@@ -1,0 +1,325 @@
+// schema.prisma
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// المستخدمون
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String    // bcrypt hashed
+  name          String
+  role          Role      @default(CLIENT)
+  isActive      Boolean   @default(true)
+  twoFactorSecret String? // للـ 2FA
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  businesses    Business[]
+  sessions      Session[]
+  
+  // For Agents
+  employerId    String?
+  employer      Business? @relation("BusinessEmployees", fields: [employerId], references: [id])
+  
+  // Tickets
+  tickets       Ticket[]  @relation("TicketCreator")
+  ticketMessages TicketMessage[]
+}
+
+enum Role {
+  SUPERADMIN
+  CLIENT
+  AGENT
+}
+
+// الأعمال/الشركات
+model Business {
+  id            String    @id @default(cuid())
+  userId        String
+  name          String
+  activityType  ActivityType // مطعم، محل ملابس، شركة...
+  language      String    @default("ar") // ar, en
+  status        BusinessStatus @default(TRIAL)
+  trialEndsAt   DateTime?
+  
+  // الإعدادات
+  botTone       String    @default("friendly") // friendly, formal, advisory
+  primaryColor  String    @default("#6366F1")
+  widgetConfig  String?   @db.Text // JSON: { welcomeMessage, personality, showBranding, ... }
+  
+  // الحصص
+  messageQuota  Int       @default(1000)
+  messagesUsed  Int       @default(0)
+  planType      PlanType  @default(TRIAL)
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  employees     User[]    @relation("BusinessEmployees")
+  knowledgeBase KnowledgeBase[]
+  conversations Conversation[]
+  integrations  Integration[]
+  tickets       Ticket[]
+  
+  @@index([userId])
+}
+
+enum ActivityType {
+  RESTAURANT
+  RETAIL
+  CLINIC
+  COMPANY
+  OTHER
+}
+
+enum BusinessStatus {
+  TRIAL
+  ACTIVE
+  SUSPENDED
+  CANCELLED
+}
+
+enum PlanType {
+  TRIAL
+  BASIC
+  PRO
+  AGENCY
+  ENTERPRISE
+}
+
+// Support Tickets
+model Ticket {
+  id          String   @id @default(cuid())
+  businessId  String
+  creatorId   String
+  subject     String
+  status      TicketStatus @default(OPEN)
+  priority    TicketPriority @default(MEDIUM)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  creator     User     @relation("TicketCreator", fields: [creatorId], references: [id])
+  messages    TicketMessage[]
+
+  @@index([businessId])
+  @@index([creatorId])
+}
+
+model TicketMessage {
+  id        String   @id @default(cuid())
+  ticketId  String
+  senderId  String   // User ID (Client or Admin)
+  message   String   @db.Text
+  isAdmin   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  sender    User     @relation(fields: [senderId], references: [id])
+
+  @@index([ticketId])
+  @@index([senderId])
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+// قاعدة المعرفة
+model KnowledgeBase {
+  id          String    @id @default(cuid())
+  businessId  String
+  type        KnowledgeType // pdf, text, url
+  content     String    @db.Text
+  embedding   Json?     // Vector embeddings
+  metadata    Json?     // {filename, pageCount, etc}
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  business    Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  knowledgeChunks KnowledgeChunk[]
+  
+  @@index([businessId])
+}
+
+// Knowledge chunks for searchable, smaller pieces of content
+model KnowledgeChunk {
+  id              String    @id @default(cuid())
+  knowledgeBaseId String
+  businessId      String
+  content         String    @db.Text
+  embedding       Json?
+  metadata        Json?
+  createdAt       DateTime  @default(now())
+
+  knowledgeBase   KnowledgeBase @relation(fields: [knowledgeBaseId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([knowledgeBaseId])
+}
+
+enum KnowledgeType {
+  PDF
+  TEXT
+  URL
+}
+
+// المحادثات
+model Conversation {
+  id          String    @id @default(cuid())
+  businessId  String
+  channel     Channel   @default(WIDGET) // widget, whatsapp
+  externalId  String?   // WhatsApp phone number
+  status      ConversationStatus @default(ACTIVE)
+  rating      Int?
+  feedback    String?
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  business    Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  messages    Message[]
+  
+  @@index([businessId])
+  @@index([externalId])
+}
+
+enum ConversationStatus {
+  ACTIVE
+  HANDOVER_REQUESTED
+  AGENT_ACTIVE
+  CLOSED
+}
+
+enum Channel {
+  WIDGET
+  WHATSAPP
+  TELEGRAM
+}
+
+// سجلات النظام
+model SystemLog {
+  id        String   @id @default(cuid())
+  level     String   // INFO, WARN, ERROR
+  message   String   @db.Text
+  context   Json?    // Stack trace, request body, etc.
+  createdAt DateTime @default(now())
+
+  @@index([level])
+  @@index([createdAt])
+}
+
+// الرسائل
+model Message {
+  id              String    @id @default(cuid())
+  conversationId  String
+  role            MessageRole
+  content         String    @db.Text
+  tokensUsed      Int       @default(0)
+  wasFromCache    Boolean   @default(false)
+  aiModel         String?   // grok, gpt-4, etc
+  
+  createdAt       DateTime  @default(now())
+  
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
+  @@index([conversationId])
+  @@index([createdAt])
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+// التكاملات (واتساب، إلخ)
+model Integration {
+  id          String    @id @default(cuid())
+  businessId  String
+  type        IntegrationType
+  config      Json      // {phoneNumberId, accessToken, etc}
+  isActive    Boolean   @default(true)
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  business    Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  
+  @@index([businessId])
+}
+
+enum IntegrationType {
+  WHATSAPP
+  TELEGRAM
+  FACEBOOK
+}
+
+// الجلسات
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([token])
+}
+
+// Cache للرسائل المتشابهة
+model MessageCache {
+  id          String    @id @default(cuid())
+  businessId  String
+  query       String    @db.Text
+  response    String    @db.Text
+  hitCount    Int       @default(1)
+  
+  createdAt   DateTime  @default(now())
+  lastUsedAt  DateTime  @default(now())
+  
+  @@index([businessId])
+  @@index([lastUsedAt])
+}
+
+// نماذج الذكاء الاصطناعي
+model AIModel {
+  id          String    @id @default(cuid())
+  name        String    @unique // grok, gpt-4, gemini
+  apiKey      String
+  endpoint    String
+  maxTokens   Int       @default(1000)
+  isActive    Boolean   @default(true)
+  priority    Int       @default(0) // أعلى رقم = أولوية أعلى
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// إعدادات النظام العامة
+model SystemSetting {
+  key         String    @id
+  value       String    @db.Text
+  description String?
+  updatedAt   DateTime  @updatedAt
+}

@@ -1,0 +1,57 @@
+DEPLOYMENT INSTRUCTIONS FOR SHARED HOSTING (cPanel)
+===================================================
+
+1. PREPARE FILES
+   - Compress the contents of the 'server' folder into a ZIP file (e.g., server_deploy.zip).
+   - Do NOT include the 'node_modules' folder in the zip to keep it small. You will install dependencies on the server.
+
+2. UPLOAD TO CPANEL
+   - Go to cPanel > File Manager.
+   - Create a folder for your app (e.g., 'fahimo-api').
+   - Upload 'server_deploy.zip' to this folder and extract it.
+
+3. SETUP NODE.JS APP
+   - Go to cPanel > Setup Node.js App.
+   - Click "Create Application".
+   - Node.js Version: Choose 18.x or 20.x (Recommended).
+   - Application Mode: Production.
+   - Application Root: 'fahimo-api' (the folder you created).
+   - Application URL: 'api.yourdomain.com' or 'yourdomain.com/api'.
+   - Application Startup File: 'server_entry.js' (This file was created for you).
+   - Click "Create".
+
+4. INSTALL DEPENDENCIES
+   - Once created, scroll down to the "Detected configuration file" section.
+   - Click "Run NPM Install". This will install all required packages.
+
+5. DATABASE SETUP
+   - Go to cPanel > MySQL Databases.
+   - Create a new database (e.g., 'username_fahimo_db').
+   - Create a new user and assign it to the database with ALL PRIVILEGES.
+   - Go to phpMyAdmin.
+   - Select your new database.
+   - Click "Import" and upload the 'schema.sql' file found in your server folder. This will create all the tables.
+
+6. ENVIRONMENT VARIABLES (.env)
+   - In the Node.js App page in cPanel, look for "Environment Variables".
+   - Add the following variables (I have pre-filled your database details):
+     
+     DATABASE_URL: mysql://mvafrgmy_chat1:Doda%4055002004@localhost:3306/mvafrgmy_chat1
+     
+     (Note: The '@' in your password was changed to '%40' to work correctly in the URL)
+
+     - JWT_SECRET: (Generate a random long string)
+     - PORT: 3001
+     - SMTP_EMAIL: mahmoud.a.fouad2@gmail.com
+     - SMTP_PASSWORD: (Your Gmail App Password)
+     - GROQ_API_KEY: (Your AI API Key)
+
+7. RESTART
+   - Click "Restart Application" in the Node.js App page.
+
+8. FRONTEND (CLIENT)
+   - The 'client/out' folder contains the static frontend files.
+   - Upload the contents of 'client/out' to your 'public_html' folder (or the folder for your main domain).
+   - Ensure the frontend is configured to point to your API URL.
+
+GOOD LUCK!
