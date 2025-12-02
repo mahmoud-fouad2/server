@@ -32,12 +32,16 @@ router.post('/demo', async (req, res) => {
       });
     }
 
-    // If still no business, we can't use the AI properly with context
+    // If still no business, use hardcoded demo config (don't block the demo)
     if (!demoBusiness) {
-      return res.json({ 
-        response: "عذراً، النظام التجريبي غير جاهز حالياً. يرجى المحاولة لاحقاً.",
-        isFallback: true
-      });
+      demoBusiness = {
+        id: 'demo-fallback',
+        name: 'Fahimo Demo',
+        activityType: 'COMPANY',
+        botTone: 'friendly',
+        widgetConfig: { dialect: 'sa' },
+        knowledgeBase: []
+      };
     }
 
     // 2. Prepare Context
