@@ -135,9 +135,22 @@ export const LandingPage = ({ lang: initialLang = 'ar', setLang: externalSetLang
               {lang === 'ar' ? 'English' : 'عربي'}
             </button>
 
-            {/* Theme Toggle - Always Visible */}
-            <button onClick={toggleTheme} className={`p-2.5 rounded-full ${isDark ? 'bg-white/5 hover:bg-white/10 text-yellow-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-600'} transition-all hover:scale-105`}>
+            {/* Theme Toggle - Desktop */}
+            <button onClick={toggleTheme} className={`hidden md:block p-2.5 rounded-full ${isDark ? 'bg-white/5 hover:bg-white/10 text-yellow-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-600'} transition-all hover:scale-105`}>
                {isDark ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
+
+            {/* Mobile Hamburger Button */}
+            <button 
+              onClick={() => setMobileMenuOpen(true)}
+              className="md:hidden p-3 rounded-lg bg-brand-600 text-white hover:bg-brand-700 transition-all hover:scale-105 shadow-md"
+              aria-label="Open menu"
+            >
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+              </svg>
             </button>
             
             {/* Desktop Menu */}
@@ -176,9 +189,109 @@ export const LandingPage = ({ lang: initialLang = 'ar', setLang: externalSetLang
             </Link>
           </div>
         </div>
-
-
       </nav>
+
+      {/* Mobile Menu Sidebar */}
+      <div className={`fixed inset-0 z-[60] md:hidden transition-opacity duration-300 ${mobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+        {/* Overlay */}
+        <div 
+          className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+        
+        {/* Sidebar */}
+        <div className={`absolute top-0 right-0 h-full w-80 max-w-[85vw] bg-white dark:bg-cosmic-900 shadow-2xl transform transition-transform duration-300 overflow-y-auto ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-white/10 sticky top-0 bg-white dark:bg-cosmic-900 z-10">
+            <img src="/logo2.png" alt="فهملي" className="h-12 w-auto" />
+            <button 
+              onClick={() => setMobileMenuOpen(false)}
+              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+              aria-label="Close menu"
+            >
+              <X size={24} className="text-gray-600 dark:text-gray-300" />
+            </button>
+          </div>
+
+          {/* Menu Content */}
+          <div className="flex flex-col p-6 space-y-6">
+            {/* Navigation Links */}
+            <div className="space-y-2">
+              <Link href="/" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-brand-50 dark:hover:bg-brand-900/20 hover:text-brand-600 dark:hover:text-brand-400 transition-colors font-medium">
+                الرئيسية
+              </Link>
+              <Link href="/services" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-brand-50 dark:hover:bg-brand-900/20 hover:text-brand-600 dark:hover:text-brand-400 transition-colors font-medium">
+                الخدمات
+              </Link>
+              <Link href="/solutions" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-brand-50 dark:hover:bg-brand-900/20 hover:text-brand-600 dark:hover:text-brand-400 transition-colors font-medium">
+                الحلول
+              </Link>
+              <Link href="/pricing" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-brand-50 dark:hover:bg-brand-900/20 hover:text-brand-600 dark:hover:text-brand-400 transition-colors font-medium">
+                الأسعار
+              </Link>
+              <Link href="/about" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-brand-50 dark:hover:bg-brand-900/20 hover:text-brand-600 dark:hover:text-brand-400 transition-colors font-medium">
+                من نحن
+              </Link>
+              <Link href="/contact" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-brand-50 dark:hover:bg-brand-900/20 hover:text-brand-600 dark:hover:text-brand-400 transition-colors font-medium">
+                اتصل بنا
+              </Link>
+            </div>
+
+            {/* Country Selector */}
+            <div className="pt-4 border-t border-gray-200 dark:border-white/10">
+              <h3 className="text-sm font-bold text-gray-500 dark:text-gray-400 mb-3 flex items-center gap-2 px-4">
+                <Globe size={16} />
+                اختر الدولة
+              </h3>
+              <div className="grid grid-cols-2 gap-2">
+                <button onClick={() => { changeCountry('sa'); setMobileMenuOpen(false); }} className={`px-4 py-3 rounded-xl text-sm font-medium transition-colors ${activeCountry === 'sa' ? 'bg-brand-600 text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/10'}`}>
+                  🇸🇦 السعودية
+                </button>
+                <button onClick={() => { changeCountry('eg'); setMobileMenuOpen(false); }} className={`px-4 py-3 rounded-xl text-sm font-medium transition-colors ${activeCountry === 'eg' ? 'bg-brand-600 text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/10'}`}>
+                  🇪🇬 مصر
+                </button>
+                <button onClick={() => { changeCountry('ae'); setMobileMenuOpen(false); }} className={`px-4 py-3 rounded-xl text-sm font-medium transition-colors ${activeCountry === 'ae' ? 'bg-brand-600 text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/10'}`}>
+                  🇦🇪 الإمارات
+                </button>
+                <button onClick={() => { changeCountry('kw'); setMobileMenuOpen(false); }} className={`px-4 py-3 rounded-xl text-sm font-medium transition-colors ${activeCountry === 'kw' ? 'bg-brand-600 text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/10'}`}>
+                  🇰🇼 الكويت
+                </button>
+              </div>
+            </div>
+
+            {/* Language Switcher */}
+            <div className="pt-4 border-t border-gray-200 dark:border-white/10">
+              <h3 className="text-sm font-bold text-gray-500 dark:text-gray-400 mb-3 px-4">اللغة</h3>
+              <div className="flex gap-2">
+                <button onClick={() => setLang('ar')} className={`flex-1 px-4 py-3 rounded-xl text-sm font-bold transition-colors ${lang === 'ar' ? 'bg-brand-600 text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/10'}`}>
+                  عربي
+                </button>
+                <button onClick={() => setLang('en')} className={`flex-1 px-4 py-3 rounded-xl text-sm font-bold transition-colors ${lang === 'en' ? 'bg-brand-600 text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/10'}`}>
+                  English
+                </button>
+              </div>
+            </div>
+
+            {/* Theme Toggle Mobile */}
+            <div className="pt-4 border-t border-gray-200 dark:border-white/10">
+              <button onClick={toggleTheme} className="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors flex items-center justify-center gap-3 text-gray-700 dark:text-gray-300 font-medium">
+                {isDark ? <Sun size={20} /> : <Moon size={20} />}
+                {isDark ? 'الوضع النهاري' : 'الوضع الليلي'}
+              </button>
+            </div>
+
+            {/* CTA Buttons */}
+            <div className="space-y-2 pt-4">
+              <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="block w-full px-6 py-3 rounded-xl text-center font-bold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors">
+                تسجيل الدخول
+              </Link>
+              <Link href="/register" onClick={() => setMobileMenuOpen(false)} className="block w-full px-6 py-3 rounded-xl text-center font-bold text-white bg-gradient-to-r from-brand-600 to-brand-500 hover:opacity-90 transition-opacity shadow-lg">
+                ابدأ الآن مجاناً
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Hero Section */}
       <section className="relative pt-40 pb-20 lg:pt-56 lg:pb-32 px-6 overflow-hidden">
@@ -482,7 +595,7 @@ export const LandingPage = ({ lang: initialLang = 'ar', setLang: externalSetLang
                 modalTitle: 'حلول التعليم والتدريب',
                 modalDesc: 'أتمتة العمليات الإدارية وتحسين التواصل مع الطلاب وأولياء الأمور.',
                 color: "indigo",
-                image: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&q=80&w=600"
+                image: "/assets/images/education.jpg"
               },
               {
                 icon: <Shield size={36} />,
