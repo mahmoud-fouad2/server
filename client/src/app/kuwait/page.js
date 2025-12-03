@@ -3,7 +3,9 @@
 import { LandingPage } from '@/components/LandingPage'
 import { useState } from 'react'
 
-export const metadata = {
+// Metadata removed - cannot use with 'use client'
+
+const metadata = {
   title: 'فهملي - شات بوت ذكي باللهجة الكويتية | خدمة عملاء 24/7',
   description: 'أفضل حل شات بوت ذكي يفهم اللهجة الكويتية. زود مبيعاتك وارضي عملاءك بخدمة ذكية 24 ساعة.',
   keywords: 'شات بوت كويتي، ذكاء اصطناعي، خدمة عملاء، اللهجة الكويتية، واتساب بوت',
