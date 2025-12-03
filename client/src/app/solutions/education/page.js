@@ -64,13 +64,10 @@ export default function EducationSolution() {
               className="rounded-3xl overflow-hidden shadow-2xl border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-cosmic-800"
             >
               <img 
-                src="/assets/images/education-solution.jpg" 
+                src="/assets/images/education-hero.jpg" 
                 alt="حلول التعليم"
                 className="w-full h-[500px] object-cover"
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = "https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?auto=format&fit=crop&q=80&w=1200"
-                }}
+                loading="lazy"
               />
             </motion.div>
           </div>

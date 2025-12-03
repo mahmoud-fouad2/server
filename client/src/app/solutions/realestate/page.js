@@ -23,7 +23,7 @@ export default function RealEstateSolution() {
               </div>
             </motion.div>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="rounded-3xl overflow-hidden shadow-2xl border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-cosmic-800">
-              <img src="/assets/images/realestate-solution.jpg" alt="حلول العقارات" className="w-full h-[500px] object-cover" onError={(e) => { e.target.onerror = null; e.target.src = "https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?auto=format&fit=crop&q=80&w=1200"; }} />
+              <img src="/assets/images/realestate-hero.jpg" alt="حلول العقارات" className="w-full h-[500px] object-cover" loading="lazy" />
             </motion.div>
           </div>
         </section>

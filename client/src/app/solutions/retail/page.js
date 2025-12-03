@@ -23,7 +23,7 @@ export default function RetailSolution() {
               </div>
             </motion.div>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="rounded-3xl overflow-hidden shadow-2xl border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-cosmic-800">
-              <img src="/assets/images/retail-solution.jpg" alt="التجارة الإلكترونية" className="w-full h-[500px] object-cover" onError={(e) => { e.target.onerror = null; e.target.src = "https://images.unsplash.com/photo-1472851294608-062f824d29cc?auto=format&fit=crop&q=80&w=1200"; }} />
+              <img src="/assets/images/retail-hero.jpg" alt="التجارة الإلكترونية" className="w-full h-[500px] object-cover" loading="lazy" />
             </motion.div>
           </div>
         </section>

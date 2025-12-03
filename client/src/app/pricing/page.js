@@ -57,6 +57,13 @@ export default function PricingPage() {
 
   useEffect(() => {
     setMounted(true)
+    
+    // Detect country from URL path
+    const path = window.location.pathname
+    if (path.includes('/eg')) setCountry('eg')
+    else if (path.includes('/ae')) setCountry('ae')
+    else if (path.includes('/kw')) setCountry('kw')
+    else setCountry('sa')
   }, [])
 
   if (!mounted) return null

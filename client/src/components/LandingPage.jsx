@@ -12,6 +12,7 @@ import { DemoChatWindow } from './DemoChatWindow';
 import FaheemAnimatedLogo from './FaheemAnimatedLogo';
 import SalesBot from './SalesBot';
 import { motion, AnimatePresence } from 'framer-motion';
+import Footer from './layout/Footer';
 
 import { useRouter } from 'next/navigation';
 
@@ -822,7 +823,10 @@ export const LandingPage = ({ lang: initialLang = 'ar', setLang: externalSetLang
                 </div>
                 <div className="text-center md:text-right">
                   <h3 className="text-lg md:text-xl font-bold bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent">
-                    ابدأ من 99 ريال شهرياً
+                    {activeCountry === 'eg' && 'ابدأ من 372 جنيه شهرياً'}
+                    {activeCountry === 'ae' && 'ابدأ من 99 درهم شهرياً'}
+                    {activeCountry === 'kw' && 'ابدأ من 8 دينار شهرياً'}
+                    {activeCountry === 'sa' && 'ابدأ من 99 ريال شهرياً'}
                   </h3>
                   <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                     خطة احترافية كاملة 🎉
@@ -840,66 +844,8 @@ export const LandingPage = ({ lang: initialLang = 'ar', setLang: externalSetLang
         </div>
       </section>
 
-      {/* Improved Footer */}
-      <footer className={`border-t ${isDark ? 'border-white/5 bg-black/40 text-gray-400' : 'border-gray-200 bg-gray-50 text-gray-600'}`}>
-        <div className="max-w-7xl mx-auto px-6 py-16">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
-             {/* Brand Column */}
-             <div className="col-span-1 md:col-span-1">
-                <div className="flex items-center justify-center md:justify-start mb-6">
-                  <img src="/logo2.png" alt="فهملي" className="w-24 h-24 object-contain" loading="lazy" />
-                </div>
-                <p className="text-sm leading-relaxed mb-8 opacity-80">
-                  أقوى منصة شات بوت عربي مدعومة بالذكاء الاصطناعي. نساعدك تزيد مبيعاتك وترضي عملاءك 24/7.
-                </p>
-                <div className="flex gap-4">
-                   <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-600 hover:text-white transition-all"><Twitter size={18} /></a>
-                   <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-600 hover:text-white transition-all"><Instagram size={18} /></a>
-                   <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-600 hover:text-white transition-all"><Linkedin size={18} /></a>
-                </div>
-             </div>
-
-             {/* Links Column 1 */}
-             <div>
-               <h4 className="font-bold text-gray-900 dark:text-white mb-6 text-lg">الشركة</h4>
-               <ul className="space-y-3 text-sm">
-                 <li><Link href="/about" className="hover:text-brand-500 transition-colors flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-brand-500"></span> {t.aboutUs}</Link></li>
-                 <li><Link href="/contact" className="hover:text-brand-500 transition-colors flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-brand-500"></span> {t.contactUs}</Link></li>
-                 <li><Link href="/register" className="hover:text-brand-500 transition-colors flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-brand-500"></span> ابدأ التجربة</Link></li>
-                 <li><Link href="/login" className="hover:text-brand-500 transition-colors flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-brand-500"></span> تسجيل الدخول</Link></li>
-               </ul>
-             </div>
-
-             {/* Links Column 2 */}
-             <div>
-               <h4 className="font-bold text-gray-900 dark:text-white mb-6 text-lg">قانوني</h4>
-               <ul className="space-y-3 text-sm">
-                 <li><Link href="/privacy" className="hover:text-brand-500 transition-colors flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-brand-500"></span> {t.privacy}</Link></li>
-                 <li><Link href="/terms" className="hover:text-brand-500 transition-colors flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-brand-500"></span> {t.terms}</Link></li>
-                 <li><Link href="/contact" className="hover:text-brand-500 transition-colors flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-brand-500"></span> الدعم الفني</Link></li>
-               </ul>
-             </div>
-
-             {/* Contact Column */}
-             <div>
-               <h4 className="font-bold text-gray-900 dark:text-white mb-6 text-lg">تواصل معنا</h4>
-               <ul className="space-y-4 text-sm">
-                 <li className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5"><Mail size={18} className="text-brand-500" /> info@Faheemly.com</li>
-                 <li className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5"><Phone size={18} className="text-brand-500" /> +966 5300 47 640</li>
-               </ul>
-             </div>
-          </div>
-          
-          <div className="border-t border-gray-200 dark:border-white/5 mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-
-             <p className="text-sm opacity-60">© 2025 جميع الحقوق محفوظة لشركة فهملي</p>
-             <a href="https://ma-fo.info" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 opacity-70 hover:opacity-100 transition-opacity group">
-                <img src="https://ma-fo.info/logo2.png" alt="Ma-Fo" className="w-6 h-6 object-contain" loading="lazy" />
-                <span className="text-xs font-medium tracking-wide group-hover:text-brand-500 transition-colors">Development By Ma-Fo.info</span>
-             </a>
-          </div>
-        </div>
-      </footer>
+      {/* Footer */}
+      <Footer />
     </div>
   );
 };

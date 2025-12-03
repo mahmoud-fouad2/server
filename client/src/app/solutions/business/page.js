@@ -23,7 +23,7 @@ export default function BusinessSolution() {
               </div>
             </motion.div>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="rounded-3xl overflow-hidden shadow-2xl border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-cosmic-800">
-              <img src="/assets/images/business-solution.jpg" alt="حلول الشركات" className="w-full h-[500px] object-cover" onError={(e) => { e.target.onerror = null; e.target.src = "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&q=80&w=1200"; }} />
+              <img src="/assets/images/business-hero.jpg" alt="حلول الشركات" className="w-full h-[500px] object-cover" loading="lazy" />
             </motion.div>
           </div>
         </section>

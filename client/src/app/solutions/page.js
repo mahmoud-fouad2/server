@@ -41,7 +41,7 @@ const solutions = [
       time: '70%',
       timeMetric: 'تقليل وقت الرد'
     },
-    image: 'https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&q=80&w=600'
+    image: '/assets/images/restaurant.jpg'
   },
   {
     id: 'clinic',
@@ -62,7 +62,7 @@ const solutions = [
       time: '80%',
       timeMetric: 'تقليل الاتصالات الهاتفية'
     },
-    image: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=600'
+    image: '/assets/images/clinic.jpg'
   },
   {
     id: 'retail',
@@ -83,7 +83,7 @@ const solutions = [
       time: '24/7',
       timeMetric: 'خدمة مبيعات متواصلة'
     },
-    image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=600'
+    image: '/assets/images/retail.jpg'
   },
   {
     id: 'business',
@@ -104,7 +104,7 @@ const solutions = [
       time: '50%',
       timeMetric: 'تقليل تكاليف الدعم'
     },
-    image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=600'
+    image: '/assets/images/business.jpg'
   },
   {
     id: 'education',
@@ -125,7 +125,7 @@ const solutions = [
       time: '90%',
       timeMetric: 'أتمتة العمليات الإدارية'
     },
-    image: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&q=80&w=600'
+    image: '/assets/images/education.jpg'
   },
   {
     id: 'realestate',
@@ -146,7 +146,7 @@ const solutions = [
       time: '60%',
       timeMetric: 'تسريع عملية البيع'
     },
-    image: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=600'
+    image: '/assets/images/realestate.jpg'
   }
 ]
 
@@ -208,14 +208,14 @@ export default function SolutionsPage() {
                     onError={(e) => {
                       e.target.onerror = null;
                       const fallbacks = {
-                        'restaurant': 'https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&q=80&w=600',
-                        'clinic': 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=600',
-                        'retail': 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=600',
-                        'business': 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=600',
-                        'education': 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&q=80&w=600',
-                        'realestate': 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=600'
+                        'restaurant': '/assets/images/restaurant.jpg',
+                        'clinic': '/assets/images/clinic.jpg',
+                        'retail': '/assets/images/retail.jpg',
+                        'business': '/assets/images/business.jpg',
+                        'education': '/assets/images/education.jpg',
+                        'realestate': '/assets/images/realestate.jpg'
                       };
-                      e.target.src = fallbacks[solution.id] || 'https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&q=80&w=600';
+                      e.target.src = fallbacks[solution.id] || '/assets/images/restaurant.jpg';
                     }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-40 transition-opacity duration-500"></div>
