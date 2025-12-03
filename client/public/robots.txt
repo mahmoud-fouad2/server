@@ -1,0 +1,40 @@
+# Faheemly.com - Robots.txt
+# شات بوت ذكي بالعربي
+
+User-agent: *
+Allow: /
+
+# Allow all major search engines
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+User-agent: Baiduspider
+Allow: /
+
+User-agent: YandexBot
+Allow: /
+
+# Disallow admin and dashboard areas
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /settings/
+Disallow: /conversations/
+Disallow: /knowledge/
+
+# Disallow API endpoints if any
+Disallow: /api/
+
+# Sitemap location
+Sitemap: https://faheemly.com/sitemap.xml
+
+# Crawl-delay for politeness
+Crawl-delay: 1
