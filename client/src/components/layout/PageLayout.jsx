@@ -93,10 +93,10 @@ export default function PageLayout({ children }) {
             </button>
             <button 
               onClick={() => setMobileMenuOpen(true)}
-              className="p-3 rounded-lg bg-brand-600 text-white hover:bg-brand-700 transition-all hover:scale-105 shadow-md"
+              className="px-4 py-2.5 rounded-full bg-brand-600 text-white hover:bg-brand-700 transition-all hover:scale-105 shadow-lg shadow-brand-500/30"
               aria-label="Open menu"
             >
-              <Menu size={26} strokeWidth={2.5} />
+              <Menu size={20} strokeWidth={2.5} />
             </button>
           </div>
         </div>
@@ -114,7 +114,7 @@ export default function PageLayout({ children }) {
         <div className={`absolute top-0 right-0 h-full w-80 max-w-[85vw] bg-white dark:bg-cosmic-900 shadow-2xl transform transition-transform duration-300 ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-white/10">
-            <img src="/logo2.png" alt="فهملي" className="h-12 w-auto" />
+            <img src="/logo2.png" alt="فهملي" className="h-16 w-auto" />
             <button 
               onClick={() => setMobileMenuOpen(false)}
               className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"

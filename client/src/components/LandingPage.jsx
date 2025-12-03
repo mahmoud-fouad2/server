@@ -143,10 +143,10 @@ export const LandingPage = ({ lang: initialLang = 'ar', setLang: externalSetLang
             {/* Mobile Hamburger Button */}
             <button 
               onClick={() => setMobileMenuOpen(true)}
-              className="md:hidden p-3 rounded-lg bg-brand-600 text-white hover:bg-brand-700 transition-all hover:scale-105 shadow-md"
+              className="md:hidden px-5 py-2.5 rounded-full bg-brand-600 text-white hover:bg-brand-700 transition-all hover:scale-105 shadow-lg shadow-brand-500/30"
               aria-label="Open menu"
             >
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="3" y1="12" x2="21" y2="12"></line>
                 <line x1="3" y1="6" x2="21" y2="6"></line>
                 <line x1="3" y1="18" x2="21" y2="18"></line>
