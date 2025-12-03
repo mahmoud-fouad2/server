@@ -579,22 +579,81 @@ export const LandingPage = ({ lang = 'ar', setLang, country = 'sa', setCountry }
       </section>
 
       {/* Trusted by Companies Section */}
-      <section className={`py-16 relative ${isDark ? 'bg-cosmic-950' : 'bg-gray-50'}`}>
+      <section className={`py-16 relative ${isDark ? 'bg-cosmic-900' : 'bg-gradient-to-b from-white to-gray-50'}`}>
         <div className="max-w-7xl mx-auto px-6">
           <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-12"
+          >
+            <p className={`text-sm font-bold mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>يثق بنا قادة التكنولوجيا العالميين</p>
+          </motion.div>
+
+          {/* Companies Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6">
+            {[
+              { name: 'أرامكو', nameEn: 'Aramco', logo: '/companies/aramco.svg' },
+              { name: 'STC', nameEn: 'STC', logo: '/companies/stc.svg' },
+              { name: 'موبايلي', nameEn: 'Mobily', logo: '/companies/mobily.svg' },
+              { name: 'زين', nameEn: 'Zain', logo: '/companies/zain.svg' },
+              { name: 'المراعي', nameEn: 'Almarai', logo: '/companies/almarai.svg' },
+              { name: 'سابك', nameEn: 'SABIC', logo: '/companies/sabic.svg' },
+              { name: 'البنك الأهلي', nameEn: 'Al Ahli', logo: '/companies/alahli.svg' },
+              { name: 'الراجحي', nameEn: 'Al Rajhi', logo: '/companies/alrajhi.svg' },
+              { name: 'جرير', nameEn: 'Jarir', logo: '/companies/jarir.svg' },
+              { name: 'نون', nameEn: 'Noon', logo: '/companies/noon.svg' },
+              { name: 'كريم', nameEn: 'Careem', logo: '/companies/careem.svg' },
+              { name: 'هنقرستيشن', nameEn: 'Hungerstation', logo: '/companies/hungerstation.svg' }
+            ].map((company, index) => (
+              <motion.div
+                key={company.nameEn}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.3, delay: index * 0.05 }}
+                className={`group relative p-6 rounded-xl transition-all duration-300 hover:scale-105 ${isDark ? 'bg-white/5 hover:bg-white/10 border border-white/10' : 'bg-white hover:bg-gray-50 border border-gray-200 shadow-sm hover:shadow-md'}`}
+              >
+                <div className="flex items-center justify-center h-16">
+                  <div className={`text-center ${isDark ? 'text-gray-400 group-hover:text-gray-300' : 'text-gray-500 group-hover:text-gray-700'} transition-colors`}>
+                    <div className="font-bold text-lg mb-1">{company.nameEn}</div>
+                    <div className="text-xs opacity-70">{company.name}</div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Actual Logos Section - Premium Companies */}
+          <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
-            className="text-center"
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="mt-16 pt-12 border-t border-gray-200 dark:border-white/10"
           >
-            <p className={`text-sm font-bold mb-8 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>يثق بنا قادة التكنولوجيا العالميين</p>
-            <div className="flex flex-wrap justify-center items-center gap-12 opacity-60">
-              <span className="text-2xl font-bold">Google</span>
-              <span className="text-2xl font-bold">Microsoft</span>
-              <span className="text-2xl font-bold">Amazon</span>
-              <span className="text-2xl font-bold">Meta</span>
-              <span className="text-2xl font-bold">Apple</span>
-              <span className="text-2xl font-bold">IBM</span>
+            <p className={`text-center text-xs font-medium mb-8 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+              شركاء النجاح في القطاع الحكومي والخاص
+            </p>
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-6">
+              {[
+                'Google', 'Microsoft', 'Amazon', 'Apple', 'Meta', 'IBM',
+                'Oracle', 'Salesforce', 'SAP', 'Adobe', 'Cisco', 'Intel'
+              ].map((company, index) => (
+                <motion.div
+                  key={company}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.2, delay: index * 0.03 }}
+                  className={`flex items-center justify-center p-4 rounded-lg transition-all duration-300 hover:scale-110 ${isDark ? 'hover:bg-white/5' : 'hover:bg-gray-50'}`}
+                >
+                  <span className={`text-sm font-bold ${isDark ? 'text-gray-500 hover:text-gray-400' : 'text-gray-400 hover:text-gray-600'} transition-colors`}>
+                    {company}
+                  </span>
+                </motion.div>
+              ))}
             </div>
           </motion.div>
         </div>
