@@ -200,11 +200,15 @@ export default function SolutionsPage() {
                 className="bg-white dark:bg-cosmic-900 rounded-3xl overflow-hidden border border-gray-200 dark:border-white/10 hover:shadow-2xl transition-all group"
               >
                 {/* Image Header */}
-                <div className="relative h-64 overflow-hidden">
+                <div className="relative h-64 overflow-hidden bg-gray-100 dark:bg-cosmic-800">
                   <img 
                     src={solution.image} 
                     alt={solution.title}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = `https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80&w=600`;
+                    }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
                   <div className={`absolute bottom-6 right-6 w-16 h-16 rounded-2xl bg-${solution.color}-500 text-white flex items-center justify-center shadow-xl`}>
@@ -254,9 +258,9 @@ export default function SolutionsPage() {
                   </div>
 
                   {/* CTA */}
-                  <Link href="/register">
+                  <Link href={`/solutions/${solution.id}`}>
                     <Button className="w-full py-4 text-lg font-bold rounded-xl shadow-lg">
-                      ابدأ مع {solution.title}
+                      اعرف المزيد عن {solution.title}
                       <ArrowRight size={20} className="mr-2" />
                     </Button>
                   </Link>

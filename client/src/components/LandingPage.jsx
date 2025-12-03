@@ -678,16 +678,16 @@ export const LandingPage = ({ lang = 'ar', setLang, country = 'sa', setCountry }
             </span>
             <h2 className={`text-3xl lg:text-5xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>{t.indTitle}</h2>
             <p className={`text-xl max-w-2xl mx-auto ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>اختر الحل المناسب لنشاطك التجاري واكتشف كيف يمكن لفهملي أن يحدث فرقاً</p>
-            <div className="mt-8">
+            <div className="mt-8 flex justify-center">
               <Link href="/solutions">
-                <Button className="rounded-full px-8 py-3 shadow-lg font-bold">
+                <Button className="rounded-full px-10 py-4 text-lg shadow-lg font-bold hover:shadow-xl transition-all">
                   عرض جميع الحلول
-                  <ArrowRight size={18} className="mr-2" />
+                  <ArrowRight size={20} className="mr-2" />
                 </Button>
               </Link>
             </div>
           </motion.div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {[
               { 
                 icon: <Utensils size={36} />, 
