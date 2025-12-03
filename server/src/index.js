@@ -13,6 +13,10 @@ const logger = require('./utils/logger');
 // Fahimo Insight: Initialize the core "Understanding" engine
 dotenv.config();
 const app = express();
+
+// Trust proxy for Render deployment (enables correct IP detection behind proxy)
+app.set('trust proxy', 1);
+
 const server = http.createServer(app);
 
 const authRoutes = require('./routes/auth.routes');
@@ -30,6 +34,8 @@ const teamRoutes = require('./routes/team.routes');
 const adminRoutes = require('./routes/admin.routes');
 const telegramRoutes = require('./routes/telegram.routes');
 const twilioRoutes = require('./routes/twilio.routes');
+const analyticsRoutes = require('./routes/analytics.routes');
+const permissionsRoutes = require('./middleware/permissions');
 
 // Security Middleware
 app.use(helmet({
@@ -285,6 +291,8 @@ app.use('/api/team', teamRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/telegram', telegramRoutes);
 app.use('/api/twilio', twilioRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/permissions', permissionsRoutes);
 
 const PORT = process.env.PORT || 3001;
 
