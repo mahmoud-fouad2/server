@@ -240,6 +240,16 @@ async function ensureAdminExists() {
         }
       });
       console.log('✅ Admin account created: admin@faheemly.com / admin@123');
+    } else if (existingAdmin.role !== 'SUPERADMIN') {
+      // Update existing user to SUPERADMIN
+      await prisma.user.update({
+        where: { email: adminEmail },
+        data: { 
+          role: 'SUPERADMIN',
+          password: adminPassword // Reset password too
+        }
+      });
+      console.log('✅ Admin role updated to SUPERADMIN');
     } else {
       console.log('✅ Admin account already exists');
     }
