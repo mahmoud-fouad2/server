@@ -41,7 +41,7 @@ export const Login = ({ lang }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-cosmic-950 p-4 relative overflow-hidden transition-colors duration-300">
+    <div className="min-h-screen flex items-center justify-center bg-white dark:bg-cosmic-950 p-4 relative overflow-hidden transition-colors duration-300">
       {/* Background Decor */}
       <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-brand-600/20 rounded-full blur-[120px] pointer-events-none opacity-50 dark:opacity-100 animate-pulse-slow" />
       <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[100px] pointer-events-none opacity-50 dark:opacity-100 animate-float" />
@@ -59,7 +59,7 @@ export const Login = ({ lang }) => {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
-        <div className="glass-panel p-8 md:p-10 rounded-3xl shadow-2xl relative overflow-hidden border border-white/20 ring-1 ring-black/5">
+        <div className="p-8 md:p-10 rounded-3xl shadow-2xl relative overflow-hidden border border-gray-200 dark:border-white/10 bg-[#f8f8fa] dark:bg-cosmic-900">
           {/* Top Gradient Line */}
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-brand-500 to-transparent opacity-50"></div>
 

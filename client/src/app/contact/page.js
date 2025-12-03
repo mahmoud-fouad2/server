@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import Logo from "@/components/ui/logo"
+import PageLayout from "@/components/layout/PageLayout"
 import Link from "next/link"
 import { Mail, MapPin, Phone, Ticket, CheckCircle, AlertCircle } from "lucide-react"
 import { motion } from "framer-motion"
@@ -43,20 +43,9 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans flex flex-col" dir="rtl">
-      <nav className="w-full px-6 py-6 flex justify-between items-center border-b border-border">
-        <div className="flex items-center gap-2">
-          <Link href="/">
-            <Logo className="w-8 h-8" />
-          </Link>
-          <span className="font-bold text-xl">فهملي.كوم</span>
-        </div>
-        <Link href="/">
-          <Button variant="ghost">العودة للرئيسية</Button>
-        </Link>
-      </nav>
-
-      <main className="flex-1 container mx-auto px-4 py-12">
+    <PageLayout>
+      <div className="min-h-screen bg-gray-50 dark:bg-cosmic-950" dir="rtl">
+        <main className="container mx-auto px-4 py-20">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
           {/* Contact Info */}
           <motion.div 
@@ -210,47 +199,8 @@ export default function ContactPage() {
             )}
           </motion.div>
         </div>
-      </main>
-
-      <footer className="border-t border-border py-12 bg-muted/20">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <Logo className="w-6 h-6" />
-                <span className="font-bold text-lg">فهملي.كوم</span>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                أقوى منصة شات بوت عربي مدعومة بالذكاء الاصطناعي.
-              </p>
-            </div>
-            <div>
-              <h4 className="font-bold mb-4">الشركة</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link href="/about" className="hover:text-primary">من نحن</Link></li>
-                <li><Link href="/contact" className="hover:text-primary">الدعم الفني</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold mb-4">قانوني</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link href="/privacy" className="hover:text-primary">سياسة الخصوصية</Link></li>
-                <li><Link href="/terms" className="hover:text-primary">شروط الخدمة</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold mb-4">تواصل</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>info@Faheemly.com</li>
-                <li>الرياض، السعودية</li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-border pt-8 text-center text-sm text-muted-foreground">
-            © 2026 Faheemly Inc. جميع الحقوق محفوظة.
-          </div>
-        </div>
-      </footer>
-    </div>
+        </main>
+      </div>
+    </PageLayout>
   )
 }

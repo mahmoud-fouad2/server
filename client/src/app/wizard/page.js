@@ -114,13 +114,13 @@ export default function Wizard() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4 font-sans relative overflow-hidden transition-colors duration-300" dir="rtl">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-white dark:bg-cosmic-950 p-4 font-sans relative overflow-hidden transition-colors duration-300" dir="rtl">
       {/* Navigation & Theme Toggle */}
       <div className="absolute top-6 left-6 flex gap-3 z-50">
         <Button 
           variant="outline" 
           size="icon" 
-          className="rounded-full bg-background/50 backdrop-blur-sm border-border hover:bg-accent"
+          className="rounded-full bg-white/80 dark:bg-white/5 backdrop-blur-sm border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10"
           onClick={() => setIsDark(!isDark)}
         >
           {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
@@ -129,7 +129,7 @@ export default function Wizard() {
           <Button 
             variant="outline" 
             size="icon" 
-            className="rounded-full bg-background/50 backdrop-blur-sm border-border hover:bg-accent"
+            className="rounded-full bg-white/80 dark:bg-white/5 backdrop-blur-sm border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10"
           >
             <Home className="w-5 h-5" />
           </Button>
@@ -156,7 +156,8 @@ export default function Wizard() {
         >
           <FaheemAnimatedLogo size="medium" showText={true} className="mx-auto mb-4" />
         </motion.div>
-                <h1 className="text-2xl font-bold">إعداد مساعد فهملي</h1>
+        <h1 className="text-3xl md:text-4xl font-bold mb-2 bg-gradient-to-r from-brand-600 to-brand-400 bg-clip-text text-transparent">إعداد مساعد فهملي</h1>
+        <p className="text-sm text-muted-foreground">جاهز في 3 دقائق فقط ⚡</p>
       </div>
 
       {/* Progress Bar */}
@@ -188,9 +189,9 @@ export default function Wizard() {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
-        <Card className="w-full shadow-2xl border-white/10 bg-white/5 backdrop-blur-xl">
+        <Card className="w-full shadow-2xl border-gray-200 dark:border-white/10 bg-[#f8f8fa] dark:bg-cosmic-900">
           <CardHeader>
-            <CardTitle className="text-2xl text-center">
+            <CardTitle className="text-2xl text-center text-gray-900 dark:text-white">
               {step === 1 && "إنشاء حساب جديد"}
               {step === 2 && "تفاصيل النشاط التجاري"}
               {step === 3 && "تخصيص مظهر البوت"}

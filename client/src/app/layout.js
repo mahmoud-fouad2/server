@@ -1,16 +1,53 @@
 import './globals.css'
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+}
+
 export const metadata = {
   metadataBase: new URL('https://faheemly.com'),
   title: {
-    default: 'فهملي.كوم | الموظف الذكي الذي لا ينام ولا يطلب راتب',
+    default: 'فهملي.كوم | الموظف الذكي الذي لا ينام ولا يطلب راتب - شات بوت ذكاء اصطناعي',
     template: '%s | فهملي.كوم'
   },
-  description: 'أقوى منصة شات بوت عربي مدعومة بالذكاء الاصطناعي. أتمتة خدمة العملاء، حجز مواعيد، وردود فورية على واتساب وموقعك بلهجة سعودية ومصرية. الموظف الذكي الذي لا ينام ولا يطلب راتب.',
-  keywords: ['شات بوت', 'ذكاء اصطناعي', 'واتساب للأعمال', 'خدمة عملاء', 'رد آلي', 'السعودية', 'مصر', 'AI Chatbot', 'Faheemly', 'فهملي', 'Chatbot Arabic', 'الموظف الذكي الذي لا ينام ولا يطلب راتب'],
+  description: 'أقوى منصة شات بوت عربي مدعومة بالذكاء الاصطناعي للشرق الأوسط. أتمتة خدمة العملاء، حجز مواعيد، وردود فورية على واتساب وموقعك بكل اللهجات العربية. يغطي السعودية، مصر، الإمارات، الكويت، قطر، البحرين، الأردن، لبنان، المغرب. الموظف الذكي الذي لا ينام ولا يطلب راتب.',
+  keywords: [
+    'شات بوت',
+    'ذكاء اصطناعي',
+    'واتساب للأعمال',
+    'خدمة عملاء',
+    'رد آلي',
+    'AI Chatbot',
+    'Faheemly',
+    'فهملي',
+    'Chatbot Arabic',
+    'شات بوت عربي',
+    'السعودية',
+    'مصر',
+    'الإمارات',
+    'الكويت',
+    'قطر',
+    'البحرين',
+    'الأردن',
+    'لبنان',
+    'المغرب',
+    'الشرق الأوسط',
+    'حجز مواعيد',
+    'أتمتة المطاعم',
+    'أتمتة العيادات',
+    'بوت واتساب',
+    'الموظف الذكي',
+    'تكامل تيليجرام',
+    'خدمات سحابية'
+  ],
   authors: [{ name: 'Ma-Fo.info', url: 'https://ma-fo.info' }],
   creator: 'Ma-Fo.info',
   publisher: 'Faheemly.com',
+  category: 'Technology',
+  classification: 'Business Software',
   formatDetection: {
     email: false,
     address: false,
@@ -27,9 +64,20 @@ export const metadata = {
       'max-snippet': -1,
     },
   },
+  verification: {
+    google: 'your-google-site-verification-code',
+  },
+  alternates: {
+    canonical: 'https://faheemly.com',
+    languages: {
+      'ar-SA': 'https://faheemly.com',
+      'ar-EG': 'https://faheemly.com',
+      'ar-AE': 'https://faheemly.com',
+    },
+  },
   openGraph: {
-    title: 'فهملي.كوم | يفهمك ويفهم طلبك',
-    description: 'حول زوار موقعك إلى عملاء دائمين مع فهملي. شات بوت ذكي يفهم اللهجات ويدير أعمالك 24/7.',
+    title: 'فهملي.كوم | الموظف الذكي الذي يفهمك ويفهم عملائك بكل اللهجات العربية',
+    description: 'حول زوار موقعك إلى عملاء دائمين مع فهملي. شات بوت ذكي يفهم اللهجات العربية من الخليج إلى المغرب ويدير أعمالك 24/7. ابدأ الآن بـ99 ريال فقط.',
     url: 'https://faheemly.com',
     siteName: 'Faheemly.com',
     locale: 'ar_SA',
@@ -39,15 +87,16 @@ export const metadata = {
         url: '/og-image.jpg',
         width: 1200,
         height: 630,
-        alt: 'Faheemly AI Platform',
+        alt: 'Faheemly AI Platform - شات بوت ذكاء اصطناعي للشرق الأوسط',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'فهملي.كوم | يفهمك ويفهم طلبك',
-    description: 'أقوى منصة شات بوت عربي. جرب مجاناً الآن!',
+    title: 'فهملي.كوم | الموظف الذكي الذي لا ينام - AI Chatbot',
+    description: 'أقوى منصة شات بوت عربي للشرق الأوسط. يغطي كل اللهجات العربية. جرب مجاناً الآن!',
     creator: '@faheemly_ai',
+    site: '@faheemly_ai',
     images: ['/twitter-image.jpg'],
   },
   icons: {
@@ -56,6 +105,11 @@ export const metadata = {
     apple: '/apple-touch-icon.png',
   },
   manifest: '/site.webmanifest',
+  other: {
+    'apple-mobile-web-app-capable': 'yes',
+    'apple-mobile-web-app-status-bar-style': 'black-translucent',
+    'mobile-web-app-capable': 'yes',
+  },
 }
 
 export default function RootLayout({ children }) {

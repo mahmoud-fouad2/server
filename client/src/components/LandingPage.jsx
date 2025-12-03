@@ -4,7 +4,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import useTheme from '@/lib/theme'
 import Link from 'next/link';
 import { Button } from './ui/Components';
-import { Bot, Zap, X, Moon, Sun, ShoppingBag, Stethoscope, Utensils, MessageCircle, Send, Check, Globe, Smile, User, Brain, ArrowRight, Twitter, Instagram, Linkedin, Mail, Sparkles, Rocket, Shield, Code } from 'lucide-react';
+import { Bot, Zap, X, Moon, Sun, ShoppingBag, Stethoscope, Utensils, MessageCircle, Send, Check, Globe, Smile, User, Brain, ArrowRight, Twitter, Instagram, Linkedin, Mail, Sparkles, Rocket, Shield, Code, Users, Clock, Lock, CheckCircle, Image as ImageIcon } from 'lucide-react';
+import Image from 'next/image';
 import { TRANSLATIONS, SEO_DATA, REGIONAL_CONTENT, COMPARISON_DATA } from '../constants';
 import { DemoChatWindow } from './DemoChatWindow';
 import FaheemAnimatedLogo from './FaheemAnimatedLogo';
@@ -70,7 +71,7 @@ const SalesBot = ({ lang }) => {
             <div className="p-4 bg-gradient-to-r from-brand-600 to-brand-700 text-white flex justify-between items-center relative overflow-hidden">
               <div className="flex items-center gap-3 relative z-10">
                 <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center relative overflow-hidden border border-white/20 backdrop-blur-sm">
-                  <img src="/logo2.png" alt="Bot" className="w-full h-full object-contain" />
+                  <img src="/logo.webp" alt="Bot" className="w-full h-full object-contain" />
                   <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-400 rounded-full border-2 border-brand-600 z-10 animate-pulse"></span>
                 </div>
                 <div>
@@ -230,11 +231,11 @@ export const LandingPage = ({ lang = 'ar', setLang, country = 'sa', setCountry }
       )}
 
       {/* Navigation */}
-      <nav className={`fixed top-0 w-full z-40 transition-all duration-300 ${scrolled ? 'h-32 shadow-lg shadow-black/5' : 'h-40'} bg-[#f8f8fa] dark:bg-cosmic-950/80 border-b border-gray-200 dark:border-white/5`}>
+      <nav className={`fixed top-0 w-full z-40 transition-all duration-300 ${scrolled ? 'h-28 shadow-lg shadow-black/5' : 'h-32'} bg-[#f8f8fa] dark:bg-cosmic-950/90 border-b border-gray-200 dark:border-white/5`}>
         <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
           <div className="flex items-center gap-3">
-             <Link href="/" className="flex items-center gap-3 group">
-                <FaheemAnimatedLogo size="small" showText={false} />
+             <Link href="/" className="flex items-center group hover:scale-105 transition-transform">
+                <img src="/logo.webp" alt="فهملي" className={`${scrolled ? 'w-32 h-32' : 'w-40 h-40'} object-contain transition-all`} />
              </Link>
              {activeCountry === 'eg' && (
                <span className="text-[10px] px-2 py-1 bg-red-500/10 text-red-600 dark:text-red-400 rounded-full border border-red-500/20 font-bold hidden sm:block animate-fade-in">
@@ -247,16 +248,22 @@ export const LandingPage = ({ lang = 'ar', setLang, country = 'sa', setCountry }
             {/* Country Switcher */}
             <div className="relative group">
               <button className="flex items-center gap-2 px-3 py-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/5 transition-colors border border-transparent hover:border-gray-200 dark:hover:border-white/10">
-                <FlagIcon code={activeCountry} />
-                <span className="text-sm font-bold uppercase hidden sm:inline-block opacity-80">{activeCountry}</span>
+                <span className="text-xl">{activeCountry === 'sa' ? '🇸🇦' : '🇪🇬'}</span>
+                <span className="text-sm font-bold hidden sm:inline-block opacity-80">{activeCountry === 'sa' ? 'السعودية' : 'مصر'}</span>
               </button>
                <div className="absolute top-full right-0 mt-2 w-40 bg-white dark:bg-cosmic-800 rounded-xl shadow-xl border border-gray-100 dark:border-white/10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all transform origin-top-right z-50 overflow-hidden">
                   <div className="p-1">
                     <button onClick={() => changeCountry('sa')} className="w-full text-right px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-white/5 rounded-lg flex items-center gap-3 text-sm transition-colors">
-                      <FlagIcon code="sa" /> السعودية
+                      <span className="text-xl">🇸🇦</span> السعودية
                     </button>
                     <button onClick={() => changeCountry('eg')} className="w-full text-right px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-white/5 rounded-lg flex items-center gap-3 text-sm transition-colors">
-                      <FlagIcon code="eg" /> مصر
+                      <span className="text-xl">🇪🇬</span> مصر
+                    </button>
+                    <button onClick={() => changeCountry('ae')} className="w-full text-right px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-white/5 rounded-lg flex items-center gap-3 text-sm transition-colors">
+                      <span className="text-xl">🇦🇪</span> الإمارات
+                    </button>
+                    <button onClick={() => changeCountry('kw')} className="w-full text-right px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-white/5 rounded-lg flex items-center gap-3 text-sm transition-colors">
+                      <span className="text-xl">🇰🇼</span> الكويت
                     </button>
                   </div>
                </div>
@@ -266,12 +273,28 @@ export const LandingPage = ({ lang = 'ar', setLang, country = 'sa', setCountry }
                {isDark ? <Sun size={18} /> : <Moon size={18} />}
             </button>
             
+            {/* Desktop Menu */}
+            <div className="hidden lg:flex items-center gap-6 ml-8">
+              <Link href="/" className={`text-sm font-medium transition-colors hover:text-brand-600 dark:hover:text-brand-400 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                الرئيسية
+              </Link>
+              <Link href="/services" className={`text-sm font-medium transition-colors hover:text-brand-600 dark:hover:text-brand-400 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                الخدمات
+              </Link>
+              <Link href="/solutions" className={`text-sm font-medium transition-colors hover:text-brand-600 dark:hover:text-brand-400 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                الحلول
+              </Link>
+              <Link href="/pricing" className={`text-sm font-medium transition-colors hover:text-brand-600 dark:hover:text-brand-400 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                الأسعار
+              </Link>
+            </div>
+
             <div className="hidden md:flex items-center gap-3">
-              <Link href="/login" className={`text-sm font-bold px-4 py-2 rounded-full transition-colors ${isDark ? 'text-gray-300 hover:text-white hover:bg-white/5' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'}`}>
+              <Link href="/login" className={`text-sm font-bold px-5 py-2.5 rounded-full transition-all hover:scale-105 ${isDark ? 'text-gray-300 hover:text-white hover:bg-white/5' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'}`}>
                 {t.loginBtn}
               </Link>
               <Link href="/register">
-                <Button className="rounded-full px-6 py-2.5 shadow-lg shadow-brand-500/25 font-bold hover:shadow-brand-500/40 transition-all hover:-translate-y-0.5 bg-gradient-to-r from-brand-600 to-brand-500 border-0">
+                <Button className="rounded-full px-8 py-3 shadow-lg shadow-brand-500/30 font-bold hover:shadow-brand-500/50 transition-all hover:-translate-y-1 hover:scale-105 bg-gradient-to-r from-brand-600 to-brand-500 border-0">
                   {t.startTrial}
                 </Button>
               </Link>
@@ -319,30 +342,60 @@ export const LandingPage = ({ lang = 'ar', setLang, country = 'sa', setCountry }
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4"
+            className="flex flex-col sm:flex-row items-center justify-center gap-5"
           >
              <Link href="/register" className="w-full sm:w-auto">
-               <Button className={`w-full sm:w-auto h-14 px-8 text-xl rounded-full ${isDark ? 'bg-brand-600 hover:bg-brand-500 text-white' : 'bg-brand-600 hover:bg-brand-700 text-white'} border-0 shadow-xl shadow-brand-500/20 font-bold transition-all hover:scale-105 hover:shadow-brand-500/40 relative overflow-hidden group`}>
-                 <span className="relative z-10">{t.startTrial}</span>
-                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+               <Button className={`w-full sm:w-auto h-16 px-10 text-xl rounded-2xl ${isDark ? 'bg-brand-600 hover:bg-brand-500 text-white' : 'bg-brand-600 hover:bg-brand-700 text-white'} border-0 shadow-2xl shadow-brand-500/30 font-bold transition-all hover:scale-110 hover:shadow-brand-500/50 relative overflow-hidden group`}>
+                 <span className="relative z-10 flex items-center gap-2">
+                   <Sparkles className="w-5 h-5" />
+                   {t.startTrial}
+                 </span>
+                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
                </Button>
              </Link>
-             <Link href="/login" className="w-full sm:w-auto">
-                <button className={`w-full sm:w-auto h-14 px-8 text-lg rounded-full border ${isDark ? 'border-white/10 hover:bg-white/5 text-white bg-white/5 backdrop-blur-sm' : 'bg-white border-gray-300 hover:bg-gray-50 text-gray-800'} transition-all font-medium flex items-center justify-center gap-2 shadow-sm hover:scale-105`}>
-                  <Zap className="w-5 h-5 text-yellow-500 fill-current" />
-                  {t.liveDemo}
+             <Link href="/solutions" className="w-full sm:w-auto">
+                <button className={`w-full sm:w-auto h-16 px-10 text-lg rounded-2xl border-2 ${isDark ? 'border-white/20 hover:bg-white/10 text-white bg-white/5 backdrop-blur-sm' : 'bg-white border-gray-300 hover:bg-gray-50 text-gray-800'} transition-all font-bold flex items-center justify-center gap-3 shadow-lg hover:scale-105 hover:shadow-xl`}>
+                  <ArrowRight className="w-5 h-5" />
+                  استكشف الحلول
                 </button>
              </Link>
+          </motion.div>
+
+          {/* Promo Banner - 99 SAR */}
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="mt-10 inline-block"
+          >
+            <div className="relative px-8 py-4 rounded-full bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-2xl shadow-green-500/30">
+              <div className="absolute -top-2 -right-2 w-16 h-16 bg-yellow-400 rounded-full flex items-center justify-center text-green-900 font-black text-xs animate-pulse">
+                عرض!
+              </div>
+              <p className="text-xl md:text-2xl font-black">
+                ابدأ من <span className="text-3xl">99</span> ريال فقط شهرياً! 🎉
+              </p>
+            </div>
           </motion.div>
           
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.5 }}
-            className="mt-10 flex items-center justify-center gap-6 text-sm text-gray-500 dark:text-gray-400 font-medium"
+            className="mt-12 flex flex-wrap items-center justify-center gap-4 text-sm font-medium"
           >
-             <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-100 dark:bg-white/5"><Globe size={14} /> {activeCountry === 'eg' ? 'يدعم اللهجة المصرية 🇪🇬' : 'يدعم اللهجة السعودية 🇸🇦'}</span>
-             <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-100 dark:bg-white/5"><Check size={14} className="text-green-500" /> تجربة مجانية 7 أيام</span>
+             <span className={`flex items-center gap-2 px-5 py-3 rounded-xl ${isDark ? 'bg-white/5 border border-white/10' : 'bg-white border border-gray-200 shadow-sm'}`}>
+               <Globe size={16} className="text-brand-500" /> 
+               {activeCountry === 'eg' ? 'يدعم اللهجة المصرية 🇪🇬' : 'يدعم اللهجة السعودية 🇸🇦'}
+             </span>
+             <span className={`flex items-center gap-2 px-5 py-3 rounded-xl ${isDark ? 'bg-green-500/10 border border-green-500/20' : 'bg-green-50 border border-green-200'}`}>
+               <Check size={16} className="text-green-500" strokeWidth={3} /> 
+               <span className="text-green-700 dark:text-green-400 font-bold">تجربة مجانية 7 أيام</span>
+             </span>
+             <span className={`flex items-center gap-2 px-5 py-3 rounded-xl ${isDark ? 'bg-white/5 border border-white/10' : 'bg-white border border-gray-200 shadow-sm'}`}>
+               <Shield size={16} className="text-blue-500" /> 
+               <span className={isDark ? 'text-gray-300' : 'text-gray-700'}>بدون بطاقة ائتمانية</span>
+             </span>
           </motion.div>
 
           <motion.div 
@@ -354,28 +407,33 @@ export const LandingPage = ({ lang = 'ar', setLang, country = 'sa', setCountry }
             <div className="absolute inset-0 bg-brand-500/20 blur-[100px] -z-10 rounded-full"></div>
             <DemoChatWindow />
           </motion.div>
+
+          {/* Stats Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.8 }}
+            className="mt-24 grid grid-cols-2 md:grid-cols-4 gap-8"
+          >
+            {[
+              { number: '500+', label: 'عميل نشط', icon: <Users size={24} /> },
+              { number: '50K+', label: 'محادثة يومياً', icon: <MessageCircle size={24} /> },
+              { number: '99.9%', label: 'وقت التشغيل', icon: <Zap size={24} /> },
+              { number: '24/7', label: 'دعم فني', icon: <Shield size={24} /> }
+            ].map((stat, i) => (
+              <div key={i} className={`text-center p-6 rounded-2xl ${isDark ? 'bg-white/5 border border-white/10' : 'bg-white border border-gray-200 shadow-lg'} hover:scale-105 transition-transform`}>
+                <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl ${isDark ? 'bg-brand-500/10' : 'bg-brand-50'} text-brand-500 mb-3`}>
+                  {stat.icon}
+                </div>
+                <div className={`text-4xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>{stat.number}</div>
+                <div className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{stat.label}</div>
+              </div>
+            ))}
+          </motion.div>
         </div>
       </section>
 
-      {/* Promotional Banner */}
-      <section className="w-full max-w-7xl mx-auto px-6 relative z-20 mb-32">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="rounded-3xl overflow-hidden shadow-2xl shadow-brand-500/10 border border-gray-200 dark:border-white/10 group"
-        >
-          <div className="relative w-full">
-            <img 
-              src="/banner.png" 
-              alt="Faheemly Features" 
-              className="w-full h-auto transition-transform duration-700 group-hover:scale-105" 
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-          </div>
-        </motion.div>
-      </section>
+
 
       {/* Industry Modal */}
       <AnimatePresence>
@@ -428,42 +486,138 @@ export const LandingPage = ({ lang = 'ar', setLang, country = 'sa', setCountry }
         )}
       </AnimatePresence>
 
+      {/* Middle East Coverage Section */}
+      <section className={`py-20 relative ${isDark ? 'bg-cosmic-900' : 'bg-white'}`}>
+        <div className="max-w-7xl mx-auto px-6">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <span className={`inline-block px-4 py-2 rounded-full text-sm font-bold mb-6 ${isDark ? 'bg-green-500/10 text-green-400' : 'bg-green-50 text-green-600'}`}>
+              نغطي جميع دول الشرق الأوسط
+            </span>
+            <h2 className={`text-3xl lg:text-5xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>نتحدث بكل اللهجات العربية</h2>
+            <p className={`text-xl max-w-3xl mx-auto ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+              من الخليج إلى المغرب، فهملي يفهم ويتحدث بلهجة عملائك المحليين
+            </p>
+            <div className="mt-12 flex flex-wrap justify-center gap-6 text-4xl">
+              <span title="السعودية">🇸🇦</span>
+              <span title="مصر">🇪🇬</span>
+              <span title="الإمارات">🇦🇪</span>
+              <span title="الكويت">🇰🇼</span>
+              <span title="قطر">🇶🇦</span>
+              <span title="البحرين">🇧🇭</span>
+              <span title="الأردن">🇯🇴</span>
+              <span title="لبنان">🇱🇧</span>
+              <span title="المغرب">🇲🇦</span>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Trusted by Companies Section */}
+      <section className={`py-16 relative ${isDark ? 'bg-cosmic-950' : 'bg-gray-50'}`}>
+        <div className="max-w-7xl mx-auto px-6">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="text-center"
+          >
+            <p className={`text-sm font-bold mb-8 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>يثق بنا قادة التكنولوجيا العالميين</p>
+            <div className="flex flex-wrap justify-center items-center gap-12 opacity-60">
+              <span className="text-2xl font-bold">Google</span>
+              <span className="text-2xl font-bold">Microsoft</span>
+              <span className="text-2xl font-bold">Amazon</span>
+              <span className="text-2xl font-bold">Meta</span>
+              <span className="text-2xl font-bold">Apple</span>
+              <span className="text-2xl font-bold">IBM</span>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* Modern Industry Solutions */}
       <section className={`py-32 relative ${isDark ? 'bg-cosmic-950' : 'bg-gray-50'}`}>
         {isDark && <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.03]"></div>}
         <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="text-center mb-20">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-20"
+          >
+            <span className={`inline-block px-4 py-2 rounded-full text-sm font-bold mb-6 ${isDark ? 'bg-brand-500/10 text-brand-400' : 'bg-brand-50 text-brand-600'}`}>
+              حلول متخصصة لكل القطاعات
+            </span>
             <h2 className={`text-3xl lg:text-5xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>{t.indTitle}</h2>
-            <p className={`text-xl ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>اختر الحل المناسب لنشاطك التجاري</p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-8">
+            <p className={`text-xl max-w-2xl mx-auto ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>اختر الحل المناسب لنشاطك التجاري واكتشف كيف يمكن لفهملي أن يحدث فرقاً</p>
+            <div className="mt-8">
+              <Link href="/solutions">
+                <Button className="rounded-full px-8 py-3 shadow-lg font-bold">
+                  عرض جميع الحلول
+                  <ArrowRight size={18} className="mr-2" />
+                </Button>
+              </Link>
+            </div>
+          </motion.div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
               { 
-                icon: <Utensils size={32} />, 
-                title: t.indRestTitle, 
-                desc: t.indRestDesc, 
-                modalTitle: t.indRestModalTitle,
-                modalDesc: t.indRestModalDesc,
+                icon: <Utensils size={36} />, 
+                title: 'المطاعم والكافيهات', 
+                desc: 'عرض المنيو بالصور، حجز الطاولات، استقبال طلبات التوصيل، والرد على استفسارات الموقع وأوقات العمل بلهجة تفتح النفس.',
+                modalTitle: 'حلول ذكية للمطاعم والكافيهات',
+                modalDesc: 'نظام متكامل يتيح لعملائك تصفح المنيو، حجز الطاولات، وطلب التوصيل عبر واتساب بكل سهولة.',
                 color: "orange", 
                 image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80&w=600" 
               },
               { 
-                icon: <Stethoscope size={32} />, 
-                title: t.indClinicTitle, 
-                desc: t.indClinicDesc, 
-                modalTitle: t.indClinicModalTitle,
-                modalDesc: t.indClinicModalDesc,
+                icon: <Stethoscope size={36} />, 
+                title: 'العيادات والمراكز الطبية', 
+                desc: 'حجز المواعيد تلقائياً، الإجابة على الأسئلة الطبية الشائعة، تذكير المرضى بمواعيدهم، وإدارة قوائم الانتظار.',
+                modalTitle: 'حلول العيادات والمراكز الطبية',
+                modalDesc: 'نظام حجز مواعيد ذكي يقلل المكالمات الهاتفية ويحسن تجربة المرضى.',
                 color: "blue", 
                 image: "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=600" 
               },
               { 
-                icon: <ShoppingBag size={32} />, 
-                title: t.indRetailTitle, 
-                desc: t.indRetailDesc, 
-                modalTitle: t.indRetailModalTitle,
-                modalDesc: t.indRetailModalDesc,
+                icon: <ShoppingBag size={36} />, 
+                title: 'المتاجر والوكالات', 
+                desc: 'مساعد تسوق ذكي يقترح المنتجات، يتابع حالة الطلب، يجيب على استفسارات المنتجات، ويقلل من استرجاع البضائع.',
+                modalTitle: 'حلول المتاجر الإلكترونية',
+                modalDesc: 'زود مبيعاتك مع مساعد تسوق ذكي يفهم احتياجات عملائك ويقترح المنتجات المناسبة.',
                 color: "purple", 
                 image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=600" 
+              },
+              {
+                icon: <Code size={36} />,
+                title: 'الشركات والمؤسسات',
+                desc: 'دعم فني ذكي، نظام تذاكر متقدم، إدارة طلبات الخدمة، قاعدة معرفية تفاعلية، وتقارير تحليلية مفصلة للأداء.',
+                modalTitle: 'حلول الشركات والمؤسسات',
+                modalDesc: 'نظام دعم فني متكامل مع قاعدة معرفية ذكية وتقارير تحليلية تفصيلية.',
+                color: "green",
+                image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=600"
+              },
+              {
+                icon: <Brain size={36} />,
+                title: 'التعليم والتدريب',
+                desc: 'تسجيل الطلاب، إرسال المواد التعليمية، متابعة الحضور والغياب، الرد على الاستفسارات الأكاديمية، وتنبيهات الامتحانات.',
+                modalTitle: 'حلول التعليم والتدريب',
+                modalDesc: 'أتمتة العمليات الإدارية وتحسين التواصل مع الطلاب وأولياء الأمور.',
+                color: "indigo",
+                image: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&q=80&w=600"
+              },
+              {
+                icon: <Shield size={36} />,
+                title: 'الخدمات المالية',
+                desc: 'استفسارات عن الحسابات والأرصدة، طلبات القروض، دعم فني آمن ومشفر، إشعارات المعاملات، وتقارير مالية فورية.',
+                modalTitle: 'حلول الخدمات المالية',
+                modalDesc: 'خدمات مصرفية ذكية وآمنة عبر واتساب مع حماية عالية للبيانات.',
+                color: "red",
+                image: "https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&q=80&w=600"
               }
             ].map((item, idx) => (
               <motion.div 
@@ -572,80 +726,177 @@ export const LandingPage = ({ lang = 'ar', setLang, country = 'sa', setCountry }
         </div>
       </section>
 
-      {/* Pricing Section */}
-      <section className={`py-32 border-t ${isDark ? 'border-white/5 bg-cosmic-950' : 'bg-white border-gray-100'}`}>
+      {/* Testimonials Section */}
+      <section className={`py-32 ${isDark ? 'bg-cosmic-900/50' : 'bg-gray-50'}`}>
         <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-20">
-            <h2 className={`text-3xl lg:text-4xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>{t.pricingTitle}</h2>
-            <p className={`${isDark ? 'text-gray-500' : 'text-gray-600'}`}>{t.pricingSub}</p>
-          </div>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <span className={`inline-block px-4 py-2 rounded-full text-sm font-bold mb-6 ${isDark ? 'bg-brand-500/10 text-brand-400' : 'bg-brand-50 text-brand-600'}`}>
+              ماذا يقول عملاؤنا
+            </span>
+            <h2 className={`text-3xl lg:text-4xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              قصص نجاح حقيقية
+            </h2>
+            <p className={`text-xl ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+              انضم لمئات الشركات التي نجحت مع فهملي
+            </p>
+          </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-             {/* Starter */}
-             <div className={`p-8 rounded-3xl border ${isDark ? 'bg-white/5 border-white/5' : 'bg-gray-50 border-gray-200'} flex flex-col hover:border-brand-500/30 transition-colors`}>
-                <h3 className="text-xl font-bold text-gray-500 mb-2">{regionContent.pricing.starter.name}</h3>
-                <p className="text-xs text-gray-500 mb-4">{t.planStarterDesc}</p>
-                <div className="flex items-baseline gap-1 mb-6">
-                  <span className={`text-4xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{regionContent.pricing.starter.price}</span>
-                  <span className="text-gray-500 text-sm">{regionContent.pricing.currency} / شهرياً</span>
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              {
+                name: 'أحمد السالم',
+                role: 'مدير مطعم الذواقة',
+                text: 'زادت طلباتنا 45% بعد استخدام فهملي. العملاء يحبون سرعة الرد والدقة في فهم طلباتهم!',
+                rating: 5,
+                avatar: '👨‍💼'
+              },
+              {
+                name: 'فاطمة محمد',
+                role: 'مديرة عيادة النور',
+                text: 'تقليل 60% من المكالمات الهاتفية. الآن المرضى يحجزون مواعيدهم بسهولة عبر واتساب.',
+                rating: 5,
+                avatar: '👩‍⚕️'
+              },
+              {
+                name: 'خالد العتيبي',
+                role: 'صاحب متجر إلكتروني',
+                text: 'فهملي غيّر شكل خدمة العملاء عندنا. الردود السريعة زادت رضا العملاء بشكل كبير.',
+                rating: 5,
+                avatar: '👨‍💻'
+              }
+            ].map((testimonial, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className={`p-8 rounded-3xl ${isDark ? 'bg-white/5 border border-white/10' : 'bg-white border border-gray-200 shadow-lg'} hover:shadow-2xl transition-all hover:-translate-y-2`}
+              >
+                <div className="flex gap-1 mb-4">
+                  {[...Array(testimonial.rating)].map((_, i) => (
+                    <span key={i} className="text-yellow-400 text-xl">⭐</span>
+                  ))}
                 </div>
-                <ul className="space-y-4 mb-8 flex-1">
-                   {[t.feat1, t.feat2, t.feat3, t.feat4].map((f, i) => (
-                     <li key={i} className={`flex items-center gap-3 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                       <Check size={16} className="text-brand-500 flex-shrink-0" /> {f}
-                     </li>
-                   ))}
-                </ul>
-                <Link href="/register">
-                  <Button variant="secondary" className="w-full rounded-xl py-3">{t.choosePlan}</Button>
-                </Link>
-             </div>
-
-             {/* Pro (Popular) */}
-             <div className={`p-1 rounded-[2rem] bg-gradient-to-b from-brand-500 to-purple-600 relative transform scale-105 z-10 shadow-2xl shadow-brand-500/20`}>
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-brand-500 text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg flex items-center gap-1">
-                  <Rocket size={12} /> {t.popular}
-                </div>
-                <div className={`h-full p-8 rounded-[1.8rem] ${isDark ? 'bg-cosmic-900' : 'bg-white'} flex flex-col`}>
-                  <h3 className="text-xl font-bold text-brand-500 mb-2">{regionContent.pricing.pro.name}</h3>
-                  <p className="text-xs text-gray-500 mb-4">{t.planProDesc}</p>
-                  <div className="flex items-baseline gap-1 mb-6">
-                    <span className={`text-5xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{regionContent.pricing.pro.price}</span>
-                    <span className="text-gray-500 text-sm">{regionContent.pricing.currency} / شهرياً</span>
+                <p className={`text-lg mb-6 leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                  "{testimonial.text}"
+                </p>
+                <div className="flex items-center gap-4 pt-6 border-t ${isDark ? 'border-white/10' : 'border-gray-200'}">
+                  <div className="w-12 h-12 rounded-full bg-brand-500/10 flex items-center justify-center text-2xl">
+                    {testimonial.avatar}
                   </div>
-                  <ul className="space-y-4 mb-8 flex-1">
-                    {[t.featPro1, t.featPro2, t.featPro3, t.featPro4].map((f, i) => (
-                      <li key={i} className={`flex items-center gap-3 text-sm font-medium ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
-                        <div className="w-5 h-5 rounded-full bg-brand-500/10 flex items-center justify-center text-brand-500"><Check size={12} strokeWidth={3} /></div> {f}
-                      </li>
-                    ))}
-                  </ul>
-                  <Link href="/register">
-                    <Button className="w-full font-bold shadow-lg shadow-brand-500/20 rounded-xl py-4 text-lg">{t.choosePlan}</Button>
-                  </Link>
+                  <div>
+                    <div className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                      {testimonial.name}
+                    </div>
+                    <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                      {testimonial.role}
+                    </div>
+                  </div>
                 </div>
-             </div>
-
-             {/* Agency */}
-             <div className={`p-8 rounded-3xl border ${isDark ? 'bg-white/5 border-white/5' : 'bg-gray-50 border-gray-200'} flex flex-col hover:border-brand-500/30 transition-colors`}>
-                <h3 className="text-xl font-bold text-gray-500 mb-2">{regionContent.pricing.agency.name}</h3>
-                <p className="text-xs text-gray-500 mb-4">{t.planAgencyDesc}</p>
-                <div className="flex items-baseline gap-1 mb-6">
-                  <span className={`text-4xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{regionContent.pricing.agency.price}</span>
-                   <span className="text-gray-500 text-sm">{regionContent.pricing.currency} / شهرياً</span>
-                </div>
-                <ul className="space-y-4 mb-8 flex-1">
-                   {[t.featEnt1, t.featEnt2, t.featEnt3, t.featEnt4].map((f, i) => (
-                     <li key={i} className={`flex items-center gap-3 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                       <Check size={16} className="text-brand-500 flex-shrink-0" /> {f}
-                     </li>
-                   ))}
-                </ul>
-                <Link href="/register">
-                 <Button variant="secondary" className="w-full rounded-xl py-3">{t.choosePlan}</Button>
-                </Link>
-             </div>
+              </motion.div>
+            ))}
           </div>
+        </div>
+      </section>
+
+      {/* Why Choose Faheemly */}
+      <section className="py-20 px-6 bg-gradient-to-b from-brand-500 to-brand-600 text-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+            >
+              <h2 className="text-4xl font-bold mb-4">لماذا تختار فهملي؟</h2>
+              <p className="text-xl opacity-90">أسباب تجعلنا الخيار الأفضل</p>
+            </motion.div>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              { icon: <Zap size={32} />, title: 'إعداد سريع', desc: 'ابدأ في أقل من 5 دقائق' },
+              { icon: <Shield size={32} />, title: 'أمان عالي', desc: 'بياناتك محمية بأعلى معايير الأمان' },
+              { icon: <Clock size={32} />, title: 'دعم 24/7', desc: 'فريق دعم متاح على مدار الساعة' }
+            ].map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="text-center"
+              >
+                <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center mx-auto mb-4">
+                  {item.icon}
+                </div>
+                <h3 className="text-xl font-bold mb-2">{item.title}</h3>
+                <p className="opacity-90">{item.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className={`py-32 relative overflow-hidden ${isDark ? 'bg-cosmic-950' : 'bg-white'}`}>
+        <div className="absolute inset-0 bg-gradient-to-br from-brand-500/10 via-purple-500/10 to-transparent"></div>
+        <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <div className="inline-block p-4 rounded-full bg-brand-500/10 mb-8">
+              <Sparkles size={40} className="text-brand-500" />
+            </div>
+            <h2 className={`text-4xl lg:text-5xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              جاهز لتحويل تجربة عملائك؟
+            </h2>
+            <p className={`text-xl mb-10 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+              ابدأ تجربتك المجانية اليوم - بدون بطاقة ائتمانية - 7 أيام كاملة
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link href="/register">
+                <Button className="h-16 px-10 text-xl rounded-2xl shadow-2xl shadow-brand-500/30 hover:scale-110 transition-all">
+                  <Rocket size={20} className="ml-2" />
+                  ابدأ التجربة المجانية
+                </Button>
+              </Link>
+              <Link href="/contact">
+                <button className={`h-16 px-10 text-xl rounded-2xl border-2 font-bold transition-all hover:scale-105 ${isDark ? 'border-white/20 hover:bg-white/5 text-white' : 'border-gray-300 hover:bg-gray-50 text-gray-900'}`}>
+                  <Mail size={20} className="inline ml-2" />
+                  تواصل معنا
+                </button>
+              </Link>
+            </div>
+
+            {/* Trust Badges */}
+            <div className="flex flex-wrap justify-center items-center gap-6 mt-12">
+              <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-white/10 rounded-full border border-gray-200 dark:border-white/10">
+                <div className="text-yellow-500">⭐⭐⭐⭐⭐</div>
+                <span className="text-xs font-medium">4.9/5 تقييم</span>
+              </div>
+              <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-white/10 rounded-full border border-gray-200 dark:border-white/10">
+                <Shield size={16} className="text-green-500" />
+                <span className="text-xs font-medium">مدفوعات آمنة</span>
+              </div>
+              <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-white/10 rounded-full border border-gray-200 dark:border-white/10">
+                <Lock size={16} className="text-blue-500" />
+                <span className="text-xs font-medium">بيانات محمية SSL</span>
+              </div>
+              <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-white/10 rounded-full border border-gray-200 dark:border-white/10">
+                <CheckCircle size={16} className="text-green-500" />
+                <span className="text-xs font-medium">ضمان استرداد 30 يوم</span>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </section>
 
@@ -655,8 +906,8 @@ export const LandingPage = ({ lang = 'ar', setLang, country = 'sa', setCountry }
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
              {/* Brand Column */}
              <div className="col-span-1 md:col-span-1">
-                <div className="flex items-center gap-3 mb-6">
-                  <img src="/logo2.png" alt="Faheemly" className="w-48 h-auto object-contain rounded-xl" />
+                <div className="flex items-center justify-center md:justify-start mb-6">
+                  <img src="/logo2.png" alt="فهملي" className="w-24 h-24 object-contain" />
                 </div>
                 <p className="text-sm leading-relaxed mb-8 opacity-80">
                   أقوى منصة شات بوت عربي مدعومة بالذكاء الاصطناعي. نساعدك تزيد مبيعاتك وترضي عملاءك 24/7.
@@ -700,10 +951,11 @@ export const LandingPage = ({ lang = 'ar', setLang, country = 'sa', setCountry }
           </div>
           
           <div className="border-t border-gray-200 dark:border-white/5 mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+
              <p className="text-sm opacity-60">© 2025 جميع الحقوق محفوظة لشركة فهملي</p>
              <a href="https://ma-fo.info" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 opacity-70 hover:opacity-100 transition-opacity group">
-                <img src="https://ma-fo.info/logo.png" alt="Ma-Fo Logo" className="w-5 h-5 object-contain" />
-                <span className="text-xs font-bold tracking-wide group-hover:text-brand-500 transition-colors">{t.footerMadeBy}</span>
+                <img src="https://ma-fo.info/logo2.png" alt="Ma-Fo" className="w-6 h-6 object-contain" />
+                <span className="text-xs font-medium tracking-wide group-hover:text-brand-500 transition-colors">Development By Ma-Fo.info</span>
              </a>
           </div>
         </div>

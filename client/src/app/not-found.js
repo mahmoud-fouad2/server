@@ -16,7 +16,7 @@ export default function NotFound() {
       <h1 className="text-9xl font-black text-brand-500/20 mb-4 select-none">404</h1>
       <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">عذراً، الصفحة غير موجودة</h2>
       <p className="text-gray-600 dark:text-gray-400 max-w-md mb-8 text-lg">
-        يبدو أنك ضللت الطريق. لا تقلق، مساعدك الذكي هنا لإرشادك للعودة إلى المسار الصحيح.
+        يبدو أنك ضللت الطريق. لا تقلق، فهملي هنا لإرشادك للعودة إلى المسار الصحيح.
       </p>
       
       <div className="flex flex-col sm:flex-row gap-4">

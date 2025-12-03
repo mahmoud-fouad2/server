@@ -6,6 +6,16 @@ import Link from "next/link"
 import { motion } from "framer-motion"
 import { Brain, Heart, Rocket, Users } from "lucide-react"
 
+export const metadata = {
+  title: 'من نحن - قصة فهملي',
+  description: 'تعرف على قصة فهملي، أقوى منصة شات بوت عربي مدعومة بالذكاء الاصطناعي. نؤمن بالذكاء الحقيقي، اللمسة الإنسانية، والسرعة في الخدمة.',
+  openGraph: {
+    title: 'من نحن - قصة فهملي.كوم',
+    description: 'اكتشف كيف بدأت فهملي لتصبح الموظف الذكي الذي لا ينام ولا يطلب راتب',
+    url: 'https://faheemly.com/about',
+  },
+};
+
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-background text-foreground font-sans flex flex-col" dir="rtl">
