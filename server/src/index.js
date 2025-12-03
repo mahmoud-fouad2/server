@@ -17,6 +17,16 @@ const app = express();
 // Trust proxy for Render deployment (enables correct IP detection behind proxy)
 app.set('trust proxy', 1);
 
+// HTTPS Enforcement (Production only)
+if (process.env.NODE_ENV === 'production') {
+  app.use((req, res, next) => {
+    if (req.header('x-forwarded-proto') !== 'https') {
+      return res.redirect(`https://${req.header('host')}${req.url}`);
+    }
+    next();
+  });
+}
+
 const server = http.createServer(app);
 
 const authRoutes = require('./routes/auth.routes');

@@ -18,26 +18,35 @@ import {
 import { motion } from 'framer-motion'
 import { useState, useEffect } from 'react'
 
+import { convertCurrency } from '@/constants'
+
+// Base prices in SAR
+const BASE_PRICES = {
+  starter: 149,
+  pro: 399,
+  agency: 999
+}
+
 const plans = {
   sa: {
-    starter: { price: '99', currency: 'ريال', agents: '1' },
-    pro: { price: '299', currency: 'ريال', agents: '3' },
-    agency: { price: '999', currency: 'ريال', agents: 'مخصص' }
+    starter: { price: BASE_PRICES.starter.toString(), currency: 'ريال', agents: '1' },
+    pro: { price: BASE_PRICES.pro.toString(), currency: 'ريال', agents: '3' },
+    agency: { price: BASE_PRICES.agency.toString(), currency: 'ريال', agents: 'مخصص' }
   },
   eg: {
-    starter: { price: '499', currency: 'جنيه', agents: '1' },
-    pro: { price: '1,499', currency: 'جنيه', agents: '3' },
-    agency: { price: '4,999', currency: 'جنيه', agents: 'مخصص' }
+    starter: { price: convertCurrency(BASE_PRICES.starter, 'EGP').toString(), currency: 'جنيه', agents: '1' },
+    pro: { price: convertCurrency(BASE_PRICES.pro, 'EGP').toLocaleString('ar-EG'), currency: 'جنيه', agents: '3' },
+    agency: { price: convertCurrency(BASE_PRICES.agency, 'EGP').toLocaleString('ar-EG'), currency: 'جنيه', agents: 'مخصص' }
   },
   ae: {
-    starter: { price: '99', currency: 'درهم', agents: '1' },
-    pro: { price: '299', currency: 'درهم', agents: '3' },
-    agency: { price: '999', currency: 'درهم', agents: 'مخصص' }
+    starter: { price: convertCurrency(BASE_PRICES.starter, 'AED').toString(), currency: 'درهم', agents: '1' },
+    pro: { price: convertCurrency(BASE_PRICES.pro, 'AED').toString(), currency: 'درهم', agents: '3' },
+    agency: { price: convertCurrency(BASE_PRICES.agency, 'AED').toString(), currency: 'درهم', agents: 'مخصص' }
   },
   kw: {
-    starter: { price: '9', currency: 'دينار', agents: '1' },
-    pro: { price: '29', currency: 'دينار', agents: '3' },
-    agency: { price: '99', currency: 'دينار', agents: 'مخصص' }
+    starter: { price: convertCurrency(BASE_PRICES.starter, 'KWD').toString(), currency: 'دينار', agents: '1' },
+    pro: { price: convertCurrency(BASE_PRICES.pro, 'KWD').toString(), currency: 'دينار', agents: '3' },
+    agency: { price: convertCurrency(BASE_PRICES.agency, 'KWD').toString(), currency: 'دينار', agents: 'مخصص' }
   }
 }
 

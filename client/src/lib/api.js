@@ -7,9 +7,10 @@ import { API_CONFIG } from './config';
  * - Authorization headers
  * - JSON parsing
  * - Error handling
+ * - Retry logic with exponential backoff
  */
 export const apiCall = async (endpoint, options = {}) => {
-  const { method = 'GET', body, headers = {}, ...customConfig } = options;
+  const { method = 'GET', body, headers = {}, retries = 3, retryDelay = 1000, ...customConfig } = options;
   
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
   
@@ -39,30 +40,54 @@ export const apiCall = async (endpoint, options = {}) => {
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
   const url = `${API_CONFIG.BASE_URL}/${cleanEndpoint}`;
 
-  try {
-    const response = await fetch(url, config);
-    
-    // Handle 401 Unauthorized - Redirect to login
-    if (response.status === 401) {
-      if (typeof window !== 'undefined') {
-        // Optional: Clear token?
-        // localStorage.removeItem('token');
-        // window.location.href = '/login'; 
-        // Better to let the caller handle redirect or use a global event
+  let lastError;
+  
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const response = await fetch(url, config);
+      
+      // Handle 401 Unauthorized - Redirect to login
+      if (response.status === 401) {
+        if (typeof window !== 'undefined') {
+          // Optional: Clear token?
+          // localStorage.removeItem('token');
+          // window.location.href = '/login'; 
+          // Better to let the caller handle redirect or use a global event
+        }
       }
+
+      const data = await response.json().catch(() => ({})); // Handle empty responses gracefully
+
+      if (!response.ok) {
+        // Don't retry on 4xx client errors (except 429 Too Many Requests)
+        if (response.status >= 400 && response.status < 500 && response.status !== 429) {
+          throw new Error(data.error || data.message || 'Something went wrong');
+        }
+        
+        // Retry on 5xx server errors or 429
+        throw new Error(data.error || data.message || 'Server error');
+      }
+
+      return data;
+    } catch (error) {
+      lastError = error;
+      
+      // If this is the last attempt, throw the error
+      if (attempt === retries) {
+        console.error(`API Error (${endpoint}) after ${retries + 1} attempts:`, error);
+        throw error;
+      }
+      
+      // Calculate exponential backoff: retryDelay * 2^attempt
+      const delay = retryDelay * Math.pow(2, attempt);
+      console.warn(`API call failed (attempt ${attempt + 1}/${retries + 1}), retrying in ${delay}ms...`, error);
+      
+      // Wait before retrying
+      await new Promise(resolve => setTimeout(resolve, delay));
     }
-
-    const data = await response.json().catch(() => ({})); // Handle empty responses gracefully
-
-    if (!response.ok) {
-      throw new Error(data.error || data.message || 'Something went wrong');
-    }
-
-    return data;
-  } catch (error) {
-    console.error(`API Error (${endpoint}):`, error);
-    throw error;
   }
+  
+  throw lastError;
 };
 
 export const authApi = {

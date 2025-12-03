@@ -2,27 +2,117 @@ import { Industry, BotConfig, KnowledgeItem } from './types';
 
 export const APP_NAME = "فهملي";
 
+// Comprehensive SEO Data for all regions and dialects
 export const SEO_DATA = {
-  home: {
-    title: "فهملي - الموظف الذكي الذي لا ينام ولا يطلب راتب",
-    desc: "أفضل منصة شات بوت عربي للمتاجر والمطاعم. تفعيل فوري، دعم واتساب، وذكاء اصطناعي يفهم اللهجات. الموظف الذكي الذي لا ينام ولا يطلب راتب.",
-    keywords: "شات بوت, ذكاء اصطناعي, واتساب للأعمال, رد آلي, خدمة عملاء, السعودية, مصر, فهملي, الموظف الذكي الذي لا ينام ولا يطلب راتب"
+  sa: {
+    home: {
+      title: "فهملي السعودية - شات بوت ذكاء اصطناعي بالسعودي | الموظف الذي ما ينام",
+      desc: "أقوى شات بوت عربي سعودي للمطاعم والمتاجر والعيادات. ربط واتساب فوري، رد تلقائي 24/7، يفهم اللهجة السعودية النجدية والحجازية. جرب مجاناً الحين!",
+      keywords: "شات بوت سعودي, بوت واتساب السعودية, ذكاء اصطناعي الرياض, جدة, خدمة عملاء تلقائية, رد آلي سعودي, فهملي, chatbot Saudi Arabia, WhatsApp bot KSA, AI السعودية"
+    },
+    services: {
+      title: "خدمات فهملي السعودية - ربط واتساب وتكامل ذكي | Faheemly KSA",
+      desc: "خدمات شات بوت متكاملة: ربط واتساب بزنس، ويدجت الموقع، تيليجرام، تحليلات ذكية. للمطاعم والمتاجر والعيادات بالسعودية.",
+      keywords: "خدمات شات بوت السعودية, ربط واتساب للأعمال, ويدجت محادثة, تكامل تيليجرام, chatbot services Saudi"
+    },
+    solutions: {
+      title: "حلول فهملي للأعمال السعودية - مطاعم، عيادات، متاجر | AI Solutions",
+      desc: "حلول ذكاء اصطناعي مخصصة للمطاعم والكافيهات، العيادات الطبية، المتاجر الإلكترونية، العقارات والتعليم في السعودية.",
+      keywords: "حلول أعمال سعودية, شات بوت مطاعم, بوت عيادات طبية, متاجر إلكترونية السعودية, AI business solutions KSA"
+    },
+    pricing: {
+      title: "أسعار فهملي بالريال السعودي - باقات من 149 ريال شهرياً",
+      desc: "باقات مرنة تبدأ من 149 ريال سعودي شهرياً. تجربة مجانية 7 أيام بدون بطاقة ائتمان. أسعار واضحة وشفافة.",
+      keywords: "أسعار شات بوت السعودية, باقات فهملي بالريال, 149 ريال, تجربة مجانية, chatbot pricing Saudi Arabia"
+    }
   },
-  about: {
-    title: "قصتنا - فهملي",
-    desc: "كيف بدأت فهملي من فكرة بسيطة إلى أقوى نظام ذكاء اصطناعي عربي للأعمال.",
+  eg: {
+    home: {
+      title: "فهملي مصر - شات بوت ذكاء اصطناعي بالمصري | الموظف اللي مبينامش",
+      desc: "أحسن شات بوت عربي مصري للمحلات والمطاعم والعيادات. ربط واتساب فوري، رد تلقائي 24/7، بيفهم اللهجة المصرية العامية. جرب مجاناً دلوقتي!",
+      keywords: "شات بوت مصري, بوت واتساب مصر, ذكاء اصطناعي القاهرة, الإسكندرية, خدمة عملاء تلقائية, رد آلي مصري, فهملي, chatbot Egypt, WhatsApp bot Egypt, AI مصر"
+    },
+    services: {
+      title: "خدمات فهملي مصر - ربط واتساب وتكامل ذكي | Faheemly Egypt",
+      desc: "خدمات شات بوت متكاملة: ربط واتساب بيزنس، ويدجت الموقع، تيليجرام، تحليلات ذكية. للمحلات والمطاعم والعيادات في مصر.",
+      keywords: "خدمات شات بوت مصر, ربط واتساب للأعمال مصر, ويدجت محادثة, تكامل تيليجرام مصري, chatbot services Egypt"
+    },
+    solutions: {
+      title: "حلول فهملي للأعمال المصرية - مطاعم، عيادات، محلات | AI Solutions",
+      desc: "حلول ذكاء اصطناعي مخصصة للمطاعم والكافيهات، العيادات الطبية، المحلات التجارية، العقارات والتعليم في مصر.",
+      keywords: "حلول أعمال مصرية, شات بوت مطاعم مصر, بوت عيادات طبية مصر, محلات تجارية مصر, AI business solutions Egypt"
+    },
+    pricing: {
+      title: "أسعار فهملي بالجنيه المصري - باقات من 559 جنيه شهرياً",
+      desc: "باقات مرنة تبدأ من 559 جنيه مصري شهرياً. تجربة مجانية 7 أيام بدون بطاقة ائتمان. أسعار واضحة وشفافة.",
+      keywords: "أسعار شات بوت مصر, باقات فهملي بالجنيه, 559 جنيه, تجربة مجانية مصر, chatbot pricing Egypt"
+    }
   },
-  pricing: {
-    title: "باقات الأسعار - فهملي",
-    desc: "باقات مرنة تناسب حجم عملك. ابدأ مجاناً.",
+  ae: {
+    home: {
+      title: "فهملي الإمارات - شات بوت ذكاء اصطناعي | الموظف الذكي 24/7",
+      desc: "أفضل شات بوت عربي للأعمال في الإمارات. ربط واتساب فوري، رد تلقائي احترافي، يفهم اللهجة الإماراتية والخليجية. جرب مجاناً الآن!",
+      keywords: "شات بوت الإمارات, بوت واتساب دبي, ذكاء اصطناعي أبوظبي, خدمة عملاء تلقائية UAE, رد آلي إماراتي, فهملي, chatbot UAE, WhatsApp bot Dubai, AI الإمارات"
+    },
+    services: {
+      title: "خدمات فهملي الإمارات - ربط واتساب وتكامل ذكي | Faheemly UAE",
+      desc: "خدمات شات بوت متكاملة: ربط واتساب بزنس، ويدجت الموقع، تيليجرام، تحليلات ذكية. للمطاعم والمتاجر والشركات في الإمارات.",
+      keywords: "خدمات شات بوت الإمارات, ربط واتساب للأعمال دبي, ويدجت محادثة UAE, تكامل تيليجرام, chatbot services UAE"
+    },
+    solutions: {
+      title: "حلول فهملي للأعمال الإماراتية - مطاعم، عيادات، متاجر | AI Solutions",
+      desc: "حلول ذكاء اصطناعي مخصصة للمطاعم، العيادات الطبية، المتاجر الإلكترونية، العقارات والشركات في الإمارات.",
+      keywords: "حلول أعمال إماراتية, شات بوت مطاعم دبي, بوت عيادات UAE, متاجر إلكترونية الإمارات, AI business solutions UAE"
+    },
+    pricing: {
+      title: "أسعار فهملي بالدرهم الإماراتي - باقات من 146 درهم شهرياً",
+      desc: "باقات مرنة تبدأ من 146 درهم إماراتي شهرياً. تجربة مجانية 7 أيام بدون بطاقة ائتمان. أسعار واضحة وشفافة.",
+      keywords: "أسعار شات بوت الإمارات, باقات فهملي بالدرهم, 146 درهم, تجربة مجانية UAE, chatbot pricing UAE"
+    }
   },
-  privacy: {
-    title: "سياسة الخصوصية - فهملي",
-    desc: "نحن نهتم بخصوصية بياناتك وبيانات عملائك."
+  kw: {
+    home: {
+      title: "فهملي الكويت - شات بوت ذكاء اصطناعي بالكويتي | خدمة 24/7",
+      desc: "أحسن شات بوت عربي كويتي للمحلات والمطاعم والشركات. ربط واتساب فوري، رد تلقائي، يفهم اللهجة الكويتية. جرب مجاناً الحين!",
+      keywords: "شات بوت كويتي, بوت واتساب الكويت, ذكاء اصطناعي الكويت, خدمة عملاء تلقائية, رد آلي كويتي, فهملي, chatbot Kuwait, WhatsApp bot Kuwait, AI الكويت"
+    },
+    services: {
+      title: "خدمات فهملي الكويت - ربط واتساب وتكامل ذكي | Faheemly Kuwait",
+      desc: "خدمات شات بوت متكاملة: ربط واتساب بزنس، ويدجت الموقع، تيليجرام، تحليلات ذكية. للمحلات والمطاعم والشركات في الكويت.",
+      keywords: "خدمات شات بوت الكويت, ربط واتساب للأعمال, ويدجت محادثة الكويت, تكامل تيليجرام, chatbot services Kuwait"
+    },
+    solutions: {
+      title: "حلول فهملي للأعمال الكويتية - مطاعم، عيادات، محلات | AI Solutions",
+      desc: "حلول ذكاء اصطناعي مخصصة للمطاعم، العيادات الطبية، المحلات التجارية، العقارات والتعليم في الكويت.",
+      keywords: "حلول أعمال كويتية, شات بوت مطاعم الكويت, بوت عيادات الكويت, محلات تجارية الكويت, AI business solutions Kuwait"
+    },
+    pricing: {
+      title: "أسعار فهملي بالدينار الكويتي - باقات من 12 دينار شهرياً",
+      desc: "باقات مرنة تبدأ من 12 دينار كويتي شهرياً. تجربة مجانية 7 أيام بدون بطاقة ائتمان. أسعار واضحة وشفافة.",
+      keywords: "أسعار شات بوت الكويت, باقات فهملي بالدينار, 12 دينار, تجربة مجانية الكويت, chatbot pricing Kuwait"
+    }
   },
-  terms: {
-    title: "الشروط والأحكام - فهملي",
-    desc: "شروط استخدام منصة فهملي للذكاء الاصطناعي."
+  en: {
+    home: {
+      title: "Faheemly - AI Chatbot for Middle East Businesses | 24/7 Smart Assistant",
+      desc: "Best Arabic AI chatbot for restaurants, clinics, and retail businesses. Instant WhatsApp integration, automatic replies in all Arabic dialects. Start your free trial today!",
+      keywords: "Arabic chatbot, AI chatbot Middle East, WhatsApp bot, automated customer service, Faheemly, chatbot Saudi Arabia, Egypt, UAE, Kuwait, business automation"
+    },
+    services: {
+      title: "Faheemly Services - WhatsApp Integration & Smart Solutions",
+      desc: "Complete chatbot services: WhatsApp Business integration, website widget, Telegram bot, smart analytics. For businesses across the Middle East.",
+      keywords: "chatbot services, WhatsApp business integration, website chat widget, Telegram bot, AI analytics, Middle East"
+    },
+    solutions: {
+      title: "Faheemly Business Solutions - Restaurants, Clinics, Retail | AI-Powered",
+      desc: "Specialized AI solutions for restaurants, medical clinics, e-commerce, real estate, and education across the Middle East.",
+      keywords: "business AI solutions, restaurant chatbot, clinic automation, retail bot, real estate AI, education technology"
+    },
+    pricing: {
+      title: "Faheemly Pricing - Plans Starting from $40/month",
+      desc: "Flexible plans starting from $40 per month. 7-day free trial with no credit card required. Transparent pricing for all businesses.",
+      keywords: "chatbot pricing, AI bot cost, $40 monthly, free trial, affordable chatbot, Middle East pricing"
+    }
   }
 };
 
@@ -32,12 +122,27 @@ export const DIALECT_OPTIONS = [
   { value: 'official', label: 'عربي فصحى (رسمي)' },
 ];
 
+// Currency Exchange Rates (SAR as base)
+export const CURRENCY_RATES = {
+  SAR: 1,
+  EGP: 3.75,  // 1 SAR = 3.75 EGP
+  AED: 0.98,  // 1 SAR = 0.98 AED
+  KWD: 0.082, // 1 SAR = 0.082 KWD
+};
+
+// Convert price from SAR to target currency
+export const convertCurrency = (sarPrice, targetCurrency = 'SAR') => {
+  const rate = CURRENCY_RATES[targetCurrency] || 1;
+  return Math.round(sarPrice * rate);
+};
+
 export const REGIONAL_CONTENT = {
   sa: {
     heroTitle: "الموظف الذكي الذي لا ينام ولا يطلب راتب",
     heroSubtitle: "فهملي هو نظام الرد الآلي العربي الأول. يمسك إدارة طلباتك، يحجز مواعيدك، ويرد على عملاءك في واتساب وموقعك بلهجة سعودية تبيض الوجه.",
     pricing: {
       currency: "ر.س",
+      currencyCode: "SAR",
       starter: { price: "149", name: "انطلاقة" },
       pro: { price: "399", name: "نمو" },
       agency: { price: "999", name: "شركات" }
@@ -48,9 +153,32 @@ export const REGIONAL_CONTENT = {
     heroSubtitle: "فهملي هو الشات بوت العربي الأول. بيمسك إدارة طلباتك، يحجز مواعيدك، ويرد على زباينك في الواتساب والموقع باللهجة المصرية اللي تفتح النفس.",
     pricing: {
       currency: "ج.م",
-      starter: { price: "499", name: "البداية" },
-      pro: { price: "1499", name: "الاحترافية" },
-      agency: { price: "3999", name: "الوحش" }
+      currencyCode: "EGP",
+      starter: { price: convertCurrency(149, 'EGP').toString(), name: "البداية" },
+      pro: { price: convertCurrency(399, 'EGP').toString(), name: "الاحترافية" },
+      agency: { price: convertCurrency(999, 'EGP').toString(), name: "الوحش" }
+    }
+  },
+  ae: {
+    heroTitle: "الموظف الذكي الذي لا ينام ولا يطلب راتب",
+    heroSubtitle: "فهملي هو نظام الرد الآلي العربي الأول. يمسك إدارة طلباتك، يحجز مواعيدك، ويرد على عملاءك في واتساب وموقعك بلهجة إماراتية احترافية.",
+    pricing: {
+      currency: "د.إ",
+      currencyCode: "AED",
+      starter: { price: convertCurrency(149, 'AED').toString(), name: "انطلاقة" },
+      pro: { price: convertCurrency(399, 'AED').toString(), name: "نمو" },
+      agency: { price: convertCurrency(999, 'AED').toString(), name: "شركات" }
+    }
+  },
+  kw: {
+    heroTitle: "الموظف الذكي الذي لا ينام ولا يطلب راتب",
+    heroSubtitle: "فهملي هو نظام الرد الآلي العربي الأول. يمسك إدارة طلباتك، يحجز مواعيدك، ويرد على عملاءك في واتساب وموقعك بلهجة كويتية احترافية.",
+    pricing: {
+      currency: "د.ك",
+      currencyCode: "KWD",
+      starter: { price: convertCurrency(149, 'KWD').toString(), name: "انطلاقة" },
+      pro: { price: convertCurrency(399, 'KWD').toString(), name: "نمو" },
+      agency: { price: convertCurrency(999, 'KWD').toString(), name: "شركات" }
     }
   }
 };

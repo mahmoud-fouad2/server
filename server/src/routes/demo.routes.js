@@ -1,10 +1,20 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const router = express.Router();
 const groqService = require('../services/groq.service');
 const prisma = require('../config/database');
 
+// Demo Chat Rate Limiter - More lenient than auth (30 msgs/15min)
+const demoLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 30, // 30 requests per 15 minutes per IP
+  message: { error: 'تم تجاوز الحد المسموح من الرسائل. يرجى المحاولة بعد قليل.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // Public Demo Chat Endpoint
-router.post('/demo', async (req, res) => {
+router.post('/demo', demoLimiter, async (req, res) => {
   try {
     const { message, history } = req.body;
 

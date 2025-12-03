@@ -5,17 +5,25 @@ import useTheme from '@/lib/theme'
 import { chatApi } from '@/lib/api';
 import Link from 'next/link';
 import { Button } from './ui/Components';
-import { Bot, Zap, X, Moon, Sun, ShoppingBag, Stethoscope, Utensils, MessageCircle, Send, Check, Globe, Smile, User, Brain, ArrowRight, Twitter, Instagram, Linkedin, Mail, Sparkles, Rocket, Shield, Code, Users, Clock, Lock, CheckCircle, Image as ImageIcon } from 'lucide-react';
+import { Bot, Zap, X, Moon, Sun, ShoppingBag, Stethoscope, Utensils, MessageCircle, Send, Check, Globe, Smile, User, Brain, ArrowRight, Twitter, Instagram, Linkedin, Mail, Phone, Sparkles, Rocket, Shield, Code, Users, Clock, Lock, CheckCircle, Image as ImageIcon } from 'lucide-react';
 import Image from 'next/image';
 import { TRANSLATIONS, SEO_DATA, REGIONAL_CONTENT, COMPARISON_DATA } from '../constants';
 import { DemoChatWindow } from './DemoChatWindow';
 import FaheemAnimatedLogo from './FaheemAnimatedLogo';
+import SalesBot from './SalesBot';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { useRouter } from 'next/navigation';
 
-export const LandingPage = ({ lang = 'ar', setLang, country = 'sa' }) => {
+export const LandingPage = ({ lang: initialLang = 'ar', setLang: externalSetLang, country = 'sa' }) => {
   const router = useRouter();
+  const [lang, setLangState] = useState(initialLang);
+  
+  const setLang = (newLang) => {
+    setLangState(newLang);
+    if (externalSetLang) externalSetLang(newLang);
+  };
+  
   const t = TRANSLATIONS[lang];
   const activeCountry = country;
   
@@ -92,7 +100,7 @@ export const LandingPage = ({ lang = 'ar', setLang, country = 'sa' }) => {
         <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
           <div className="flex items-center gap-3">
              <Link href="/" className="flex items-center group hover:scale-105 transition-transform">
-                <img src={lang === 'en' ? "/logoen.png" : "/logo.webp"} alt="فهملي" className={`${scrolled ? 'w-48 h-48' : 'w-64 h-64'} object-contain transition-all`} />
+                <img src={lang === 'en' ? "/logoen.png" : "/logo.webp"} alt="فهملي" className={`${scrolled ? 'w-40 md:w-48' : 'w-48 md:w-64'} h-auto object-contain transition-all`} />
              </Link>
              {activeCountry === 'eg' && (
                <span className="text-[10px] px-2 py-1 bg-red-500/10 text-red-600 dark:text-red-400 rounded-full border border-red-500/20 font-bold hidden sm:block animate-fade-in">
@@ -102,8 +110,8 @@ export const LandingPage = ({ lang = 'ar', setLang, country = 'sa' }) => {
           </div>
           
           <div className="flex items-center gap-3 md:gap-4">
-            {/* Country Switcher */}
-            <div className="relative group">
+            {/* Country Switcher - Desktop Only */}
+            <div className="relative group hidden md:block">
               <button className="flex items-center gap-2 px-3 py-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/5 transition-colors border border-transparent hover:border-gray-200 dark:hover:border-white/10">
                 <span className={`fi fi-${activeCountry} text-xl rounded-sm shadow-sm`}></span>
                 <span className="text-sm font-bold hidden sm:inline-block opacity-80">{activeCountry === 'sa' ? 'السعودية' : activeCountry === 'eg' ? 'مصر' : activeCountry === 'ae' ? 'الإمارات' : 'الكويت'}</span>
@@ -130,14 +138,15 @@ export const LandingPage = ({ lang = 'ar', setLang, country = 'sa' }) => {
                </div>
             </div>
 
-            {/* Language Toggle */}
+            {/* Language Toggle - Desktop Only */}
             <button 
               onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')} 
-              className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${lang === 'en' ? 'bg-brand-600 text-white border-brand-600' : 'bg-transparent border-gray-300 text-gray-600 hover:border-brand-500 hover:text-brand-500'}`}
+              className={`hidden md:block px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${lang === 'en' ? 'bg-brand-600 text-white border-brand-600' : 'bg-transparent border-gray-300 text-gray-600 hover:border-brand-500 hover:text-brand-500'}`}
             >
               {lang === 'ar' ? 'English' : 'عربي'}
             </button>
 
+            {/* Theme Toggle - Always Visible */}
             <button onClick={toggleTheme} className={`p-2.5 rounded-full ${isDark ? 'bg-white/5 hover:bg-white/10 text-yellow-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-600'} transition-all hover:scale-105`}>
                {isDark ? <Sun size={18} /> : <Moon size={18} />}
             </button>
@@ -158,7 +167,8 @@ export const LandingPage = ({ lang = 'ar', setLang, country = 'sa' }) => {
               </Link>
             </div>
 
-            <div className="flex items-center gap-3">
+            {/* Desktop CTA Buttons */}
+            <div className="hidden md:flex items-center gap-3">
               <Link href="/login" className={`text-sm font-bold px-4 md:px-5 py-2 md:py-2.5 rounded-full transition-all hover:scale-105 ${isDark ? 'text-gray-300 hover:text-white hover:bg-white/5' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'}`}>
                 {t.loginBtn}
               </Link>
@@ -169,110 +179,16 @@ export const LandingPage = ({ lang = 'ar', setLang, country = 'sa' }) => {
               </Link>
             </div>
 
-            {/* Mobile Menu Button */}
-            <button 
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                {mobileMenuOpen ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                )}
-              </svg>
-            </button>
+            {/* Mobile: Only "جرب مجاناً" Button (Theme toggle already visible above) */}
+            <Link href="/register" className="md:hidden">
+              <Button className="rounded-full px-5 py-2.5 text-sm shadow-lg shadow-brand-500/30 font-bold hover:shadow-brand-500/50 transition-all hover:scale-105 bg-gradient-to-r from-brand-600 to-brand-500 border-0 whitespace-nowrap">
+                جرب مجاناً
+              </Button>
+            </Link>
           </div>
         </div>
 
-        {/* Mobile Menu - Slide from Right */}
-        <AnimatePresence>
-          {mobileMenuOpen && (
-            <>
-              {/* Backdrop */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setMobileMenuOpen(false)}
-                className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] lg:hidden"
-              />
-              
-              {/* Sidebar */}
-              <motion.div
-                initial={{ x: '100%' }}
-                animate={{ x: 0 }}
-                exit={{ x: '100%' }}
-                transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-                className="fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-white dark:bg-cosmic-900 shadow-2xl z-[70] lg:hidden overflow-y-auto"
-              >
-                {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-white/10">
-                  <img src="/logo.webp" alt="فهملي" className="w-24 h-24 object-contain" />
-                  <button 
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
-                  >
-                    <X size={24} className="text-gray-600 dark:text-gray-400" />
-                  </button>
-                </div>
 
-                {/* Menu Items */}
-                <div className="p-6 space-y-2">
-                  <Link 
-                    href="/" 
-                    onClick={() => setMobileMenuOpen(false)} 
-                    className={`block px-4 py-3.5 rounded-xl font-bold text-lg transition-colors hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-brand-900/20 dark:hover:text-brand-400 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
-                  >
-                    الرئيسية
-                  </Link>
-                  <Link 
-                    href="/services" 
-                    onClick={() => setMobileMenuOpen(false)} 
-                    className={`block px-4 py-3.5 rounded-xl font-bold text-lg transition-colors hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-brand-900/20 dark:hover:text-brand-400 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
-                  >
-                    الخدمات
-                  </Link>
-                  <Link 
-                    href="/solutions" 
-                    onClick={() => setMobileMenuOpen(false)} 
-                    className={`block px-4 py-3.5 rounded-xl font-bold text-lg transition-colors hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-brand-900/20 dark:hover:text-brand-400 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
-                  >
-                    الحلول
-                  </Link>
-                  <Link 
-                    href="/pricing" 
-                    onClick={() => setMobileMenuOpen(false)} 
-                    className={`block px-4 py-3.5 rounded-xl font-bold text-lg transition-colors hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-brand-900/20 dark:hover:text-brand-400 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
-                  >
-                    الأسعار
-                  </Link>
-                  <Link 
-                    href="/contact" 
-                    onClick={() => setMobileMenuOpen(false)} 
-                    className={`block px-4 py-3.5 rounded-xl font-bold text-lg transition-colors hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-brand-900/20 dark:hover:text-brand-400 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
-                  >
-                    اتصل بنا
-                  </Link>
-                </div>
-
-                {/* CTA Buttons */}
-                <div className="p-6 space-y-3 border-t border-gray-200 dark:border-white/10">
-                  <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                    <button className="w-full py-3.5 rounded-xl font-bold text-base border-2 border-brand-600 text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-all">
-                      تسجيل الدخول
-                    </button>
-                  </Link>
-                  <Link href="/register" onClick={() => setMobileMenuOpen(false)}>
-                    <button className="w-full py-3.5 rounded-xl font-bold text-base bg-gradient-to-r from-brand-600 to-brand-500 text-white shadow-lg hover:shadow-xl transition-all">
-                      ابدأ التجربة المجانية
-                    </button>
-                  </Link>
-                </div>
-              </motion.div>
-            </>
-          )}
-        </AnimatePresence>
       </nav>
 
       {/* Hero Section */}
@@ -929,7 +845,7 @@ export const LandingPage = ({ lang = 'ar', setLang, country = 'sa' }) => {
              {/* Brand Column */}
              <div className="col-span-1 md:col-span-1">
                 <div className="flex items-center justify-center md:justify-start mb-6">
-                  <img src="/logo2.png" alt="فهملي" className="w-24 h-24 object-contain" />
+                  <img src="/logo2.png" alt="فهملي" className="w-24 h-24 object-contain" loading="lazy" />
                 </div>
                 <p className="text-sm leading-relaxed mb-8 opacity-80">
                   أقوى منصة شات بوت عربي مدعومة بالذكاء الاصطناعي. نساعدك تزيد مبيعاتك وترضي عملاءك 24/7.
@@ -976,7 +892,7 @@ export const LandingPage = ({ lang = 'ar', setLang, country = 'sa' }) => {
 
              <p className="text-sm opacity-60">© 2025 جميع الحقوق محفوظة لشركة فهملي</p>
              <a href="https://ma-fo.info" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 opacity-70 hover:opacity-100 transition-opacity group">
-                <img src="https://ma-fo.info/logo2.png" alt="Ma-Fo" className="w-6 h-6 object-contain" />
+                <img src="https://ma-fo.info/logo2.png" alt="Ma-Fo" className="w-6 h-6 object-contain" loading="lazy" />
                 <span className="text-xs font-medium tracking-wide group-hover:text-brand-500 transition-colors">Development By Ma-Fo.info</span>
              </a>
           </div>

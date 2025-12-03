@@ -151,30 +151,34 @@ export default function ServicesPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-white dark:bg-cosmic-900 rounded-3xl p-8 border border-gray-200 dark:border-white/10 hover:shadow-2xl hover:-translate-y-2 transition-all group"
+                className="bg-white dark:bg-cosmic-900 rounded-3xl p-8 border-2 border-gray-200 dark:border-white/10 hover:border-brand-400 dark:hover:border-brand-600 hover:shadow-2xl hover:shadow-brand-500/20 hover:-translate-y-3 transition-all duration-500 group cursor-pointer relative overflow-hidden"
               >
-                <div className={`w-16 h-16 rounded-2xl bg-${service.color}-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform text-${service.color}-500`}>
-                  {service.icon}
-                </div>
-                
-                <h3 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
-                  {service.title}
-                </h3>
-                
-                <p className="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
-                  {service.description}
-                </p>
+                {/* Animated Background Gradient on Hover */}
+                <div className="absolute inset-0 bg-gradient-to-br from-brand-500/5 to-purple-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="relative z-10">
+                  <div className={`w-16 h-16 rounded-2xl bg-${service.color}-500/10 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 text-${service.color}-500`}>
+                    {service.icon}
+                  </div>
+                  
+                  <h3 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                    {service.title}
+                  </h3>
+                  
+                  <p className="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
+                    {service.description}
+                  </p>
 
-                <ul className="space-y-3">
-                  {service.features.map((feature, i) => (
-                    <li key={i} className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
-                      <div className="w-5 h-5 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0">
-                        <Check size={12} className="text-green-500" strokeWidth={3} />
-                      </div>
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
+                  <ul className="space-y-3">
+                    {service.features.map((feature, i) => (
+                      <li key={i} className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
+                        <div className="w-5 h-5 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0">
+                          <Check size={12} className="text-green-500" strokeWidth={3} />
+                        </div>
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </motion.div>
             ))}
           </div>

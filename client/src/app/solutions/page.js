@@ -197,14 +197,14 @@ export default function SolutionsPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-white dark:bg-cosmic-900 rounded-2xl overflow-hidden border border-gray-200 dark:border-white/10 hover:shadow-xl transition-all group hover:-translate-y-2"
+                className="bg-white dark:bg-cosmic-900 rounded-3xl overflow-hidden border-2 border-gray-200 dark:border-white/10 hover:border-brand-400 dark:hover:border-brand-600 hover:shadow-2xl hover:shadow-brand-500/20 transition-all duration-500 group hover:-translate-y-3 cursor-pointer relative"
               >
-                {/* Image Header */}
-                <div className="relative h-48 overflow-hidden bg-gray-100 dark:bg-cosmic-800">
+                {/* Image Header with Gradient Overlay */}
+                <div className="relative h-56 overflow-hidden bg-gradient-to-br from-brand-500/10 to-purple-600/10 dark:from-brand-900/20 dark:to-purple-900/20">
                   <img 
                     src={solution.image} 
                     alt={solution.title}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110 group-hover:brightness-110"
                     onError={(e) => {
                       e.target.onerror = null;
                       const fallbacks = {
@@ -218,8 +218,8 @@ export default function SolutionsPage() {
                       e.target.src = fallbacks[solution.id] || 'https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&q=80&w=600';
                     }}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-                  <div className={`absolute bottom-4 right-4 w-14 h-14 rounded-xl bg-${solution.color}-500 text-white flex items-center justify-center shadow-lg`}>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-40 transition-opacity duration-500"></div>
+                  <div className={`absolute bottom-4 right-4 w-16 h-16 rounded-2xl bg-${solution.color}-500 text-white flex items-center justify-center shadow-2xl group-hover:scale-110 group-hover:rotate-6 transition-all duration-500`}>
                     {solution.icon}
                   </div>
                 </div>
@@ -265,11 +265,11 @@ export default function SolutionsPage() {
                     </div>
                   </div>
 
-                  {/* CTA */}
+                  {/* CTA with Enhanced Animation */}
                   <Link href={`/solutions/${solution.id}`}>
-                    <Button className="w-full py-3 text-base font-bold rounded-xl shadow-lg hover:shadow-xl transition-all">
+                    <Button className="w-full py-3.5 text-base font-bold rounded-xl shadow-lg hover:shadow-2xl transition-all group-hover:scale-[1.02] bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-700 hover:to-brand-600">
                       استكشف الحل
-                      <ArrowRight size={18} className="mr-2" />
+                      <ArrowRight size={18} className="mr-2 group-hover:translate-x-1 transition-transform" />
                     </Button>
                   </Link>
                 </div>

@@ -139,7 +139,7 @@ export default function PageLayout({ children }) {
           <div className="border-t border-gray-200 dark:border-white/5 mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-sm opacity-60">© 2025 جميع الحقوق محفوظة لشركة فهملي</p>
             <a href="https://ma-fo.info" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 opacity-70 hover:opacity-100 transition-opacity group">
-              <img src="https://ma-fo.info/logo2.png" alt="Ma-Fo" className="w-6 h-6 object-contain" />
+              <img src="https://ma-fo.info/logo2.png" alt="Ma-Fo" className="w-6 h-6 object-contain" loading="lazy" />
               <span className="text-xs font-medium tracking-wide group-hover:text-brand-500 transition-colors">Development By Ma-Fo.info</span>
             </a>
           </div>

@@ -1,5 +1,8 @@
 import './globals.css'
-import SalesBot from '@/components/SalesBot'
+import dynamic from 'next/dynamic'
+import ErrorBoundary from '@/components/ErrorBoundary'
+
+const SalesBot = dynamic(() => import('@/components/SalesBot'), { ssr: false })
 
 export const viewport = {
   width: 'device-width',
@@ -11,10 +14,10 @@ export const viewport = {
 export const metadata = {
   metadataBase: new URL('https://faheemly.com'),
   title: {
-    default: 'فهملي.كوم | الموظف الذكي الذي لا ينام ولا يطلب راتب - شات بوت ذكاء اصطناعي',
-    template: '%s | فهملي.كوم'
+    default: 'فهملي - شات بوت ذكاء اصطناعي عربي | واتساب للأعمال السعودية ومصر والخليج',
+    template: '%s | فهملي - شات بوت ذكاء اصطناعي'
   },
-  description: 'أقوى منصة شات بوت عربي مدعومة بالذكاء الاصطناعي للشرق الأوسط. أتمتة خدمة العملاء، حجز مواعيد، وردود فورية على واتساب وموقعك بكل اللهجات العربية. يغطي السعودية، مصر، الإمارات، الكويت، قطر، البحرين، الأردن، لبنان، المغرب. الموظف الذكي الذي لا ينام ولا يطلب راتب.',
+  description: 'أقوى منصة شات بوت عربي بالذكاء الاصطناعي للسعودية ومصر والإمارات والكويت. ربط واتساب فوري، رد تلقائي 24/7 بكل اللهجات العربية. للمطاعم والعيادات والمتاجر. جرب مجاناً 7 أيام!',
   keywords: [
     'شات بوت',
     'ذكاء اصطناعي',
@@ -134,6 +137,65 @@ export default function RootLayout({ children }) {
 
         {/* Quick placeholder override early to avoid other scripts reading null from getElementById */}
         <script dangerouslySetInnerHTML={{ __html: `(function(){try{var ids=['share-modal','share-button','share-btn','share-trigger','share-modal-root'];var orig=document.getElementById.bind(document);document.getElementById=function(id){try{var f=orig(id);if(f) return f;}catch(e){} if(ids.indexOf(id)!==-1){var el=document.createElement('div');el.id=id;el.style.display='none';el.style.pointerEvents='none';if(document.body)document.body.appendChild(el);else document.documentElement.appendChild(el);return el;} return null;};}catch(e){console.warn('early-placeholder failed',e);} })();` }} />
+        
+        {/* Structured Data - Organization */}
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'Organization',
+          name: 'Faheemly - فهملي',
+          alternateName: ['فهملي.كوم', 'Faheemly.com'],
+          url: 'https://faheemly.com',
+          logo: 'https://faheemly.com/logo.webp',
+          description: 'أقوى منصة شات بوت عربي مدعومة بالذكاء الاصطناعي للشرق الأوسط',
+          foundingDate: '2023',
+          contactPoint: {
+            '@type': 'ContactPoint',
+            contactType: 'Customer Service',
+            areaServed: ['SA', 'EG', 'AE', 'KW', 'QA', 'BH', 'JO', 'LB', 'MA'],
+            availableLanguage: ['Arabic', 'English']
+          },
+          sameAs: [
+            'https://twitter.com/faheemly_ai',
+            'https://linkedin.com/company/faheemly',
+            'https://instagram.com/faheemly_ai'
+          ]
+        }) }} />
+        
+        {/* Structured Data - Software Application */}
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'SoftwareApplication',
+          name: 'Faheemly AI Chatbot',
+          applicationCategory: 'BusinessApplication',
+          operatingSystem: 'Web',
+          offers: {
+            '@type': 'AggregateOffer',
+            lowPrice: '149',
+            highPrice: '999',
+            priceCurrency: 'SAR',
+            offerCount: '3'
+          },
+          aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: '4.8',
+            reviewCount: '500',
+            bestRating: '5',
+            worstRating: '1'
+          }
+        }) }} />
+        
+        {/* Structured Data - Website */}
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'WebSite',
+          name: 'Faheemly',
+          url: 'https://faheemly.com',
+          potentialAction: {
+            '@type': 'SearchAction',
+            target: 'https://faheemly.com/search?q={search_term_string}',
+            'query-input': 'required name=search_term_string'
+          }
+        }) }} />
       </head>
       <body className={`font-sans overflow-x-hidden bg-gray-50 dark:bg-cosmic-950 text-gray-900 dark:text-gray-100 transition-colors duration-300 selection:bg-brand-500/30`}>
         <noscript>
@@ -189,8 +251,10 @@ export default function RootLayout({ children }) {
             </div>
           </div>
         </noscript>
-        <SalesBot />
-        {children}
+        <ErrorBoundary>
+          <SalesBot />
+          {children}
+        </ErrorBoundary>
       </body>
     </html>
   )
