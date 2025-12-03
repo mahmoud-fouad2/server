@@ -63,8 +63,8 @@ export default function PageLayout({ children }) {
         {children}
       </div>
 
-      {/* Floating Widget - Visible on all pages */}
-      <div className="fixed bottom-6 left-6 z-50">
+      {/* Floating Widget - Visible on all pages - RIGHT SIDE */}
+      <div className="fixed bottom-6 right-6 z-50">
         <button 
           onClick={() => {
             const widget = document.querySelector('#fahimo-widget-container');
@@ -72,11 +72,8 @@ export default function PageLayout({ children }) {
               widget.style.display = widget.style.display === 'none' ? 'block' : 'none';
             }
           }}
-          className="group relative w-16 h-16 bg-gradient-to-br from-brand-600 to-brand-500 rounded-full shadow-2xl hover:shadow-brand-500/50 hover:scale-110 transition-all duration-300 flex items-center justify-center animate-pulse hover:animate-none"
+          className="group relative w-16 h-16 bg-gradient-to-br from-brand-600 to-brand-500 rounded-full shadow-2xl hover:shadow-brand-500/50 hover:scale-110 transition-all duration-300 flex items-center justify-center"
         >
-          {/* Ping Animation */}
-          <span className="absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75 animate-ping"></span>
-          
           {/* Icon */}
           <svg 
             xmlns="http://www.w3.org/2000/svg" 

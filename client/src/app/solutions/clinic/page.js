@@ -35,21 +35,21 @@ export default function ClinicSolution() {
               <div className="w-20 h-20 rounded-3xl bg-blue-500 text-white flex items-center justify-center mx-auto mb-6 shadow-2xl">
                 <Stethoscope size={40} />
               </div>
-              <h1 className="text-5xl lg:text-6xl font-bold mb-6 text-gray-900 dark:text-white">
+              <h1 className="text-4xl lg:text-5xl font-bold mb-6 text-gray-900 dark:text-white leading-tight">
                 حلول العيادات الطبية
               </h1>
-              <p className="text-2xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto mb-10">
+              <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto mb-10 leading-relaxed">
                 نظام حجز مواعيد ذكي يحسّن تجربة المرضى ويقلل العبء الإداري
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link href="/register">
-                  <Button className="h-14 px-8 text-xl rounded-full shadow-xl">
+                  <Button className="h-14 px-10 text-lg rounded-full shadow-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 transition-all">
                     ابدأ تجربتك المجانية
                     <ArrowRight size={20} className="mr-2" />
                   </Button>
                 </Link>
                 <Link href="/contact">
-                  <Button variant="outline" className="h-14 px-8 text-xl rounded-full">
+                  <Button variant="outline" className="h-14 px-10 text-lg rounded-full border-2 hover:bg-blue-50 dark:hover:bg-blue-950/30">
                     احجز عرضاً توضيحياً
                   </Button>
                 </Link>
@@ -60,14 +60,15 @@ export default function ClinicSolution() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2 }}
-              className="rounded-3xl overflow-hidden shadow-2xl border border-gray-200 dark:border-white/10"
+              className="rounded-3xl overflow-hidden shadow-2xl border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-cosmic-800"
             >
               <img 
                 src="/assets/images/clinic-solution.jpg" 
                 alt="حلول العيادات"
                 className="w-full h-[500px] object-cover"
                 onError={(e) => {
-                  e.target.src = "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=1200"
+                  e.target.onerror = null;
+                  e.target.src = "https://images.unsplash.com/photo-1538108149393-fbbd81895907?auto=format&fit=crop&q=80&w=1200"
                 }}
               />
             </motion.div>
@@ -238,7 +239,7 @@ export default function ClinicSolution() {
                 ))}
               </ul>
               <Link href="/register">
-                <Button className="w-full h-14 text-lg font-bold rounded-xl">
+                <Button className="w-full h-14 text-lg font-bold rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600">
                   ابدأ الآن
                   <ArrowRight size={20} className="mr-2" />
                 </Button>
@@ -257,7 +258,7 @@ export default function ClinicSolution() {
               انضم لمئات العيادات التي تستخدم فهملي
             </p>
             <Link href="/register">
-              <Button className="h-16 px-12 text-xl font-bold rounded-full shadow-2xl">
+              <Button className="h-16 px-12 text-xl font-bold rounded-full shadow-2xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600">
                 ابدأ التجربة المجانية الآن
                 <ArrowRight size={24} className="mr-2" />
               </Button>

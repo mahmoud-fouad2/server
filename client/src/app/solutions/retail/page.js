@@ -16,14 +16,14 @@ export default function RetailSolution() {
               <div className="w-20 h-20 rounded-3xl bg-purple-500 text-white flex items-center justify-center mx-auto mb-6 shadow-2xl">
                 <ShoppingBag size={40} />
               </div>
-              <h1 className="text-5xl lg:text-6xl font-bold mb-6 text-gray-900 dark:text-white">حلول التجارة الإلكترونية</h1>
-              <p className="text-2xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto mb-10">حوّل واتساب إلى متجر إلكتروني كامل المميزات</p>
+              <h1 className="text-4xl lg:text-5xl font-bold mb-6 text-gray-900 dark:text-white leading-tight">حلول التجارة الإلكترونية</h1>
+              <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto mb-10 leading-relaxed">حوّل واتساب إلى متجر إلكتروني كامل المميزات</p>
               <div className="flex gap-4 justify-center">
-                <Link href="/register"><Button className="h-14 px-8 text-xl rounded-full shadow-xl">ابدأ تجربتك المجانية<ArrowRight size={20} className="mr-2" /></Button></Link>
+                <Link href="/register"><Button className="h-14 px-10 text-lg rounded-full shadow-xl bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600">ابدأ تجربتك المجانية<ArrowRight size={20} className="mr-2" /></Button></Link>
               </div>
             </motion.div>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="rounded-3xl overflow-hidden shadow-2xl">
-              <img src="/assets/images/retail-solution.jpg" alt="التجارة الإلكترونية" className="w-full h-[500px] object-cover" onError={(e) => e.target.src = "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=1200"} />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="rounded-3xl overflow-hidden shadow-2xl border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-cosmic-800">
+              <img src="/assets/images/retail-solution.jpg" alt="التجارة الإلكترونية" className="w-full h-[500px] object-cover" onError={(e) => { e.target.onerror = null; e.target.src = "https://images.unsplash.com/photo-1472851294608-062f824d29cc?auto=format&fit=crop&q=80&w=1200"; }} />
             </motion.div>
           </div>
         </section>
@@ -69,7 +69,7 @@ export default function RetailSolution() {
         <section className="py-20 px-6">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-4xl font-bold mb-6 text-gray-900 dark:text-white">ابدأ البيع اليوم</h2>
-            <Link href="/register"><Button className="h-16 px-12 text-xl font-bold rounded-full shadow-2xl">ابدأ التجربة المجانية<ArrowRight size={24} className="mr-2" /></Button></Link>
+            <Link href="/register"><Button className="h-16 px-12 text-xl font-bold rounded-full shadow-2xl bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600">ابدأ التجربة المجانية<ArrowRight size={24} className="mr-2" /></Button></Link>
           </div>
         </section>
       </div>

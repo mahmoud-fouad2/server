@@ -34,21 +34,21 @@ export default function RestaurantSolution() {
               <div className="w-20 h-20 rounded-3xl bg-orange-500 text-white flex items-center justify-center mx-auto mb-6 shadow-2xl">
                 <Utensils size={40} />
               </div>
-              <h1 className="text-5xl lg:text-6xl font-bold mb-6 text-gray-900 dark:text-white">
+              <h1 className="text-4xl lg:text-5xl font-bold mb-6 text-gray-900 dark:text-white leading-tight">
                 حلول المطاعم والمقاهي
               </h1>
-              <p className="text-2xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto mb-10">
+              <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto mb-10 leading-relaxed">
                 حوّل واتساب إلى نظام إدارة متكامل لمطعمك - من الحجز إلى التوصيل
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link href="/register">
-                  <Button className="h-14 px-8 text-xl rounded-full shadow-xl">
+                  <Button className="h-14 px-10 text-lg rounded-full shadow-xl bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 transition-all">
                     ابدأ تجربتك المجانية
                     <ArrowRight size={20} className="mr-2" />
                   </Button>
                 </Link>
                 <Link href="/contact">
-                  <Button variant="outline" className="h-14 px-8 text-xl rounded-full">
+                  <Button variant="outline" className="h-14 px-10 text-lg rounded-full border-2 hover:bg-orange-50 dark:hover:bg-orange-950/30">
                     احجز عرضاً توضيحياً
                   </Button>
                 </Link>
@@ -60,14 +60,15 @@ export default function RestaurantSolution() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2 }}
-              className="rounded-3xl overflow-hidden shadow-2xl border border-gray-200 dark:border-white/10"
+              className="rounded-3xl overflow-hidden shadow-2xl border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-cosmic-800"
             >
               <img 
                 src="/assets/images/restaurant-solution.jpg" 
                 alt="حلول المطاعم"
                 className="w-full h-[500px] object-cover"
                 onError={(e) => {
-                  e.target.src = "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80&w=1200"
+                  e.target.onerror = null;
+                  e.target.src = "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&q=80&w=1200"
                 }}
               />
             </motion.div>
@@ -238,7 +239,7 @@ export default function RestaurantSolution() {
                 ))}
               </ul>
               <Link href="/register">
-                <Button className="w-full h-14 text-lg font-bold rounded-xl">
+                <Button className="w-full h-14 text-lg font-bold rounded-xl bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600">
                   ابدأ الآن
                   <ArrowRight size={20} className="mr-2" />
                 </Button>
@@ -257,7 +258,7 @@ export default function RestaurantSolution() {
               ابدأ اليوم وشاهد الفرق في أسبوع واحد
             </p>
             <Link href="/register">
-              <Button className="h-16 px-12 text-xl font-bold rounded-full shadow-2xl">
+              <Button className="h-16 px-12 text-xl font-bold rounded-full shadow-2xl bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600">
                 ابدأ التجربة المجانية الآن
                 <ArrowRight size={24} className="mr-2" />
               </Button>
