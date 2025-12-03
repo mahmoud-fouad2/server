@@ -1,36 +1,83 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { 
   MessageCircle, Zap, Shield, BarChart3, Globe, Users, 
-  CheckCircle2, ArrowRight, Rocket, Sparkles
+  CheckCircle2, ArrowRight, Rocket, Sparkles, Moon, Sun
 } from 'lucide-react';
 
 export default function Home() {
+  const [isDark, setIsDark] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const darkMode = localStorage.getItem('darkMode') === 'true';
+    setIsDark(darkMode);
+    if (darkMode) document.documentElement.classList.add('dark');
+    
+    setTimeout(() => setIsLoading(false), 2000);
+  }, []);
+
+  const toggleDarkMode = () => {
+    setIsDark(!isDark);
+    document.documentElement.classList.toggle('dark');
+    localStorage.setItem('darkMode', (!isDark).toString());
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center">
+        <div className="text-center">
+          <div className="relative w-32 h-32 mx-auto mb-6 animate-bounce">
+            <Image src="/logo2.png" alt="فهملي" fill className="object-contain" />
+          </div>
+          <div className="w-64 h-2 bg-white/20 rounded-full overflow-hidden">
+            <div className="h-full bg-white rounded-full animate-[loading_2s_ease-in-out_infinite]" style={{width: '40%'}}></div>
+          </div>
+          <p className="text-white mt-4 text-lg font-semibold">جاري التحميل...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
       {/* Navigation */}
-      <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-md border-b border-gray-200 z-50">
+      <nav className="fixed top-0 w-full bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 z-50">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-2">
-              <Sparkles className="text-indigo-600" size={28} />
-              <span className="text-2xl font-bold text-gray-900">فهيملي</span>
-            </div>
+            <Link href="/" className="flex items-center gap-3">
+              <div className="relative w-10 h-10">
+                <Image src="/logo2.png" alt="فهملي" fill className="object-contain" />
+              </div>
+              <div>
+                <span className="text-2xl font-bold text-gray-900 dark:text-white">فهملي</span>
+                <p className="text-xs text-gray-500 dark:text-gray-400">الذكاء الذي يفهمك</p>
+              </div>
+            </Link>
             
             <div className="hidden md:flex items-center gap-8">
-              <Link href="/services" className="text-gray-700 hover:text-indigo-600 transition">الخدمات</Link>
-              <Link href="/solutions" className="text-gray-700 hover:text-indigo-600 transition">الحلول</Link>
-              <Link href="/pricing" className="text-gray-700 hover:text-indigo-600 transition">الأسعار</Link>
-              <Link href="/about" className="text-gray-700 hover:text-indigo-600 transition">من نحن</Link>
-              <Link href="/contact" className="text-gray-700 hover:text-indigo-600 transition">تواصل معنا</Link>
+              <Link href="/services" className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition">الخدمات</Link>
+              <Link href="/solutions" className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition">الحلول</Link>
+              <Link href="/pricing" className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition">الأسعار</Link>
+              <Link href="/about" className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition">من نحن</Link>
+              <Link href="/contact" className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition">تواصل معنا</Link>
             </div>
 
             <div className="flex items-center gap-4">
-              <Link href="/login" className="text-gray-700 hover:text-indigo-600 transition">
+              <button 
+                onClick={toggleDarkMode}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+                aria-label="Toggle dark mode"
+              >
+                {isDark ? <Sun className="text-yellow-400" size={20} /> : <Moon className="text-gray-600" size={20} />}
+              </button>
+              <Link href="/login" className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition">
                 تسجيل الدخول
               </Link>
-              <Link href="/register" className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition">
+              <Link href="/register" className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition shadow-lg shadow-indigo-500/30">
                 ابدأ مجاناً
               </Link>
             </div>
@@ -46,14 +93,14 @@ export default function Home() {
               <div className="inline-block bg-indigo-100 text-indigo-700 px-4 py-2 rounded-full text-sm font-semibold mb-6">
                 🚀 الأول في العالم العربي
               </div>
-              <h1 className="text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+              <h1 className="text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-6 leading-tight">
                 شات بوت ذكي
                 <br />
-                <span className="text-indigo-600">يفهم عملائك</span>
+                <span className="text-indigo-600 dark:text-indigo-400">يفهم عملائك</span>
                 <br />
                 ويرد تلقائياً
               </h1>
-              <p className="text-xl text-gray-600 mb-8 leading-relaxed">
+              <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
                 حوّل محادثاتك إلى مبيعات. شات بوت بالذكاء الاصطناعي يعمل 24/7 
                 على واتساب، تليجرام، وموقعك. <strong>وفّر 70% من التكاليف</strong> وزوّد رضا عملائك.
               </p>
@@ -327,16 +374,21 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-gray-300 py-12">
+      <footer className="bg-gray-900 dark:bg-gray-950 text-gray-300 py-12">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <Sparkles className="text-indigo-400" size={24} />
-                <span className="text-xl font-bold text-white">فهيملي</span>
+                <div className="relative w-8 h-8">
+                  <Image src="/logo2.png" alt="فهملي" fill className="object-contain" />
+                </div>
+                <span className="text-xl font-bold text-white">فهملي</span>
               </div>
-              <p className="text-sm">
+              <p className="text-sm mb-3">
                 شات بوت ذكي بالذكاء الاصطناعي للشركات العربية
+              </p>
+              <p className="text-xs text-gray-500">
+                الذكاء الذي يفهمك
               </p>
             </div>
             <div>
@@ -365,7 +417,14 @@ export default function Home() {
             </div>
           </div>
           <div className="border-t border-gray-800 pt-8 text-center text-sm">
-            <p>© 2025 فهيملي. جميع الحقوق محفوظة.</p>
+            <p className="mb-3">© 2025 فهملي. جميع الحقوق محفوظة.</p>
+            <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
+              <span>Development By</span>
+              <a href="https://ma-fo.info" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-indigo-400 transition">
+                <Image src="https://ma-fo.info/logo.png" alt="Ma-Fo" width={20} height={20} className="rounded" />
+                <span className="font-semibold">Ma-Fo.info</span>
+              </a>
+            </div>
           </div>
         </div>
       </footer>
