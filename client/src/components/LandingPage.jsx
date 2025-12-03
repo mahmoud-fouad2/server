@@ -173,6 +173,7 @@ export const LandingPage = ({ lang = 'ar', setLang, country = 'sa', setCountry }
   const [selectedIndustry, setSelectedIndustry] = useState(null);
   const [mounted, setMounted] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -289,18 +290,59 @@ export const LandingPage = ({ lang = 'ar', setLang, country = 'sa', setCountry }
               </Link>
             </div>
 
-            <div className="hidden md:flex items-center gap-3">
-              <Link href="/login" className={`text-sm font-bold px-5 py-2.5 rounded-full transition-all hover:scale-105 ${isDark ? 'text-gray-300 hover:text-white hover:bg-white/5' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'}`}>
+            <div className="flex items-center gap-3">
+              <Link href="/login" className={`text-sm font-bold px-4 md:px-5 py-2 md:py-2.5 rounded-full transition-all hover:scale-105 ${isDark ? 'text-gray-300 hover:text-white hover:bg-white/5' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'}`}>
                 {t.loginBtn}
               </Link>
-              <Link href="/register">
-                <Button className="rounded-full px-8 py-3 shadow-lg shadow-brand-500/30 font-bold hover:shadow-brand-500/50 transition-all hover:-translate-y-1 hover:scale-105 bg-gradient-to-r from-brand-600 to-brand-500 border-0">
+              <Link href="/register" className="block">
+                <Button className="rounded-full px-5 md:px-8 py-2 md:py-3 text-sm md:text-base shadow-lg shadow-brand-500/30 font-bold hover:shadow-brand-500/50 transition-all hover:-translate-y-1 hover:scale-105 bg-gradient-to-r from-brand-600 to-brand-500 border-0">
                   {t.startTrial}
                 </Button>
               </Link>
             </div>
+
+            {/* Mobile Menu Button */}
+            <button 
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {mobileMenuOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                )}
+              </svg>
+            </button>
           </div>
         </div>
+
+        {/* Mobile Menu */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="lg:hidden border-t border-gray-200 dark:border-white/10"
+            >
+              <div className="max-w-7xl mx-auto px-6 py-4 space-y-2">
+                <Link href="/" onClick={() => setMobileMenuOpen(false)} className={`block px-4 py-3 rounded-lg font-medium transition-colors hover:bg-gray-100 dark:hover:bg-white/5 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                  الرئيسية
+                </Link>
+                <Link href="/services" onClick={() => setMobileMenuOpen(false)} className={`block px-4 py-3 rounded-lg font-medium transition-colors hover:bg-gray-100 dark:hover:bg-white/5 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                  الخدمات
+                </Link>
+                <Link href="/solutions" onClick={() => setMobileMenuOpen(false)} className={`block px-4 py-3 rounded-lg font-medium transition-colors hover:bg-gray-100 dark:hover:bg-white/5 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                  الحلول
+                </Link>
+                <Link href="/pricing" onClick={() => setMobileMenuOpen(false)} className={`block px-4 py-3 rounded-lg font-medium transition-colors hover:bg-gray-100 dark:hover:bg-white/5 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                  الأسعار
+                </Link>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </nav>
 
       {/* Hero Section */}
@@ -416,44 +458,6 @@ export const LandingPage = ({ lang = 'ar', setLang, country = 'sa', setCountry }
             ))}
           </motion.div>
 
-          {/* Limited Time Offer Banner */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 1 }}
-            className="mt-16 relative"
-          >
-            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-orange-500 via-red-500 to-pink-600 p-1 shadow-2xl hover:shadow-orange-500/40 transition-shadow">
-              <div className={`rounded-3xl px-8 py-8 md:px-12 md:py-10 ${isDark ? 'bg-cosmic-900' : 'bg-white'} relative overflow-hidden`}>
-                {/* Decorative Elements */}
-                <div className="absolute -top-10 -left-10 w-40 h-40 bg-gradient-to-br from-orange-500/20 to-transparent rounded-full blur-3xl"></div>
-                <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-gradient-to-br from-pink-500/20 to-transparent rounded-full blur-3xl"></div>
-                
-                <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
-                  <div className="text-center md:text-right flex-1">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-orange-500 to-red-500 text-white text-sm font-bold mb-4 animate-pulse">
-                      <Sparkles size={16} />
-                      عرض لفترة محدودة
-                    </div>
-                    <h3 className="text-3xl md:text-4xl font-black mb-3 bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent">
-                      ابدأ من 99 ريال فقط!
-                    </h3>
-                    <p className={`text-lg ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                      خطة احترافية كاملة مع تكامل واتساب وويدجت الموقع 🎉
-                    </p>
-                  </div>
-                  <div>
-                    <Link href="/register">
-                      <Button className="px-10 py-6 text-lg font-black rounded-2xl bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 shadow-xl hover:shadow-2xl hover:scale-105 transition-all">
-                        اشترك الآن
-                        <ArrowRight className="mr-2" size={20} />
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
         </div>
       </section>
 
@@ -919,6 +923,42 @@ export const LandingPage = ({ lang = 'ar', setLang, country = 'sa', setCountry }
                 <CheckCircle size={16} className="text-green-500" />
                 <span className="text-xs font-medium">ضمان استرداد 30 يوم</span>
               </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Limited Time Offer - Compact Banner */}
+      <section className={`py-8 ${isDark ? 'bg-cosmic-900/50' : 'bg-gray-50'}`}>
+        <div className="max-w-7xl mx-auto px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.3 }}
+            className="relative overflow-hidden rounded-xl bg-gradient-to-r from-orange-500 to-pink-600 p-[1px]"
+          >
+            <div className={`rounded-xl px-6 py-4 ${isDark ? 'bg-cosmic-900' : 'bg-white'} flex flex-col md:flex-row items-center justify-between gap-4`}>
+              <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4">
+                <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-orange-500 to-pink-500 text-white text-xs font-bold">
+                  <Sparkles size={12} />
+                  عرض لفترة محدودة
+                </div>
+                <div className="text-center md:text-right">
+                  <h3 className="text-lg md:text-xl font-bold bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent">
+                    ابدأ من 99 ريال شهرياً
+                  </h3>
+                  <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                    خطة احترافية كاملة 🎉
+                  </p>
+                </div>
+              </div>
+              <Link href="/register">
+                <Button className="px-5 py-2.5 text-sm rounded-lg bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 font-bold whitespace-nowrap">
+                  اشترك الآن
+                  <ArrowRight className="mr-2" size={16} />
+                </Button>
+              </Link>
             </div>
           </motion.div>
         </div>
