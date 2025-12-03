@@ -13,6 +13,7 @@ import FaheemAnimatedLogo from './FaheemAnimatedLogo';
 import SalesBot from './SalesBot';
 import { motion, AnimatePresence } from 'framer-motion';
 import Footer from './layout/Footer';
+import LoadingScreen from './LoadingScreen';
 
 import { useRouter } from 'next/navigation';
 
@@ -50,12 +51,8 @@ export const LandingPage = ({ lang: initialLang = 'ar', setLang: externalSetLang
     const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
 
-    // Simulate loading
-    const timer = setTimeout(() => setIsLoading(false), 2000);
-
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      clearTimeout(timer);
     };
   }, [activeCountry]);
 
@@ -70,18 +67,7 @@ export const LandingPage = ({ lang: initialLang = 'ar', setLang: externalSetLang
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-cosmic-950 relative overflow-hidden">
-        {/* Background effects */}
-        {mounted && isDark && (
-          <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-            <div className="absolute top-[-20%] left-[-10%] w-[60vw] h-[60vw] bg-brand-600/10 rounded-full blur-[150px] animate-pulse-slow"></div>
-            <div className="absolute bottom-[-20%] right-[-10%] w-[50vw] h-[50vw] bg-purple-600/10 rounded-full blur-[150px] animate-float"></div>
-          </div>
-        )}
-        <FaheemAnimatedLogo size="medium" isLoading={true} showText={false} className="z-10" />
-      </div>
-    );
+    return <LoadingScreen onComplete={() => setIsLoading(false)} />;
   }
 
   return (
