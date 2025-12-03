@@ -56,7 +56,7 @@ const FaheemAnimatedLogo = ({
   if (isLoading) {
     return (
       <div className={`flex flex-col items-center justify-center ${className}`}>
-        <div className="relative mb-8">
+        <div className="relative">
           <div className="absolute inset-0 bg-brand-500/20 blur-3xl rounded-full animate-pulse"></div>
           <div className="relative w-80 h-80 flex items-center justify-center p-12 bg-[#f8f8fa] rounded-full overflow-hidden shadow-2xl border-4 border-white/50">
             <img 
@@ -66,22 +66,6 @@ const FaheemAnimatedLogo = ({
             />
           </div>
         </div>
-        
-        <div className="w-64 flex flex-col gap-3">
-           <div className="h-2 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden relative shadow-inner border border-gray-200 dark:border-white/5">
-             <div className="absolute inset-y-0 left-0 h-full bg-gradient-to-r from-brand-500 via-purple-500 to-brand-500 w-[50%] animate-[loading_1.5s_ease-in-out_infinite]"></div>
-           </div>
-           <p className="text-center text-sm font-bold text-brand-600 dark:text-brand-400 animate-pulse">
-             جاري تجهيز النظام الذكي...
-           </p>
-        </div>
-        <style>{`
-          @keyframes loading {
-            0% { left: -50%; width: 50%; }
-            50% { left: 25%; width: 75%; }
-            100% { left: 100%; width: 50%; }
-          }
-        `}</style>
       </div>
     );
   }
