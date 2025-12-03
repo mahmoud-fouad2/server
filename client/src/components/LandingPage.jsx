@@ -42,7 +42,9 @@ export const LandingPage = ({ lang: initialLang = 'ar', setLang: externalSetLang
 
   useEffect(() => {
     setMounted(true);
-    document.title = SEO_DATA.home.title;
+    // Set page title based on country
+    const seoData = SEO_DATA[activeCountry] || SEO_DATA['sa'];
+    document.title = seoData.home.title;
     
     const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
@@ -54,7 +56,7 @@ export const LandingPage = ({ lang: initialLang = 'ar', setLang: externalSetLang
       window.removeEventListener('scroll', handleScroll);
       clearTimeout(timer);
     };
-  }, []);
+  }, [activeCountry]);
 
   const toggleTheme = () => {
     setIsDark(!isDark);
