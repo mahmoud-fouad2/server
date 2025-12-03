@@ -143,23 +143,14 @@ async function attemptGenerateResponse(messages, providerConfig, options = {}) {
   }
 }
 
+const embeddingService = require('./embedding.service');
+
 /**
  * Generate embedding for semantic search
- * Note: Groq doesn't provide embeddings API yet, using text-ada-002 from OpenAI as fallback
- * Or we can use local sentence transformers
+ * Uses the centralized embedding service
  */
 async function generateEmbedding(text) {
-  // For now, return a simple hash-based embedding
-  // In production, use OpenAI, Cohere, or local models
-  console.log('[Groq] Embedding generation not yet supported, using placeholder');
-  
-  // Simple character-based embedding (placeholder)
-  const embedding = new Array(1536).fill(0);
-  for (let i = 0; i < text.length && i < 1536; i++) {
-    embedding[i] = text.charCodeAt(i) / 255;
-  }
-  
-  return embedding;
+  return await embeddingService.generateEmbedding(text);
 }
 
 /**
