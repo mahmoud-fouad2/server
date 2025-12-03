@@ -127,8 +127,56 @@ export default function RootLayout({ children }) {
       </head>
       <body className={`font-sans overflow-x-hidden bg-gray-50 dark:bg-cosmic-950 text-gray-900 dark:text-gray-100 transition-colors duration-300 selection:bg-brand-500/30`}>
         <noscript>
-          <div style={{ padding: '20px', textAlign: 'center', background: '#fee2e2', color: '#991b1b', borderBottom: '1px solid #f87171' }}>
-            <strong>تنبيه:</strong> هذا الموقع يتطلب تفعيل JavaScript ليعمل بشكل صحيح. يرجى تفعيل JavaScript في إعدادات المتصفح للحصول على أفضل تجربة.
+          <style>{`
+            .noscript-content {
+              display: block !important;
+            }
+            .js-only {
+              display: none !important;
+            }
+          `}</style>
+          <div style={{ 
+            padding: '40px 20px', 
+            textAlign: 'center', 
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+            color: 'white',
+            fontFamily: 'system-ui, -apple-system, sans-serif'
+          }}>
+            <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+              <h1 style={{ fontSize: '32px', marginBottom: '20px', fontWeight: 'bold' }}>فهملي - شات بوت ذكي</h1>
+              <p style={{ fontSize: '18px', marginBottom: '30px', lineHeight: '1.6' }}>
+                أقوى منصة شات بوت عربي مدعومة بالذكاء الاصطناعي. نساعدك على أتمتة خدمة العملاء وزيادة مبيعاتك 24/7.
+              </p>
+              <div style={{ 
+                background: 'rgba(255,255,255,0.1)', 
+                padding: '20px', 
+                borderRadius: '12px',
+                marginBottom: '20px'
+              }}>
+                <p style={{ fontSize: '16px', marginBottom: '15px' }}>✨ خدماتنا:</p>
+                <ul style={{ textAlign: 'right', fontSize: '14px', lineSpace: '1.8' }}>
+                  <li>✓ تكامل واتساب للأعمال</li>
+                  <li>✓ ويدجت ذكي للموقع</li>
+                  <li>✓ بوت تيليجرام</li>
+                  <li>✓ تحليلات متقدمة</li>
+                  <li>✓ دعم كل اللهجات العربية</li>
+                </ul>
+              </div>
+              <div style={{
+                background: 'rgba(255,200,50,0.2)',
+                padding: '15px',
+                borderRadius: '8px',
+                marginTop: '20px'
+              }}>
+                <p style={{ fontSize: '14px', margin: 0 }}>
+                  ⚠️ <strong>ملاحظة:</strong> لتفعيل الميزات التفاعلية والحصول على أفضل تجربة، يرجى تفعيل JavaScript في متصفحك.
+                </p>
+              </div>
+              <div style={{ marginTop: '30px', fontSize: '14px' }}>
+                <p>للتواصل: info@faheemly.com</p>
+                <p>الموقع: faheemly.com</p>
+              </div>
+            </div>
           </div>
         </noscript>
         {children}
