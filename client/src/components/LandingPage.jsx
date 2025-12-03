@@ -754,8 +754,16 @@ export const LandingPage = ({ lang = 'ar', setLang, country = 'sa', setCountry }
                 className={`relative rounded-[2rem] overflow-hidden group cursor-pointer border ${isDark ? 'border-white/10 bg-white/5' : 'border-gray-200 bg-white'} transition-all hover:-translate-y-2 hover:shadow-2xl`}
               >
                  {/* Background Image with Overlay */}
-                 <div className="absolute inset-0 h-48">
-                    <img src={item.image} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                 <div className="absolute inset-0 h-48 bg-gray-100 dark:bg-cosmic-800">
+                    <img 
+                      src={item.image} 
+                      alt={item.title} 
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = item.image;
+                      }}
+                    />
                     <div className={`absolute inset-0 bg-gradient-to-b ${isDark ? 'from-transparent to-cosmic-900' : 'from-transparent to-white'}`}></div>
                  </div>
 
