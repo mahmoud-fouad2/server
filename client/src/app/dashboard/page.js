@@ -376,16 +376,25 @@ export default function Dashboard() {
     const token = localStorage.getItem('token')
     const userData = localStorage.getItem('user')
     
-    // Auto-setup demo credentials if none exist
+    // Check authentication BEFORE doing anything else
     if (!token || !userData) {
+      setLoading(false);
       router.push('/login');
       return;
     }
 
     if (userData) {
-      const parsedUser = JSON.parse(userData)
-      setUser(parsedUser)
-      setProfileData({ name: parsedUser.name, email: parsedUser.email, password: "" })
+      try {
+        const parsedUser = JSON.parse(userData)
+        setUser(parsedUser)
+        setProfileData({ name: parsedUser.name, email: parsedUser.email, password: "" })
+      } catch (e) {
+        console.error('Invalid user data, redirecting to login');
+        localStorage.clear();
+        setLoading(false);
+        router.push('/login');
+        return;
+      }
     }
 
     fetchData(token)

@@ -53,6 +53,16 @@ router.post('/demo', async (req, res) => {
       widgetConfig: { dialect: 'sa' } // Default to Saudi dialect for demo
     };
 
+    // Detect dialect preference from message
+    let preferredDialect = 'sa'; // Default Saudi
+    const msgLower = message.toLowerCase();
+    if (msgLower.includes('مصري') || msgLower.includes('مصر') || msgLower.includes('كلمني مصري')) {
+      preferredDialect = 'eg';
+    }
+
+    // Update config with detected dialect
+    demoConfig.widgetConfig = { dialect: preferredDialect };
+
     // 3. Prepare Knowledge Base (Hardcoded for Landing Page Demo)
     // This ensures the bot knows about Fahimo even if the DB is empty
     const demoKnowledge = [
@@ -64,11 +74,14 @@ router.post('/demo', async (req, res) => {
         - تدعم اللهجات العربية (مصري، سعودي، خليجي) بطلاقة.
         - المميزات: حجز مواعيد، رد على استفسارات، إتمام مبيعات، تحليل محادثات.
         - الأسعار:
-          1. باقة المبتدئ: 99 ريال/شهر (1000 رسالة).
-          2. باقة المحترف: 199 ريال/شهر (5000 رسالة) - الأكثر طلباً.
-          3. باقة الشركات: 499 ريال/شهر (غير محدود).
-        - يوجد تجربة مجانية لمدة 7 أيام.
+          1. باقة المبتدئ: 99 ريال/جنيه شهرياً (1000 رسالة).
+          2. باقة المحترف: 199 ريال/جنيه شهرياً (5000 رسالة) - الأكثر طلباً.
+          3. باقة الشركات: 499 ريال/جنيه شهرياً (غير محدود).
+        - يوجد تجربة مجانية لمدة 7 أيام بدون بطاقة ائتمان.
         - طريقة الاشتراك: اضغط على زر "ابدأ التجربة المجانية" في الموقع.
+        - ملاحظة مهمة: هذا بوت تجريبي للعرض فقط. لا يمكنني تحويلك لموظف حقيقي الآن لأنك تجرب النسخة التوضيحية. 
+          لكن عند اشتراكك الفعلي، سيكون لديك فريق دعم كامل متاح 24/7.
+        - إذا طلب العميل "تحويل لموظف" أو "دعم فني"، أخبره بلطف أن هذه نسخة تجريبية وأن التحويل متاح فقط للعملاء المشتركين.
         `
       },
       ...(demoBusiness.knowledgeBase || [])
