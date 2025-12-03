@@ -1,6 +1,5 @@
 const { Worker } = require('bullmq');
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../config/database');
 const { summarizeText } = require('../services/summarizer.service');
 const { generateEmbedding } = require('../services/embedding.service');
 

@@ -1,9 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { PrismaClient } = require('@prisma/client');
 const { authenticateToken } = require('../middleware/auth');
-
-const prisma = new PrismaClient();
+const prisma = require('../config/database');
 
 // Create a new ticket
 router.post('/', authenticateToken, async (req, res) => {

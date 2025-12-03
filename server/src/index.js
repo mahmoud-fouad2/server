@@ -2,15 +2,15 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
-const { PrismaClient } = require('@prisma/client');
 const http = require('http');
 const { Server } = require('socket.io');
+const prisma = require('./config/database');
+const logger = require('./utils/logger');
 
 // Fahimo Insight: Initialize the core "Understanding" engine
 dotenv.config();
 const app = express();
 const server = http.createServer(app);
-const prisma = new PrismaClient();
 
 const authRoutes = require('./routes/auth.routes');
 const botRoutes = require('./routes/bots');
@@ -50,14 +50,17 @@ app.use('/', express.static(clientOut, {
 // Socket.io for real-time widget chat
 const io = new Server(server, {
   cors: {
-    origin: "*", // Allow all for now, restrict in production
-    methods: ["GET", "POST"]
+    origin: process.env.NODE_ENV === 'production' 
+      ? ['https://faheemly.com', 'https://www.faheemly.com']
+      : ['http://localhost:3000', 'http://localhost:3001'],
+    methods: ["GET", "POST"],
+    credentials: true
   }
 });
 
 // Fahimo Insight: Real-time connection for the "Magic" widget
 io.on('connection', (socket) => {
-  console.log('A user connected to Fahimo Widget:', socket.id);
+  logger.debug('Widget connection established', { socketId: socket.id });
 
   socket.on('join_room', (room) => {
     socket.join(room);
@@ -182,7 +185,7 @@ io.on('connection', (socket) => {
       });
 
     } catch (error) {
-      console.error('Socket Message Error:', error);
+      logger.error('Socket message processing failed', error, { socketId: socket.id });
       socket.emit('receive_message', {
         role: 'assistant',
         content: 'عذراً، حدث خطأ أثناء معالجة رسالتك.',
@@ -192,7 +195,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', () => {
-    console.log('User disconnected');
+    logger.debug('Widget disconnected', { socketId: socket.id });
   });
 });
 
@@ -215,12 +218,33 @@ app.use('/api/chat', demoRoutes); // Mount demo routes under /api/chat/demo
 
 const PORT = process.env.PORT || 3001;
 
+// CRITICAL: Validate required environment variables on startup
+function validateEnvironment() {
+  const required = ['JWT_SECRET', 'DATABASE_URL', 'GROQ_API_KEY'];
+  const missing = required.filter(key => !process.env[key]);
+  
+  if (missing.length > 0) {
+    logger.error('FATAL: Missing required environment variables', null, { missing });
+    logger.error('Please set them in your .env file');
+    process.exit(1);
+  }
+
+  if (process.env.JWT_SECRET === 'your-secret-key' || process.env.JWT_SECRET.length < 32) {
+    logger.error('FATAL: JWT_SECRET is weak or using default value!');
+    logger.error('Generate a strong secret: openssl rand -base64 32');
+    process.exit(1);
+  }
+
+  logger.info('Environment validation passed');
+}
+
 process.on('uncaughtException', (err) => {
-  console.error('UNCAUGHT EXCEPTION:', err);
+  logger.error('UNCAUGHT EXCEPTION - Server will exit', err);
+  process.exit(1);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('UNHANDLED REJECTION:', reason);
+  logger.error('UNHANDLED REJECTION', reason instanceof Error ? reason : new Error(String(reason)));
 });
 
 // Auto-create admin on startup
@@ -241,7 +265,7 @@ async function ensureAdminExists() {
           role: 'SUPERADMIN'
         }
       });
-      console.log('✅ Admin account created: admin@faheemly.com / admin@123');
+      logger.info('Admin account created', { email: adminEmail });
     } else if (existingAdmin.role !== 'SUPERADMIN') {
       // Update existing user to SUPERADMIN
       await prisma.user.update({
@@ -251,17 +275,21 @@ async function ensureAdminExists() {
           password: adminPassword // Reset password too
         }
       });
-      console.log('✅ Admin role updated to SUPERADMIN');
+      logger.info('Admin role updated to SUPERADMIN', { email: adminEmail });
     } else {
-      console.log('✅ Admin account already exists');
+      logger.info('Admin account already exists', { email: adminEmail });
     }
   } catch (error) {
-    console.error('⚠️ Error ensuring admin exists:', error.message);
+    logger.error('Failed to ensure admin exists', error);
   }
 }
 
 server.listen(PORT, async () => {
-  console.log(`\n🚀 Fahimo Server is running on port ${PORT}`);
-  console.log(`✨ "The one who understands you" is ready to serve.`);
+  logger.info(`Fahimo Server is running on port ${PORT}`);
+  logger.info('"The one who understands you" is ready to serve.');
+  
+  // Validate environment before starting
+  validateEnvironment();
+  
   await ensureAdminExists();
 });

@@ -58,7 +58,7 @@ router.post('/register', async (req, res) => {
     // Generate Token
     const token = jwt.sign(
       { userId: result.user.id, email: result.user.email, role: result.user.role, businessId: result.business.id },
-      process.env.JWT_SECRET || 'your-secret-key',
+      process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
 
@@ -102,14 +102,14 @@ router.post('/login', async (req, res) => {
 
     const token = jwt.sign(
       { userId: user.id, email: user.email, role: user.role, businessId },
-      process.env.JWT_SECRET || 'your-secret-key',
+      process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
 
     res.json({
       message: 'Login successful',
       token,
-      user: { id: user.id, name: user.name, email: user.email, businessId },
+      user: { id: user.id, name: user.name, email: user.email, role: user.role, businessId },
       businessId
     });
 

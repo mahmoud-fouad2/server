@@ -37,19 +37,11 @@ router.post('/forgot-password', async (req, res) => {
     // Create reset URL
     const resetUrl = `https://faheemly.com/reset-password?token=${resetToken}`;
 
-    // TODO: Send email with reset link
-    // For now, we'll log it (in production, use nodemailer or similar)
+    // TODO: Send email with reset link (use nodemailer or SendGrid)
     console.log('🔐 Password Reset Link:', resetUrl);
     console.log('📧 For user:', email);
 
-    // In development, return the link
-    if (process.env.NODE_ENV === 'development') {
-      return res.json({ 
-        message: 'تم إرسال رابط الاسترجاع',
-        resetUrl // Remove this in production!
-      });
-    }
-
+    // Always return generic message (don't expose reset URL in response)
     res.json({ message: 'إذا كان البريد موجودًا، سيتم إرسال رابط الاسترجاع' });
   } catch (error) {
     console.error('Forgot password error:', error);

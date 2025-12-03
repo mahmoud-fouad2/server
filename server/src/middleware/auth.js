@@ -14,7 +14,7 @@ const authenticateToken = async (req, res, next) => {
     console.log('[auth] verifying token for path', req.path);
     console.log('[auth] header auth preview:', (req.headers['authorization'] || '').slice(0, 40));
     console.log('[auth] token preview (trim):', (token || '').slice(0, 20), ' len=', (token || '').length);
-    const verified = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    const verified = jwt.verify(token, process.env.JWT_SECRET);
     // Attach basic user payload
     req.user = verified || {};
 

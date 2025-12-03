@@ -1,8 +1,6 @@
 const axios = require('axios');
-const { PrismaClient } = require('@prisma/client');
 const levenshtein = require('fast-levenshtein');
-
-const prisma = new PrismaClient();
+const prisma = require('../config/database');
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 

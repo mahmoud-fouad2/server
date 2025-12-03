@@ -1,11 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { PrismaClient } = require('@prisma/client');
 const multer = require('multer');
 const pdfParse = require('pdf-parse');
 const fs = require('fs');
-
-const prisma = new PrismaClient();
+const prisma = require('../config/database');
 const upload = multer({ dest: 'uploads/' });
 
 // Middleware to check auth (simplified for speed)
