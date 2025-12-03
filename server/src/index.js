@@ -239,6 +239,33 @@ async function ensureAdminExists() {
   }
 }
 
+async function checkServicesStatus() {
+  try {
+    const redisCache = require('./services/redis-cache.service');
+    const vectorSearch = require('./services/vector-search.service');
+
+    // Check Redis
+    if (redisCache.isEnabled && redisCache.isConnected) {
+      logger.info('✅ Redis Cache is ACTIVE and CONNECTED');
+    } else if (redisCache.isEnabled && !redisCache.isConnected) {
+      logger.warn('⚠️ Redis Cache is ENABLED but NOT CONNECTED');
+    } else {
+      logger.info('ℹ️ Redis Cache is DISABLED (REDIS_URL not set)');
+    }
+
+    // Check pgvector
+    const isPgVector = await vectorSearch.isPgVectorAvailable();
+    if (isPgVector) {
+      logger.info('✅ pgvector extension is INSTALLED and READY');
+    } else {
+      logger.warn('⚠️ pgvector extension is NOT INSTALLED. Falling back to keyword search.');
+    }
+
+  } catch (error) {
+    logger.error('Failed to check services status', error);
+  }
+}
+
 server.listen(PORT, async () => {
   logger.info(`Fahimo Server is running on port ${PORT}`);
   logger.info('"The one who understands you" is ready to serve.');
@@ -247,4 +274,5 @@ server.listen(PORT, async () => {
   validateEnvironment();
   
   await ensureAdminExists();
+  await checkServicesStatus();
 });

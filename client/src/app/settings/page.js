@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Loader2 } from "lucide-react"
+import { businessApi } from "@/lib/api"
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState(null)
@@ -13,12 +14,8 @@ export default function SettingsPage() {
 
   useEffect(() => {
     const fetchSettings = async () => {
-      const token = localStorage.getItem('token')
       try {
-        const res = await fetch('https://fahimo-api.onrender.com/api/business/settings', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
-        const data = await res.json()
+        const data = await businessApi.getSettings()
         setSettings(data)
       } catch (error) {
         console.error(error)

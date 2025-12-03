@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Lock, ShieldCheck, Loader2 } from 'lucide-react'
 import FaheemAnimatedLogo from "@/components/FaheemAnimatedLogo"
+import { authApi } from "@/lib/api"
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('')
@@ -21,28 +22,18 @@ export default function AdminLogin() {
     setError('')
 
     try {
-      const res = await fetch('https://fahimo-api.onrender.com/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      })
+      const data = await authApi.login({ email, password })
 
-      const data = await res.json()
-
-      if (res.ok) {
-        if (data.user.role !== 'SUPERADMIN') {
-          setError('Access Denied: You are not an administrator.')
-          setLoading(false)
-          return
-        }
-        localStorage.setItem('token', data.token)
-        localStorage.setItem('user', JSON.stringify(data.user))
-        router.push('/admin')
-      } else {
-        setError(data.error || 'Login failed')
+      if (data.user.role !== 'SUPERADMIN') {
+        setError('Access Denied: You are not an administrator.')
+        setLoading(false)
+        return
       }
+      localStorage.setItem('token', data.token)
+      localStorage.setItem('user', JSON.stringify(data.user))
+      router.push('/admin')
     } catch (err) {
-      setError('Connection error. Please try again.')
+      setError(err.message || 'Connection error. Please try again.')
     } finally {
       setLoading(false)
     }

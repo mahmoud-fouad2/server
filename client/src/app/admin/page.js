@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import useTheme from '@/lib/theme';
+import { adminApi, ticketApi } from '@/lib/api';
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -34,22 +35,10 @@ export default function AdminDashboard() {
   const [ticketReply, setTicketReply] = useState('');
 
   useEffect(() => {
-    if (activeTab === 'settings') {
-      const token = localStorage.getItem('token');
-      if (token) fetchSettings(token);
-    }
-    if (activeTab === 'bots') {
-      const token = localStorage.getItem('token');
-      if (token) fetchAiModels(token);
-    }
-    if (activeTab === 'logs') {
-      const token = localStorage.getItem('token');
-      if (token) fetchLogs(token);
-    }
-    if (activeTab === 'tickets') {
-      const token = localStorage.getItem('token');
-      if (token) fetchTickets(token);
-    }
+    if (activeTab === 'settings') fetchSettings();
+    if (activeTab === 'bots') fetchAiModels();
+    if (activeTab === 'logs') fetchLogs();
+    if (activeTab === 'tickets') fetchTickets();
   }, [activeTab]);
 
   useEffect(() => {
@@ -69,98 +58,72 @@ export default function AdminDashboard() {
       }
 
       // Fetch Data
-      await Promise.all([fetchStats(token), fetchUsers(token), fetchTicketCount(token)]);
+      await Promise.all([fetchStats(), fetchUsers(), fetchTicketCount()]);
       setLoading(false);
     };
 
     checkAuth();
   }, [router]);
 
-  const fetchTicketCount = async (token) => {
+  const fetchTicketCount = async () => {
     try {
-      const res = await fetch('https://fahimo-api.onrender.com/api/tickets/all', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const count = data.filter(t => t.status === 'OPEN' || t.status === 'IN_PROGRESS').length;
-        setTicketCount(count);
-      }
+      const data = await adminApi.getAllTickets();
+      const count = data.filter(t => t.status === 'OPEN' || t.status === 'IN_PROGRESS').length;
+      setTicketCount(count);
     } catch (err) {
       console.error("Failed to fetch ticket count", err);
     }
   };
 
-  const fetchStats = async (token) => {
+  const fetchStats = async () => {
     try {
-      const res = await fetch('https://fahimo-api.onrender.com/api/admin/stats', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setStats(data);
-      }
+      const data = await adminApi.getStats();
+      setStats(data);
     } catch (err) {
       console.error("Failed to fetch stats", err);
     }
   };
 
-  const fetchUsers = async (token) => {
+  const fetchUsers = async () => {
     try {
-      const res = await fetch('https://fahimo-api.onrender.com/api/admin/users', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setUsers(data);
-      }
+      const data = await adminApi.getUsers();
+      setUsers(data);
     } catch (err) {
       console.error("Failed to fetch users", err);
     }
   };
 
-  const fetchSettings = async (token) => {
+  const fetchSettings = async () => {
     try {
-      const res = await fetch('https://fahimo-api.onrender.com/api/admin/settings', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setSettings(data);
-      }
+      const data = await adminApi.getSettings();
+      setSettings(data);
     } catch (err) {
       console.error("Failed to fetch settings", err);
     }
   };
 
-  const fetchAiModels = async (token) => {
+  const fetchAiModels = async () => {
     try {
-      const res = await fetch('https://fahimo-api.onrender.com/api/admin/ai-models', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) setAiModels(await res.json());
+      const data = await adminApi.getAIModels();
+      setAiModels(data);
     } catch (err) {
       console.error("Failed to fetch AI models", err);
     }
   };
 
-  const fetchLogs = async (token) => {
+  const fetchLogs = async () => {
     try {
-      const res = await fetch('https://fahimo-api.onrender.com/api/admin/logs', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) setSystemLogs(await res.json());
+      const data = await adminApi.getLogs();
+      setSystemLogs(data);
     } catch (err) {
       console.error("Failed to fetch logs", err);
     }
   };
 
-  const fetchTickets = async (token) => {
+  const fetchTickets = async () => {
     try {
-      const res = await fetch('https://fahimo-api.onrender.com/api/tickets/all', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) setTickets(await res.json());
+      const data = await adminApi.getAllTickets();
+      setTickets(data);
     } catch (err) {
       console.error("Failed to fetch tickets", err);
     }
@@ -168,16 +131,10 @@ export default function AdminDashboard() {
 
   const selectTicket = async (ticket) => {
     setSelectedTicket(ticket);
-    const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`https://fahimo-api.onrender.com/api/tickets/${ticket.id}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setTicketMessages(data.messages);
-        // Mark as read or update local state if needed
-      }
+      const data = await ticketApi.get(ticket.id);
+      setTicketMessages(data.messages);
+      // Mark as read or update local state if needed
     } catch (err) {
       console.error("Failed to fetch ticket details", err);
     }
@@ -187,24 +144,12 @@ export default function AdminDashboard() {
     e.preventDefault();
     if (!ticketReply.trim() || !selectedTicket) return;
 
-    const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`https://fahimo-api.onrender.com/api/tickets/${selectedTicket.id}/reply`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ message: ticketReply })
-      });
-
-      if (res.ok) {
-        const newMessage = await res.json();
-        setTicketMessages([...ticketMessages, newMessage]);
-        setTicketReply('');
-        // Refresh tickets list to update status/counts
-        fetchTickets(token);
-      }
+      const newMessage = await ticketApi.reply(selectedTicket.id, ticketReply);
+      setTicketMessages([...ticketMessages, newMessage]);
+      setTicketReply('');
+      // Refresh tickets list to update status/counts
+      fetchTickets();
     } catch (err) {
       console.error("Failed to send reply", err);
     }
@@ -212,62 +157,30 @@ export default function AdminDashboard() {
 
   const updateTicketStatus = async (status) => {
     if (!selectedTicket) return;
-    const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`https://fahimo-api.onrender.com/api/tickets/${selectedTicket.id}/status`, {
-        method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ status })
-      });
-
-      if (res.ok) {
-        const updated = await res.json();
-        setSelectedTicket({...selectedTicket, status: updated.status});
-        fetchTickets(token); // Refresh list
-      }
+      const updated = await ticketApi.updateStatus(selectedTicket.id, status);
+      setSelectedTicket({...selectedTicket, status: updated.status});
+      fetchTickets(); // Refresh list
     } catch (err) {
       console.error("Failed to update status", err);
     }
   };
 
   const handleUpdatePlan = async (businessId, planType) => {
-    const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`https://fahimo-api.onrender.com/api/admin/business/${businessId}/plan`, {
-        method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ planType })
-      });
-      if (res.ok) {
-        fetchUsers(token); // Refresh list
-      }
+      await adminApi.updateBusinessPlan(businessId, planType);
+      fetchUsers(); // Refresh list
     } catch (err) {
       console.error("Failed to update plan", err);
     }
   };
 
   const handleAddModel = async () => {
-    const token = localStorage.getItem('token');
     try {
-      const res = await fetch('https://fahimo-api.onrender.com/api/admin/ai-models', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(newModel)
-      });
-      if (res.ok) {
-        alert('تم إضافة النموذج بنجاح');
-        setNewModel({ name: '', apiKey: '', endpoint: '', maxTokens: 1000, priority: 0 });
-        fetchAiModels(token);
-      }
+      await adminApi.addAIModel(newModel);
+      alert('تم إضافة النموذج بنجاح');
+      setNewModel({ name: '', apiKey: '', endpoint: '', maxTokens: 1000, priority: 0 });
+      fetchAiModels();
     } catch (err) {
       console.error("Failed to add model", err);
     }
@@ -275,48 +188,27 @@ export default function AdminDashboard() {
 
   const handleDeleteModel = async (id) => {
     if (!confirm('هل أنت متأكد من الحذف؟')) return;
-    const token = localStorage.getItem('token');
     try {
-      await fetch(`https://fahimo-api.onrender.com/api/admin/ai-models/${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      fetchAiModels(token);
+      await adminApi.deleteAIModel(id);
+      fetchAiModels();
     } catch (err) {
       console.error("Failed to delete model", err);
     }
   };
 
   const handleToggleModel = async (id) => {
-    const token = localStorage.getItem('token');
     try {
-      await fetch(`https://fahimo-api.onrender.com/api/admin/ai-models/${id}/toggle`, {
-        method: 'PUT',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      fetchAiModels(token);
+      await adminApi.toggleAIModel(id);
+      fetchAiModels();
     } catch (err) {
       console.error("Failed to toggle model", err);
     }
   };
 
   const saveSettings = async () => {
-    const token = localStorage.getItem('token');
     try {
-      const res = await fetch('https://fahimo-api.onrender.com/api/admin/settings', {
-        method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(settings)
-      });
-      
-      if (res.ok) {
-        alert('تم حفظ الإعدادات بنجاح');
-      } else {
-        throw new Error('Failed to save');
-      }
+      await adminApi.updateSettings(settings);
+      alert('تم حفظ الإعدادات بنجاح');
     } catch (err) {
       console.error("Failed to save settings", err);
       alert('حدث خطأ أثناء حفظ الإعدادات');

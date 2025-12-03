@@ -11,6 +11,7 @@ import Link from "next/link"
 import FaheemAnimatedLogo from "@/components/FaheemAnimatedLogo"
 import Captcha from "@/components/Captcha"
 import { Upload, Check, ArrowRight, ArrowLeft, Loader2, Home, Sun, Moon, Palette, Bot, FileText } from "lucide-react"
+import { authApi, widgetApi, knowledgeApi } from '@/lib/api'
 
 export default function Wizard() {
   const [step, setStep] = useState(1)
@@ -57,53 +58,33 @@ export default function Wizard() {
       if (activityType === 'SERVICE') activityType = 'COMPANY'; // Map service to COMPANY as SERVICE is not in enum
 
       // 1. Register User
-      const authRes = await fetch('https://fahimo-api.onrender.com/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-          name: formData.businessName,
-          activityType: activityType
-        })
-      })
-      const authData = await authRes.json()
-      
-      if (!authRes.ok) throw new Error(authData.error)
+      const authData = await authApi.register({
+        email: formData.email,
+        password: formData.password,
+        name: formData.businessName,
+        activityType: activityType
+      });
 
       const token = authData.token;
+      // Temporarily set token for subsequent requests in this flow
+      localStorage.setItem('token', token);
 
       // 2. Update Widget Config (Color, Tone)
-      await fetch('https://fahimo-api.onrender.com/api/widget/config', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          welcomeMessage: `مرحباً بك في ${formData.businessName}! كيف يمكنني مساعدتك؟`,
-          primaryColor: formData.primaryColor,
-          personality: formData.botTone,
-          showBranding: true
-        })
+      await widgetApi.updateConfig({
+        welcomeMessage: `مرحباً بك في ${formData.businessName}! كيف يمكنني مساعدتك؟`,
+        primaryColor: formData.primaryColor,
+        personality: formData.botTone,
+        showBranding: true
       });
 
       // 3. Upload Knowledge (if any)
       if (formData.file) {
         const uploadData = new FormData()
         uploadData.append('file', formData.file)
-        
-        await fetch('https://fahimo-api.onrender.com/api/knowledge/upload', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          },
-          body: uploadData
-        })
+        await knowledgeApi.upload(uploadData);
       }
 
       // Save token and redirect
-      localStorage.setItem('token', token)
       localStorage.setItem('user', JSON.stringify(authData.user))
       
       router.push('/dashboard')
@@ -190,7 +171,7 @@ export default function Wizard() {
         className="w-full max-w-md"
       >
         <Card className="w-full shadow-2xl border-gray-200 dark:border-white/10 bg-[#f8f8fa] dark:bg-cosmic-900">
-          <CardHeader>
+          <CardHeader className="bg-[#f8f8fa] dark:bg-cosmic-900 rounded-t-xl">
             <CardTitle className="text-2xl text-center text-gray-900 dark:text-white">
               {step === 1 && "إنشاء حساب جديد"}
               {step === 2 && "تفاصيل النشاط التجاري"}

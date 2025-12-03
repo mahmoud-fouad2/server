@@ -41,7 +41,7 @@ const solutions = [
       time: '70%',
       timeMetric: 'تقليل وقت الرد'
     },
-    image: '/assets/images/restaurant-solution.jpg'
+    image: 'https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&q=80&w=600'
   },
   {
     id: 'clinic',
@@ -62,7 +62,7 @@ const solutions = [
       time: '80%',
       timeMetric: 'تقليل الاتصالات الهاتفية'
     },
-    image: '/assets/images/clinic-solution.jpg'
+    image: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=600'
   },
   {
     id: 'retail',
@@ -83,7 +83,7 @@ const solutions = [
       time: '24/7',
       timeMetric: 'خدمة مبيعات متواصلة'
     },
-    image: '/assets/images/retail-solution.jpg'
+    image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=600'
   },
   {
     id: 'business',
@@ -104,7 +104,7 @@ const solutions = [
       time: '50%',
       timeMetric: 'تقليل تكاليف الدعم'
     },
-    image: '/assets/images/business-solution.jpg'
+    image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=600'
   },
   {
     id: 'education',
@@ -125,7 +125,7 @@ const solutions = [
       time: '90%',
       timeMetric: 'أتمتة العمليات الإدارية'
     },
-    image: '/assets/images/education-solution.jpg'
+    image: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&q=80&w=600'
   },
   {
     id: 'realestate',
@@ -146,7 +146,7 @@ const solutions = [
       time: '60%',
       timeMetric: 'تسريع عملية البيع'
     },
-    image: '/assets/images/realestate-solution.jpg'
+    image: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=600'
   }
 ]
 

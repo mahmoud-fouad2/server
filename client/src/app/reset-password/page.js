@@ -7,6 +7,7 @@ import { Button, Input } from '../../components/ui/Components';
 import { Lock, CheckCircle, Loader2, Home, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 import FaheemAnimatedLogo from '../../components/FaheemAnimatedLogo';
+import { authApi } from '@/lib/api';
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState('');
@@ -45,17 +46,7 @@ export default function ResetPasswordPage() {
     setError('');
 
     try {
-      const res = await fetch('https://fahimo-api.onrender.com/api/auth/reset-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, newPassword: password })
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || 'فشل إعادة تعيين كلمة المرور');
-      }
+      await authApi.resetPassword({ token, newPassword: password });
 
       setSuccess(true);
       setTimeout(() => router.push('/login'), 3000);

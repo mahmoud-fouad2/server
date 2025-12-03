@@ -7,6 +7,7 @@ import { Button, Input } from '../../components/ui/Components';
 import { Mail, ArrowLeft, CheckCircle, Loader2, Home } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import FaheemAnimatedLogo from '../../components/FaheemAnimatedLogo';
+import { authApi } from '@/lib/api';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -21,17 +22,7 @@ export default function ForgotPasswordPage() {
     setError('');
 
     try {
-      const res = await fetch('https://fahimo-api.onrender.com/api/auth/forgot-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || 'فشل إرسال رابط الاسترجاع');
-      }
+      await authApi.forgotPassword(email);
 
       setSuccess(true);
     } catch (err) {

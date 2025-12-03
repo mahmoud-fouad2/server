@@ -6,6 +6,7 @@ import { Lock, Mail, Bot, Home, ArrowRight, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import FaheemAnimatedLogo from './FaheemAnimatedLogo';
 import Captcha from './Captcha';
+import { authApi } from '@/lib/api';
 
 export const Login = ({ lang }) => {
   const [email, setEmail] = useState('');
@@ -24,15 +25,17 @@ export const Login = ({ lang }) => {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('https://fahimo-api.onrender.com/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Login failed');
+      const data = await authApi.login({ email, password });
+      
       // Handle login success
       console.log('Logged in:', data);
+      // You might want to save token here if not handled by the component calling this
+      // But usually Login component handles the redirect or state update
+      if (data.token) {
+         localStorage.setItem('token', data.token);
+         localStorage.setItem('user', JSON.stringify(data.user));
+         window.location.href = '/dashboard';
+      }
     } catch (err) {
       setError(err.message);
     } finally {

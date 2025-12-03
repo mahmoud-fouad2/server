@@ -1,4 +1,5 @@
 import './globals.css'
+import SalesBot from '@/components/SalesBot'
 
 export const viewport = {
   width: 'device-width',
@@ -41,7 +42,13 @@ export const metadata = {
     'بوت واتساب',
     'الموظف الذكي',
     'تكامل تيليجرام',
-    'خدمات سحابية'
+    'خدمات سحابية',
+    'شات بوت مصري',
+    'شات بوت سعودي',
+    'شات بوت إماراتي',
+    'شات بوت كويتي',
+    'ردود آلية ذكية',
+    'خدمة عملاء 24 ساعة'
   ],
   authors: [{ name: 'Ma-Fo.info', url: 'https://ma-fo.info' }],
   creator: 'Ma-Fo.info',
@@ -70,9 +77,11 @@ export const metadata = {
   alternates: {
     canonical: 'https://faheemly.com',
     languages: {
-      'ar-SA': 'https://faheemly.com',
-      'ar-EG': 'https://faheemly.com',
-      'ar-AE': 'https://faheemly.com',
+      'ar-SA': 'https://faheemly.com/sa',
+      'ar-EG': 'https://faheemly.com/eg',
+      'ar-AE': 'https://faheemly.com/ae',
+      'ar-KW': 'https://faheemly.com/kw',
+      'x-default': 'https://faheemly.com',
     },
   },
   openGraph: {
@@ -180,6 +189,7 @@ export default function RootLayout({ children }) {
             </div>
           </div>
         </noscript>
+        <SalesBot />
         {children}
       </body>
     </html>

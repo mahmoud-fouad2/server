@@ -28,6 +28,16 @@ const plans = {
     starter: { price: '499', currency: 'جنيه', agents: '1' },
     pro: { price: '1,499', currency: 'جنيه', agents: '3' },
     agency: { price: '4,999', currency: 'جنيه', agents: 'مخصص' }
+  },
+  ae: {
+    starter: { price: '99', currency: 'درهم', agents: '1' },
+    pro: { price: '299', currency: 'درهم', agents: '3' },
+    agency: { price: '999', currency: 'درهم', agents: 'مخصص' }
+  },
+  kw: {
+    starter: { price: '9', currency: 'دينار', agents: '1' },
+    pro: { price: '29', currency: 'دينار', agents: '3' },
+    agency: { price: '99', currency: 'دينار', agents: 'مخصص' }
   }
 }
 
@@ -68,7 +78,7 @@ export default function PricingPage() {
             </p>
 
             {/* Country Selector */}
-            <div className="flex justify-center gap-4 mb-10">
+            <div className="flex flex-wrap justify-center gap-4 mb-10">
               <button
                 onClick={() => setCountry('sa')}
                 className={`px-6 py-3 rounded-full font-bold transition-all ${
@@ -88,6 +98,26 @@ export default function PricingPage() {
                 }`}
               >
                 🇪🇬 مصر
+              </button>
+              <button
+                onClick={() => setCountry('ae')}
+                className={`px-6 py-3 rounded-full font-bold transition-all ${
+                  country === 'ae'
+                    ? 'bg-brand-600 text-white shadow-lg'
+                    : 'bg-white dark:bg-white/5 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-white/10'
+                }`}
+              >
+                🇦🇪 الإمارات
+              </button>
+              <button
+                onClick={() => setCountry('kw')}
+                className={`px-6 py-3 rounded-full font-bold transition-all ${
+                  country === 'kw'
+                    ? 'bg-brand-600 text-white shadow-lg'
+                    : 'bg-white dark:bg-white/5 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-white/10'
+                }`}
+              >
+                🇰🇼 الكويت
               </button>
             </div>
 

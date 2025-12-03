@@ -8,6 +8,7 @@ import PageLayout from "@/components/layout/PageLayout"
 import Link from "next/link"
 import { Mail, MapPin, Phone, Ticket, CheckCircle, AlertCircle } from "lucide-react"
 import { motion } from "framer-motion"
+import { contactApi } from "@/lib/api"
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -24,18 +25,10 @@ export default function ContactPage() {
     setStatus('loading');
 
     try {
-      const res = await fetch('https://fahimo-api.onrender.com/api/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
+      await contactApi.send(formData);
 
-      if (res.ok) {
-        setStatus('success');
-        setFormData({ firstName: '', lastName: '', email: '', subject: '', message: '' });
-      } else {
-        setStatus('error');
-      }
+      setStatus('success');
+      setFormData({ firstName: '', lastName: '', email: '', subject: '', message: '' });
     } catch (err) {
       console.error(err);
       setStatus('error');
@@ -97,7 +90,7 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <h3 className="font-bold">الهاتف</h3>
-                  <p className="text-muted-foreground">+966 50 000 0000</p>
+                  <p className="text-muted-foreground">+966 5300 47 640</p>
                 </div>
               </div>
 

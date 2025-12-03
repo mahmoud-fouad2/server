@@ -1,0 +1,252 @@
+import { useState, useEffect } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { FileText, Globe, Upload, Trash2, Zap, Loader2, Save, Sparkles, AlertTriangle } from "lucide-react"
+import { knowledgeApi } from "@/lib/api"
+
+export default function KnowledgeBaseView({ addNotification }) {
+  const [kbList, setKbList] = useState([])
+  const [uploading, setUploading] = useState(false)
+  const [textInput, setTextInput] = useState("")
+  const [textTitle, setTextTitle] = useState("")
+  const [urlInput, setUrlInput] = useState("")
+  const [kbTab, setKbTab] = useState("text")
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchKbList()
+  }, [])
+
+  const fetchKbList = async () => {
+    try {
+      const data = await knowledgeApi.list()
+      setKbList(data)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    setUploading(true)
+    const formData = new FormData()
+    formData.append('file', file)
+
+    try {
+      await knowledgeApi.upload(formData)
+      addNotification("تم رفع الملف بنجاح")
+      fetchKbList()
+      e.target.value = null
+    } catch (err) {
+      addNotification(`فشل الرفع: ${err.message}`, 'error')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleTextSubmit = async () => {
+    if (!textInput) return
+    setUploading(true)
+    try {
+      await knowledgeApi.addText({ text: textInput, title: textTitle })
+      addNotification("تم إضافة النص بنجاح")
+      setTextInput("")
+      setTextTitle("")
+      fetchKbList()
+    } catch (err) {
+      addNotification(`فشل: ${err.message}`, 'error')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleUrlSubmit = async () => {
+    if (!urlInput) return
+    setUploading(true)
+    try {
+      await knowledgeApi.addUrl({ url: urlInput })
+      addNotification("تم استجلاب الرابط بنجاح")
+      setUrlInput("")
+      fetchKbList()
+    } catch (err) {
+      addNotification(`فشل: ${err.message}`, 'error')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleDeleteKb = async (id) => {
+    if (!confirm("هل أنت متأكد من الحذف؟")) return
+    try {
+      await knowledgeApi.delete(id)
+      fetchKbList()
+      addNotification("تم الحذف بنجاح")
+    } catch (err) {
+      addNotification("فشل الحذف", 'error')
+    }
+  }
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-[calc(100vh-140px)]">
+      
+      {/* Left Column: Active Sources */}
+      <Card className="lg:col-span-1 flex flex-col h-full">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-lg">المصادر النشطة ({kbList.length})</CardTitle>
+          <div className="p-2 bg-muted rounded-lg"><FileText className="w-4 h-4" /></div>
+        </CardHeader>
+        <CardContent className="flex-1 overflow-y-auto pr-2">
+          {loading ? (
+            <div className="flex justify-center py-8"><Loader2 className="animate-spin" /></div>
+          ) : (
+            <div className="space-y-3">
+              {kbList.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground border-2 border-dashed border-border rounded-xl">
+                  <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Zap className="w-6 h-6 text-muted-foreground" />
+                  </div>
+                  <p className="font-medium">قاعدة المعرفة فارغة</p>
+                  <p className="text-xs mt-1">أضف نصوصاً أو روابط لتدريب البوت</p>
+                </div>
+              ) : (
+                kbList.map((kb) => (
+                  <div key={kb.id} className="group flex items-center justify-between p-3 bg-card border border-border hover:border-brand-500/50 transition-all rounded-xl shadow-sm">
+                    <div className="flex items-center gap-3 overflow-hidden">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                        kb.type === 'PDF' ? 'bg-red-500/10 text-red-500' : 
+                        kb.type === 'URL' ? 'bg-blue-500/10 text-blue-500' : 'bg-purple-500/10 text-purple-500'
+                      }`}>
+                        {kb.type === 'PDF' && <FileText className="w-5 h-5" />}
+                        {kb.type === 'URL' && <Globe className="w-5 h-5" />}
+                        {kb.type === 'TEXT' && <FileText className="w-5 h-5" />}
+                      </div>
+                      <div className="truncate">
+                        <p className="font-medium text-sm truncate max-w-[150px]">
+                          {kb.metadata?.filename || kb.metadata?.title || kb.metadata?.url || "بدون عنوان"}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{kb.type}</p>
+                      </div>
+                    </div>
+                    <Button variant="ghost" size="icon" onClick={() => handleDeleteKb(kb.id)} className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:bg-destructive/10">
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Right Column: Input Area */}
+      <Card className="lg:col-span-2 flex flex-col h-full border-brand-500/20 shadow-lg">
+        <div className="flex border-b border-border">
+          <button 
+            onClick={() => setKbTab('text')}
+            className={`flex-1 py-4 text-sm font-medium transition-all border-b-2 ${kbTab === 'text' ? 'border-brand-500 text-brand-500 bg-brand-500/5' : 'border-transparent text-muted-foreground hover:bg-muted/50'}`}
+          >
+            <FileText className="w-4 h-4 inline-block ml-2" />
+            نص (Text)
+          </button>
+          <button 
+            onClick={() => setKbTab('url')}
+            className={`flex-1 py-4 text-sm font-medium transition-all border-b-2 ${kbTab === 'url' ? 'border-brand-500 text-brand-500 bg-brand-500/5' : 'border-transparent text-muted-foreground hover:bg-muted/50'}`}
+          >
+            <Globe className="w-4 h-4 inline-block ml-2" />
+            رابط (URL)
+          </button>
+          <button 
+            onClick={() => setKbTab('pdf')}
+            className={`flex-1 py-4 text-sm font-medium transition-all border-b-2 ${kbTab === 'pdf' ? 'border-brand-500 text-brand-500 bg-brand-500/5' : 'border-transparent text-muted-foreground hover:bg-muted/50'}`}
+          >
+            <Upload className="w-4 h-4 inline-block ml-2" />
+            ملف (PDF)
+          </button>
+        </div>
+
+        <CardContent className="flex-1 p-6">
+          <AnimatePresence mode="wait">
+            {kbTab === 'text' && (
+              <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} key="text" className="space-y-4 h-full flex flex-col">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-muted-foreground uppercase tracking-wider">العنوان / الموضوع</label>
+                  <Input 
+                    placeholder="مثال: سياسة الاسترجاع" 
+                    value={textTitle} 
+                    onChange={(e) => setTextTitle(e.target.value)} 
+                    className="bg-white dark:bg-gray-800 border-border focus:bg-background transition-colors text-gray-900 dark:text-white"
+                  />
+                </div>
+                <div className="space-y-2 flex-1 flex flex-col">
+                  <label className="text-sm font-medium text-muted-foreground uppercase tracking-wider">المحتوى</label>
+                  <textarea 
+                    className="flex-1 w-full p-4 rounded-xl border border-border bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:bg-background transition-colors resize-none text-sm leading-relaxed focus:ring-2 focus:ring-brand-500/20 outline-none" 
+                    placeholder="الصق النص هنا... يمكنك إضافة معلومات عن عملك، الأسعار، الخدمات، أو أي شيء تريد أن يعرفه البوت."
+                    value={textInput}
+                    onChange={(e) => setTextInput(e.target.value)}
+                  ></textarea>
+                </div>
+                <Button onClick={handleTextSubmit} disabled={uploading || !textInput} className="w-full h-12 text-lg shadow-lg shadow-brand-500/20">
+                  {uploading ? <Loader2 className="animate-spin ml-2" /> : <Save className="ml-2 w-5 h-5" />}
+                  حفظ المعلومات
+                </Button>
+              </motion.div>
+            )}
+
+            {kbTab === 'url' && (
+              <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} key="url" className="flex flex-col justify-center h-full space-y-6 max-w-md mx-auto w-full">
+                <div className="text-center space-y-2">
+                  <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Globe className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-xl font-bold">استجلاب من رابط</h3>
+                  <p className="text-sm text-muted-foreground">سيقوم البوت بزيارة الرابط وقراءة المحتوى ليتعلم منه.</p>
+                </div>
+                <div className="space-y-4">
+                  <Input 
+                    placeholder="https://example.com/about" 
+                    value={urlInput} 
+                    onChange={(e) => setUrlInput(e.target.value)} 
+                    className="h-12 text-center bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                  />
+                  <Button onClick={handleUrlSubmit} disabled={uploading || !urlInput} className="w-full h-12" variant="default">
+                    {uploading ? <Loader2 className="animate-spin ml-2" /> : <Sparkles className="ml-2 w-5 h-5" />}
+                    بدء المعالجة
+                  </Button>
+                </div>
+                <div className="bg-yellow-500/10 p-4 rounded-lg text-xs text-yellow-600 dark:text-yellow-400 flex gap-2">
+                  <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                  <p>تأكد من أن الرابط عام ويمكن الوصول إليه. الصفحات التي تتطلب تسجيل دخول لن تعمل.</p>
+                </div>
+              </motion.div>
+            )}
+
+            {kbTab === 'pdf' && (
+              <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} key="pdf" className="flex flex-col justify-center h-full space-y-6">
+                <div className="border-2 border-dashed border-brand-500/30 rounded-2xl p-12 text-center hover:bg-brand-500/5 transition-all cursor-pointer relative group">
+                  <input type="file" className="absolute inset-0 opacity-0 cursor-pointer z-10" onChange={handleFileUpload} accept=".pdf" disabled={uploading} />
+                  <div className="w-20 h-20 bg-brand-500/10 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                    {uploading ? <Loader2 className="w-10 h-10 text-brand-500 animate-spin" /> : <Upload className="w-10 h-10 text-brand-500" />}
+                  </div>
+                  <h3 className="text-xl font-bold mb-2">اسحب الملف هنا أو اضغط للرفع</h3>
+                  <p className="text-muted-foreground">ملفات PDF فقط (الحد الأقصى 10 ميجابايت)</p>
+                  <div className="mt-6 flex justify-center gap-4">
+                    <span className="px-3 py-1 bg-muted rounded-full text-xs">Menu.pdf</span>
+                    <span className="px-3 py-1 bg-muted rounded-full text-xs">Policy.pdf</span>
+                    <span className="px-3 py-1 bg-muted rounded-full text-xs">Info.pdf</span>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </CardContent>
+      </Card>
+    </motion.div>
+  )
+}

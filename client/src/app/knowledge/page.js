@@ -5,6 +5,7 @@ import Sidebar from "@/components/Sidebar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Upload, FileText, Check, Loader2 } from "lucide-react"
+import { knowledgeApi } from "@/lib/api"
 
 export default function KnowledgePage() {
   const [uploading, setUploading] = useState(false)
@@ -19,22 +20,13 @@ export default function KnowledgePage() {
     
     const formData = new FormData()
     formData.append('file', file)
-    const token = localStorage.getItem('token')
 
     try {
-      const res = await fetch('https://fahimo-api.onrender.com/api/knowledge/upload', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
-        body: formData
-      })
+      await knowledgeApi.upload(formData)
       
-      if (res.ok) {
-        setMessage("تم رفع الملف بنجاح! سيتم تدريب البوت عليه فوراً.")
-      } else {
-        setMessage("فشل الرفع. حاول مرة أخرى.")
-      }
+      setMessage("تم رفع الملف بنجاح! سيتم تدريب البوت عليه فوراً.")
     } catch (error) {
-      setMessage("حدث خطأ أثناء الرفع.")
+      setMessage("فشل الرفع. حاول مرة أخرى.")
     } finally {
       setUploading(false)
     }

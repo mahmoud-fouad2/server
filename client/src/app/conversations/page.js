@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import Sidebar from "@/components/Sidebar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { MessageSquare, User, Clock } from "lucide-react"
+import { businessApi } from "@/lib/api"
 
 export default function ConversationsPage() {
   const [conversations, setConversations] = useState([])
@@ -11,12 +12,8 @@ export default function ConversationsPage() {
 
   useEffect(() => {
     const fetchConversations = async () => {
-      const token = localStorage.getItem('token')
       try {
-        const res = await fetch('https://fahimo-api.onrender.com/api/business/conversations', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
-        const data = await res.json()
+        const data = await businessApi.getConversations()
         setConversations(data)
       } catch (error) {
         console.error(error)

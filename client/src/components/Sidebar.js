@@ -5,6 +5,7 @@ import useTheme from '@/lib/theme';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import FaheemAnimatedLogo from './FaheemAnimatedLogo';
+import { ticketApi } from '@/lib/api';
 
 const SidebarItem = ({ icon: Icon, label, id, activeTab, setActiveTab, badge }) => (
   <button 
@@ -45,18 +46,10 @@ export default function Sidebar({ activeTab, setActiveTab, userRole }) {
     // Fetch Ticket Count
     const fetchTicketCount = async () => {
       try {
-        const token = localStorage.getItem('token');
-        if (!token) return;
-        
-        const res = await fetch('https://fahimo-api.onrender.com/api/tickets/my-tickets', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (res.ok) {
-          const data = await res.json();
-          // Count open or in_progress tickets
-          const count = data.filter(t => t.status === 'OPEN' || t.status === 'IN_PROGRESS').length;
-          setTicketCount(count);
-        }
+        const data = await ticketApi.list();
+        // Count open or in_progress tickets
+        const count = data.filter(t => t.status === 'OPEN' || t.status === 'IN_PROGRESS').length;
+        setTicketCount(count);
       } catch (err) {
         console.error(err);
       }
