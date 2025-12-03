@@ -10,6 +10,7 @@ const prisma = require('../config/database');
 const { authenticateToken } = require('../middleware/auth');
 const { generateEmbedding } = require('../services/embedding.service');
 const { WebCrawler, scrapeSinglePage } = require('../services/crawler.service');
+const redisCache = require('../services/redis-cache.service');
 
 // Simple text chunking utility: split into overlapping word chunks
 function chunkText(text, maxWords = 400, overlap = 50) {
@@ -215,6 +216,9 @@ router.post('/upload', authenticateToken, (req, res, next) => {
     // Create chunks for search and retrieval
     try { await createChunksForKB(kb); } catch (e) { console.error('createChunksForKB failed:', e); }
 
+    // Invalidate Redis cache since knowledge base changed
+    await redisCache.invalidate(businessId);
+
     // Cleanup
     fs.unlinkSync(req.file.path);
 
@@ -273,6 +277,9 @@ router.post('/text', authenticateToken, async (req, res) => {
     // Create chunks for the saved text
     try { await createChunksForKB(kb); } catch (e) { console.error('createChunksForKB failed:', e); }
     console.log("Created KB:", kb.id);
+
+    // Invalidate Redis cache since knowledge base changed
+    await redisCache.invalidate(businessId);
 
     res.json({ message: 'Text added successfully', id: kb.id });
   } catch (error) {
@@ -433,6 +440,9 @@ router.post('/url', authenticateToken, async (req, res) => {
     // Create chunks for the scraped URL content
     try { await createChunksForKB(kb); } catch (e) { console.error('createChunksForKB failed:', e); }
 
+    // Invalidate Redis cache since knowledge base changed
+    await redisCache.invalidate(businessId);
+
     res.json({ message: 'URL scraped successfully', id: kb.id });
   } catch (error) {
     console.error('URL Scrape Error:', error.message);
@@ -475,6 +485,9 @@ router.delete('/:id', authenticateToken, async (req, res) => {
         businessId 
       }
     });
+    
+    // Invalidate Redis cache since knowledge base changed
+    await redisCache.invalidate(businessId);
     
     res.json({ message: 'Deleted successfully' });
   } catch (error) {

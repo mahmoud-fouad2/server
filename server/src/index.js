@@ -4,6 +4,9 @@ const dotenv = require('dotenv');
 const path = require('path');
 const http = require('http');
 const { Server } = require('socket.io');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const hpp = require('hpp');
 const prisma = require('./config/database');
 const logger = require('./utils/logger');
 
@@ -23,10 +26,44 @@ const ticketRoutes = require('./routes/tickets.routes');
 const contactRoutes = require('./routes/contact.routes');
 const demoRoutes = require('./routes/demo.routes');
 const passwordRoutes = require('./routes/password.routes');
+const teamRoutes = require('./routes/team.routes');
+const adminRoutes = require('./routes/admin.routes');
+const telegramRoutes = require('./routes/telegram.routes');
+const twilioRoutes = require('./routes/twilio.routes');
+
+// Security Middleware
+app.use(helmet({
+  contentSecurityPolicy: false, // Disable for now to avoid breaking widget embedding
+  crossOriginEmbedderPolicy: false
+}));
+app.use(hpp()); // Prevent HTTP Parameter Pollution
+
+// Rate Limiting - General API
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // 100 requests per 15 minutes per IP
+  message: { error: 'Too many requests from this IP, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Stricter Rate Limiting - Authentication
+const authLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10, // 10 requests per hour per IP
+  message: { error: 'Too many authentication attempts, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // Middleware
-app.use(cors());
-app.use(express.json());
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? ['https://faheemly.com', 'https://www.faheemly.com']
+    : ['http://localhost:3000', 'http://localhost:3001'],
+  credentials: true
+}));
+app.use(express.json({ limit: '10mb' })); // Add size limit for security
 
 // Serve server public folder (API static assets) with caching
 app.use(express.static('public', { 
@@ -204,6 +241,11 @@ app.get('/', (req, res) => {
   res.send('Fahimo API is running. The AI that understands you.');
 });
 
+// Apply rate limiters
+app.use('/api/auth', authLimiter); // Strict limiter for auth routes
+app.use('/api', apiLimiter); // General limiter for all other API routes
+
+// Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/auth', passwordRoutes); // Password reset routes
 app.use('/api/bots', botRoutes);
@@ -215,6 +257,10 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/chat', demoRoutes); // Mount demo routes under /api/chat/demo
+app.use('/api/team', teamRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/telegram', telegramRoutes);
+app.use('/api/twilio', twilioRoutes);
 
 const PORT = process.env.PORT || 3001;
 

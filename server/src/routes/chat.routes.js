@@ -1,8 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const groqService = require('../services/groq.service');
+const vectorSearch = require('../services/vector-search.service');
+const redisCache = require('../services/redis-cache.service');
 const prisma = require('../config/database');
 const { authenticateToken } = require('../middleware/auth');
+const { validateChatMessage, validateRating } = require('../middleware/validation');
 
 // Protected: Get all conversations for the business
 router.get('/conversations', authenticateToken, async (req, res) => {
@@ -106,7 +109,7 @@ router.post('/reply', authenticateToken, async (req, res) => {
 });
 
 // Public: Submit Rating
-router.post('/rating', async (req, res) => {
+router.post('/rating', validateRating, async (req, res) => {
   try {
     const { conversationId, rating, feedback } = req.body;
     
@@ -131,7 +134,7 @@ router.post('/rating', async (req, res) => {
 });
 
 // Public Chat Endpoint (for Widget)
-router.post('/message', async (req, res) => {
+router.post('/message', validateChatMessage, async (req, res) => {
   try {
     const { message, businessId, conversationId } = req.body;
 
@@ -247,6 +250,32 @@ router.post('/message', async (req, res) => {
       });
     }
 
+    // Check Redis cache first (significant cost savings!)
+    const cachedResponse = await redisCache.get(businessId, message);
+    if (cachedResponse) {
+      console.log('[Chat] ✅ Using cached response');
+      
+      // Still save messages to DB for history
+      await prisma.message.create({
+        data: {
+          conversationId: conversation.id,
+          role: 'ASSISTANT',
+          content: cachedResponse.response.response || cachedResponse.response,
+          tokensUsed: 0, // From cache, no tokens used
+          wasFromCache: true,
+          aiModel: 'cached'
+        }
+      });
+
+      return res.json({
+        response: cachedResponse.response.response || cachedResponse.response,
+        conversationId: conversation.id,
+        fromCache: true,
+        tokensUsed: 0,
+        model: 'redis-cache'
+      });
+    }
+
     // Get Conversation History (last 10 messages)
     const history = await prisma.message.findMany({
       where: { conversationId: conversation.id },
@@ -256,17 +285,27 @@ router.post('/message', async (req, res) => {
 
     // Get Business Info
     const business = await prisma.business.findUnique({
-      where: { id: businessId },
-      include: {
-        knowledgeBase: {
-          take: 5, // Get top 5 most relevant knowledge entries
-          orderBy: { createdAt: 'desc' }
-        }
-      }
+      where: { id: businessId }
     });
 
     if (!business) {
       return res.status(404).json({ error: 'Business not found' });
+    }
+
+    // Use Vector Search to find relevant knowledge chunks
+    let knowledgeContext = [];
+    try {
+      knowledgeContext = await vectorSearch.searchKnowledge(message, businessId, 5);
+      console.log(`[Chat] Found ${knowledgeContext.length} relevant knowledge chunks using vector search`);
+    } catch (vectorError) {
+      console.warn('[Chat] Vector search failed, falling back to recent knowledge:', vectorError.message);
+      // Fallback: Get recent knowledge entries
+      const fallbackKnowledge = await prisma.knowledgeBase.findMany({
+        where: { businessId },
+        orderBy: { createdAt: 'desc' },
+        take: 5
+      });
+      knowledgeContext = fallbackKnowledge;
     }
 
     // Parse widget config
@@ -285,13 +324,13 @@ router.post('/message', async (req, res) => {
       content: msg.content
     }));
 
-    // Generate AI Response using Groq
+    // Generate AI Response using Groq with vector search results
     try {
       const aiResult = await groqService.generateChatResponse(
         message,
         { ...business, widgetConfig },
         formattedHistory,
-        business.knowledgeBase || []
+        knowledgeContext // Use vector search results instead of all knowledge
       );
 
       // Update business message usage
@@ -313,6 +352,9 @@ router.post('/message', async (req, res) => {
           aiModel: aiResult.model || 'groq-llama'
         }
       });
+
+      // Cache the response for future queries (7 days TTL)
+      await redisCache.set(businessId, message, aiResult, 7 * 24 * 60 * 60);
 
       res.json({
         response: aiResult.response,

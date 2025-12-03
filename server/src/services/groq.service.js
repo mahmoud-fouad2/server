@@ -18,38 +18,78 @@ const MODELS = {
 };
 
 /**
- * Generate AI response using Groq
+ * Generate AI response using Groq with multi-provider fallback
  * @param {Array} messages - Array of {role, content} messages
  * @param {Object} options - Additional options (model, temperature, max_tokens)
  * @returns {Promise<Object>} - { response, tokensUsed, model }
  */
 async function generateResponse(messages, options = {}) {
-  try {
-    // Fetch active model from DB
-    const activeModel = await prisma.aIModel.findFirst({
-      where: { isActive: true },
-      orderBy: { priority: 'desc' }
-    });
+  // Fetch ALL active models ordered by priority (highest first)
+  const activeModels = await prisma.aIModel.findMany({
+    where: { isActive: true },
+    orderBy: { priority: 'desc' }
+  });
 
-    let apiKey = GROQ_API_KEY;
-    let modelName = options.model || MODELS.LLAMA_70B;
-    let endpoint = GROQ_API_URL;
-    let maxTokensLimit = options.maxTokens || 1024;
+  // If no models in DB, use default Groq
+  if (activeModels.length === 0) {
+    console.log('[Groq] No active models in DB, using default Groq configuration');
+    return await attemptGenerateResponse(messages, {
+      apiKey: GROQ_API_KEY,
+      modelName: options.model || MODELS.LLAMA_70B,
+      endpoint: GROQ_API_URL,
+      maxTokensLimit: options.maxTokens || 1024
+    }, options);
+  }
 
-    if (activeModel) {
-      apiKey = activeModel.apiKey || apiKey;
-      modelName = activeModel.name || modelName;
-      endpoint = activeModel.endpoint || endpoint;
-      if (activeModel.maxTokens) maxTokensLimit = activeModel.maxTokens;
+  // Try each model in priority order until one succeeds
+  let lastError = null;
+  for (const model of activeModels) {
+    try {
+      console.log(`[Groq] Attempting with model: ${model.name} (priority: ${model.priority})`);
+      
+      const result = await attemptGenerateResponse(messages, {
+        apiKey: model.apiKey || GROQ_API_KEY,
+        modelName: model.name,
+        endpoint: model.endpoint || GROQ_API_URL,
+        maxTokensLimit: model.maxTokens || options.maxTokens || 1024
+      }, options);
+
+      console.log(`[Groq] ✅ Success with model: ${model.name}`);
+      return result;
+
+    } catch (error) {
+      console.error(`[Groq] ❌ Failed with model ${model.name}:`, error.message);
+      lastError = error;
+      
+      // If this is a rate limit error, wait before trying next provider
+      if (error.message.includes('Rate limit')) {
+        console.log('[Groq] Rate limit hit, trying next provider immediately...');
+      }
+      
+      // Continue to next model
+      continue;
     }
+  }
 
-    const {
-      temperature = 0.7,
-      stream = false
-    } = options;
+  // If all models failed, throw the last error
+  throw new Error(`All AI providers failed. Last error: ${lastError?.message || 'Unknown error'}`);
+}
 
-    console.log(`[Groq] Generating response with ${modelName}...`);
+/**
+ * Helper: Attempt to generate response with specific provider config
+ * @private
+ */
+async function attemptGenerateResponse(messages, providerConfig, options = {}) {
+  const { apiKey, modelName, endpoint, maxTokensLimit } = providerConfig;
 
+  const {
+    temperature = 0.7,
+    stream = false
+  } = options;
+
+  console.log(`[Groq] Generating response with ${modelName}...`);
+
+  try {
     const response = await axios.post(
       endpoint,
       {
@@ -70,7 +110,7 @@ async function generateResponse(messages, options = {}) {
     );
 
     if (!response.data || !response.data.choices || response.data.choices.length === 0) {
-      throw new Error('Invalid response from Groq API');
+      throw new Error('Invalid response from AI API');
     }
 
     const aiMessage = response.data.choices[0].message.content;
@@ -86,18 +126,20 @@ async function generateResponse(messages, options = {}) {
     };
 
   } catch (error) {
-    console.error('[Groq] Error generating response:', error.response?.data || error.message);
+    console.error('[Groq] Error with provider:', error.response?.data || error.message);
     
-    // Return helpful error message
+    // Throw error with specific code for fallback logic
     if (error.response?.status === 429) {
-      throw new Error('Rate limit exceeded. Please try again in a moment.');
-    } else if (error.response?.status === 401) {
-      throw new Error('Invalid API key. Please check your Groq configuration.');
-    } else if (error.code === 'ECONNABORTED') {
-      throw new Error('Request timeout. The AI model is taking too long to respond.');
+      throw new Error('Rate limit exceeded');
+    } else if (error.response?.status === 401 || error.response?.status === 403) {
+      throw new Error('Authentication failed - Invalid API key');
+    } else if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
+      throw new Error('Request timeout');
+    } else if (error.response?.status >= 500) {
+      throw new Error('Provider server error');
     }
     
-    throw new Error(`Groq API error: ${error.message}`);
+    throw new Error(`AI Provider error: ${error.message}`);
   }
 }
 

@@ -78,10 +78,6 @@ export default function RootLayout({ children }) {
           </div>
         </noscript>
         {children}
-        {/* Ensure demo token/user exist early so client-side API calls have Authorization header in dev */}
-        <script dangerouslySetInnerHTML={{ __html: `(function(){try{if(!localStorage.getItem('token')){localStorage.setItem('token','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbWluOWswc2YwMDAwYmMzNHVucnU0OHhjIiwiZW1haWwiOiJkZW1vQGZhaGVlbS5jb20iLCJyb2xlIjoiQ0xJRU5UIiwiYnVzaW5lc3NJZCI6ImNtaW45azBzcDAwMDJiYzM0MTUwa2I3emIiLCJpYXQiOjE3NjQ2MDA1MTUsImV4cCI6MTc5NjEzNjUxNX0.oD24QTqOSqk9rlfdWZBndIy5oRTW2P6EqHdoR6pdSsg');}
-          if(!localStorage.getItem('user')){localStorage.setItem('user', JSON.stringify({ id:'cmin9k0sf0000bc34unru48xc', name:'Demo User', email:'demo@faheem.com', businessId:'cmin9k0sp0002bc34150kb7zb'}));}
-        }catch(e){} })();` }} />
       </body>
     </html>
   )
