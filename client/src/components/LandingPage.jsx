@@ -361,22 +361,7 @@ export const LandingPage = ({ lang = 'ar', setLang, country = 'sa', setCountry }
              </Link>
           </motion.div>
 
-          {/* Promo Banner - 99 SAR */}
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            className="mt-10 inline-block"
-          >
-            <div className="relative px-8 py-4 rounded-full bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-2xl shadow-green-500/30">
-              <div className="absolute -top-2 -right-2 w-16 h-16 bg-yellow-400 rounded-full flex items-center justify-center text-green-900 font-black text-xs animate-pulse">
-                عرض!
-              </div>
-              <p className="text-xl md:text-2xl font-black">
-                ابدأ من <span className="text-3xl">99</span> ريال فقط شهرياً! 🎉
-              </p>
-            </div>
-          </motion.div>
+
           
           <motion.div 
             initial={{ opacity: 0 }}
@@ -429,6 +414,45 @@ export const LandingPage = ({ lang = 'ar', setLang, country = 'sa', setCountry }
                 <div className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{stat.label}</div>
               </div>
             ))}
+          </motion.div>
+
+          {/* Limited Time Offer Banner */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 1 }}
+            className="mt-16 relative"
+          >
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-orange-500 via-red-500 to-pink-600 p-1 shadow-2xl hover:shadow-orange-500/40 transition-shadow">
+              <div className={`rounded-3xl px-8 py-8 md:px-12 md:py-10 ${isDark ? 'bg-cosmic-900' : 'bg-white'} relative overflow-hidden`}>
+                {/* Decorative Elements */}
+                <div className="absolute -top-10 -left-10 w-40 h-40 bg-gradient-to-br from-orange-500/20 to-transparent rounded-full blur-3xl"></div>
+                <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-gradient-to-br from-pink-500/20 to-transparent rounded-full blur-3xl"></div>
+                
+                <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+                  <div className="text-center md:text-right flex-1">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-orange-500 to-red-500 text-white text-sm font-bold mb-4 animate-pulse">
+                      <Sparkles size={16} />
+                      عرض لفترة محدودة
+                    </div>
+                    <h3 className="text-3xl md:text-4xl font-black mb-3 bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent">
+                      ابدأ من 99 ريال فقط!
+                    </h3>
+                    <p className={`text-lg ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                      خطة احترافية كاملة مع تكامل واتساب وويدجت الموقع 🎉
+                    </p>
+                  </div>
+                  <div>
+                    <Link href="/register">
+                      <Button className="px-10 py-6 text-lg font-black rounded-2xl bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 shadow-xl hover:shadow-2xl hover:scale-105 transition-all">
+                        اشترك الآن
+                        <ArrowRight className="mr-2" size={20} />
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
           </motion.div>
         </div>
       </section>
