@@ -103,28 +103,25 @@ router.get('/ai-providers', authenticateToken, isAdmin, async (req, res) => {
         id: 'gemini',
         name: 'Google Gemini',
         model: 'gemini-1.5-flash',
-        apiKey: process.env.GEMINI_API_KEY || 'AIzaSyBqhlvpIoPwIqGDQ-4zDUmqEowO4BSH9d8',
         isActive: true,
         tier: 'Free',
-        status: 'configured'
+        status: process.env.GEMINI_API_KEY ? 'configured' : 'not-configured'
       },
       {
         id: 'cerebras',
         name: 'Cerebras AI',
         model: 'llama3.1-8b',
-        apiKey: process.env.CEREBRAS_API_KEY || 'csk-92v9ywj8cr4et9k4h2rpm3mwfxpe4hnhvhxe9yfyfvtncjfm',
         isActive: true,
         tier: 'Free',
-        status: 'configured'
+        status: process.env.CEREBRAS_API_KEY ? 'configured' : 'not-configured'
       },
       {
         id: 'deepseek',
         name: 'Deepseek',
         model: 'deepseek-chat',
-        apiKey: process.env.DEEPSEEK_API_KEY || 'sk-2cc3db21757f4af493012f75f6185ed1',
         isActive: true,
         tier: 'Free',
-        status: 'configured'
+        status: process.env.DEEPSEEK_API_KEY ? 'configured' : 'not-configured'
       }
     ];
     res.json(providers);

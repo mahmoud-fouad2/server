@@ -10,17 +10,17 @@ const AI_PROVIDERS = {
     model: 'llama-3.3-70b-versatile'
   },
   gemini: {
-    apiKey: process.env.GEMINI_API_KEY || 'AIzaSyBqhlvpIoPwIqGDQ-4zDUmqEowO4BSH9d8',
+    apiKey: process.env.GEMINI_API_KEY,
     url: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent',
     model: 'gemini-1.5-flash'
   },
   cerebras: {
-    apiKey: process.env.CEREBRAS_API_KEY || 'csk-92v9ywj8cr4et9k4h2rpm3mwfxpe4hnhvhxe9yfyfvtncjfm',
+    apiKey: process.env.CEREBRAS_API_KEY,
     url: 'https://api.cerebras.ai/v1/chat/completions',
     model: 'llama3.1-8b'
   },
   deepseek: {
-    apiKey: process.env.DEEPSEEK_API_KEY || 'sk-2cc3db21757f4af493012f75f6185ed1',
+    apiKey: process.env.DEEPSEEK_API_KEY,
     url: 'https://api.deepseek.com/v1/chat/completions',
     model: 'deepseek-chat'
   }
