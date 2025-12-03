@@ -241,6 +241,30 @@ app.get('/', (req, res) => {
   res.send('Fahimo API is running. The AI that understands you.');
 });
 
+// Health Check Endpoint (no rate limit)
+app.get('/api/health', async (req, res) => {
+  try {
+    // Check database connection
+    await prisma.$queryRaw`SELECT 1`;
+    
+    res.json({
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      environment: process.env.NODE_ENV || 'development',
+      database: 'connected',
+      version: '1.0.0'
+    });
+  } catch (error) {
+    logger.error('Health check failed', error);
+    res.status(503).json({
+      status: 'unhealthy',
+      timestamp: new Date().toISOString(),
+      error: 'Database connection failed'
+    });
+  }
+});
+
 // Apply rate limiters
 app.use('/api/auth', authLimiter); // Strict limiter for auth routes
 app.use('/api', apiLimiter); // General limiter for all other API routes
