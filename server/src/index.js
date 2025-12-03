@@ -62,11 +62,18 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// Determine allowed origins
+const allowedOrigins = process.env.NODE_ENV === 'production'
+  ? [
+      'https://faheemly.com', 
+      'https://www.faheemly.com',
+      ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',').map(url => url.trim()) : [])
+    ]
+  : ['http://localhost:3000', 'http://localhost:3001'];
+
 // Middleware
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://faheemly.com', 'https://www.faheemly.com']
-    : ['http://localhost:3000', 'http://localhost:3001'],
+  origin: allowedOrigins,
   credentials: true
 }));
 app.use(express.json({ limit: '10mb' })); // Add size limit for security
@@ -93,9 +100,7 @@ app.use('/', express.static(clientOut, {
 // Socket.io for real-time widget chat
 const io = new Server(server, {
   cors: {
-    origin: process.env.NODE_ENV === 'production' 
-      ? ['https://faheemly.com', 'https://www.faheemly.com']
-      : ['http://localhost:3000', 'http://localhost:3001'],
+    origin: allowedOrigins,
     methods: ["GET", "POST"],
     credentials: true
   }
