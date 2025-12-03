@@ -221,7 +221,35 @@ process.on('unhandledRejection', (reason, promise) => {
   console.error('UNHANDLED REJECTION:', reason);
 });
 
-server.listen(PORT, () => {
+// Auto-create admin on startup
+async function ensureAdminExists() {
+  try {
+    const bcrypt = require('bcryptjs');
+    const adminEmail = 'admin@faheemly.com';
+    const adminPassword = await bcrypt.hash('admin@123', 10);
+    
+    const existingAdmin = await prisma.user.findUnique({ where: { email: adminEmail } });
+    
+    if (!existingAdmin) {
+      await prisma.user.create({
+        data: {
+          email: adminEmail,
+          name: 'Super Admin',
+          password: adminPassword,
+          role: 'SUPERADMIN'
+        }
+      });
+      console.log('✅ Admin account created: admin@faheemly.com / admin@123');
+    } else {
+      console.log('✅ Admin account already exists');
+    }
+  } catch (error) {
+    console.error('⚠️ Error ensuring admin exists:', error.message);
+  }
+}
+
+server.listen(PORT, async () => {
   console.log(`\n🚀 Fahimo Server is running on port ${PORT}`);
   console.log(`✨ "The one who understands you" is ready to serve.`);
+  await ensureAdminExists();
 });
