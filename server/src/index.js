@@ -22,6 +22,7 @@ const chatRoutes = require('./routes/chat.routes');
 const ticketRoutes = require('./routes/tickets.routes');
 const contactRoutes = require('./routes/contact.routes');
 const demoRoutes = require('./routes/demo.routes');
+const passwordRoutes = require('./routes/password.routes');
 
 // Middleware
 app.use(cors());
@@ -201,6 +202,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/auth', passwordRoutes); // Password reset routes
 app.use('/api/bots', botRoutes);
 app.use('/api/whatsapp', whatsappRoutes);
 app.use('/api/knowledge', knowledgeRoutes);

@@ -105,7 +105,7 @@ export const Login = ({ lang }) => {
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
                   <Lock size={16} className="text-brand-500" /> {t.password}
                 </label>
-                <a href="/contact" className="text-xs text-brand-600 dark:text-brand-400 hover:underline">نسيت كلمة المرور؟</a>
+                <a href="/forgot-password" className="text-xs text-brand-600 dark:text-brand-400 hover:underline">نسيت كلمة المرور؟</a>
               </div>
               <div className="relative group">
                 <Input 

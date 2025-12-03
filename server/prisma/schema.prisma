@@ -17,6 +17,8 @@ model User {
   role          Role      @default(CLIENT)
   isActive      Boolean   @default(true)
   twoFactorSecret String? // للـ 2FA
+  resetToken    String?   // Password reset token (hashed)
+  resetTokenExpiry DateTime? // Token expiration time
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   
