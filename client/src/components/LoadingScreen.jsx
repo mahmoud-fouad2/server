@@ -59,11 +59,8 @@ export default function LoadingScreen({ onComplete }) {
         </div>
 
         {/* Progress Text */}
-        <div className="flex items-center justify-between mt-3 px-1">
-          <span className="text-sm font-bold text-gray-600 dark:text-gray-400">
-            جاري التحميل...
-          </span>
-          <span className="text-lg font-bold bg-gradient-to-r from-brand-600 to-brand-500 bg-clip-text text-transparent">
+        <div className="flex items-center justify-center mt-3 px-1">
+          <span className="text-2xl font-bold bg-gradient-to-r from-brand-600 to-brand-500 bg-clip-text text-transparent">
             {Math.round(progress)}%
           </span>
         </div>

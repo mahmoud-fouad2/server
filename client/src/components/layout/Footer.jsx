@@ -28,7 +28,7 @@ export default function Footer() {
           {/* Brand Column */}
           <div className="col-span-1 md:col-span-1">
             <div className="flex items-center justify-center md:justify-start mb-6">
-              <img src="/logo2.png" alt="فهملي" className="w-56 h-56 object-contain" loading="lazy" />
+              <img src="/logo2.png" alt="فهملي" className="w-32 h-32 object-contain" loading="lazy" />
             </div>
             <p className="text-sm leading-relaxed mb-8 opacity-80">
               أقوى منصة شات بوت عربي مدعومة بالذكاء الاصطناعي. نساعدك تزيد مبيعاتك وترضي عملاءك 24/7.

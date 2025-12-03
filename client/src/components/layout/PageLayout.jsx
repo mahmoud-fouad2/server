@@ -88,15 +88,15 @@ export default function PageLayout({ children }) {
 
           {/* Mobile Menu Button */}
           <div className="flex items-center gap-3 lg:hidden">
-            <button onClick={toggleTheme} className={`p-2 rounded-full ${isDark ? 'bg-white/5 text-yellow-400' : 'bg-gray-100 text-gray-600'}`}>
-              {isDark ? <Sun size={18} /> : <Moon size={18} />}
+            <button onClick={toggleTheme} className={`p-2.5 rounded-full ${isDark ? 'bg-white/5 text-yellow-400' : 'bg-gray-100 text-gray-600'} transition-all hover:scale-105`}>
+              {isDark ? <Sun size={20} /> : <Moon size={20} />}
             </button>
             <button 
               onClick={() => setMobileMenuOpen(true)}
-              className="p-2 rounded-full bg-gray-100 dark:bg-white/5 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
+              className="p-3 rounded-lg bg-brand-600 text-white hover:bg-brand-700 transition-all hover:scale-105 shadow-md"
               aria-label="Open menu"
             >
-              <Menu size={24} />
+              <Menu size={26} strokeWidth={2.5} />
             </button>
           </div>
         </div>

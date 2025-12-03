@@ -135,10 +135,12 @@ export default function Wizard() {
           }}
           className="inline-block"
         >
-          <FaheemAnimatedLogo size="medium" showText={true} className="mx-auto mb-4" />
+          <div className="bg-[#f8f8fa] dark:bg-cosmic-800 rounded-3xl p-6 shadow-lg inline-block">
+            <FaheemAnimatedLogo size="medium" showText={true} className="mx-auto" />
+          </div>
         </motion.div>
-        <h1 className="text-3xl md:text-4xl font-bold mb-2 bg-gradient-to-r from-brand-600 to-brand-400 bg-clip-text text-transparent">إعداد مساعد فهملي</h1>
-        <p className="text-sm text-muted-foreground">جاهز في 3 دقائق فقط ⚡</p>
+        <h1 className="text-3xl md:text-4xl font-bold mb-2 mt-6 bg-gradient-to-r from-brand-600 to-brand-400 bg-clip-text text-transparent">إعداد مساعد فهملي الذكي</h1>
+        <p className="text-base text-muted-foreground">جاهز في 3 دقائق فقط ⚡ | سهل • سريع • ذكي</p>
       </div>
 
       {/* Progress Bar */}
