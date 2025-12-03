@@ -578,105 +578,20 @@ export const LandingPage = ({ lang = 'ar', setLang, country = 'sa', setCountry }
         </div>
       </section>
 
-      {/* Trusted by Companies Section */}
-      <section className={`py-20 relative overflow-hidden ${isDark ? 'bg-cosmic-900' : 'bg-white'}`}>
-        {/* Subtle background decoration */}
-        <div className="absolute inset-0 opacity-[0.02]">
-          <div className="absolute top-1/2 left-1/4 w-96 h-96 bg-brand-500 rounded-full blur-3xl"></div>
-          <div className="absolute top-1/2 right-1/4 w-96 h-96 bg-purple-500 rounded-full blur-3xl"></div>
-        </div>
-
-        <div className="max-w-6xl mx-auto px-6 relative z-10">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="text-center mb-14"
-          >
-            <p className={`text-xs uppercase tracking-wider font-bold mb-3 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-              Trusted By
-            </p>
-            <h3 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              يثق بنا قادة التكنولوجيا العالميين
-            </h3>
-          </motion.div>
-
-          {/* Premium Companies Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-            {[
-              { name: 'Google', color: 'from-blue-500 to-green-500' },
-              { name: 'Microsoft', color: 'from-blue-600 to-sky-400' },
-              { name: 'Amazon', color: 'from-orange-500 to-yellow-500' },
-              { name: 'Apple', color: 'from-gray-700 to-gray-500' },
-              { name: 'Meta', color: 'from-blue-600 to-purple-600' },
-              { name: 'IBM', color: 'from-blue-700 to-blue-500' }
-            ].map((company, index) => (
-              <motion.div
-                key={company.name}
-                initial={{ opacity: 0, y: 30, scale: 0.9 }}
-                whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ 
-                  duration: 0.5, 
-                  delay: index * 0.1,
-                  type: "spring",
-                  stiffness: 100
-                }}
-                whileHover={{ 
-                  y: -8,
-                  transition: { duration: 0.2 }
-                }}
-                className="group relative"
-              >
-                {/* Gradient Border */}
-                <div className={`absolute inset-0 bg-gradient-to-br ${company.color} rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-xl`}></div>
-                
-                {/* Card */}
-                <div className={`relative p-8 rounded-2xl transition-all duration-300 ${isDark ? 'bg-cosmic-800 hover:bg-cosmic-700 border border-white/10' : 'bg-white hover:bg-gray-50 border border-gray-100 shadow-lg hover:shadow-2xl'}`}>
-                  <div className="flex flex-col items-center justify-center h-20">
-                    <div className={`text-2xl font-black mb-2 bg-gradient-to-br ${company.color} bg-clip-text text-transparent`}>
-                      {company.name}
-                    </div>
-                    <div className={`h-1 w-12 rounded-full bg-gradient-to-r ${company.color} transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300`}></div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Trust Badge */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.8 }}
-            className="mt-12 text-center"
-          >
-            <div className={`inline-flex items-center gap-2 px-6 py-3 rounded-full ${isDark ? 'bg-white/5 border border-white/10' : 'bg-gray-50 border border-gray-200'}`}>
-              <Shield className="w-4 h-4 text-green-500" />
-              <span className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                موثوق من قبل أكثر من 500+ شركة عالمية
-              </span>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
       {/* Modern Industry Solutions */}
-      <section className={`py-32 relative ${isDark ? 'bg-cosmic-950' : 'bg-gray-50'}`}>
+      <section className={`py-16 relative ${isDark ? 'bg-cosmic-950' : 'bg-gray-50'}`}>
         {isDark && <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.03]"></div>}
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-20"
+            className="text-center mb-12"
           >
-            <span className={`inline-block px-4 py-2 rounded-full text-sm font-bold mb-6 ${isDark ? 'bg-brand-500/10 text-brand-400' : 'bg-brand-50 text-brand-600'}`}>
+            <span className={`inline-block px-4 py-2 rounded-full text-sm font-bold mb-4 ${isDark ? 'bg-brand-500/10 text-brand-400' : 'bg-brand-50 text-brand-600'}`}>
               حلول متخصصة لكل القطاعات
             </span>
-            <h2 className={`text-3xl lg:text-5xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>{t.indTitle}</h2>
+            <h2 className={`text-3xl lg:text-5xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>{t.indTitle}</h2>
             <p className={`text-xl max-w-2xl mx-auto ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>اختر الحل المناسب لنشاطك التجاري واكتشف كيف يمكن لفهملي أن يحدث فرقاً</p>
             <div className="mt-8 flex justify-center">
               <Link href="/solutions">
@@ -743,14 +658,22 @@ export const LandingPage = ({ lang = 'ar', setLang, country = 'sa', setCountry }
                 color: "red",
                 image: "https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&q=80&w=600"
               }
-            ].map((item, idx) => (
+            ].map((item, idx) => {
+              const solutionLinks = {
+                'المطاعم والكافيهات': '/solutions/restaurant',
+                'العيادات والمراكز الطبية': '/solutions/clinic',
+                'المتاجر والوكالات': '/solutions/retail',
+                'الشركات والمؤسسات': '/solutions/business',
+                'التعليم والتدريب': '/solutions/education',
+                'الخدمات المالية': '/solutions/realestate'
+              };
+              return (
+              <Link key={idx} href={solutionLinks[item.title] || '/solutions'}>
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: idx * 0.1 }}
-                key={idx} 
-                onClick={() => setSelectedIndustry(item)}
                 className={`relative rounded-[2rem] overflow-hidden group cursor-pointer border ${isDark ? 'border-white/10 bg-white/5' : 'border-gray-200 bg-white'} transition-all hover:-translate-y-2 hover:shadow-2xl`}
               >
                  {/* Background Image with Overlay */}
@@ -779,15 +702,16 @@ export const LandingPage = ({ lang = 'ar', setLang, country = 'sa', setCountry }
                    </div>
                  </div>
               </motion.div>
-            ))}
+              </Link>
+            )})})
           </div>
         </div>
       </section>
 
       {/* Comparison Section (New & Improved) */}
-      <section className={`py-32 border-t ${isDark ? 'border-white/5 bg-cosmic-900/50' : 'bg-white border-gray-200'}`}>
+      <section className={`py-16 border-t ${isDark ? 'border-white/5 bg-cosmic-900/50' : 'bg-white border-gray-200'}`}>
         <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-20">
+          <div className="text-center mb-12">
             <h2 className={`text-3xl lg:text-4xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>{t.whyFahimo}</h2>
             <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{t.compSub}</p>
           </div>
@@ -859,15 +783,15 @@ export const LandingPage = ({ lang = 'ar', setLang, country = 'sa', setCountry }
       </section>
 
       {/* Testimonials Section */}
-      <section className={`py-32 ${isDark ? 'bg-cosmic-900/50' : 'bg-gray-50'}`}>
+      <section className={`py-16 ${isDark ? 'bg-cosmic-900/50' : 'bg-gray-50'}`}>
         <div className="max-w-7xl mx-auto px-6">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center mb-10"
           >
-            <span className={`inline-block px-4 py-2 rounded-full text-sm font-bold mb-6 ${isDark ? 'bg-brand-500/10 text-brand-400' : 'bg-brand-50 text-brand-600'}`}>
+            <span className={`inline-block px-4 py-2 rounded-full text-sm font-bold mb-4 ${isDark ? 'bg-brand-500/10 text-brand-400' : 'bg-brand-50 text-brand-600'}`}>
               ماذا يقول عملاؤنا
             </span>
             <h2 className={`text-3xl lg:text-4xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
@@ -977,7 +901,7 @@ export const LandingPage = ({ lang = 'ar', setLang, country = 'sa', setCountry }
       </section>
 
       {/* CTA Section */}
-      <section className={`py-32 relative overflow-hidden ${isDark ? 'bg-cosmic-950' : 'bg-white'}`}>
+      <section className={`py-16 relative overflow-hidden ${isDark ? 'bg-cosmic-950' : 'bg-white'}`}>
         <div className="absolute inset-0 bg-gradient-to-br from-brand-500/10 via-purple-500/10 to-transparent"></div>
         <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
           <motion.div
