@@ -515,33 +515,66 @@ export const LandingPage = ({ lang = 'ar', setLang, country = 'sa', setCountry }
       </AnimatePresence>
 
       {/* Middle East Coverage Section */}
-      <section className={`py-20 relative ${isDark ? 'bg-cosmic-900' : 'bg-white'}`}>
-        <div className="max-w-7xl mx-auto px-6">
+      <section className={`py-20 relative overflow-hidden ${isDark ? 'bg-gradient-to-br from-cosmic-900 via-cosmic-900 to-cosmic-800' : 'bg-gradient-to-br from-white via-gray-50 to-blue-50'}`}>
+        {/* Decorative Background */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute top-0 left-0 w-96 h-96 bg-green-500 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-500 rounded-full blur-3xl"></div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
             className="text-center mb-16"
           >
-            <span className={`inline-block px-4 py-2 rounded-full text-sm font-bold mb-6 ${isDark ? 'bg-green-500/10 text-green-400' : 'bg-green-50 text-green-600'}`}>
+            <span className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold mb-6 ${isDark ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-green-50 text-green-600 border border-green-200'}`}>
+              <Globe size={16} />
               نغطي جميع دول الشرق الأوسط
             </span>
-            <h2 className={`text-3xl lg:text-5xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>نتحدث بكل اللهجات العربية</h2>
-            <p className={`text-xl max-w-3xl mx-auto ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+            <h2 className={`text-4xl lg:text-6xl font-black mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              نتحدث بكل اللهجات العربية
+            </h2>
+            <p className={`text-xl lg:text-2xl max-w-3xl mx-auto leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
               من الخليج إلى المغرب، فهملي يفهم ويتحدث بلهجة عملائك المحليين
             </p>
-            <div className="mt-12 flex flex-wrap justify-center gap-6 text-4xl">
-              <span title="السعودية">🇸🇦</span>
-              <span title="مصر">🇪🇬</span>
-              <span title="الإمارات">🇦🇪</span>
-              <span title="الكويت">🇰🇼</span>
-              <span title="قطر">🇶🇦</span>
-              <span title="البحرين">🇧🇭</span>
-              <span title="الأردن">🇯🇴</span>
-              <span title="لبنان">🇱🇧</span>
-              <span title="المغرب">🇲🇦</span>
-            </div>
           </motion.div>
+
+          {/* Countries Grid */}
+          <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-4 md:gap-6 mt-16">
+            {[
+              { flag: 'SA', name: 'السعودية', code: 'SA' },
+              { flag: 'EG', name: 'مصر', code: 'EG' },
+              { flag: 'AE', name: 'الإمارات', code: 'AE' },
+              { flag: 'KW', name: 'الكويت', code: 'KW' },
+              { flag: 'QA', name: 'قطر', code: 'QA' },
+              { flag: 'BH', name: 'البحرين', code: 'BH' },
+              { flag: 'JO', name: 'الأردن', code: 'JO' },
+              { flag: 'LB', name: 'لبنان', code: 'LB' },
+              { flag: 'MA', name: 'المغرب', code: 'MA' }
+            ].map((country, index) => (
+              <motion.div
+                key={country.code}
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
+                className={`group relative p-6 rounded-2xl text-center transition-all duration-300 hover:scale-110 ${isDark ? 'bg-white/5 hover:bg-white/10 border border-white/10' : 'bg-white hover:bg-gray-50 border border-gray-200 shadow-lg hover:shadow-xl'}`}
+              >
+                <div className="text-5xl mb-3 transform group-hover:scale-125 transition-transform duration-300">
+                  <span className={`inline-block rounded-lg overflow-hidden shadow-lg fi fi-${country.code.toLowerCase()}`} style={{ fontSize: '48px', lineHeight: '48px', width: '48px', height: '48px', backgroundSize: 'cover' }}></span>
+                </div>
+                <p className={`text-sm font-bold ${isDark ? 'text-gray-300 group-hover:text-white' : 'text-gray-700 group-hover:text-gray-900'}`}>
+                  {country.name}
+                </p>
+                <span className={`text-xs font-medium ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                  {country.code}
+                </span>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 
