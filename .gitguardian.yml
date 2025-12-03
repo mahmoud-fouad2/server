@@ -1,0 +1,15 @@
+# GitGuardian Configuration
+# This file tells GitGuardian to ignore false positives
+
+# Ignore example files and documentation
+paths-ignore:
+  - "**/*.example"
+  - "**/*.md"
+  - "**/SECURITY_UPDATES.md"
+  - "**/DEPLOYMENT_GUIDE.md"
+  - "**/.env.example"
+  - "**/README*.md"
+
+# All real secrets are stored securely in:
+# - Render.com environment variables (production)
+# - Local .env files (excluded from git via .gitignore)
