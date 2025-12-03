@@ -84,67 +84,101 @@ router.put('/settings', authenticateToken, isAdmin, async (req, res) => {
   }
 });
 
-// --- AI Models Management ---
+// --- AI Providers Management ---
 
-// Get All AI Models
-router.get('/ai-models', authenticateToken, isAdmin, async (req, res) => {
+// Get AI Providers Configuration
+router.get('/ai-providers', authenticateToken, isAdmin, async (req, res) => {
   try {
-    const models = await prisma.aIModel.findMany({
-      orderBy: { priority: 'desc' }
-    });
-    res.json(models);
+    const providers = [
+      {
+        id: 'groq',
+        name: 'Groq',
+        model: 'llama-3.3-70b-versatile',
+        apiKey: process.env.GROQ_API_KEY || '',
+        isActive: true,
+        tier: 'Free',
+        status: process.env.GROQ_API_KEY ? 'configured' : 'not-configured'
+      },
+      {
+        id: 'gemini',
+        name: 'Google Gemini',
+        model: 'gemini-1.5-flash',
+        apiKey: process.env.GEMINI_API_KEY || 'AIzaSyBqhlvpIoPwIqGDQ-4zDUmqEowO4BSH9d8',
+        isActive: true,
+        tier: 'Free',
+        status: 'configured'
+      },
+      {
+        id: 'cerebras',
+        name: 'Cerebras AI',
+        model: 'llama3.1-8b',
+        apiKey: process.env.CEREBRAS_API_KEY || 'csk-92v9ywj8cr4et9k4h2rpm3mwfxpe4hnhvhxe9yfyfvtncjfm',
+        isActive: true,
+        tier: 'Free',
+        status: 'configured'
+      }
+    ];
+    res.json(providers);
   } catch (error) {
-    console.error('Admin Get AI Models Error:', error);
-    res.status(500).json({ error: 'Failed to fetch AI models' });
+    console.error('Admin Get AI Providers Error:', error);
+    res.status(500).json({ error: 'Failed to fetch AI providers' });
   }
 });
 
-// Add AI Model
-router.post('/ai-models', authenticateToken, isAdmin, async (req, res) => {
+// Test AI Provider
+router.post('/ai-providers/:id/test', authenticateToken, isAdmin, async (req, res) => {
   try {
-    const { name, apiKey, endpoint, maxTokens, priority } = req.body;
-    const model = await prisma.aIModel.create({
-      data: {
-        name,
-        apiKey,
-        endpoint,
-        maxTokens: parseInt(maxTokens) || 1000,
-        priority: parseInt(priority) || 0,
-        isActive: true
+    const { id } = req.params;
+    const aiService = require('../services/aiService');
+    
+    // Simple test message
+    const testMessage = "مرحباً، هل أنت تعمل؟";
+    const testBusinessId = req.user.businesses?.[0]?.id;
+    
+    if (!testBusinessId) {
+      return res.status(400).json({ error: 'No business found for testing' });
+    }
+
+    const result = await aiService.generateResponse(testMessage, testBusinessId, []);
+    
+    res.json({
+      success: true,
+      provider: result.provider,
+      response: result.response,
+      fromCache: result.fromCache
+    });
+  } catch (error) {
+    console.error('Admin Test AI Provider Error:', error);
+    res.status(500).json({ error: 'Test failed: ' + error.message });
+  }
+});
+
+// Get AI Usage Statistics
+router.get('/ai-stats', authenticateToken, isAdmin, async (req, res) => {
+  try {
+    const conversations = await prisma.conversation.findMany({
+      where: {
+        createdAt: {
+          gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // Last 30 days
+        }
+      },
+      include: {
+        messages: true
       }
     });
-    res.json(model);
-  } catch (error) {
-    console.error('Admin Add AI Model Error:', error);
-    res.status(500).json({ error: 'Failed to add AI model' });
-  }
-});
 
-// Delete AI Model
-router.delete('/ai-models/:id', authenticateToken, isAdmin, async (req, res) => {
-  try {
-    await prisma.aIModel.delete({
-      where: { id: req.params.id }
-    });
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Admin Delete AI Model Error:', error);
-    res.status(500).json({ error: 'Failed to delete AI model' });
-  }
-});
+    const totalMessages = conversations.reduce((sum, conv) => sum + conv.messages.length, 0);
+    const totalConversations = conversations.length;
 
-// Toggle AI Model Status
-router.put('/ai-models/:id/toggle', authenticateToken, isAdmin, async (req, res) => {
-  try {
-    const model = await prisma.aIModel.findUnique({ where: { id: req.params.id } });
-    const updated = await prisma.aIModel.update({
-      where: { id: req.params.id },
-      data: { isActive: !model.isActive }
+    res.json({
+      totalConversations,
+      totalMessages,
+      averageMessagesPerConversation: totalConversations > 0 ? (totalMessages / totalConversations).toFixed(2) : 0,
+      period: '30 days'
     });
-    res.json(updated);
   } catch (error) {
-    console.error('Admin Toggle AI Model Error:', error);
-    res.status(500).json({ error: 'Failed to toggle AI model' });
+    console.error('Admin Get AI Stats Error:', error);
+    res.status(500).json({ error: 'Failed to fetch AI stats' });
   }
 });
 
