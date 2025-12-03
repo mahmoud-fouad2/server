@@ -1,16 +1,10 @@
-import { Metadata } from 'next';
+'use client';
+
 import Link from 'next/link';
 import { 
   MessageCircle, Zap, Shield, BarChart3, Globe, Users, 
-  CheckCircle2, ArrowRight, Star, TrendingUp, Clock, 
-  Headphones, Lock, Rocket, Sparkles
+  CheckCircle2, ArrowRight, Rocket, Sparkles
 } from 'lucide-react';
-
-export const metadata = {
-  title: 'فهيملي - أقوى شات بوت بالذكاء الاصطناعي للشركات العربية | Faheemly AI',
-  description: 'حوّل خدمة عملائك بالذكاء الاصطناعي. شات بوت ذكي يرد تلقائياً على واتساب، تليجرام، والموقع. وفّر 70% من التكاليف وزوّد رضا عملائك. جرب مجاناً!',
-  keywords: 'شات بوت، ذكاء اصطناعي، AI chatbot، خدمة عملاء تلقائية، واتساب بوت، تليجرام بوت، Arabic AI',
-};
 
 export default function Home() {
   return (
