@@ -64,36 +64,6 @@ export default function PageLayout({ children }) {
         {children}
       </div>
 
-      {/* Floating Widget - Visible on all pages - RIGHT SIDE */}
-      <div className="fixed bottom-6 right-6 z-50">
-        <button 
-          onClick={() => {
-            const widget = document.querySelector('#fahimo-widget-container');
-            if (widget) {
-              widget.style.display = widget.style.display === 'none' ? 'block' : 'none';
-            }
-          }}
-          className="group relative w-16 h-16 bg-gradient-to-br from-brand-600 to-brand-500 rounded-full shadow-2xl hover:shadow-brand-500/50 hover:scale-110 transition-all duration-300 flex items-center justify-center"
-        >
-          {/* Icon */}
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
-            className="w-8 h-8 text-white relative z-10 group-hover:rotate-12 transition-transform"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-          </svg>
-          
-          {/* Tooltip */}
-          <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-            تحدث معنا
-            <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
-          </div>
-        </button>
-      </div>
-
       {/* Footer */}
       <Footer />
     </>
