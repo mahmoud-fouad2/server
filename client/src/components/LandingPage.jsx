@@ -236,11 +236,11 @@ export const LandingPage = ({ lang = 'ar', setLang, country = 'sa', setCountry }
         <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
           <div className="flex items-center gap-3">
              <Link href="/" className="flex items-center group hover:scale-105 transition-transform">
-                <img src="/logo.webp" alt="فهملي" className={`${scrolled ? 'w-32 h-32' : 'w-40 h-40'} object-contain transition-all`} />
+                <img src="/logo.webp" alt="فهملي" className={`${scrolled ? 'w-40 h-40' : 'w-48 h-48'} object-contain transition-all`} />
              </Link>
              {activeCountry === 'eg' && (
                <span className="text-[10px] px-2 py-1 bg-red-500/10 text-red-600 dark:text-red-400 rounded-full border border-red-500/20 font-bold hidden sm:block animate-fade-in">
-                 نسخة مصر 🇪🇬
+                 نسخة مصر
                </span>
              )}
           </div>
@@ -249,22 +249,26 @@ export const LandingPage = ({ lang = 'ar', setLang, country = 'sa', setCountry }
             {/* Country Switcher */}
             <div className="relative group">
               <button className="flex items-center gap-2 px-3 py-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/5 transition-colors border border-transparent hover:border-gray-200 dark:hover:border-white/10">
-                <span className="text-xl">{activeCountry === 'sa' ? '🇸🇦' : '🇪🇬'}</span>
-                <span className="text-sm font-bold hidden sm:inline-block opacity-80">{activeCountry === 'sa' ? 'السعودية' : 'مصر'}</span>
+                <Globe size={18} className="text-brand-600 dark:text-brand-400" />
+                <span className="text-sm font-bold hidden sm:inline-block opacity-80">{activeCountry === 'sa' ? 'السعودية' : activeCountry === 'eg' ? 'مصر' : activeCountry === 'ae' ? 'الإمارات' : 'الكويت'}</span>
               </button>
-               <div className="absolute top-full right-0 mt-2 w-40 bg-white dark:bg-cosmic-800 rounded-xl shadow-xl border border-gray-100 dark:border-white/10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all transform origin-top-right z-50 overflow-hidden">
-                  <div className="p-1">
-                    <button onClick={() => changeCountry('sa')} className="w-full text-right px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-white/5 rounded-lg flex items-center gap-3 text-sm transition-colors">
-                      <span className="text-xl">🇸🇦</span> السعودية
+               <div className="absolute top-full right-0 mt-2 w-44 bg-white dark:bg-cosmic-800 rounded-xl shadow-xl border border-gray-100 dark:border-white/10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all transform origin-top-right z-50 overflow-hidden">
+                  <div className="p-1.5">
+                    <button onClick={() => changeCountry('sa')} className={`w-full text-right px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-white/5 rounded-lg flex items-center gap-3 text-sm transition-colors ${activeCountry === 'sa' ? 'bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400' : ''}`}>
+                      <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-xs text-white font-bold shadow">SA</div>
+                      السعودية
                     </button>
-                    <button onClick={() => changeCountry('eg')} className="w-full text-right px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-white/5 rounded-lg flex items-center gap-3 text-sm transition-colors">
-                      <span className="text-xl">🇪🇬</span> مصر
+                    <button onClick={() => changeCountry('eg')} className={`w-full text-right px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-white/5 rounded-lg flex items-center gap-3 text-sm transition-colors ${activeCountry === 'eg' ? 'bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400' : ''}`}>
+                      <div className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center text-xs text-white font-bold shadow">EG</div>
+                      مصر
                     </button>
-                    <button onClick={() => changeCountry('ae')} className="w-full text-right px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-white/5 rounded-lg flex items-center gap-3 text-sm transition-colors">
-                      <span className="text-xl">🇦🇪</span> الإمارات
+                    <button onClick={() => changeCountry('ae')} className={`w-full text-right px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-white/5 rounded-lg flex items-center gap-3 text-sm transition-colors ${activeCountry === 'ae' ? 'bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400' : ''}`}>
+                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-green-600 via-white to-red-600 flex items-center justify-center text-xs text-gray-800 font-bold shadow">AE</div>
+                      الإمارات
                     </button>
-                    <button onClick={() => changeCountry('kw')} className="w-full text-right px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-white/5 rounded-lg flex items-center gap-3 text-sm transition-colors">
-                      <span className="text-xl">🇰🇼</span> الكويت
+                    <button onClick={() => changeCountry('kw')} className={`w-full text-right px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-white/5 rounded-lg flex items-center gap-3 text-sm transition-colors ${activeCountry === 'kw' ? 'bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400' : ''}`}>
+                      <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-xs text-white font-bold shadow">KW</div>
+                      الكويت
                     </button>
                   </div>
                </div>
@@ -317,30 +321,92 @@ export const LandingPage = ({ lang = 'ar', setLang, country = 'sa', setCountry }
           </div>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Mobile Menu - Slide from Right */}
         <AnimatePresence>
           {mobileMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="lg:hidden border-t border-gray-200 dark:border-white/10"
-            >
-              <div className="max-w-7xl mx-auto px-6 py-4 space-y-2">
-                <Link href="/" onClick={() => setMobileMenuOpen(false)} className={`block px-4 py-3 rounded-lg font-medium transition-colors hover:bg-gray-100 dark:hover:bg-white/5 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                  الرئيسية
-                </Link>
-                <Link href="/services" onClick={() => setMobileMenuOpen(false)} className={`block px-4 py-3 rounded-lg font-medium transition-colors hover:bg-gray-100 dark:hover:bg-white/5 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                  الخدمات
-                </Link>
-                <Link href="/solutions" onClick={() => setMobileMenuOpen(false)} className={`block px-4 py-3 rounded-lg font-medium transition-colors hover:bg-gray-100 dark:hover:bg-white/5 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                  الحلول
-                </Link>
-                <Link href="/pricing" onClick={() => setMobileMenuOpen(false)} className={`block px-4 py-3 rounded-lg font-medium transition-colors hover:bg-gray-100 dark:hover:bg-white/5 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                  الأسعار
-                </Link>
-              </div>
-            </motion.div>
+            <>
+              {/* Backdrop */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setMobileMenuOpen(false)}
+                className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] lg:hidden"
+              />
+              
+              {/* Sidebar */}
+              <motion.div
+                initial={{ x: '100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '100%' }}
+                transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+                className="fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-white dark:bg-cosmic-900 shadow-2xl z-[70] lg:hidden overflow-y-auto"
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-white/10">
+                  <img src="/logo.webp" alt="فهملي" className="w-24 h-24 object-contain" />
+                  <button 
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+                  >
+                    <X size={24} className="text-gray-600 dark:text-gray-400" />
+                  </button>
+                </div>
+
+                {/* Menu Items */}
+                <div className="p-6 space-y-2">
+                  <Link 
+                    href="/" 
+                    onClick={() => setMobileMenuOpen(false)} 
+                    className={`block px-4 py-3.5 rounded-xl font-bold text-lg transition-colors hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-brand-900/20 dark:hover:text-brand-400 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
+                  >
+                    الرئيسية
+                  </Link>
+                  <Link 
+                    href="/services" 
+                    onClick={() => setMobileMenuOpen(false)} 
+                    className={`block px-4 py-3.5 rounded-xl font-bold text-lg transition-colors hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-brand-900/20 dark:hover:text-brand-400 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
+                  >
+                    الخدمات
+                  </Link>
+                  <Link 
+                    href="/solutions" 
+                    onClick={() => setMobileMenuOpen(false)} 
+                    className={`block px-4 py-3.5 rounded-xl font-bold text-lg transition-colors hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-brand-900/20 dark:hover:text-brand-400 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
+                  >
+                    الحلول
+                  </Link>
+                  <Link 
+                    href="/pricing" 
+                    onClick={() => setMobileMenuOpen(false)} 
+                    className={`block px-4 py-3.5 rounded-xl font-bold text-lg transition-colors hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-brand-900/20 dark:hover:text-brand-400 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
+                  >
+                    الأسعار
+                  </Link>
+                  <Link 
+                    href="/contact" 
+                    onClick={() => setMobileMenuOpen(false)} 
+                    className={`block px-4 py-3.5 rounded-xl font-bold text-lg transition-colors hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-brand-900/20 dark:hover:text-brand-400 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
+                  >
+                    اتصل بنا
+                  </Link>
+                </div>
+
+                {/* CTA Buttons */}
+                <div className="p-6 space-y-3 border-t border-gray-200 dark:border-white/10">
+                  <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+                    <button className="w-full py-3.5 rounded-xl font-bold text-base border-2 border-brand-600 text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-all">
+                      تسجيل الدخول
+                    </button>
+                  </Link>
+                  <Link href="/register" onClick={() => setMobileMenuOpen(false)}>
+                    <button className="w-full py-3.5 rounded-xl font-bold text-base bg-gradient-to-r from-brand-600 to-brand-500 text-white shadow-lg hover:shadow-xl transition-all">
+                      ابدأ التجربة المجانية
+                    </button>
+                  </Link>
+                </div>
+              </motion.div>
+            </>
           )}
         </AnimatePresence>
       </nav>

@@ -27,7 +27,7 @@ export default function PageLayout({ children }) {
       <nav className={`fixed top-0 w-full z-40 transition-all duration-300 ${scrolled ? 'h-28 shadow-lg' : 'h-32'} bg-[#f8f8fa] dark:bg-cosmic-950/90 border-b border-gray-200 dark:border-white/5`}>
         <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
           <Link href="/" className="hover:scale-105 transition-transform">
-            <img src="/logo.webp" alt="فهملي" className={`${scrolled ? 'w-32 h-32' : 'w-40 h-40'} object-contain transition-all`} />
+            <img src="/logo.webp" alt="فهملي" className={`${scrolled ? 'w-40 h-40' : 'w-48 h-48'} object-contain transition-all`} />
           </Link>
 
           <div className="flex items-center gap-6">
@@ -100,7 +100,7 @@ export default function PageLayout({ children }) {
             {/* Brand Column */}
             <div className="col-span-1 md:col-span-1">
               <div className="flex items-center justify-center md:justify-start mb-6">
-                <img src="/logo2.png" alt="فهملي" className="w-24 h-24 object-contain" />
+                <img src="/logo.webp" alt="فهملي" className="w-40 h-40 object-contain" />
               </div>
               <p className="text-sm leading-relaxed mb-8 opacity-80">
                 أقوى منصة شات بوت عربي مدعومة بالذكاء الاصطناعي. نساعدك تزيد مبيعاتك وترضي عملاءك 24/7.

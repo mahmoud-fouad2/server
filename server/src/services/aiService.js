@@ -18,6 +18,11 @@ const AI_PROVIDERS = {
     apiKey: process.env.CEREBRAS_API_KEY || 'csk-92v9ywj8cr4et9k4h2rpm3mwfxpe4hnhvhxe9yfyfvtncjfm',
     url: 'https://api.cerebras.ai/v1/chat/completions',
     model: 'llama3.1-8b'
+  },
+  deepseek: {
+    apiKey: process.env.DEEPSEEK_API_KEY || 'sk-2cc3db21757f4af493012f75f6185ed1',
+    url: 'https://api.deepseek.com/v1/chat/completions',
+    model: 'deepseek-chat'
   }
 };
 
@@ -64,7 +69,7 @@ function getLocalResponse(message) {
 
 class AIService {
   constructor() {
-    this.providers = ['groq', 'gemini', 'cerebras'];
+    this.providers = ['groq', 'gemini', 'cerebras', 'deepseek'];
     this.currentProviderIndex = 0;
   }
 
@@ -137,6 +142,27 @@ class AIService {
     return response.data.choices[0].message.content;
   }
 
+  async callDeepseek(messages) {
+    const config = AI_PROVIDERS.deepseek;
+    const response = await axios.post(
+      config.url,
+      {
+        model: config.model,
+        messages: messages,
+        temperature: 0.7,
+        max_tokens: 500
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${config.apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        timeout: 10000
+      }
+    );
+    return response.data.choices[0].message.content;
+  }
+
   async callAIProvider(messages, providerName) {
     try {
       console.log(`[AI] Trying ${providerName}...`);
@@ -147,6 +173,8 @@ class AIService {
           return await this.callGemini(messages);
         case 'cerebras':
           return await this.callCerebras(messages);
+        case 'deepseek':
+          return await this.callDeepseek(messages);
         default:
           throw new Error('Unknown provider');
       }

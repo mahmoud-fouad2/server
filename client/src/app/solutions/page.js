@@ -197,40 +197,48 @@ export default function SolutionsPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-white dark:bg-cosmic-900 rounded-3xl overflow-hidden border border-gray-200 dark:border-white/10 hover:shadow-2xl transition-all group"
+                className="bg-white dark:bg-cosmic-900 rounded-2xl overflow-hidden border border-gray-200 dark:border-white/10 hover:shadow-xl transition-all group hover:-translate-y-2"
               >
                 {/* Image Header */}
-                <div className="relative h-64 overflow-hidden bg-gray-100 dark:bg-cosmic-800">
+                <div className="relative h-48 overflow-hidden bg-gray-100 dark:bg-cosmic-800">
                   <img 
                     src={solution.image} 
                     alt={solution.title}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     onError={(e) => {
                       e.target.onerror = null;
-                      e.target.src = `https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80&w=600`;
+                      const fallbacks = {
+                        'restaurant': 'https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&q=80&w=600',
+                        'clinic': 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=600',
+                        'retail': 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=600',
+                        'business': 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=600',
+                        'education': 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&q=80&w=600',
+                        'realestate': 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=600'
+                      };
+                      e.target.src = fallbacks[solution.id] || 'https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&q=80&w=600';
                     }}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                  <div className={`absolute bottom-6 right-6 w-16 h-16 rounded-2xl bg-${solution.color}-500 text-white flex items-center justify-center shadow-xl`}>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+                  <div className={`absolute bottom-4 right-4 w-14 h-14 rounded-xl bg-${solution.color}-500 text-white flex items-center justify-center shadow-lg`}>
                     {solution.icon}
                   </div>
                 </div>
 
                 {/* Content */}
-                <div className="p-8">
-                  <h3 className="text-3xl font-bold mb-3 text-gray-900 dark:text-white">
+                <div className="p-6">
+                  <h3 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">
                     {solution.title}
                   </h3>
-                  <p className="text-lg text-gray-600 dark:text-gray-400 mb-6">
+                  <p className="text-base text-gray-600 dark:text-gray-400 mb-5">
                     {solution.description}
                   </p>
 
                   {/* Features List */}
-                  <ul className="space-y-3 mb-8">
-                    {solution.features.map((feature, i) => (
-                      <li key={i} className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
-                        <div className="w-5 h-5 rounded-full bg-green-500/10 flex items-center justify-center">
-                          <Check size={12} className="text-green-500" strokeWidth={3} />
+                  <ul className="space-y-2.5 mb-6">
+                    {solution.features.slice(0, 3).map((feature, i) => (
+                      <li key={i} className="flex items-center gap-2.5 text-sm text-gray-700 dark:text-gray-300">
+                        <div className="w-4 h-4 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0">
+                          <Check size={10} className="text-green-500" strokeWidth={3} />
                         </div>
                         <span>{feature}</span>
                       </li>
@@ -238,20 +246,20 @@ export default function SolutionsPage() {
                   </ul>
 
                   {/* Stats */}
-                  <div className="grid grid-cols-2 gap-4 p-6 bg-gray-50 dark:bg-white/5 rounded-2xl mb-6">
+                  <div className="grid grid-cols-2 gap-3 p-4 bg-gray-50 dark:bg-white/5 rounded-xl mb-5">
                     <div className="text-center">
-                      <div className="text-3xl font-bold text-brand-600 dark:text-brand-400 mb-1">
+                      <div className="text-2xl font-bold text-brand-600 dark:text-brand-400 mb-0.5">
                         {solution.stats.increase}
                       </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                      <div className="text-xs text-gray-600 dark:text-gray-400">
                         {solution.stats.metric}
                       </div>
                     </div>
                     <div className="text-center">
-                      <div className="text-3xl font-bold text-brand-600 dark:text-brand-400 mb-1">
+                      <div className="text-2xl font-bold text-brand-600 dark:text-brand-400 mb-0.5">
                         {solution.stats.time}
                       </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                      <div className="text-xs text-gray-600 dark:text-gray-400">
                         {solution.stats.timeMetric}
                       </div>
                     </div>
@@ -259,9 +267,9 @@ export default function SolutionsPage() {
 
                   {/* CTA */}
                   <Link href={`/solutions/${solution.id}`}>
-                    <Button className="w-full py-4 text-lg font-bold rounded-xl shadow-lg">
-                      اعرف المزيد عن {solution.title}
-                      <ArrowRight size={20} className="mr-2" />
+                    <Button className="w-full py-3 text-base font-bold rounded-xl shadow-lg hover:shadow-xl transition-all">
+                      استكشف الحل
+                      <ArrowRight size={18} className="mr-2" />
                     </Button>
                   </Link>
                 </div>

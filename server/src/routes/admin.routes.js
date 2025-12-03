@@ -116,6 +116,15 @@ router.get('/ai-providers', authenticateToken, isAdmin, async (req, res) => {
         isActive: true,
         tier: 'Free',
         status: 'configured'
+      },
+      {
+        id: 'deepseek',
+        name: 'Deepseek',
+        model: 'deepseek-chat',
+        apiKey: process.env.DEEPSEEK_API_KEY || 'sk-2cc3db21757f4af493012f75f6185ed1',
+        isActive: true,
+        tier: 'Free',
+        status: 'configured'
       }
     ];
     res.json(providers);
