@@ -203,7 +203,7 @@ export const LandingPage = ({ lang: initialLang = 'ar', setLang: externalSetLang
         <div className={`absolute top-0 right-0 h-full w-80 max-w-[85vw] bg-white dark:bg-cosmic-900 shadow-2xl transform transition-transform duration-300 overflow-y-auto ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-white/10 sticky top-0 bg-white dark:bg-cosmic-900 z-10">
-            <img src="/logo2.png" alt="فهملي" className="h-12 w-auto" />
+            <img src="/logo2.png" alt="فهملي" className="h-20 w-auto" />
             <button 
               onClick={() => setMobileMenuOpen(false)}
               className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
