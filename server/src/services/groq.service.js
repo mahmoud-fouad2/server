@@ -1,6 +1,7 @@
 const axios = require('axios');
 const prisma = require('../config/database');
 const hybridAI = require('./hybrid-ai.service');
+const responseFormatter = require('../utils/response-formatter');
 
 /**
  * AI Service - Hybrid Multi-Provider with Intelligent Load Balancing
@@ -475,7 +476,10 @@ function buildSystemPrompt(business, knowledgeContext = []) {
  */
 async function generateChatResponse(userMessage, business, conversationHistory = [], knowledgeContext = []) {
   try {
-    const systemPrompt = buildSystemPrompt(business, knowledgeContext);
+    // 🎨 تقليل نص قاعدة المعرفة (فقط 3 نتائج، كل واحدة 300 حرف)
+    const summarizedKnowledge = responseFormatter.summarizeKnowledge(knowledgeContext, 3, 300);
+    
+    const systemPrompt = buildSystemPrompt(business, summarizedKnowledge);
 
     const messages = [
       { role: 'system', content: systemPrompt },
@@ -488,6 +492,11 @@ async function generateChatResponse(userMessage, business, conversationHistory =
       temperature: 0.7,
       maxTokens: 512 // Keep responses concise
     });
+
+    // ✨ تنسيق الرد بشكل منظم
+    if (response && response.response) {
+      response.response = responseFormatter.format(response.response);
+    }
 
     return response;
 

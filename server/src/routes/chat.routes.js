@@ -3,6 +3,7 @@ const router = express.Router();
 const groqService = require('../services/groq.service');
 const vectorSearch = require('../services/vector-search.service');
 const redisCache = require('../services/redis-cache.service');
+const visitorSession = require('../services/visitor-session.service');
 const prisma = require('../config/database');
 const { authenticateToken } = require('../middleware/auth');
 const { validateChatMessage, validateRating } = require('../middleware/validation');
@@ -136,13 +137,25 @@ router.post('/rating', validateRating, async (req, res) => {
 // Public Chat Endpoint (for Widget)
 router.post('/message', validateChatMessage, async (req, res) => {
   try {
-    const { message, businessId, conversationId } = req.body;
+    const { message, businessId, conversationId, sessionId } = req.body;
 
     if (!message || !businessId) {
       return res.status(400).json({ error: 'Message and Business ID are required' });
     }
 
-    // Find or create conversation
+    // 🎯 إنشاء أو استرجاع جلسة الزائر (مع كشف اللهجة)
+    let visitorSessionData = null;
+    let detectedDialect = 'standard';
+    
+    try {
+      visitorSessionData = await visitorSession.getOrCreateSession(businessId, sessionId, req);
+      detectedDialect = visitorSessionData.detectedDialect || 'standard';
+      console.log(`[Chat] 🌍 Visitor from ${visitorSessionData.country} | Dialect: ${detectedDialect}`);
+    } catch (visitorError) {
+      console.warn('[Chat] Visitor session error:', visitorError.message);
+    }
+
+    // Find or create conversation (ربط بالجلسة)
     let conversation;
     if (conversationId) {
       conversation = await prisma.conversation.findUnique({ where: { id: conversationId } });
@@ -153,7 +166,8 @@ router.post('/message', validateChatMessage, async (req, res) => {
         data: {
           businessId,
           channel: 'WIDGET',
-          status: 'ACTIVE'
+          status: 'ACTIVE',
+          visitorSessionId: visitorSessionData?.id || null
         }
       });
     }
@@ -283,7 +297,7 @@ router.post('/message', validateChatMessage, async (req, res) => {
       take: 10
     });
 
-    // Get Business Info
+    // Get Business Info (مع دمج اللهجة المكتشفة)
     const business = await prisma.business.findUnique({
       where: { id: businessId }
     });
@@ -292,30 +306,39 @@ router.post('/message', validateChatMessage, async (req, res) => {
       return res.status(404).json({ error: 'Business not found' });
     }
 
-    // Use Vector Search to find relevant knowledge chunks
-    let knowledgeContext = [];
-    try {
-      knowledgeContext = await vectorSearch.searchKnowledge(message, businessId, 5);
-      console.log(`[Chat] Found ${knowledgeContext.length} relevant knowledge chunks using vector search`);
-    } catch (vectorError) {
-      console.warn('[Chat] Vector search failed, falling back to recent knowledge:', vectorError.message);
-      // Fallback: Get recent knowledge entries
-      const fallbackKnowledge = await prisma.knowledgeBase.findMany({
-        where: { businessId },
-        orderBy: { createdAt: 'desc' },
-        take: 5
-      });
-      knowledgeContext = fallbackKnowledge;
-    }
-
-    // Parse widget config
+    // 🎯 دمج اللهجة المكتشفة في widgetConfig
     let widgetConfig = {};
     try {
       widgetConfig = typeof business.widgetConfig === 'string' 
         ? JSON.parse(business.widgetConfig) 
         : business.widgetConfig || {};
+      
+      // استخدام اللهجة المكتشفة من جلسة الزائر
+      if (detectedDialect && detectedDialect !== 'standard') {
+        widgetConfig.dialect = detectedDialect;
+        console.log(`[Chat] 🎯 Using detected dialect: ${detectedDialect}`);
+      }
     } catch (e) {
       console.warn('Failed to parse widgetConfig:', e);
+    }
+
+    // تحديث business.widgetConfig بالتكوين المعدّل
+    business.widgetConfig = widgetConfig;
+
+    // ⚡ Use Vector Search (أخذ 3 نتائج فقط لتقليل الرغي)
+    let knowledgeContext = [];
+    try {
+      knowledgeContext = await vectorSearch.searchKnowledge(message, businessId, 3);
+      console.log(`[Chat] 📚 Found ${knowledgeContext.length} relevant knowledge chunks`);
+    } catch (vectorError) {
+      console.warn('[Chat] Vector search failed, falling back to recent knowledge:', vectorError.message);
+      // Fallback: Get recent knowledge entries (2 فقط)
+      const fallbackKnowledge = await prisma.knowledgeBase.findMany({
+        where: { businessId },
+        orderBy: { createdAt: 'desc' },
+        take: 2
+      });
+      knowledgeContext = fallbackKnowledge;
     }
 
     // Format conversation history for Groq
@@ -359,9 +382,11 @@ router.post('/message', validateChatMessage, async (req, res) => {
       res.json({
         response: aiResult.response,
         conversationId: conversation.id,
+        sessionId: visitorSessionData?.id || null, // 🎯 إرجاع sessionId للعميل
         fromCache: false,
         tokensUsed: aiResult.tokensUsed,
-        model: aiResult.model
+        model: aiResult.model,
+        dialect: detectedDialect // 🌍 اللهجة المستخدمة
       });
 
     } catch (aiError) {

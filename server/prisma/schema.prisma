@@ -240,19 +240,19 @@ model Conversation {
   agentRating Int?      // تقييم الموظف من 1-5
   agentFeedback String?
   
-  // Session tracking
-  sessionId   String?   @unique
+  // Session tracking (ربط مع جلسة الزائر)
+  visitorSessionId String?
   
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   
   business    Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
   messages    Message[]
-  visitor     VisitorSession? @relation(fields: [sessionId], references: [id])
+  visitorSession VisitorSession? @relation(fields: [visitorSessionId], references: [id], onDelete: SetNull)
   
   @@index([businessId])
   @@index([externalId])
-  @@index([sessionId])
+  @@index([visitorSessionId])
 }
 
 enum ConversationStatus {
@@ -390,9 +390,11 @@ model VisitorSession {
   // Visitor Info
   ipAddress     String?
   country       String?
+  countryCode   String?   // مثل: SA, EG, AE, KW
   city          String?
   region        String?
   timezone      String?
+  detectedDialect String? // اللهجة المكتشفة: sa, eg, uae, kw, standard
   
   // Device Info
   userAgent     String?   @db.Text
