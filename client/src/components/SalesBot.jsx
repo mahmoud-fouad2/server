@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { X, MessageCircle, Send, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname } from 'next/navigation';
+import { API_CONFIG } from '@/lib/config';
 
 const SalesBot = ({ lang = 'ar' }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -33,16 +34,19 @@ const SalesBot = ({ lang = 'ar' }) => {
     setIsBotTyping(true);
 
     try {
-      // Use the centralized API if available, or fetch directly if this component is standalone
-      // For safety/portability, we'll use fetch here or import api if we are sure about the path.
-      // Let's use fetch to be safe as this might be used in different contexts.
-      // Actually, we should use the chatApi from lib/api if possible, but let's stick to the working logic.
-      const res = await fetch('https://fahimo-api.onrender.com/api/chat/demo', {
+      // Using production chat endpoint with Faheemly business ID
+      const FAHEEMLY_BUSINESS_ID = 'cmir2oyaz00013ltwis4xc4tp'; // Faheemly's business ID
+      
+      const res = await fetch(`${API_CONFIG.BASE_URL}/api/chat/message`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ message: userText })
+        body: JSON.stringify({ 
+          businessId: FAHEEMLY_BUSINESS_ID,
+          message: userText,
+          visitorId: 'landing-page-visitor' // Unique identifier for landing page visitors
+        })
       });
 
       const data = await res.json();
@@ -50,11 +54,11 @@ const SalesBot = ({ lang = 'ar' }) => {
       if (res.ok) {
         setMessages(prev => [...prev, { role: 'bot', text: data.response }]);
       } else {
-        console.error('Demo chat error:', data);
+        console.error('Chat error:', data);
         setMessages(prev => [...prev, { role: 'bot', text: 'عذراً، حدث خطأ في الاتصال. يرجى المحاولة لاحقاً.' }]);
       }
     } catch (error) {
-      console.error('Demo chat network error:', error);
+      console.error('Chat network error:', error);
       setMessages(prev => [...prev, { role: 'bot', text: 'عذراً، حدث خطأ في الاتصال. يرجى المحاولة لاحقاً.' }]);
     } finally {
       setIsBotTyping(false);

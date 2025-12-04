@@ -187,7 +187,7 @@
                 <div id="fahimo-bot-info">
                     <div id="fahimo-bot-avatar">F</div>
                     <div>
-                        <div id="fahimo-bot-name" style="font-weight:bold; font-size:15px;">Fahimo Assistant</div>
+                        <div id="fahimo-bot-name" style="font-weight:bold; font-size:15px;">مساعد فهملي</div>
                         <div style="font-size:11px; opacity:0.8;">● Online</div>
                     </div>
                 </div>
@@ -198,7 +198,7 @@
             </div>
             <div id="fahimo-messages"></div>
             <div id="fahimo-branding">
-                Powered by <a href="https://fahimo.com" target="_blank">Fahimo AI</a>
+                Powered by <a href="https://faheemly.com" target="_blank">Faheemly AI</a>
             </div>
             <div id="fahimo-input-area">
                 <input type="text" id="fahimo-input" placeholder="Type a message...">
@@ -229,7 +229,7 @@
         .then(data => {
             const config = data.widgetConfig || {};
             // Use business name from data.name, fallback to config.name, then default
-            const botName = data.name || config.name || "Fahimo Assistant";
+            const botName = data.name || config.name || "مساعد فهملي";
             document.getElementById('fahimo-bot-name').innerText = botName;
             
             // Add welcome message if no history

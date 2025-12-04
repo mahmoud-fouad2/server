@@ -155,7 +155,7 @@ router.post('/webhook/:integrationId', async (req, res) => {
       widgetConfig = typeof integration.business.widgetConfig === 'string' 
         ? JSON.parse(integration.business.widgetConfig) 
         : integration.business.widgetConfig || {};
-    } catch (e) {}
+    } catch (e) { logger.warn('Failed to parse widgetConfig', { error: e.message }); }
 
     // Generate
     const aiResult = await groqService.generateChatResponse(

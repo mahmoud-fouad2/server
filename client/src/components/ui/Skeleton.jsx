@@ -225,3 +225,130 @@ export const LoadingContainer = ({ children, isLoading, skeleton }) => {
   }
   return children;
 };
+
+/**
+ * Dashboard-specific Skeletons
+ */
+export const SkeletonDashboardStats = ({ className = '' }) => {
+  return (
+    <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 ${className}`}>
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div key={i} className="glass-panel p-6 animate-pulse">
+          <div className="flex items-center justify-between mb-4">
+            <div className="h-5 bg-gray-300 dark:bg-cosmic-700 rounded w-24"></div>
+            <div className="h-10 w-10 bg-gray-300 dark:bg-cosmic-700 rounded-lg"></div>
+          </div>
+          <div className="h-8 bg-gray-300 dark:bg-cosmic-700 rounded w-20 mb-2"></div>
+          <div className="h-3 bg-gray-300 dark:bg-cosmic-700 rounded w-32"></div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export const SkeletonConversationList = ({ rows = 8, className = '' }) => {
+  return (
+    <div className={`space-y-3 ${className}`}>
+      {Array.from({ length: rows }).map((_, i) => (
+        <div key={i} className="glass-panel p-4 animate-pulse">
+          <div className="flex gap-4">
+            <div className="h-12 w-12 bg-gray-300 dark:bg-cosmic-700 rounded-full flex-shrink-0"></div>
+            <div className="flex-1 space-y-2">
+              <div className="flex justify-between">
+                <div className="h-4 bg-gray-300 dark:bg-cosmic-700 rounded w-32"></div>
+                <div className="h-3 bg-gray-300 dark:bg-cosmic-700 rounded w-16"></div>
+              </div>
+              <div className="h-3 bg-gray-300 dark:bg-cosmic-700 rounded w-full"></div>
+              <div className="h-3 bg-gray-300 dark:bg-cosmic-700 rounded w-3/4"></div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export const SkeletonKnowledgeBaseCard = ({ className = '' }) => {
+  return (
+    <div className={`glass-panel p-6 animate-pulse ${className}`}>
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex-1 space-y-2">
+          <div className="h-6 bg-gray-300 dark:bg-cosmic-700 rounded w-3/4"></div>
+          <div className="h-4 bg-gray-300 dark:bg-cosmic-700 rounded w-full"></div>
+          <div className="h-4 bg-gray-300 dark:bg-cosmic-700 rounded w-5/6"></div>
+        </div>
+        <div className="h-10 w-10 bg-gray-300 dark:bg-cosmic-700 rounded-lg flex-shrink-0"></div>
+      </div>
+      
+      <div className="flex gap-2 mb-4">
+        <div className="h-6 w-16 bg-gray-300 dark:bg-cosmic-700 rounded-full"></div>
+        <div className="h-6 w-20 bg-gray-300 dark:bg-cosmic-700 rounded-full"></div>
+      </div>
+      
+      <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-cosmic-700">
+        <div className="h-4 bg-gray-300 dark:bg-cosmic-700 rounded w-24"></div>
+        <div className="flex gap-2">
+          <div className="h-8 w-8 bg-gray-300 dark:bg-cosmic-700 rounded"></div>
+          <div className="h-8 w-8 bg-gray-300 dark:bg-cosmic-700 rounded"></div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const SkeletonWidgetPreview = ({ className = '' }) => {
+  return (
+    <div className={`glass-panel p-8 animate-pulse ${className}`}>
+      <div className="flex justify-between items-center mb-6">
+        <div className="h-6 bg-gray-300 dark:bg-cosmic-700 rounded w-40"></div>
+        <div className="h-10 w-32 bg-gray-300 dark:bg-cosmic-700 rounded-lg"></div>
+      </div>
+      
+      <div className="border-2 border-dashed border-gray-300 dark:border-cosmic-700 rounded-2xl p-8 mb-6">
+        <div className="h-64 bg-gray-300 dark:bg-cosmic-700 rounded-xl mb-4"></div>
+        <div className="flex gap-4 justify-center">
+          <div className="h-10 w-10 bg-gray-300 dark:bg-cosmic-700 rounded-full"></div>
+          <div className="h-10 w-10 bg-gray-300 dark:bg-cosmic-700 rounded-full"></div>
+          <div className="h-10 w-10 bg-gray-300 dark:bg-cosmic-700 rounded-full"></div>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <div className="h-4 bg-gray-300 dark:bg-cosmic-700 rounded w-20"></div>
+          <div className="h-10 bg-gray-300 dark:bg-cosmic-700 rounded-lg"></div>
+        </div>
+        <div className="space-y-2">
+          <div className="h-4 bg-gray-300 dark:bg-cosmic-700 rounded w-20"></div>
+          <div className="h-10 bg-gray-300 dark:bg-cosmic-700 rounded-lg"></div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const SkeletonChart = ({ className = '' }) => {
+  return (
+    <div className={`glass-panel p-6 animate-pulse ${className}`}>
+      <div className="flex justify-between items-center mb-6">
+        <div className="h-6 bg-gray-300 dark:bg-cosmic-700 rounded w-40"></div>
+        <div className="h-8 w-24 bg-gray-300 dark:bg-cosmic-700 rounded-lg"></div>
+      </div>
+      
+      <div className="h-64 flex items-end gap-2 mb-6">
+        {Array.from({ length: 12 }).map((_, i) => (
+          <div 
+            key={i} 
+            className="flex-1 bg-gray-300 dark:bg-cosmic-700 rounded-t"
+            style={{ height: `${Math.random() * 70 + 30}%` }}
+          ></div>
+        ))}
+      </div>
+      
+      <div className="flex justify-between pt-4 border-t border-gray-200 dark:border-cosmic-700">
+        <div className="h-4 bg-gray-300 dark:bg-cosmic-700 rounded w-32"></div>
+        <div className="h-4 bg-gray-300 dark:bg-cosmic-700 rounded w-32"></div>
+      </div>
+    </div>
+  );
+};

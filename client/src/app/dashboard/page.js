@@ -5,8 +5,9 @@ import useTheme from '@/lib/theme'
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import Sidebar from "@/components/Sidebar"
+import MobileNav from "@/components/MobileNav"
 import FaheemAnimatedLogo from "@/components/FaheemAnimatedLogo"
-import { Check, Loader2, Sun, Moon, AlertTriangle, X, Crown } from "lucide-react"
+import { Check, Loader2, Sun, Moon, AlertTriangle, X, Crown, HelpCircle } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { businessApi, knowledgeApi, widgetApi } from "@/lib/api"
 import AuthGuard from "@/components/AuthGuard"
@@ -21,6 +22,7 @@ import TicketsView from "./components/TicketsView"
 import WidgetSettingsView from "./components/WidgetSettingsView"
 import TeamView from "./components/TeamView"
 import SettingsView from "./components/SettingsView"
+import DashboardTour, { useDashboardTour } from "./components/DashboardTour"
 
 function DashboardContent() {
   const [stats, setStats] = useState(null)
@@ -33,6 +35,9 @@ function DashboardContent() {
   const [isDark, setIsDark] = useTheme(false)
   const [showProAlert, setShowProAlert] = useState(false)
   const [notifications, setNotifications] = useState([])
+  
+  // Dashboard Tour
+  const { runTour, startTour, resetTour, handleComplete } = useDashboardTour()
   
   const router = useRouter()
 
@@ -96,8 +101,11 @@ function DashboardContent() {
         <div className="absolute bottom-[-10%] right-[-10%] w-[40vw] h-[40vw] bg-purple-600/8 rounded-full blur-[120px] animate-float"></div>
       </div>
       
-      {/* Sidebar */}
+      {/* Desktop Sidebar */}
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} userRole={user?.role} />
+      
+      {/* Mobile Navigation */}
+      <MobileNav activeTab={activeTab} setActiveTab={setActiveTab} userRole={user?.role} />
 
       {/* Notifications */}
       <div className="fixed top-4 left-4 z-50 flex flex-col gap-2">
@@ -118,7 +126,7 @@ function DashboardContent() {
       </div>
 
       {/* Main Content */}
-      <main className="flex-1 p-4 md:p-8 overflow-y-auto h-screen relative">
+      <main className="flex-1 p-4 md:p-8 overflow-y-auto h-screen relative pt-16 md:pt-8">
         {/* Pro Feature Alert Modal */}
         <AnimatePresence>
           {showProAlert && (
@@ -176,7 +184,7 @@ function DashboardContent() {
             </div>
           </div>
           <div className="flex items-center gap-4">
-             <button onClick={() => setIsDark(!isDark)} aria-label="Toggle theme" className="h-10 w-10 rounded-full bg-brand-600/10 dark:bg-white/5 flex items-center justify-center hover:bg-brand-600/20 transition-colors">
+             <button onClick={() => setIsDark(!isDark)} data-tour="theme-toggle" aria-label="Toggle theme" className="h-10 w-10 rounded-full bg-brand-600/10 dark:bg-white/5 flex items-center justify-center hover:bg-brand-600/20 transition-colors">
                {isDark ? <Sun className="w-5 h-5 text-yellow-300" /> : <Moon className="w-5 h-5 text-gray-700" />}
              </button>
             <div className="h-10 w-10 rounded-full bg-brand-500 flex items-center justify-center text-brand-50 font-bold">
@@ -239,12 +247,24 @@ function DashboardContent() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Help Button - Restart Tour */}
+        <button
+          onClick={resetTour}
+          className="fixed bottom-6 left-6 z-40 p-3 bg-brand-600 hover:bg-brand-700 text-white rounded-full shadow-lg transition-all hover:scale-110"
+          title="إعادة جولة المساعدة"
+        >
+          <HelpCircle className="w-5 h-5" />
+        </button>
       </main>
+
+      {/* Dashboard Tour */}
+      <DashboardTour run={runTour} onComplete={handleComplete} />
     </div>
   )
 }
 
-export default function Dashboard() {
+export default function DashboardPage() {
   return (
     <AuthGuard>
       <DashboardContent />

@@ -14,6 +14,48 @@ export default function AdminDashboard() {
   const [isDark, setIsDark] = useTheme(false); // Default light
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [authorized, setAuthorized] = useState(false);
+
+  // SECURITY: Check authentication and admin role
+  useEffect(() => {
+    const checkAuth = () => {
+      try {
+        const userData = localStorage.getItem('user');
+        if (!userData) {
+          router.push('/login');
+          return;
+        }
+        
+        const user = JSON.parse(userData);
+        if (!user.token) {
+          router.push('/login');
+          return;
+        }
+        
+        // Check if user has admin role
+        if (user.role !== 'ADMIN' && user.role !== 'SUPERADMIN') {
+          router.push('/dashboard');
+          return;
+        }
+        
+        setAuthorized(true);
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        router.push('/login');
+      }
+    };
+    
+    checkAuth();
+  }, [router]);
+
+  // Show loading while checking authorization
+  if (!authorized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-cosmic-950">
+        <Loader2 className="w-10 h-10 animate-spin text-brand-500" />
+      </div>
+    );
+  }
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalBusinesses: 0,

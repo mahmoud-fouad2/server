@@ -32,9 +32,9 @@ export default function StatsOverview({ stats, subscription, kbList, chartData, 
   };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-8">
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-8" id="dashboard-overview">
       {/* Usage Bar Section */}
-      <div className="glass-panel smooth-transition soft-shadow rounded-xl p-6">
+      <div className="glass-panel smooth-transition soft-shadow rounded-xl p-6" data-tour="stats-overview">
         <div className="flex justify-between items-end mb-2">
           <div>
             <h2 className="text-lg font-semibold">الرصيد المستخدم</h2>

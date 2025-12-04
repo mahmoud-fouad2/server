@@ -1,15 +1,21 @@
 const axios = require('axios');
 const prisma = require('../config/database');
+const hybridAI = require('./hybrid-ai.service');
 
 /**
- * Groq AI Service - Fast and powerful AI with open models
- * Models: llama-3.3-70b-versatile, mixtral-8x7b-32768
+ * AI Service - Hybrid Multi-Provider with Intelligent Load Balancing
+ * 
+ * Now uses Hybrid AI Service with:
+ * - DeepSeek (60 req/min) - Primary
+ * - Groq (30 req/min) - Secondary
+ * - Cerebras (30 req/min) - Tertiary
+ * - Gemini (15 req/min) - Fallback
  */
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const GROQ_API_URL = process.env.GROQ_API_URL || 'https://api.groq.com/openai/v1/chat/completions';
 
-// Available models
+// Available models (legacy support)
 const MODELS = {
   LLAMA_70B: 'llama-3.3-70b-versatile',  // Best quality
   LLAMA_8B: 'llama-3.1-8b-instant',       // Fastest
@@ -18,61 +24,68 @@ const MODELS = {
 };
 
 /**
- * Generate AI response using Groq with multi-provider fallback
+ * Generate AI response using Hybrid AI Service
  * @param {Array} messages - Array of {role, content} messages
  * @param {Object} options - Additional options (model, temperature, max_tokens)
- * @returns {Promise<Object>} - { response, tokensUsed, model }
+ * @returns {Promise<Object>} - { response, tokensUsed, model, provider }
  */
 async function generateResponse(messages, options = {}) {
-  // Fetch ALL active models ordered by priority (highest first)
-  const activeModels = await prisma.aIModel.findMany({
-    where: { isActive: true },
-    orderBy: { priority: 'desc' }
-  });
+  try {
+    // Use Hybrid AI Service for intelligent load balancing
+    console.log('[AI] Using Hybrid AI Service with load balancing...');
+    return await hybridAI.generateResponse(messages, options);
+  } catch (error) {
+    console.error('[AI] Hybrid AI failed, falling back to database models...', error.message);
+    
+    // Fallback: Try database models if hybrid fails
+    const activeModels = await prisma.aIModel.findMany({
+      where: { isActive: true },
+      orderBy: { priority: 'desc' }
+    });
 
-  // If no models in DB, use default Groq
-  if (activeModels.length === 0) {
-    console.log('[Groq] No active models in DB, using default Groq configuration');
-    return await attemptGenerateResponse(messages, {
-      apiKey: GROQ_API_KEY,
-      modelName: options.model || MODELS.LLAMA_70B,
-      endpoint: GROQ_API_URL,
-      maxTokensLimit: options.maxTokens || 1024
-    }, options);
-  }
-
-  // Try each model in priority order until one succeeds
-  let lastError = null;
-  for (const model of activeModels) {
-    try {
-      console.log(`[Groq] Attempting with model: ${model.name} (priority: ${model.priority})`);
-      
-      const result = await attemptGenerateResponse(messages, {
-        apiKey: model.apiKey || GROQ_API_KEY,
-        modelName: model.name,
-        endpoint: model.endpoint || GROQ_API_URL,
-        maxTokensLimit: model.maxTokens || options.maxTokens || 1024
+    if (activeModels.length === 0) {
+      console.log('[AI] No active models in DB, using default Groq configuration');
+      return await attemptGenerateResponse(messages, {
+        apiKey: GROQ_API_KEY,
+        modelName: options.model || MODELS.LLAMA_70B,
+        endpoint: GROQ_API_URL,
+        maxTokensLimit: options.maxTokens || 1024
       }, options);
-
-      console.log(`[Groq] ✅ Success with model: ${model.name}`);
-      return result;
-
-    } catch (error) {
-      console.error(`[Groq] ❌ Failed with model ${model.name}:`, error.message);
-      lastError = error;
-      
-      // If this is a rate limit error, wait before trying next provider
-      if (error.message.includes('Rate limit')) {
-        console.log('[Groq] Rate limit hit, trying next provider immediately...');
-      }
-      
-      // Continue to next model
-      continue;
     }
-  }
 
-  // If all models failed, throw the last error
-  throw new Error(`All AI providers failed. Last error: ${lastError?.message || 'Unknown error'}`);
+    // Try each model in priority order until one succeeds
+    let lastError = null;
+    for (const model of activeModels) {
+      try {
+        console.log(`[AI] Attempting with model: ${model.name} (priority: ${model.priority})`);
+        
+        const result = await attemptGenerateResponse(messages, {
+          apiKey: model.apiKey || GROQ_API_KEY,
+          modelName: model.name,
+          endpoint: model.endpoint || GROQ_API_URL,
+          maxTokensLimit: model.maxTokens || options.maxTokens || 1024
+        }, options);
+
+        console.log(`[AI] ✅ Success with model: ${model.name}`);
+        return result;
+
+      } catch (error) {
+        console.error(`[AI] ❌ Failed with model ${model.name}:`, error.message);
+        lastError = error;
+        
+        // If this is a rate limit error, wait before trying next provider
+        if (error.message.includes('Rate limit')) {
+          console.log('[AI] Rate limit hit, trying next provider immediately...');
+        }
+        
+        // Continue to next model
+        continue;
+      }
+    }
+
+    // If all models failed, throw the last error
+    throw new Error(`All AI providers failed. Last error: ${lastError?.message || 'Unknown error'}`);
+  }
 }
 
 /**
@@ -160,7 +173,7 @@ async function generateEmbedding(text) {
  * @returns {string} - System prompt
  */
 function buildSystemPrompt(business, knowledgeContext = []) {
-  const businessName = business?.name || 'فهيم';
+  const businessName = business?.name || 'فهملي';
   const activityType = business?.activityType || 'RESTAURANT';
   const botTone = business?.botTone || 'friendly';
   const dialect = business?.widgetConfig?.dialect || 'sa';
@@ -245,7 +258,7 @@ function buildSystemPrompt(business, knowledgeContext = []) {
   systemPrompt += `\n\n# تذكير أخير:
 - أنت واجهة الشركة. كن مفيداً، ذكياً، ومحترماً.
 - لا تذكر أبداً أنك "نموذج ذكاء اصطناعي" أو "تم تدريبك من قبل جوجل/OpenAI". أنت مساعد خاص بـ ${businessName}.
-- إذا سألك عن "فهملي" (Faheemly)، فهي المنصة التي تشغلك. هي منصة شات بوت عربي ذكي.`;
+- إذا سألك عن "فهملي" (Faheemly)، فهي المنصة التي تشغلك. هي منصة شات بوت عربي ذكي مدعوم بالذكاء الاصطناعي.`;
 
   return systemPrompt;
 }
@@ -324,5 +337,8 @@ module.exports = {
   generateEmbedding,
   summarizeText,
   buildSystemPrompt,
-  MODELS
+  MODELS,
+  // Hybrid AI functions
+  getProviderStatus: hybridAI.getProviderStatus,
+  healthCheck: hybridAI.healthCheck
 };

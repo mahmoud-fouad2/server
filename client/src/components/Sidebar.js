@@ -7,9 +7,10 @@ import { useRouter } from 'next/navigation';
 import FaheemAnimatedLogo from './FaheemAnimatedLogo';
 import { ticketApi } from '@/lib/api';
 
-const SidebarItem = ({ icon: Icon, label, id, activeTab, setActiveTab, badge }) => (
+const SidebarItem = ({ icon: Icon, label, id, activeTab, setActiveTab, badge, dataTour }) => (
   <button 
     onClick={() => setActiveTab(id)}
+    data-tour={dataTour}
     className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 mb-1 group relative overflow-hidden ${
       activeTab === id
         ? 'bg-brand-600/10 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400 shadow-sm' 
@@ -85,16 +86,16 @@ export default function Sidebar({ activeTab, setActiveTab, userRole }) {
         </div>
         
         <nav className="flex-1 space-y-1">
-          {!isAgent && <SidebarItem icon={TrendingUp} label="نظرة عامة" id="overview" activeTab={activeTab} setActiveTab={setActiveTab} />}
-          <SidebarItem icon={MessageSquare} label="المحادثات" id="conversations" activeTab={activeTab} setActiveTab={setActiveTab} />
+          {!isAgent && <SidebarItem icon={TrendingUp} label="نظرة عامة" id="overview" activeTab={activeTab} setActiveTab={setActiveTab} dataTour="sidebar-overview" />}
+          <SidebarItem icon={MessageSquare} label="المحادثات" id="conversations" activeTab={activeTab} setActiveTab={setActiveTab} dataTour="sidebar-conversations" />
           <SidebarItem icon={Headphones} label="الدعم المباشر" id="live-support" activeTab={activeTab} setActiveTab={setActiveTab} />
           {!isAgent && <SidebarItem icon={Users} label="فريق العمل" id="team" activeTab={activeTab} setActiveTab={setActiveTab} />}
           {!isAgent && <SidebarItem icon={Share2} label="قنوات الاتصال" id="channels" activeTab={activeTab} setActiveTab={setActiveTab} />}
-          {!isAgent && <SidebarItem icon={FileText} label="قاعدة المعرفة" id="knowledge" activeTab={activeTab} setActiveTab={setActiveTab} />}
-          {!isAgent && <SidebarItem icon={Settings} label="تخصيص الويدجت" id="widget" activeTab={activeTab} setActiveTab={setActiveTab} />}
+          {!isAgent && <SidebarItem icon={FileText} label="قاعدة المعرفة" id="knowledge" activeTab={activeTab} setActiveTab={setActiveTab} dataTour="sidebar-knowledge" />}
+          {!isAgent && <SidebarItem icon={Settings} label="تخصيص الويدجت" id="widget" activeTab={activeTab} setActiveTab={setActiveTab} dataTour="sidebar-widget" />}
           {!isAgent && <SidebarItem icon={Play} label="تجربة البوت" id="playground" activeTab={activeTab} setActiveTab={setActiveTab} />}
           <SidebarItem icon={LifeBuoy} label="تذاكر الدعم" id="tickets" activeTab={activeTab} setActiveTab={setActiveTab} badge={ticketCount} />
-          <SidebarItem icon={User} label="إعدادات الحساب" id="settings" activeTab={activeTab} setActiveTab={setActiveTab} />
+          <SidebarItem icon={User} label="إعدادات الحساب" id="settings" activeTab={activeTab} setActiveTab={setActiveTab} dataTour="sidebar-settings" />
           {!isAgent && <SidebarItem icon={CreditCard} label="الاشتراك والباقة" id="subscription" activeTab={activeTab} setActiveTab={setActiveTab} />}
         </nav>
       </div>
@@ -111,6 +112,7 @@ export default function Sidebar({ activeTab, setActiveTab, userRole }) {
         <div className="flex gap-2">
            <button 
             onClick={toggleTheme}
+            data-tour="theme-toggle"
             className="flex-1 flex items-center justify-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white bg-white dark:bg-white/5 py-2.5 rounded-lg border border-gray-200 dark:border-white/5 hover:border-brand-500 dark:hover:border-brand-500 transition-colors shadow-sm"
           >
             {isDark ? <Sun size={18} /> : <Moon size={18} />}

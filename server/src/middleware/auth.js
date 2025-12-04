@@ -11,9 +11,7 @@ const authenticateToken = async (req, res, next) => {
   }
 
   try {
-    console.log('[auth] verifying token for path', req.path);
-    console.log('[auth] header auth preview:', (req.headers['authorization'] || '').slice(0, 40));
-    console.log('[auth] token preview (trim):', (token || '').slice(0, 20), ' len=', (token || '').length);
+    // SECURITY: Token verification - no logging of sensitive data in production
     const verified = jwt.verify(token, process.env.JWT_SECRET);
     // Attach basic user payload
     req.user = verified || {};

@@ -55,10 +55,10 @@ router.post('/demo', demoLimiter, async (req, res) => {
     }
 
     // 2. Prepare Context
-    // We'll use a hardcoded "Fahimo" persona for the landing page demo
+    // We'll use a hardcoded "Faheemly" persona for the landing page demo
     const demoConfig = {
-      name: 'فهيم',
-      activityType: 'COMPANY', // Acts as Fahimo Company Agent
+      name: 'فهملي',
+      activityType: 'COMPANY', // Acts as Faheemly Company Agent
       botTone: 'friendly',
       widgetConfig: { dialect: 'sa' } // Default to Saudi dialect for demo
     };
@@ -78,7 +78,7 @@ router.post('/demo', demoLimiter, async (req, res) => {
     const demoKnowledge = [
       {
         content: `
-        معلومات عن منصة فهملي (Fahimo):
+        معلومات عن منصة فهملي (Faheemly):
         - منصة شات بوت عربي ذكي مدعوم بالذكاء الاصطناعي (AI).
         - تساعد الشركات والمتاجر على الرد الآلي على العملاء 24/7.
         - تدعم اللهجات العربية (مصري، سعودي، خليجي) بطلاقة.

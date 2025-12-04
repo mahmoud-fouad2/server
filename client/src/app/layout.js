@@ -196,6 +196,90 @@ export default function RootLayout({ children }) {
             'query-input': 'required name=search_term_string'
           }
         }) }} />
+        
+        {/* Structured Data - FAQ */}
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'FAQPage',
+          mainEntity: [
+            {
+              '@type': 'Question',
+              name: 'ما هو فهملي؟',
+              acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'فهملي هي أقوى منصة شات بوت عربي مدعومة بالذكاء الاصطناعي. نساعد الشركات على أتمتة خدمة العملاء وزيادة المبيعات 24/7 بكل اللهجات العربية.'
+              }
+            },
+            {
+              '@type': 'Question',
+              name: 'كيف يعمل فهملي؟',
+              acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'فهملي يستخدم تقنيات الذكاء الاصطناعي المتقدمة لفهم استفسارات العملاء باللهجات العربية المختلفة والرد عليها تلقائياً. يمكن دمجه مع واتساب وموقعك الإلكتروني وتيليجرام.'
+              }
+            },
+            {
+              '@type': 'Question',
+              name: 'ما هي تكلفة استخدام فهملي؟',
+              acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'نوفر عدة خطط تبدأ من 149 ريال شهرياً مع تجربة مجانية 7 أيام. تشمل جميع الخطط الدعم الفني والتحديثات المستمرة.'
+              }
+            },
+            {
+              '@type': 'Question',
+              name: 'هل يدعم فهملي اللهجات العربية المختلفة؟',
+              acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'نعم، فهملي يدعم جميع اللهجات العربية من الخليج إلى المغرب العربي، بما في ذلك السعودية، مصر، الإمارات، الكويت، وغيرها.'
+              }
+            }
+          ]
+        }) }} />
+        
+        {/* Structured Data - BreadcrumbList */}
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            {
+              '@type': 'ListItem',
+              position: 1,
+              name: 'الرئيسية',
+              item: 'https://faheemly.com'
+            },
+            {
+              '@type': 'ListItem',
+              position: 2,
+              name: 'الخدمات',
+              item: 'https://faheemly.com/services'
+            },
+            {
+              '@type': 'ListItem',
+              position: 3,
+              name: 'الأسعار',
+              item: 'https://faheemly.com/pricing'
+            },
+            {
+              '@type': 'ListItem',
+              position: 4,
+              name: 'تواصل معنا',
+              item: 'https://faheemly.com/contact'
+            }
+          ]
+        }) }} />
+        
+        {/* Preload critical resources */}
+        <link rel="preload" href="/assets/fonts/Cairo-Regular.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="/assets/fonts/Cairo-Bold.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        
+        {/* DNS Prefetch for external resources */}
+        <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+        <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+        
+        {/* Performance hints */}
+        <meta name="format-detection" content="telephone=no" />
+        <meta httpEquiv="x-ua-compatible" content="IE=edge" />
       </head>
       <body className={`font-sans overflow-x-hidden bg-gray-50 dark:bg-cosmic-950 text-gray-900 dark:text-gray-100 transition-colors duration-300 selection:bg-brand-500/30`}>
         <noscript>

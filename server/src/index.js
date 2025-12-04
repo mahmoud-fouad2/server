@@ -38,13 +38,13 @@ const businessRoutes = require('./routes/business.routes');
 const chatRoutes = require('./routes/chat.routes');
 const ticketRoutes = require('./routes/tickets.routes');
 const contactRoutes = require('./routes/contact.routes');
-const demoRoutes = require('./routes/demo.routes');
 const passwordRoutes = require('./routes/password.routes');
 const teamRoutes = require('./routes/team.routes');
 const adminRoutes = require('./routes/admin.routes');
 const telegramRoutes = require('./routes/telegram.routes');
 const twilioRoutes = require('./routes/twilio.routes');
 const analyticsRoutes = require('./routes/analytics.routes');
+const aiRoutes = require('./routes/ai.routes');
 const permissionsRoutes = require('./middleware/permissions');
 
 // Security Middleware
@@ -164,12 +164,12 @@ app.use('/api/business', businessRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/contact', contactRoutes);
-app.use('/api/chat', demoRoutes); // Mount demo routes under /api/chat/demo
 app.use('/api/team', teamRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/telegram', telegramRoutes);
 app.use('/api/twilio', twilioRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/ai', aiRoutes); // Hybrid AI monitoring
 app.use('/api/permissions', permissionsRoutes);
 
 const PORT = process.env.PORT || 3001;
@@ -200,7 +200,8 @@ process.on('uncaughtException', (err) => {
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-  logger.error('UNHANDLED REJECTION', reason instanceof Error ? reason : new Error(String(reason)));
+  logger.error('UNHANDLED REJECTION - Server will exit', reason instanceof Error ? reason : new Error(String(reason)));
+  process.exit(1);
 });
 
 // Auto-create admin on startup
@@ -209,12 +210,13 @@ async function ensureAdminExists() {
     const bcrypt = require('bcryptjs');
     const adminEmail = 'admin@faheemly.com';
     
-    // SECURITY: Use environment variable for initial password, fallback to random if not set
-    // NEVER use a hardcoded password in production code
-    const initialPassword = process.env.ADMIN_INITIAL_PASSWORD || 'admin@123';
+    // SECURITY: Require environment variable for initial password - NO FALLBACK
+    const initialPassword = process.env.ADMIN_INITIAL_PASSWORD;
     
-    if (!process.env.ADMIN_INITIAL_PASSWORD) {
-      logger.warn('SECURITY WARNING: Using default admin password. Set ADMIN_INITIAL_PASSWORD in .env!');
+    if (!initialPassword || initialPassword.length < 12) {
+      logger.error('FATAL: ADMIN_INITIAL_PASSWORD must be set in .env (minimum 12 characters)');
+      logger.error('Add to .env: ADMIN_INITIAL_PASSWORD=<strong-secure-password>');
+      process.exit(1);
     }
 
     const adminPassword = await bcrypt.hash(initialPassword, 10);

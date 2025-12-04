@@ -170,7 +170,7 @@ router.post('/upload', authenticateToken, (req, res, next) => {
     const businessId = await resolveBusinessId(req);
     if (!businessId) {
       // Clean up file if auth fails
-      try { fs.unlinkSync(req.file.path); } catch (e) {}
+      try { fs.unlinkSync(req.file.path); } catch (e) { logger.warn('File cleanup failed', { path: req.file.path, error: e.message }); }
       return res.status(400).json({ error: 'Business ID missing or invalid. Please re-login or contact support.' });
     }
 
