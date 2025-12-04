@@ -79,18 +79,19 @@ export default function ContactPage() {
             </div>
 
             {/* Ticket System Promo */}
-            <div className="bg-brand-50 dark:bg-brand-900/10 border border-brand-200 dark:border-brand-800 rounded-2xl p-6">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-brand-100 dark:bg-brand-900/30 rounded-full flex items-center justify-center text-brand-600 dark:text-brand-400 shrink-0">
-                  <Ticket className="w-6 h-6" />
+            <div className="bg-gradient-to-br from-brand-50 to-purple-50 dark:from-brand-900/20 dark:to-purple-900/20 border border-brand-200 dark:border-brand-800 rounded-3xl p-8 shadow-lg relative overflow-hidden group hover:shadow-xl transition-all">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-500 to-purple-500"></div>
+              <div className="flex items-start gap-6 relative z-10">
+                <div className="w-16 h-16 bg-white dark:bg-white/10 rounded-2xl flex items-center justify-center text-brand-600 dark:text-brand-400 shrink-0 shadow-sm group-hover:scale-110 transition-transform">
+                  <Ticket className="w-8 h-8" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-lg mb-2">هل أنت عميل حالي؟</h3>
-                  <p className="text-muted-foreground mb-4">
-                    للحصول على رد أسرع ومتابعة حالة طلبك، يفضل فتح تذكرة دعم فني من خلال لوحة التحكم الخاصة بك.
+                  <h3 className="font-bold text-xl mb-3 text-gray-900 dark:text-white">هل أنت عميل حالي؟</h3>
+                  <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+                    للحصول على رد أسرع ومتابعة دقيقة لحالة طلبك، نوصي بفتح تذكرة دعم فني مباشرة من لوحة التحكم.
                   </p>
                   <Link href="/dashboard?tab=tickets">
-                    <Button className="w-full sm:w-auto">
+                    <Button className="w-full sm:w-auto bg-white text-brand-600 hover:bg-gray-50 border border-brand-200 shadow-sm font-bold">
                       فتح تذكرة دعم فني
                     </Button>
                   </Link>

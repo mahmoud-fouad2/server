@@ -35,7 +35,12 @@ export const LandingPage = ({ lang: initialLang = 'ar', setLang: externalSetLang
     else router.push(`/${code}`);
   };
 
-  const regionContent = REGIONAL_CONTENT[activeCountry] || REGIONAL_CONTENT['sa'];
+  const regionContent = lang === 'en' 
+    ? {
+        heroTitle: "The Smart Employee That Never Sleeps",
+        heroSubtitle: "Faheemly is the #1 Arabic AI Chatbot. It manages your orders, books appointments, and replies to your customers on WhatsApp and your website.",
+      } 
+    : (REGIONAL_CONTENT[activeCountry] || REGIONAL_CONTENT['sa']);
   const [isDark, setIsDark] = useTheme(true);
   const [selectedIndustry, setSelectedIndustry] = useState(null);
   const [mounted, setMounted] = useState(false);
@@ -398,34 +403,8 @@ export const LandingPage = ({ lang: initialLang = 'ar', setLang: externalSetLang
             <DemoChat />
           </motion.div>
 
-          {/* Stats Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.8 }}
-            className="mt-24 grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8"
-          >
-            {[
-              { number: '500+', label: 'عميل نشط', icon: <Users size={28} />, color: 'blue' },
-              { number: '50K+', label: 'محادثة يومياً', icon: <MessageCircle size={28} />, color: 'green' },
-              { number: '99.9%', label: 'وقت التشغيل', icon: <Zap size={28} />, color: 'yellow' },
-              { number: '24/7', label: 'دعم فني', icon: <Shield size={28} />, color: 'purple' }
-            ].map((stat, i) => (
-              <motion.div 
-                key={i} 
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.9 + (i * 0.1) }}
-                className={`text-center p-8 rounded-3xl ${isDark ? 'bg-gradient-to-br from-white/10 to-white/5 border-2 border-white/20' : 'bg-white border-2 border-gray-200 shadow-xl'} hover:scale-110 hover:shadow-2xl transition-all duration-300`}
-              >
-                <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl ${isDark ? `bg-${stat.color}-500/20 border border-${stat.color}-500/30` : `bg-${stat.color}-50 border border-${stat.color}-200`} text-${stat.color}-500 mb-4 shadow-lg`}>
-                  {stat.icon}
-                </div>
-                <div className={`text-5xl font-black mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>{stat.number}</div>
-                <div className={`text-sm font-bold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{stat.label}</div>
-              </motion.div>
-            ))}
-          </motion.div>
+        </div>
+      </section>
 
         </div>
       </section>
@@ -691,7 +670,7 @@ export const LandingPage = ({ lang: initialLang = 'ar', setLang: externalSetLang
                 </div>
               </motion.div>
               </Link>
-            )})})
+            )})}
           </div>
         </div>
       </section>
