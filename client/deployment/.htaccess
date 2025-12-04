@@ -1,0 +1,23 @@
+# Faheemly Next.js Bluehost Configuration
+
+# Enable Node.js application
+PassengerEnabled on
+PassengerAppRoot /home/username/faheemly
+PassengerAppType node
+PassengerStartupFile server.js
+
+# Node.js version
+PassengerNodejs /home/username/nodevenv/faheemly/18/bin/node
+
+# Environment
+SetEnv NODE_ENV production
+
+# Force HTTPS
+RewriteEngine On
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Handle Next.js routing
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ /index.html [L]
