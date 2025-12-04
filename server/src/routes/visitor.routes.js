@@ -4,6 +4,9 @@ const visitorService = require('../services/visitor.service');
 const { protect } = require('../middleware/auth');
 
 /**
+ * Visitor Routes - Track sessions, page visits, and user analytics
+ * Last updated: 2024-12-04
+ * 
  * POST /api/visitor/session
  * إنشاء أو استرجاع جلسة زائر
  */
