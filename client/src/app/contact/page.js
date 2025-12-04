@@ -9,6 +9,7 @@ import Link from "next/link"
 import { Mail, MapPin, Phone, Ticket, CheckCircle, AlertCircle } from "lucide-react"
 import { motion } from "framer-motion"
 import { contactApi } from "@/lib/api"
+import Captcha from "@/components/Captcha"
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -19,16 +20,34 @@ export default function ContactPage() {
     message: ''
   });
   const [status, setStatus] = useState('idle'); // idle, loading, success, error
+  const [captchaValid, setCaptchaValid] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!captchaValid) {
+      setStatus('error');
+      return;
+    }
+    
     setStatus('loading');
 
     try {
-      await contactApi.send(formData);
+      // Send to mahmoud.a.fouad2@gmail.com
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...formData,
+          to: 'mahmoud.a.fouad2@gmail.com'
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to send');
 
       setStatus('success');
       setFormData({ firstName: '', lastName: '', email: '', subject: '', message: '' });
+      setCaptchaValid(false);
     } catch (err) {
       console.error(err);
       setStatus('error');
@@ -90,7 +109,7 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <h3 className="font-bold">الهاتف</h3>
-                  <p className="text-muted-foreground">+966 5300 47 640</p>
+                  <p className="text-muted-foreground" dir="ltr">+966 530047640</p>
                 </div>
               </div>
 
@@ -178,14 +197,19 @@ export default function ContactPage() {
                   />
                 </div>
 
+                {/* Captcha */}
+                <div className="space-y-2">
+                  <Captcha onValidate={setCaptchaValid} />
+                </div>
+
                 {status === 'error' && (
-                  <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm flex items-center gap-2">
+                  <div className="p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm flex items-center gap-2">
                     <AlertCircle size={16} />
-                    حدث خطأ أثناء الإرسال. يرجى المحاولة مرة أخرى.
+                    {!captchaValid ? 'يرجى التحقق من أنك لست روبوت' : 'حدث خطأ أثناء الإرسال. يرجى المحاولة مرة أخرى.'}
                   </div>
                 )}
 
-                <Button type="submit" className="w-full h-12 text-lg" disabled={status === 'loading'}>
+                <Button type="submit" className="w-full h-12 text-lg" disabled={status === 'loading' || !captchaValid}>
                   {status === 'loading' ? 'جاري الإرسال...' : 'إرسال الرسالة'}
                 </Button>
               </form>

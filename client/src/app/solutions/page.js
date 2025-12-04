@@ -197,66 +197,46 @@ export default function SolutionsPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-white dark:bg-cosmic-900 rounded-3xl overflow-hidden border-2 border-gray-200 dark:border-white/10 hover:border-brand-400 dark:hover:border-brand-600 hover:shadow-2xl hover:shadow-brand-500/20 transition-all duration-500 group hover:-translate-y-3 cursor-pointer relative"
+                className="bg-white dark:bg-cosmic-900 rounded-2xl overflow-hidden border border-gray-200 dark:border-white/10 hover:border-brand-400 dark:hover:border-brand-500 hover:shadow-xl transition-all duration-300 group hover:-translate-y-2 cursor-pointer relative"
               >
-                {/* Image Header with Gradient Overlay */}
-                <div className="relative h-56 overflow-hidden bg-gradient-to-br from-brand-500/10 to-purple-600/10 dark:from-brand-900/20 dark:to-purple-900/20">
-                  <img 
-                    src={solution.image} 
-                    alt={solution.title}
-                    className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110 group-hover:brightness-110"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      const fallbacks = {
-                        'restaurant': '/assets/images/restaurant.jpg',
-                        'clinic': '/assets/images/clinic.jpg',
-                        'retail': '/assets/images/retail.jpg',
-                        'business': '/assets/images/business.jpg',
-                        'education': '/assets/images/education.jpg',
-                        'realestate': '/assets/images/realestate.jpg'
-                      };
-                      e.target.src = fallbacks[solution.id] || '/assets/images/restaurant.jpg';
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-40 transition-opacity duration-500"></div>
-                  <div className={`absolute bottom-4 right-4 w-16 h-16 rounded-2xl bg-${solution.color}-500 text-white flex items-center justify-center shadow-2xl group-hover:scale-110 group-hover:rotate-6 transition-all duration-500`}>
+                {/* Icon & Title Section - No Image */}
+                <div className="relative p-6 pb-4 bg-gradient-to-br from-gray-50 to-white dark:from-white/[0.03] dark:to-transparent">
+                  <div className={`inline-flex w-12 h-12 rounded-xl bg-${solution.color}-500/10 text-${solution.color}-600 dark:text-${solution.color}-400 items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-105`}>
                     {solution.icon}
                   </div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                    {solution.title}
+                  </h3>
                 </div>
 
                 {/* Content */}
-                <div className="p-6">
-                  <h3 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">
-                    {solution.title}
-                  </h3>
-                  <p className="text-base text-gray-600 dark:text-gray-400 mb-5">
+                <div className="px-6 pb-6">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                     {solution.description}
                   </p>
 
-                  {/* Features List */}
-                  <ul className="space-y-2.5 mb-6">
-                    {solution.features.slice(0, 3).map((feature, i) => (
-                      <li key={i} className="flex items-center gap-2.5 text-sm text-gray-700 dark:text-gray-300">
-                        <div className="w-4 h-4 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0">
-                          <Check size={10} className="text-green-500" strokeWidth={3} />
-                        </div>
+                  {/* Features List - Compact */}
+                  <ul className="space-y-2 mb-5">
+                    {solution.features.slice(0, 4).map((feature, i) => (
+                      <li key={i} className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                        <Check size={14} className="text-green-500 flex-shrink-0" strokeWidth={3} />
                         <span>{feature}</span>
                       </li>
                     ))}
                   </ul>
 
-                  {/* Stats */}
-                  <div className="grid grid-cols-2 gap-3 p-4 bg-gray-50 dark:bg-white/5 rounded-xl mb-5">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-brand-600 dark:text-brand-400 mb-0.5">
+                  {/* Stats - Inline */}
+                  <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-white/5 rounded-lg">
+                    <div>
+                      <div className="text-lg font-bold text-brand-600 dark:text-brand-400">
                         {solution.stats.increase}
                       </div>
                       <div className="text-xs text-gray-600 dark:text-gray-400">
                         {solution.stats.metric}
                       </div>
                     </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-brand-600 dark:text-brand-400 mb-0.5">
+                    <div className="text-right border-r pr-3 dark:border-white/10">
+                      <div className="text-lg font-bold text-gray-900 dark:text-white">
                         {solution.stats.time}
                       </div>
                       <div className="text-xs text-gray-600 dark:text-gray-400">

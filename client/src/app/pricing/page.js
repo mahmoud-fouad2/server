@@ -346,8 +346,8 @@ export default function PricingPage() {
                   <Crown size={24} className="text-purple-500" />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white">باقة الوكالات</h3>
-                  <p className="text-sm text-gray-500">للمؤسسات الكبيرة</p>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white">المتاجر والشركات</h3>
+                  <p className="text-sm text-gray-500">للشركات المتنامية</p>
                 </div>
               </div>
 
@@ -474,23 +474,18 @@ export default function PricingPage() {
           >
             <div className="text-6xl mb-6">🏢</div>
             <h2 className="text-4xl font-bold mb-6 text-gray-900 dark:text-white">
-              هل أنت وكالة أو لديك احتياجات خاصة؟
+              هل لديك احتياجات خاصة أو تبحث عن حلول مؤسسية؟
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-400 mb-8 leading-relaxed">
-              نقدم حلول مخصصة للوكالات والمؤسسات الكبرى مع باقات خاصة وأسعار تنافسية.
+              نقدم حلول مخصصة للمؤسسات الكبرى مع باقات خاصة وأسعار تنافسية.
               احصل على White Label، API مخصص، ومدير حساب متخصص.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex justify-center">
               <Link href="/contact">
                 <Button className="h-14 px-10 text-lg rounded-full bg-brand-600 hover:bg-brand-700 text-white shadow-lg">
                   تواصل معنا للحصول على عرض خاص
                 </Button>
               </Link>
-              <a href="https://wa.me/966533333999" target="_blank" rel="noopener noreferrer">
-                <Button variant="outline" className="h-14 px-10 text-lg rounded-full border-2 border-brand-600 text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-950">
-                  تواصل واتساب
-                </Button>
-              </a>
             </div>
           </motion.div>
         </div>

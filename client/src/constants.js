@@ -145,7 +145,7 @@ export const REGIONAL_CONTENT = {
       currencyCode: "SAR",
       starter: { price: "99", name: "الأساسية" },
       pro: { price: "299", name: "الاحترافية" },
-      agency: { price: "999", name: "المؤسسات" }
+      agency: { price: "999", name: "المتاجر والشركات" }
     }
   },
   eg: {
@@ -156,7 +156,7 @@ export const REGIONAL_CONTENT = {
       currencyCode: "EGP",
       starter: { price: convertCurrency(99, 'EGP').toString(), name: "الأساسية" },
       pro: { price: convertCurrency(299, 'EGP').toString(), name: "الاحترافية" },
-      agency: { price: convertCurrency(999, 'EGP').toString(), name: "المؤسسات" }
+      agency: { price: convertCurrency(999, 'EGP').toString(), name: "المتاجر والشركات" }
     }
   },
   ae: {
@@ -167,7 +167,7 @@ export const REGIONAL_CONTENT = {
       currencyCode: "AED",
       starter: { price: convertCurrency(99, 'AED').toString(), name: "الأساسية" },
       pro: { price: convertCurrency(299, 'AED').toString(), name: "الاحترافية" },
-      agency: { price: convertCurrency(999, 'AED').toString(), name: "المؤسسات" }
+      agency: { price: convertCurrency(999, 'AED').toString(), name: "المتاجر والشركات" }
     }
   },
   kw: {
@@ -178,7 +178,7 @@ export const REGIONAL_CONTENT = {
       currencyCode: "KWD",
       starter: { price: convertCurrency(99, 'KWD').toString(), name: "الأساسية" },
       pro: { price: convertCurrency(299, 'KWD').toString(), name: "الاحترافية" },
-      agency: { price: convertCurrency(999, 'KWD').toString(), name: "المؤسسات" }
+      agency: { price: convertCurrency(999, 'KWD').toString(), name: "المتاجر والشركات" }
     }
   }
 };
