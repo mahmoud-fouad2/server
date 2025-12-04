@@ -11,6 +11,12 @@ import { motion } from "framer-motion"
 import { contactApi } from "@/lib/api"
 import Captcha from "@/components/Captcha"
 
+// export const metadata = {
+//   title: 'اتصل بنا - فهملي | تواصل معنا للحصول على استشارة مجانية',
+//   description: 'تواصل مع فريق فهملي للحصول على استشارة مجانية حول كيفية تحويل أعمالك رقمياً. الهاتف: +966530047640 | البريد: mahmoud.a.fouad2@gmail.com',
+//   keywords: 'اتصل بنا, تواصل معنا, استشارة مجانية, دعم فني, خدمة عملاء فهملي',
+// }
+
 export default function ContactPage() {
   const [formData, setFormData] = useState({
     firstName: '',

@@ -161,8 +161,36 @@ export default function SolutionsPage() {
   if (!mounted) return null
 
   return (
-    <PageLayout>
-      <div className="min-h-screen bg-gray-50 dark:bg-cosmic-950" dir="rtl">
+    <>
+      <noscript>
+        <div style={{ padding: '40px', maxWidth: '1200px', margin: '0 auto', fontFamily: 'Arial, sans-serif', direction: 'rtl' }}>
+          <h1>حلول فهملي للأعمال</h1>
+          <p style={{ fontSize: '18px', marginBottom: '30px' }}>اكتشف كيف يمكن لفهملي أن يحدث ثورة في طريقة تواصلك مع عملائك</p>
+          
+          <div style={{ display: 'grid', gap: '20px' }}>
+            <div style={{ border: '1px solid #ddd', padding: '20px', borderRadius: '8px' }}>
+              <h2>🍽️ المطاعم والمقاهي</h2>
+              <p>احجز طاولة، اطلب توصيل، استعرض المنيو - كل شيء عبر واتساب</p>
+            </div>
+            <div style={{ border: '1px solid #ddd', padding: '20px', borderRadius: '8px' }}>
+              <h2>🏥 العيادات الطبية</h2>
+              <p>حجز المواعيد والرد على الاستفسارات الطبية تلقائياً</p>
+            </div>
+            <div style={{ border: '1px solid #ddd', padding: '20px', borderRadius: '8px' }}>
+              <h2>🛍️ التجارة الإلكترونية</h2>
+              <p>عرض المنتجات وإتمام الطلبات ومتابعة الشحنات</p>
+            </div>
+          </div>
+          
+          <p style={{ marginTop: '30px', textAlign: 'center' }}>
+            <a href="/register" style={{ padding: '15px 30px', background: '#7C3AED', color: 'white', textDecoration: 'none', borderRadius: '8px', display: 'inline-block' }}>
+              ابدأ الآن
+            </a>
+          </p>
+        </div>
+      </noscript>
+      <PageLayout>
+        <div className="min-h-screen bg-gray-50 dark:bg-cosmic-950" dir="rtl">
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 px-6 overflow-hidden border-b border-gray-200 dark:border-white/5">
         <div className="absolute inset-0 bg-gradient-to-b from-brand-500/5 to-transparent"></div>
@@ -318,5 +346,6 @@ export default function SolutionsPage() {
       </section>
       </div>
     </PageLayout>
+    </>
   )
 }
