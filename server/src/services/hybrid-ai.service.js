@@ -29,7 +29,7 @@ const PROVIDERS = {
     apiKey: process.env.CEREBRAS_API_KEY,
     model: 'llama3.1-8b',
     rateLimit: { requestsPerMinute: 30, tokensPerMinute: 30000 },
-    priority: 2,
+    priority: 3,
     enabled: true
   },
   GEMINI: {
@@ -38,7 +38,7 @@ const PROVIDERS = {
     apiKey: process.env.GEMINI_API_KEY,
     model: 'gemini-1.5-flash',
     rateLimit: { requestsPerMinute: 15, tokensPerDay: 1000000 },
-    priority: 3,
+    priority: 4,
     enabled: true,
     isGemini: true
   },
@@ -48,8 +48,8 @@ const PROVIDERS = {
     apiKey: process.env.DEEPSEEK_API_KEY,
     model: 'deepseek-chat',
     rateLimit: { requestsPerMinute: 60, tokensPerMinute: 50000 },
-    priority: 4, // LAST - Insufficient balance reported
-    enabled: false // Disabled due to balance issues
+    priority: 2, // SECONDARY - Balance restored, fast and reliable
+    enabled: true // Re-enabled after balance added
     isGemini: true // Special flag for different API format
   }
 };
