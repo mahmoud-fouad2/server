@@ -75,9 +75,52 @@ model Business {
 
 enum ActivityType {
   RESTAURANT
-  RETAIL
+  CAFE
+  BAKERY
   CLINIC
+  HOSPITAL
+  PHARMACY
+  DENTAL
+  RETAIL
+  FASHION
+  ELECTRONICS
+  JEWELRY
+  FURNITURE
   COMPANY
+  CONSULTING
+  LEGAL
+  ACCOUNTING
+  REALESTATE
+  EDUCATION
+  SCHOOL
+  UNIVERSITY
+  BANK
+  INSURANCE
+  INVESTMENT
+  HOTEL
+  TRAVEL
+  TOURISM
+  SALON
+  SPA
+  GYM
+  AUTOMOTIVE
+  CARMAINTENANCE
+  LOGISTICS
+  CONSTRUCTION
+  ARCHITECTURE
+  INTERIOR
+  IT
+  MAINTENANCE
+  SECURITY
+  SOFTWARE
+  TELECOM
+  DIGITAL
+  MARKETING
+  DESIGN
+  PHOTOGRAPHY
+  EVENTS
+  ECOMMERCE
+  DROPSHIPPING
   OTHER
 }
 
@@ -191,17 +234,25 @@ model Conversation {
   channel     Channel   @default(WIDGET) // widget, whatsapp
   externalId  String?   // WhatsApp phone number
   status      ConversationStatus @default(ACTIVE)
-  rating      Int?
+  rating      Int?      // تقييم من 1-5 نجوم
   feedback    String?
+  agentId     String?   // الموظف الذي تعامل مع المحادثة
+  agentRating Int?      // تقييم الموظف من 1-5
+  agentFeedback String?
+  
+  // Session tracking
+  sessionId   String?   @unique
   
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   
   business    Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
   messages    Message[]
+  visitor     VisitorSession? @relation(fields: [sessionId], references: [id])
   
   @@index([businessId])
   @@index([externalId])
+  @@index([sessionId])
 }
 
 enum ConversationStatus {
@@ -324,4 +375,111 @@ model SystemSetting {
   value       String    @db.Text
   description String?
   updatedAt   DateTime  @updatedAt
+}
+
+// جلسات الزوار - Visitor Sessions & Analytics
+model VisitorSession {
+  id            String    @id @default(cuid())
+  businessId    String
+  
+  // Session Info
+  fingerprint   String    // Browser fingerprint
+  isActive      Boolean   @default(true)
+  lastActivity  DateTime  @default(now())
+  
+  // Visitor Info
+  ipAddress     String?
+  country       String?
+  city          String?
+  region        String?
+  timezone      String?
+  
+  // Device Info
+  userAgent     String?   @db.Text
+  browser       String?
+  browserVersion String?
+  os            String?
+  device        String?   // mobile, tablet, desktop
+  isMobile      Boolean   @default(false)
+  
+  // UTM & Referrer
+  referrer      String?   @db.Text
+  utmSource     String?
+  utmMedium     String?
+  utmCampaign   String?
+  utmTerm       String?
+  utmContent    String?
+  
+  // Engagement
+  pageViews     Int       @default(0)
+  totalDuration Int       @default(0) // بالثواني
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  endedAt       DateTime?
+  
+  // Relations
+  pageVisits    PageVisit[]
+  conversations Conversation[]
+  
+  @@index([businessId])
+  @@index([fingerprint])
+  @@index([ipAddress])
+  @@index([isActive])
+  @@index([createdAt])
+}
+
+// تتبع الصفحات المزارة
+model PageVisit {
+  id            String    @id @default(cuid())
+  sessionId     String
+  
+  // Page Info
+  url           String    @db.Text
+  title         String?
+  path          String
+  
+  // Timing
+  duration      Int?      // بالثواني
+  enteredAt     DateTime  @default(now())
+  exitedAt      DateTime?
+  
+  // Interaction
+  scrollDepth   Int?      // 0-100%
+  clicks        Int       @default(0)
+  
+  session       VisitorSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  @@index([sessionId])
+  @@index([path])
+  @@index([enteredAt])
+}
+
+// User Analytics - تحليلات المشتركين
+model UserAnalytics {
+  id            String    @id @default(cuid())
+  businessId    String
+  userId        String
+  
+  // Login Info
+  ipAddress     String?
+  country       String?
+  city          String?
+  
+  // Device Info
+  userAgent     String?   @db.Text
+  browser       String?
+  os            String?
+  device        String?
+  
+  // Activity
+  action        String    // login, logout, create_bot, etc
+  metadata      Json?     // Additional data
+  
+  createdAt     DateTime  @default(now())
+  
+  @@index([businessId])
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
 }

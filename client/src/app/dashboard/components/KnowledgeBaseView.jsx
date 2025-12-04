@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { FileText, Globe, Upload, Trash2, Zap, Loader2, Save, Sparkles, AlertTriangle } from "lucide-react"
+import { FileText, Globe, Upload, Trash2, Zap, Loader2, Save, Sparkles, AlertTriangle, Edit2, X } from "lucide-react"
 import { knowledgeApi } from "@/lib/api"
 
 export default function KnowledgeBaseView({ addNotification }) {
@@ -14,6 +14,9 @@ export default function KnowledgeBaseView({ addNotification }) {
   const [urlInput, setUrlInput] = useState("")
   const [kbTab, setKbTab] = useState("text")
   const [loading, setLoading] = useState(true)
+  const [editingKb, setEditingKb] = useState(null)
+  const [editContent, setEditContent] = useState("")
+  const [editTitle, setEditTitle] = useState("")
 
   useEffect(() => {
     fetchKbList()
@@ -92,8 +95,86 @@ export default function KnowledgeBaseView({ addNotification }) {
     }
   }
 
+  const handleEditKb = (kb) => {
+    setEditingKb(kb)
+    setEditContent(kb.content)
+    setEditTitle(kb.metadata?.title || "")
+  }
+
+  const handleUpdateKb = async () => {
+    if (!editContent || !editingKb) return
+    setUploading(true)
+    try {
+      await knowledgeApi.update(editingKb.id, {
+        content: editContent,
+        metadata: { ...editingKb.metadata, title: editTitle }
+      })
+      addNotification("تم التحديث بنجاح")
+      setEditingKb(null)
+      setEditContent("")
+      setEditTitle("")
+      fetchKbList()
+    } catch (err) {
+      addNotification(`فشل التحديث: ${err.message}`, 'error')
+    } finally {
+      setUploading(false)
+    }
+  }
+
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-[calc(100vh-140px)]">
+    <>
+      {/* Edit Modal */}
+      {editingKb && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setEditingKb(null)}>
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }} 
+            animate={{ opacity: 1, scale: 1 }} 
+            exit={{ opacity: 0, scale: 0.9 }}
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-3xl mx-4 max-h-[90vh] overflow-hidden flex flex-col"
+          >
+            <div className="flex items-center justify-between p-6 border-b border-border">
+              <h3 className="text-xl font-bold flex items-center gap-2">
+                <Edit2 className="w-5 h-5 text-brand-500" />
+                تعديل المصدر
+              </h3>
+              <Button variant="ghost" size="icon" onClick={() => setEditingKb(null)}>
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+            <div className="p-6 space-y-4 flex-1 overflow-y-auto">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-muted-foreground uppercase tracking-wider">العنوان</label>
+                <Input 
+                  value={editTitle} 
+                  onChange={(e) => setEditTitle(e.target.value)} 
+                  className="bg-white dark:bg-gray-800 border-border text-gray-900 dark:text-white"
+                  placeholder="عنوان المصدر"
+                />
+              </div>
+              <div className="space-y-2 flex-1 flex flex-col">
+                <label className="text-sm font-medium text-muted-foreground uppercase tracking-wider">المحتوى</label>
+                <textarea 
+                  className="w-full p-4 rounded-xl border border-border bg-white dark:bg-gray-800 text-gray-900 dark:text-white resize-none text-sm leading-relaxed focus:ring-2 focus:ring-brand-500/20 outline-none min-h-[300px]" 
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                ></textarea>
+              </div>
+            </div>
+            <div className="p-6 border-t border-border flex gap-3">
+              <Button variant="outline" onClick={() => setEditingKb(null)} className="flex-1">
+                إلغاء
+              </Button>
+              <Button onClick={handleUpdateKb} disabled={uploading || !editContent} className="flex-1">
+                {uploading ? <Loader2 className="animate-spin ml-2" /> : <Save className="ml-2 w-4 h-4" />}
+                حفظ التعديلات
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-[calc(100vh-140px)]">
       
       {/* Left Column: Active Sources */}
       <Card className="lg:col-span-1 flex flex-col h-full">
@@ -133,9 +214,16 @@ export default function KnowledgeBaseView({ addNotification }) {
                         <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{kb.type}</p>
                       </div>
                     </div>
-                    <Button variant="ghost" size="icon" onClick={() => handleDeleteKb(kb.id)} className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:bg-destructive/10">
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    <div className="flex gap-1">
+                      {kb.type === 'TEXT' && (
+                        <Button variant="ghost" size="icon" onClick={() => handleEditKb(kb)} className="opacity-0 group-hover:opacity-100 transition-opacity text-blue-500 hover:bg-blue-500/10">
+                          <Edit2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                      <Button variant="ghost" size="icon" onClick={() => handleDeleteKb(kb.id)} className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:bg-destructive/10">
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 ))
               )}
@@ -248,5 +336,6 @@ export default function KnowledgeBaseView({ addNotification }) {
         </CardContent>
       </Card>
     </motion.div>
+    </>
   )
 }

@@ -91,7 +91,9 @@ export default function MobileNav({ activeTab, setActiveTab, userRole }) {
             )}
           </button>
 
-          <FaheemAnimatedLogo size="tiny" showText={false} />
+          <div className="w-8 h-8">
+            <FaheemAnimatedLogo size="tiny" showText={false} />
+          </div>
 
           <div className="flex items-center gap-2">
             <button

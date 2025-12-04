@@ -46,6 +46,8 @@ const twilioRoutes = require('./routes/twilio.routes');
 const analyticsRoutes = require('./routes/analytics.routes');
 const aiRoutes = require('./routes/ai.routes');
 const permissionsRoutes = require('./middleware/permissions');
+const visitorRoutes = require('./routes/visitor.routes');
+const ratingRoutes = require('./routes/rating.routes');
 
 // Security Middleware
 app.use(helmet({
@@ -171,6 +173,8 @@ app.use('/api/twilio', twilioRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/ai', aiRoutes); // Hybrid AI monitoring
 app.use('/api/permissions', permissionsRoutes);
+app.use('/api/visitor', visitorRoutes); // Visitor tracking & analytics
+app.use('/api/rating', ratingRoutes); // Rating system
 
 const PORT = process.env.PORT || 3001;
 

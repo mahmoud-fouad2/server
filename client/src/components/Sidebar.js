@@ -1,6 +1,6 @@
 "use client"
 
-import { LayoutDashboard, MessageSquare, Database, Settings, LogOut, Globe, Moon, Sun, CreditCard, Play, TrendingUp, FileText, User, Users, Share2, Headphones, LifeBuoy } from 'lucide-react';
+import { LayoutDashboard, MessageSquare, Database, Settings, LogOut, Globe, Moon, Sun, CreditCard, Play, TrendingUp, FileText, User, Users, Share2, Headphones, LifeBuoy, BarChart3 } from 'lucide-react';
 import useTheme from '@/lib/theme';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -89,6 +89,7 @@ export default function Sidebar({ activeTab, setActiveTab, userRole }) {
           {!isAgent && <SidebarItem icon={TrendingUp} label="نظرة عامة" id="overview" activeTab={activeTab} setActiveTab={setActiveTab} dataTour="sidebar-overview" />}
           <SidebarItem icon={MessageSquare} label="المحادثات" id="conversations" activeTab={activeTab} setActiveTab={setActiveTab} dataTour="sidebar-conversations" />
           <SidebarItem icon={Headphones} label="الدعم المباشر" id="live-support" activeTab={activeTab} setActiveTab={setActiveTab} />
+          {!isAgent && <SidebarItem icon={BarChart3} label="تحليلات الزوار" id="analytics" activeTab={activeTab} setActiveTab={setActiveTab} />}
           {!isAgent && <SidebarItem icon={Users} label="فريق العمل" id="team" activeTab={activeTab} setActiveTab={setActiveTab} />}
           {!isAgent && <SidebarItem icon={Share2} label="قنوات الاتصال" id="channels" activeTab={activeTab} setActiveTab={setActiveTab} />}
           {!isAgent && <SidebarItem icon={FileText} label="قاعدة المعرفة" id="knowledge" activeTab={activeTab} setActiveTab={setActiveTab} dataTour="sidebar-knowledge" />}

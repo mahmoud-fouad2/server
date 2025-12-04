@@ -143,6 +143,7 @@ export const knowledgeApi = {
   upload: (formData) => apiCall('/api/knowledge/upload', { method: 'POST', body: formData }),
   addText: (data) => apiCall('/api/knowledge/text', { method: 'POST', body: data }),
   addUrl: (data) => apiCall('/api/knowledge/url', { method: 'POST', body: data }),
+  update: (id, data) => apiCall(`/api/knowledge/${id}`, { method: 'PUT', body: data }),
   delete: (id) => apiCall(`/api/knowledge/${id}`, { method: 'DELETE' }),
 };
 

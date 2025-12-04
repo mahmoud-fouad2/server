@@ -382,27 +382,46 @@ router.post('/url', authenticateToken, async (req, res) => {
     const title = $('title').text().trim() || url;
     const description = $('meta[name="description"]').attr('content') || '';
     
-    // Get main content - prioritize main, article, or body
-    let $content = $('main');
-    if ($content.length === 0) $content = $('article');
-    if ($content.length === 0) $content = $('body');
+    // Get main content - try multiple selectors for better coverage
+    let content = '';
+    
+    // Priority 1: Semantic HTML5 content tags
+    const mainContent = $('main, article, [role="main"]').text();
+    if (mainContent.trim().length > 200) {
+      content = mainContent;
+    } else {
+      // Priority 2: Common content containers
+      const containerContent = $('.content, #content, .main-content, #main-content, .post-content, .entry-content, .article-content').text();
+      if (containerContent.trim().length > 200) {
+        content = containerContent;
+      } else {
+        // Priority 3: Body excluding headers/footers/sidebars
+        $('header, footer, aside, nav, .sidebar, .header, .footer, .navigation').remove();
+        content = $('body').text();
+      }
+    }
 
     // Clean up text
-    let textContent = $content.text()
+    let textContent = content
       .replace(/\s+/g, ' ') // Replace multiple spaces/newlines with single space
       .trim();
 
-    // Remove common boilerplate lines, nav items and cookie/privacy notices
-    const boilerplatePatterns = [/(cookie(s)?)/i, /privacy policy/i, /terms( of service)?/i, /(sign in|log in|register|subscribe)/i, /(©|copyright)/i];
-    let lines = textContent.split(/[\.\?!]\s+/).map(s => s.trim()).filter(Boolean);
-    lines = lines.filter(l => !boilerplatePatterns.some(p => p.test(l)));
-    // Reassemble but keep longer sentences and drop tiny ones
-    textContent = lines.filter(l => l.length > 20).join('. ');
-
-    // Fallback: If main content is empty, try body
-    if (textContent.length < 50) {
-        textContent = $('body').text().replace(/\s+/g, ' ').trim();
-    }
+    // Remove common boilerplate patterns
+    const boilerplatePatterns = [
+      /cookie(s)?\s*(policy|notice|settings)?/gi,
+      /privacy\s*policy/gi,
+      /terms\s*(of\s*service|and\s*conditions)?/gi,
+      /(sign\s*in|log\s*in|register|subscribe\s*now)/gi,
+      /(©|copyright)\s*\d{4}/gi,
+      /all\s*rights\s*reserved/gi
+    ];
+    
+    boilerplatePatterns.forEach(pattern => {
+      textContent = textContent.replace(pattern, '');
+    });
+    
+    // Clean up extra whitespace again
+    textContent = textContent.replace(/\s+/g, ' ').trim();
 
     // Combine title, description, and content for better context
     // Prepare metadata and full content
@@ -416,9 +435,14 @@ router.post('/url', authenticateToken, async (req, res) => {
 
     const fullContent = `Title: ${title}\nDescription: ${description}\nURL: ${url}\nDomain: ${domain}\nPageType: ${pageType}\n\nContent:\n${textContent}`;
 
-    // Relaxed limit: 10 chars instead of 50 to allow small pages
-    if (textContent.length < 10) {
-        return res.status(400).json({ error: 'Could not extract enough text from this URL. It might be a Single Page App or protected.' });
+    // More relaxed validation - 50 characters minimum
+    if (textContent.length < 50) {
+        console.log(`⚠️ URL extraction warning: Only ${textContent.length} characters extracted from ${url}`);
+        console.log('Extracted content:', textContent.substring(0, 200));
+        return res.status(400).json({ 
+          error: 'Could not extract enough text from this URL. Try enabling "Deep Crawl" for better results, or the page might be JavaScript-heavy.',
+          suggestion: 'Enable deep crawl option or manually copy-paste the content as text instead.'
+        });
     }
 
     console.log("Saving URL content...");
@@ -470,18 +494,71 @@ router.get('/', authenticateToken, async (req, res) => {
   }
 });
 
+// Update/Edit Knowledge (TEXT only)
+router.put('/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { content, title } = req.body;
+    const businessId = req.user.businessId;
+
+    if (!content) {
+      return res.status(400).json({ error: 'Content is required' });
+    }
+
+    // Find existing knowledge base entry
+    const existing = await prisma.knowledgeBase.findFirst({
+      where: { id, businessId }
+    });
+
+    if (!existing) {
+      return res.status(404).json({ error: 'Knowledge base entry not found' });
+    }
+
+    // Only allow editing TEXT type
+    if (existing.type !== 'TEXT') {
+      return res.status(400).json({ error: 'Only TEXT entries can be edited. For URL/PDF, delete and re-upload.' });
+    }
+
+    // Update the knowledge base entry
+    const updated = await prisma.knowledgeBase.update({
+      where: { id },
+      data: {
+        content,
+        metadata: {
+          ...existing.metadata,
+          title: title || existing.metadata?.title || 'Untitled Text',
+          editedAt: new Date().toISOString(),
+          wordCount: content.split(/\s+/).length
+        }
+      }
+    });
+
+    // Delete old chunks and create new ones
+    await prisma.knowledgeChunk.deleteMany({
+      where: { knowledgeBaseId: id }
+    });
+
+    await createChunksForKB(updated).catch(e => console.error('Chunk creation failed:', e));
+
+    // Invalidate Redis cache
+    await redisCache.invalidate(businessId);
+
+    res.json({ message: 'Knowledge base updated successfully', id: updated.id });
+  } catch (error) {
+    console.error("Update Knowledge Error:", error);
+    res.status(500).json({ error: 'Failed to update knowledge base' });
+  }
+});
+
 // Delete Knowledge
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const businessId = req.user.businessId;
     
-    // id comes as string from params, but Prisma might expect string (cuid) or int depending on schema.
-    // Schema says id is String @id @default(cuid()). So we should NOT parse int.
-    
     await prisma.knowledgeBase.deleteMany({
       where: { 
-        id: id, // Removed parseInt
+        id: id,
         businessId 
       }
     });

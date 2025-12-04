@@ -852,6 +852,14 @@ export default function AdminDashboard() {
             <p>جاري العمل على تطوير هذا القسم</p>
           </div>
         )}
+
+        {/* Footer - Copyright */}
+        <footer className="mt-16 pt-8 pb-4 text-center text-sm text-muted-foreground border-t border-border/50 space-y-1">
+          <p>© {new Date().getFullYear()} فهملي - جميع الحقوق محفوظة</p>
+          <p className="text-xs">
+            تطوير: <a href="https://github.com/mahmoud-fouad2" target="_blank" rel="noopener noreferrer" className="text-brand-500 hover:text-brand-600 transition-colors">محمود فؤاد</a>
+          </p>
+        </footer>
       </main>
     </div>
   );

@@ -161,14 +161,14 @@ RewriteRule ^ - [L]
 # Handle API routes (if you have any static API)
 RewriteRule ^api/(.*)$ api/$1 [L]
 
-# Handle _next static files - must exist
-RewriteCond %{REQUEST_FILENAME} -f [OR]
-RewriteCond %{REQUEST_FILENAME} -d
-RewriteRule ^_next/(.*)$ - [L]
+# CRITICAL: Protect _next static assets from rewrite rules
+RewriteRule ^_next/.* - [L]
 
-# Serve _next chunks with correct MIME type
-<FilesMatch "\.js$">
-    Header set Content-Type "application/javascript; charset=utf-8"
+# Serve JavaScript files with correct MIME type
+<FilesMatch "\.(js|mjs)$">
+    <IfModule mod_mime.c>
+        ForceType application/javascript
+    </IfModule>
 </FilesMatch>
 
 # Handle country routes
@@ -178,8 +178,11 @@ RewriteRule ^(saudi|egypt|uae|kuwait)/?$ $1.html [L]
 # Handle solutions routes
 RewriteRule ^solutions/(restaurant|clinic|retail|business|education|realestate)/?$ solutions/$1.html [L]
 
-# Handle main routes
-RewriteRule ^(about|contact|services|pricing|login|register|wizard|careers|news|examples|privacy|terms)/?$ $1.html [L]
+# Handle main routes (specific files that exist)
+RewriteRule ^(about|contact|services|pricing|careers|news|examples|privacy|terms)/?$ $1.html [L]
+
+# Handle auth routes (redirect to index for client-side routing)
+RewriteRule ^(login|register|wizard|forgot-password|reset-password)/?$ index.html [L]
 
 # Handle dashboard and admin routes (client-side only)
 RewriteRule ^(dashboard|admin|settings|conversations|knowledge)/?$ index.html [L]

@@ -22,6 +22,8 @@ import TicketsView from "./components/TicketsView"
 import WidgetSettingsView from "./components/WidgetSettingsView"
 import TeamView from "./components/TeamView"
 import SettingsView from "./components/SettingsView"
+import PlaygroundView from "./components/PlaygroundView"
+import VisitorAnalytics from "./components/VisitorAnalytics"
 import DashboardTour, { useDashboardTour } from "./components/DashboardTour"
 
 function DashboardContent() {
@@ -238,6 +240,14 @@ function DashboardContent() {
             <SettingsView key="settings" user={user} addNotification={addNotification} />
           )}
 
+          {activeTab === "playground" && (
+            <PlaygroundView key="playground" />
+          )}
+
+          {activeTab === "analytics" && (
+            <VisitorAnalytics key="analytics" />
+          )}
+
           {activeTab === "subscription" && (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} key="subscription" className="space-y-8">
                <div className="text-center py-12">
@@ -256,6 +266,14 @@ function DashboardContent() {
         >
           <HelpCircle className="w-5 h-5" />
         </button>
+
+        {/* Footer - Copyright */}
+        <footer className="mt-auto pt-8 pb-4 text-center text-sm text-muted-foreground border-t border-border/50 space-y-1">
+          <p>© {new Date().getFullYear()} فهملي - جميع الحقوق محفوظة</p>
+          <p className="text-xs">
+            تطوير: <a href="https://github.com/mahmoud-fouad2" target="_blank" rel="noopener noreferrer" className="text-brand-500 hover:text-brand-600 transition-colors">محمود فؤاد</a>
+          </p>
+        </footer>
       </main>
 
       {/* Dashboard Tour */}

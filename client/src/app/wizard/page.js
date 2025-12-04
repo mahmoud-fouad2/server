@@ -231,10 +231,98 @@ export default function Wizard() {
                       onChange={handleInputChange}
                       value={formData.businessType}
                     >
-                      <option value="restaurant">مطعم (نبرة شهية ومرحبة)</option>
-                      <option value="retail">متجر تجزئة (نبرة أنيقة)</option>
-                      <option value="service">خدمات (نبرة احترافية)</option>
-                      <option value="clinic">عيادة طبية (نبرة هادئة ومطمئنة)</option>
+                      <optgroup label="🍽️ الأطعمة والمشروبات">
+                        <option value="restaurant">مطعم (نبرة شهية ومرحبة)</option>
+                        <option value="cafe">مقهى (نبرة عصرية وودية)</option>
+                        <option value="bakery">مخبز / حلويات (نبرة دافئة)</option>
+                      </optgroup>
+                      
+                      <optgroup label="🏥 الرعاية الصحية">
+                        <option value="clinic">عيادة طبية (نبرة هادئة ومطمئنة)</option>
+                        <option value="hospital">مستشفى (نبرة احترافية)</option>
+                        <option value="pharmacy">صيدلية (نبرة استشارية)</option>
+                        <option value="dental">عيادة أسنان (نبرة لطيفة)</option>
+                      </optgroup>
+                      
+                      <optgroup label="🛍️ التجارة والتجزئة">
+                        <option value="retail">متجر تجزئة (نبرة أنيقة)</option>
+                        <option value="fashion">أزياء وموضة (نبرة عصرية)</option>
+                        <option value="electronics">إلكترونيات (نبرة تقنية)</option>
+                        <option value="jewelry">مجوهرات (نبرة راقية)</option>
+                        <option value="furniture">أثاث (نبرة استشارية)</option>
+                      </optgroup>
+                      
+                      <optgroup label="💼 الأعمال والخدمات">
+                        <option value="company">شركة (نبرة احترافية)</option>
+                        <option value="consulting">استشارات (نبرة خبيرة)</option>
+                        <option value="legal">خدمات قانونية (نبرة رسمية)</option>
+                        <option value="accounting">محاسبة (نبرة دقيقة)</option>
+                        <option value="realestate">عقارات (نبرة استثمارية)</option>
+                      </optgroup>
+                      
+                      <optgroup label="🎓 التعليم والتدريب">
+                        <option value="education">مركز تدريب (نبرة تعليمية)</option>
+                        <option value="school">مدرسة (نبرة تربوية)</option>
+                        <option value="university">جامعة (نبرة أكاديمية)</option>
+                      </optgroup>
+                      
+                      <optgroup label="💰 الخدمات المالية">
+                        <option value="bank">بنك (نبرة موثوقة)</option>
+                        <option value="insurance">تأمين (نبرة أمان)</option>
+                        <option value="investment">استثمار (نبرة استراتيجية)</option>
+                      </optgroup>
+                      
+                      <optgroup label="🏨 السياحة والضيافة">
+                        <option value="hotel">فندق (نبرة مضيافة)</option>
+                        <option value="travel">وكالة سفر (نبرة مغامرة)</option>
+                        <option value="tourism">سياحة (نبرة ترحيبية)</option>
+                      </optgroup>
+                      
+                      <optgroup label="💅 الجمال والعناية">
+                        <option value="salon">صالون تجميل (نبرة أنيقة)</option>
+                        <option value="spa">سبا (نبرة مريحة)</option>
+                        <option value="gym">نادي رياضي (نبرة محفزة)</option>
+                      </optgroup>
+                      
+                      <optgroup label="🚗 السيارات والنقل">
+                        <option value="automotive">معرض سيارات (نبرة تسويقية)</option>
+                        <option value="carmaintenance">صيانة سيارات (نبرة تقنية)</option>
+                        <option value="logistics">لوجستيات (نبرة منظمة)</option>
+                      </optgroup>
+                      
+                      <optgroup label="🏗️ البناء والعقار">
+                        <option value="construction">مقاولات (نبرة هندسية)</option>
+                        <option value="architecture">هندسة معمارية (نبرة إبداعية)</option>
+                        <option value="interior">تصميم داخلي (نبرة فنية)</option>
+                      </optgroup>
+                      
+                      <optgroup label="🔧 الخدمات الفنية">
+                        <option value="it">تقنية معلومات (نبرة تقنية)</option>
+                        <option value="maintenance">صيانة (نبرة حلول)</option>
+                        <option value="security">أمن وحماية (نبرة يقظة)</option>
+                      </optgroup>
+                      
+                      <optgroup label="📱 التكنولوجيا">
+                        <option value="software">برمجيات (نبرة تقنية)</option>
+                        <option value="telecom">اتصالات (نبرة سريعة)</option>
+                        <option value="digital">خدمات رقمية (نبرة عصرية)</option>
+                      </optgroup>
+                      
+                      <optgroup label="🎨 الإبداع والفنون">
+                        <option value="marketing">تسويق (نبرة إبداعية)</option>
+                        <option value="design">تصميم (نبرة فنية)</option>
+                        <option value="photography">تصوير (نبرة احترافية)</option>
+                        <option value="events">تنظيم فعاليات (نبرة حماسية)</option>
+                      </optgroup>
+                      
+                      <optgroup label="📦 التجارة الإلكترونية">
+                        <option value="ecommerce">متجر إلكتروني (نبرة تسويقية)</option>
+                        <option value="dropshipping">دروبشيبينج (نبرة سريعة)</option>
+                      </optgroup>
+                      
+                      <optgroup label="🏢 أخرى">
+                        <option value="other">أخرى (نبرة عامة)</option>
+                      </optgroup>
                     </select>
                   </div>
                 </motion.div>
