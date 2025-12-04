@@ -48,6 +48,7 @@ const aiRoutes = require('./routes/ai.routes');
 const permissionsRoutes = require('./middleware/permissions');
 const visitorRoutes = require('./routes/visitor.routes');
 const ratingRoutes = require('./routes/rating.routes');
+const healthRoutes = require('./routes/health.routes');
 
 // Security Middleware
 app.use(helmet({
@@ -127,29 +128,8 @@ app.get('/', (req, res) => {
   res.send('Fahimo API is running. The AI that understands you.');
 });
 
-// Health Check Endpoint (no rate limit)
-app.get('/api/health', async (req, res) => {
-  try {
-    // Check database connection
-    await prisma.$queryRaw`SELECT 1`;
-    
-    res.json({
-      status: 'healthy',
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      environment: process.env.NODE_ENV || 'development',
-      database: 'connected',
-      version: '1.0.0'
-    });
-  } catch (error) {
-    logger.error('Health check failed', error);
-    res.status(503).json({
-      status: 'unhealthy',
-      timestamp: new Date().toISOString(),
-      error: 'Database connection failed'
-    });
-  }
-});
+// Health Check Endpoint (using new monitoring system)
+app.use('/api/health', healthRoutes);
 
 // Apply rate limiters
 app.use('/api/auth', authLimiter); // Strict limiter for auth routes
@@ -194,6 +174,9 @@ function validateEnvironment() {
     logger.error('Generate a strong secret: openssl rand -base64 32');
     process.exit(1);
   }
+
+  // Note: ADMIN_INITIAL_PASSWORD should be set on Render/hosting platform, not in .env file
+  // This is for security - password shouldn't be committed to git
 
   logger.info('Environment validation passed');
 }
@@ -291,4 +274,9 @@ server.listen(PORT, async () => {
   
   await ensureAdminExists();
   await checkServicesStatus();
+
+  // Start system monitoring (every 5 minutes)
+  const monitor = require('./utils/monitor');
+  monitor.startPeriodicMonitoring(5);
+  logger.info('🔍 System monitoring initialized (5-minute intervals)');
 });

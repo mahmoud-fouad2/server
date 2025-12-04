@@ -46,13 +46,48 @@ function initializeSocket(io) {
           return;
         }
 
-        // Check Message Quota
+        // Check Message Quota with detailed feedback
         if (business.messagesUsed >= business.messageQuota) {
+          const planNames = {
+            TRIAL: 'التجريبية',
+            BASIC: 'الأساسية',
+            PRO: 'الاحترافية',
+            ENTERPRISE: 'المؤسسات'
+          };
+          
+          const upgradeMessage = business.planType === 'TRIAL' 
+            ? 'يمكنك الترقية للباقة الأساسية (5,000 رسالة/شهر) بسعر 99 ريال شهرياً.'
+            : business.planType === 'BASIC'
+            ? 'يمكنك الترقية للباقة الاحترافية (25,000 رسالة/شهر) بسعر 299 ريال شهرياً.'
+            : 'يمكنك الترقية للباقة المؤسسات (غير محدود) بسعر 999 ريال شهرياً.';
+
           socket.emit('receive_message', { 
             role: 'assistant', 
-            content: 'عذراً، لقد استهلكت رصيد الرسائل المتاح لهذا الشهر. يرجى الترقية.' 
+            content: `عذراً، لقد استهلكت رصيد الرسائل المتاح في الباقة ${planNames[business.planType]} (${business.messageQuota} رسالة/شهر).\n\n${upgradeMessage}\n\nللترقية، تواصل معنا على: support@faheemly.com`,
+            quotaExceeded: true,
+            currentPlan: business.planType,
+            used: business.messagesUsed,
+            quota: business.messageQuota
           });
+          
+          logger.warn('Message quota exceeded', {
+            businessId,
+            planType: business.planType,
+            used: business.messagesUsed,
+            quota: business.messageQuota
+          });
+          
           return;
+        }
+
+        // Warn if approaching quota (90%)
+        const usagePercent = (business.messagesUsed / business.messageQuota) * 100;
+        if (usagePercent >= 90 && usagePercent < 100) {
+          logger.warn('Approaching message quota', {
+            businessId,
+            usagePercent: usagePercent.toFixed(2),
+            remaining: business.messageQuota - business.messagesUsed
+          });
         }
 
         // Find or create conversation

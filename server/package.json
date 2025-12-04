@@ -15,7 +15,12 @@
     "db:demo": "node scripts/create-demo-data.js",
     "check": "node scripts/check-infrastructure.js",
     "list:businesses": "node scripts/listBusinesses.js",
-    "test:system": "node scripts/test-system.js"
+    "test:system": "node scripts/test-system.js",
+    "test": "jest --verbose --coverage",
+    "test:watch": "jest --watch",
+    "test:unit": "jest tests/unit --verbose",
+    "test:integration": "jest tests/integration --verbose",
+    "test:health": "jest tests/monitoring --verbose"
   },
   "keywords": [],
   "author": "ma-fo.info",
@@ -48,7 +53,22 @@
     "ua-parser-js": "^2.0.6"
   },
   "devDependencies": {
+    "jest": "^29.7.0",
     "nodemon": "^3.1.0",
-    "prisma": "^5.10.2"
+    "prisma": "^5.10.2",
+    "supertest": "^7.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "coverageDirectory": "coverage",
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/index.js",
+      "!**/node_modules/**"
+    ],
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ],
+    "verbose": true
   }
 }

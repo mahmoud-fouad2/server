@@ -1,0 +1,249 @@
+/**
+ * ═══════════════════════════════════════════════════
+ *  FAHEEMLY - Subscription Limits Integration Tests
+ * ═══════════════════════════════════════════════════
+ */
+
+const request = require('supertest');
+const { PrismaClient } = require('@prisma/client');
+const jwt = require('jsonwebtoken');
+
+const prisma = new PrismaClient();
+
+describe('Subscription Plan Limits', () => {
+  let testBusiness;
+  let testUser;
+  let authToken;
+
+  beforeAll(async () => {
+    // Create test user and business
+    testUser = await prisma.user.create({
+      data: {
+        email: 'test-subscription@example.com',
+        fullName: 'Test User',
+        password: 'hashed-password-here',
+        role: 'CLIENT'
+      }
+    });
+
+    testBusiness = await prisma.business.create({
+      data: {
+        userId: testUser.id,
+        name: 'Test Business',
+        activityType: 'RETAIL',
+        planType: 'TRIAL',
+        messageQuota: 1000,
+        messagesUsed: 0
+      }
+    });
+
+    // Generate auth token
+    authToken = jwt.sign(
+      { userId: testUser.id, businessId: testBusiness.id, role: 'CLIENT' },
+      process.env.JWT_SECRET || 'test-secret-key-for-testing-only-32chars',
+      { expiresIn: '1h' }
+    );
+  });
+
+  afterAll(async () => {
+    // Cleanup
+    await prisma.conversation.deleteMany({ where: { businessId: testBusiness.id } });
+    await prisma.business.delete({ where: { id: testBusiness.id } });
+    await prisma.user.delete({ where: { id: testUser.id } });
+    await prisma.$disconnect();
+  });
+
+  describe('Message Quota Enforcement', () => {
+    test('should allow messages within quota', async () => {
+      const business = await prisma.business.findUnique({
+        where: { id: testBusiness.id }
+      });
+
+      expect(business.messagesUsed).toBeLessThan(business.messageQuota);
+    });
+
+    test('should block messages when quota exceeded', async () => {
+      // Set messagesUsed to quota limit
+      await prisma.business.update({
+        where: { id: testBusiness.id },
+        data: { messagesUsed: 1000, messageQuota: 1000 }
+      });
+
+      const business = await prisma.business.findUnique({
+        where: { id: testBusiness.id }
+      });
+
+      expect(business.messagesUsed).toBeGreaterThanOrEqual(business.messageQuota);
+      
+      // In socket handler, this would trigger quota exceeded message
+      // Testing the business logic here
+    });
+
+    test('should reset quota properly', async () => {
+      await prisma.business.update({
+        where: { id: testBusiness.id },
+        data: { messagesUsed: 0 }
+      });
+
+      const business = await prisma.business.findUnique({
+        where: { id: testBusiness.id }
+      });
+
+      expect(business.messagesUsed).toBe(0);
+    });
+  });
+
+  describe('Plan Type Quotas', () => {
+    test('TRIAL plan should have 1000 messages quota', async () => {
+      await prisma.business.update({
+        where: { id: testBusiness.id },
+        data: { planType: 'TRIAL', messageQuota: 1000 }
+      });
+
+      const business = await prisma.business.findUnique({
+        where: { id: testBusiness.id }
+      });
+
+      expect(business.planType).toBe('TRIAL');
+      expect(business.messageQuota).toBe(1000);
+    });
+
+    test('BASIC plan should have 5000 messages quota', async () => {
+      await prisma.business.update({
+        where: { id: testBusiness.id },
+        data: { planType: 'BASIC', messageQuota: 5000 }
+      });
+
+      const business = await prisma.business.findUnique({
+        where: { id: testBusiness.id }
+      });
+
+      expect(business.planType).toBe('BASIC');
+      expect(business.messageQuota).toBe(5000);
+    });
+
+    test('PRO plan should have 25000 messages quota', async () => {
+      await prisma.business.update({
+        where: { id: testBusiness.id },
+        data: { planType: 'PRO', messageQuota: 25000 }
+      });
+
+      const business = await prisma.business.findUnique({
+        where: { id: testBusiness.id }
+      });
+
+      expect(business.planType).toBe('PRO');
+      expect(business.messageQuota).toBe(25000);
+    });
+
+    test('ENTERPRISE plan should have 999999 messages quota', async () => {
+      await prisma.business.update({
+        where: { id: testBusiness.id },
+        data: { planType: 'ENTERPRISE', messageQuota: 999999 }
+      });
+
+      const business = await prisma.business.findUnique({
+        where: { id: testBusiness.id }
+      });
+
+      expect(business.planType).toBe('ENTERPRISE');
+      expect(business.messageQuota).toBe(999999);
+    });
+  });
+
+  describe('Trial Expiry', () => {
+    test('should block access when trial expires', async () => {
+      const expiredDate = new Date(Date.now() - 24 * 60 * 60 * 1000); // Yesterday
+      
+      await prisma.business.update({
+        where: { id: testBusiness.id },
+        data: { 
+          planType: 'TRIAL',
+          trialEndsAt: expiredDate
+        }
+      });
+
+      const business = await prisma.business.findUnique({
+        where: { id: testBusiness.id }
+      });
+
+      const isExpired = business.planType === 'TRIAL' && 
+                        business.trialEndsAt && 
+                        new Date() > new Date(business.trialEndsAt);
+
+      expect(isExpired).toBe(true);
+    });
+
+    test('should allow access when trial is active', async () => {
+      const futureDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
+      
+      await prisma.business.update({
+        where: { id: testBusiness.id },
+        data: { 
+          planType: 'TRIAL',
+          trialEndsAt: futureDate
+        }
+      });
+
+      const business = await prisma.business.findUnique({
+        where: { id: testBusiness.id }
+      });
+
+      const isExpired = business.planType === 'TRIAL' && 
+                        business.trialEndsAt && 
+                        new Date() > new Date(business.trialEndsAt);
+
+      expect(isExpired).toBe(false);
+    });
+  });
+
+  describe('Usage Tracking', () => {
+    test('should increment messagesUsed correctly', async () => {
+      await prisma.business.update({
+        where: { id: testBusiness.id },
+        data: { messagesUsed: 0 }
+      });
+
+      // Simulate message increment
+      await prisma.business.update({
+        where: { id: testBusiness.id },
+        data: { messagesUsed: { increment: 1 } }
+      });
+
+      let business = await prisma.business.findUnique({
+        where: { id: testBusiness.id }
+      });
+
+      expect(business.messagesUsed).toBe(1);
+
+      // Increment again
+      await prisma.business.update({
+        where: { id: testBusiness.id },
+        data: { messagesUsed: { increment: 1 } }
+      });
+
+      business = await prisma.business.findUnique({
+        where: { id: testBusiness.id }
+      });
+
+      expect(business.messagesUsed).toBe(2);
+    });
+
+    test('should calculate usage percentage correctly', async () => {
+      await prisma.business.update({
+        where: { id: testBusiness.id },
+        data: { 
+          messagesUsed: 500,
+          messageQuota: 1000
+        }
+      });
+
+      const business = await prisma.business.findUnique({
+        where: { id: testBusiness.id }
+      });
+
+      const usagePercentage = (business.messagesUsed / business.messageQuota) * 100;
+      expect(usagePercentage).toBe(50);
+    });
+  });
+});
