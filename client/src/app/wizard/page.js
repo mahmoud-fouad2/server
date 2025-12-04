@@ -429,14 +429,22 @@ export default function Wizard() {
                 >
                   <div className="space-y-2">
                     <label className="text-sm font-medium">البريد الإلكتروني</label>
-                    <Input name="email" type="email" placeholder="you@example.com" onChange={handleInputChange} className="bg-white/50 dark:bg-black/20 text-right" dir="ltr" />
+                    <Input name="email" type="email" placeholder="you@example.com" value={formData.email} onChange={handleInputChange} className="bg-white/50 dark:bg-black/20 text-right" dir="ltr" />
+                    {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">كلمة المرور</label>
-                    <Input name="password" type="password" placeholder="••••••••" onChange={handleInputChange} className="bg-white/50 dark:bg-black/20 text-right" dir="ltr" />
+                    <Input name="password" type="password" placeholder="••••••••" value={formData.password} onChange={handleInputChange} className="bg-white/50 dark:bg-black/20 text-right" dir="ltr" />
+                    {errors.password && <p className="text-xs text-red-500">{errors.password}</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">تأكيد كلمة المرور</label>
+                    <Input name="confirmPassword" type="password" placeholder="••••••••" value={formData.confirmPassword} onChange={handleInputChange} className="bg-white/50 dark:bg-black/20 text-right" dir="ltr" />
+                    {errors.confirmPassword && <p className="text-xs text-red-500">{errors.confirmPassword}</p>}
                   </div>
                   <div className="space-y-2 pt-2">
                     <Captcha onVerify={setIsVerified} />
+                    {errors.captcha && <p className="text-xs text-red-500">{errors.captcha}</p>}
                   </div>
                 </motion.div>
               )}
@@ -451,7 +459,13 @@ export default function Wizard() {
                 >
                   <div className="space-y-2">
                     <label className="text-sm font-medium">اسم النشاط التجاري</label>
-                    <Input name="businessName" placeholder="مثال: مطعم البيك" onChange={handleInputChange} className="bg-white/50 dark:bg-black/20" />
+                    <Input name="businessName" placeholder="مثال: مطعم البيك" value={formData.businessName} onChange={handleInputChange} className="bg-white/50 dark:bg-black/20" />
+                    {errors.businessName && <p className="text-xs text-red-500">{errors.businessName}</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">رقم الهاتف</label>
+                    <Input name="phone" type="tel" placeholder="05xxxxxxxx" value={formData.phone} onChange={handleInputChange} className="bg-white/50 dark:bg-black/20" dir="ltr" />
+                    {errors.phone && <p className="text-xs text-red-500">{errors.phone}</p>}
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">نوع النشاط</label>
@@ -566,6 +580,62 @@ export default function Wizard() {
                   exit={{ opacity: 0, x: 20 }}
                   className="space-y-6"
                 >
+                  {/* Plans Selection */}
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {Object.values(PLANS).map(plan => (
+                      <div 
+                        key={plan.id}
+                        onClick={() => setFormData({ ...formData, selectedPlan: plan.id })}
+                        className={`relative p-6 rounded-xl border-2 cursor-pointer transition-all hover:shadow-lg ${
+                          formData.selectedPlan === plan.id 
+                            ? 'border-brand-600 bg-brand-50 dark:bg-brand-900/10 shadow-lg' 
+                            : 'border-gray-200 dark:border-white/10 hover:border-brand-400'
+                        }`}
+                      >
+                        {plan.popular && (
+                          <span className="absolute -top-3 right-4 bg-gradient-to-r from-brand-600 to-brand-500 text-white text-xs px-3 py-1 rounded-full font-bold">
+                            الأكثر طلباً
+                          </span>
+                        )}
+                        <h3 className="text-xl font-bold mb-2">{plan.name}</h3>
+                        <div className="text-3xl font-black mb-4">
+                          {plan.price === 0 ? 'مجاناً' : plan.price ? `${plan.price} ريال` : 'حسب الطلب'}
+                          {plan.price > 0 && <span className="text-sm font-normal text-muted-foreground">/{plan.duration}</span>}
+                        </div>
+                        <ul className="space-y-2">
+                          {plan.features.map((feature, idx) => (
+                            <li key={idx} className="flex items-center gap-2 text-sm">
+                              <Check className="w-4 h-4 text-green-500" />
+                              {feature}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+
+              {step === 4 && (
+                <motion.div
+                  key="step4"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  className="space-y-6"
+                >
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium flex items-center gap-2">
+                      <Bot className="w-4 h-4" /> اسم البوت
+                    </label>
+                    <Input name="botName" placeholder="مثال: مساعد المبيعات" value={formData.botName} onChange={handleInputChange} className="bg-white/50 dark:bg-black/20" />
+                    {errors.botName && <p className="text-xs text-red-500">{errors.botName}</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">رسالة الترحيب</label>
+                    <Input name="welcomeMessage" placeholder="مثال: مرحباً! كيف يمكنني مساعدتك اليوم؟" value={formData.welcomeMessage} onChange={handleInputChange} className="bg-white/50 dark:bg-black/20" />
+                    {errors.welcomeMessage && <p className="text-xs text-red-500">{errors.welcomeMessage}</p>}
+                  </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium flex items-center gap-2">
                       <Palette className="w-4 h-4" /> اللون الرئيسي
@@ -622,9 +692,9 @@ export default function Wizard() {
                 </motion.div>
               )}
 
-              {step === 4 && (
+              {step === 5 && (
                 <motion.div
-                  key="step4"
+                  key="step5"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
