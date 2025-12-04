@@ -23,18 +23,24 @@ export default function AdminLogin() {
 
     try {
       const data = await authApi.login({ email, password })
+      
+      console.log('Login response:', data) // Debug log
 
-      if (data.user.role !== 'SUPERADMIN') {
-        setError('Access Denied: You are not an administrator.')
+      if (!data.user || (data.user.role !== 'SUPERADMIN' && data.user.role !== 'ADMIN')) {
+        setError('الوصول مرفوض: أنت لست مسؤولاً')
         setLoading(false)
         return
       }
+      
+      // Store token and user info
       localStorage.setItem('token', data.token)
       localStorage.setItem('user', JSON.stringify(data.user))
-      router.push('/admin')
+      
+      // Force redirect to admin panel
+      window.location.href = '/admin'
     } catch (err) {
-      setError(err.message || 'Connection error. Please try again.')
-    } finally {
+      console.error('Login error:', err)
+      setError(err.message || 'خطأ في الاتصال. حاول مرة أخرى.')
       setLoading(false)
     }
   }

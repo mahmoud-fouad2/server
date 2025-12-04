@@ -218,20 +218,25 @@ export default function EducationSolution() {
             <p className="text-xl text-gray-600 dark:text-gray-400 mb-10">
               بدون بطاقة ائتمانية - ابدأ فوراً
             </p>
-            <div className="bg-white dark:bg-cosmic-900 rounded-3xl p-10 border border-gray-200 dark:border-white/10 shadow-xl max-w-md mx-auto">
-              <div className="text-5xl font-bold text-indigo-500 mb-2">99 ر.س</div>
-              <div className="text-gray-600 dark:text-gray-400 mb-8">شهرياً</div>
+            <div className="bg-white dark:bg-cosmic-900 rounded-3xl p-10 border-2 border-indigo-200 dark:border-indigo-800 shadow-2xl max-w-md mx-auto">
+              <div className="text-center mb-8">
+                <div className="inline-block px-4 py-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-full mb-4">
+                  <span className="text-sm font-bold text-indigo-700 dark:text-indigo-300">باقة التعليم</span>
+                </div>
+                <div className="text-5xl font-bold text-indigo-600 dark:text-indigo-400 mb-2">ابدأ بـ 99 ر.س</div>
+                <div className="text-gray-700 dark:text-gray-300 font-medium">شهرياً - جرب مجاناً 7 أيام</div>
+              </div>
               <ul className="text-right space-y-3 mb-8">
                 {[
-                  '4,000 محادثة شهرياً',
-                  'تسجيل تلقائي',
-                  'إرسال مواد تعليمية',
-                  'متابعة حضور',
-                  'تنبيهات امتحانات',
-                  'دعم فني مباشر'
+                  'تسجيل طلاب تلقائي',
+                  'إرسال مواد تعليمية بالملفات',
+                  'متابعة حضور وغياب',
+                  'تنبيهات امتحانات ومواعيد',
+                  'رد فوري على استفسارات الطلاب',
+                  'دعم فني مباشر 24/7'
                 ].map((item, i) => (
-                  <li key={i} className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
-                    <Check size={20} className="text-indigo-500 flex-shrink-0" strokeWidth={3} />
+                  <li key={i} className="flex items-center gap-3 text-gray-800 dark:text-gray-200">
+                    <Check size={22} className="text-indigo-500 flex-shrink-0" strokeWidth={3} />
                     <span>{item}</span>
                   </li>
                 ))}
