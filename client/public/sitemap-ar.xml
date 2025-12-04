@@ -1,80 +1,68 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
-        http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
-
-  <!-- Main Home Page - Global -->
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  
+  <!-- خريطة الموقع العربية - فهيملي -->
+  
+  <!-- الصفحة الرئيسية -->
   <url>
     <loc>https://faheemly.com/</loc>
     <lastmod>2025-12-04</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://faheemly.com/" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://faheemly.com/en" />
-    <xhtml:link rel="alternate" hreflang="ar-SA" href="https://faheemly.com/sa" />
-    <xhtml:link rel="alternate" hreflang="ar-EG" href="https://faheemly.com/eg" />
-    <xhtml:link rel="alternate" hreflang="ar-AE" href="https://faheemly.com/ae" />
-    <xhtml:link rel="alternate" hreflang="ar-KW" href="https://faheemly.com/kw" />
   </url>
-
-  <!-- Country-Specific Home Pages -->
+  
+  <!-- صفحات الدول العربية -->
   <url>
     <loc>https://faheemly.com/sa</loc>
     <lastmod>2025-12-04</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
-    <xhtml:link rel="alternate" hreflang="ar-SA" href="https://faheemly.com/sa" />
-    <xhtml:link rel="alternate" hreflang="ar" href="https://faheemly.com/" />
   </url>
   <url>
     <loc>https://faheemly.com/eg</loc>
     <lastmod>2025-12-04</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
-    <xhtml:link rel="alternate" hreflang="ar-EG" href="https://faheemly.com/eg" />
-    <xhtml:link rel="alternate" hreflang="ar" href="https://faheemly.com/" />
   </url>
   <url>
     <loc>https://faheemly.com/ae</loc>
     <lastmod>2025-12-04</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
-    <xhtml:link rel="alternate" hreflang="ar-AE" href="https://faheemly.com/ae" />
-    <xhtml:link rel="alternate" hreflang="ar" href="https://faheemly.com/" />
   </url>
   <url>
     <loc>https://faheemly.com/kw</loc>
     <lastmod>2025-12-04</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
-    <xhtml:link rel="alternate" hreflang="ar-KW" href="https://faheemly.com/kw" />
-    <xhtml:link rel="alternate" hreflang="ar" href="https://faheemly.com/" />
   </url>
-
-  <!-- Core Service Pages -->
+  
+  <!-- الخدمات -->
   <url>
     <loc>https://faheemly.com/services</loc>
     <lastmod>2025-12-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.95</priority>
   </url>
+  
+  <!-- الحلول -->
   <url>
     <loc>https://faheemly.com/solutions</loc>
     <lastmod>2025-12-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.95</priority>
   </url>
+  
+  <!-- الأسعار -->
   <url>
     <loc>https://faheemly.com/pricing</loc>
     <lastmod>2025-12-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.95</priority>
   </url>
-
-  <!-- Industry Solutions - High Priority -->
+  
+  <!-- حلول القطاعات -->
   <url>
     <loc>https://faheemly.com/solutions/restaurant</loc>
     <lastmod>2025-12-04</lastmod>
@@ -111,87 +99,77 @@
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
   </url>
-
-  <!-- Legacy Solution Routes (for backward compatibility) -->
-  <url>
-    <loc>https://faheemly.com/restaurant</loc>
-    <lastmod>2025-12-04</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.60</priority>
-  </url>
-  <url>
-    <loc>https://faheemly.com/clinic</loc>
-    <lastmod>2025-12-04</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.60</priority>
-  </url>
-
-  <!-- Company Pages -->
+  
+  <!-- من نحن -->
   <url>
     <loc>https://faheemly.com/about</loc>
     <lastmod>2025-12-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.85</priority>
   </url>
+  
+  <!-- اتصل بنا -->
   <url>
     <loc>https://faheemly.com/contact</loc>
     <lastmod>2025-12-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.85</priority>
   </url>
+  
+  <!-- الوظائف -->
   <url>
     <loc>https://faheemly.com/careers</loc>
     <lastmod>2025-12-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
+  
+  <!-- الأخبار -->
   <url>
     <loc>https://faheemly.com/news</loc>
     <lastmod>2025-12-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.70</priority>
   </url>
-
-  <!-- Getting Started -->
+  
+  <!-- البدء السريع -->
   <url>
     <loc>https://faheemly.com/wizard</loc>
     <lastmod>2025-12-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.85</priority>
   </url>
-  <url>
-    <loc>https://faheemly.com/examples</loc>
-    <lastmod>2025-12-04</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.75</priority>
-  </url>
-
-  <!-- Authentication Pages -->
+  
+  <!-- تسجيل الدخول -->
   <url>
     <loc>https://faheemly.com/login</loc>
     <lastmod>2025-12-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.70</priority>
   </url>
+  
+  <!-- إنشاء حساب -->
   <url>
     <loc>https://faheemly.com/register</loc>
     <lastmod>2025-12-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.75</priority>
   </url>
-
-  <!-- Legal Pages -->
+  
+  <!-- سياسة الخصوصية -->
   <url>
     <loc>https://faheemly.com/privacy</loc>
     <lastmod>2025-12-04</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.50</priority>
   </url>
+  
+  <!-- شروط الاستخدام -->
   <url>
     <loc>https://faheemly.com/terms</loc>
     <lastmod>2025-12-04</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.50</priority>
   </url>
-
+  
 </urlset>

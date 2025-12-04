@@ -622,33 +622,71 @@ export const LandingPage = ({ lang: initialLang = 'ar', setLang: externalSetLang
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: idx * 0.1 }}
-                className={`relative rounded-[2rem] overflow-hidden group cursor-pointer border ${isDark ? 'border-white/10 bg-white/5' : 'border-gray-200 bg-white'} transition-all hover:-translate-y-2 hover:shadow-2xl hover:shadow-brand-500/10 hover:border-brand-500/30`}
+                className="group cursor-pointer"
               >
-                 {/* Background Image with Overlay */}
-                 <div className="absolute inset-0 h-48 bg-gray-100 dark:bg-cosmic-800 overflow-hidden">
-                    <img 
-                      src={item.image} 
-                      alt={item.title} 
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 group-hover:rotate-1"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = item.image;
-                      }}
-                    />
-                    <div className={`absolute inset-0 bg-gradient-to-b ${isDark ? 'from-transparent to-cosmic-900' : 'from-transparent to-white'}`}></div>
-                 </div>
+                <div className={`relative rounded-3xl overflow-hidden border-2 transition-all duration-500 h-full ${
+                  isDark 
+                    ? 'border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02] hover:border-brand-500/50 hover:shadow-2xl hover:shadow-brand-500/20' 
+                    : 'border-gray-100 bg-gradient-to-br from-white to-gray-50/50 hover:border-brand-500/30 hover:shadow-2xl hover:shadow-brand-500/10'
+                } hover:-translate-y-3`}>
+                  
+                  {/* Animated Background Pattern */}
+                  <div className="absolute inset-0 opacity-5">
+                    <div className={`absolute inset-0 bg-gradient-to-br from-${item.color}-500 via-transparent to-transparent group-hover:opacity-20 transition-opacity duration-500`}></div>
+                  </div>
 
-                 <div className="relative p-8 pt-32 h-full flex flex-col">
-                   <div className={`w-16 h-16 rounded-2xl bg-${item.color}-500 text-white flex items-center justify-center mb-6 shadow-lg shadow-${item.color}-500/30 transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 relative z-10`}>
-                     {item.icon}
-                   </div>
-                   <h3 className={`text-2xl font-bold mb-3 ${isDark ? 'text-white' : 'text-gray-900'} group-hover:text-brand-500 transition-colors`}>{item.title}</h3>
-                   <p className={`leading-relaxed mb-6 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{item.desc}</p>
-                   
-                   <div className="mt-auto pt-4 flex items-center gap-2 text-sm font-bold text-brand-600 dark:text-brand-400 group-hover:gap-4 transition-all">
-                      <span>اكتشف المزيد</span> <ArrowRight size={16} />
-                   </div>
-                 </div>
+                  {/* Icon with Glassmorphism Effect */}
+                  <div className="relative p-8 pb-6">
+                    <div className={`relative w-20 h-20 rounded-2xl backdrop-blur-xl border flex items-center justify-center mb-6 transition-all duration-500 group-hover:scale-110 group-hover:rotate-6 ${
+                      isDark
+                        ? `bg-${item.color}-500/10 border-${item.color}-500/20 shadow-lg shadow-${item.color}-500/20`
+                        : `bg-${item.color}-50 border-${item.color}-100 shadow-xl shadow-${item.color}-200/50`
+                    }`}>
+                      <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br from-${item.color}-500/20 to-transparent group-hover:animate-pulse`}></div>
+                      <div className={`relative text-${item.color}-600 dark:text-${item.color}-400 transition-transform group-hover:scale-110`}>
+                        {item.icon}
+                      </div>
+                    </div>
+
+                    {/* Content */}
+                    <h3 className={`text-2xl font-bold mb-4 transition-colors duration-300 ${
+                      isDark ? 'text-white group-hover:text-brand-400' : 'text-gray-900 group-hover:text-brand-600'
+                    }`}>
+                      {item.title}
+                    </h3>
+                    
+                    <p className={`text-sm leading-relaxed mb-6 min-h-[120px] ${
+                      isDark ? 'text-gray-400' : 'text-gray-600'
+                    }`}>
+                      {item.desc}
+                    </p>
+                  </div>
+
+                  {/* Interactive Bottom Section */}
+                  <div className={`relative px-8 pb-8 pt-4 border-t ${
+                    isDark ? 'border-white/5' : 'border-gray-100'
+                  }`}>
+                    <div className="flex items-center justify-between">
+                      <span className={`text-sm font-bold transition-all duration-300 ${
+                        isDark 
+                          ? 'text-brand-400 group-hover:text-brand-300' 
+                          : 'text-brand-600 group-hover:text-brand-700'
+                      }`}>
+                        اكتشف المزيد
+                      </span>
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 group-hover:scale-110 ${
+                        isDark
+                          ? 'bg-brand-500/10 text-brand-400 group-hover:bg-brand-500 group-hover:text-white'
+                          : 'bg-brand-50 text-brand-600 group-hover:bg-brand-500 group-hover:text-white'
+                      }`}>
+                        <ArrowRight size={18} className="transform group-hover:-translate-x-1 transition-transform" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Hover Glow Effect */}
+                  <div className={`absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none bg-gradient-to-br from-${item.color}-500/5 via-transparent to-transparent`}></div>
+                </div>
               </motion.div>
               </Link>
             )})})
