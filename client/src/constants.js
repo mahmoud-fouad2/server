@@ -21,9 +21,9 @@ export const SEO_DATA = {
       keywords: "حلول أعمال سعودية, شات بوت مطاعم, بوت عيادات طبية, متاجر إلكترونية السعودية, AI business solutions KSA"
     },
     pricing: {
-      title: "أسعار فهملي بالريال السعودي - باقات من 149 ريال شهرياً",
-      desc: "باقات مرنة تبدأ من 149 ريال سعودي شهرياً. تجربة مجانية 7 أيام بدون بطاقة ائتمان. أسعار واضحة وشفافة.",
-      keywords: "أسعار شات بوت السعودية, باقات فهملي بالريال, 149 ريال, تجربة مجانية, chatbot pricing Saudi Arabia"
+      title: "أسعار فهملي بالريال السعودي - باقات من 99 ريال شهرياً",
+      desc: "باقات مرنة تبدأ من 99 ريال سعودي شهرياً. تجربة مجانية 7 أيام بدون بطاقة ائتمان. أسعار واضحة وشفافة.",
+      keywords: "أسعار شات بوت السعودية, باقات فهملي بالريال, 99 ريال, تجربة مجانية, chatbot pricing Saudi Arabia"
     }
   },
   eg: {
@@ -44,8 +44,8 @@ export const SEO_DATA = {
     },
     pricing: {
       title: "أسعار فهملي بالجنيه المصري - باقات من 559 جنيه شهرياً",
-      desc: "باقات مرنة تبدأ من 559 جنيه مصري شهرياً. تجربة مجانية 7 أيام بدون بطاقة ائتمان. أسعار واضحة وشفافة.",
-      keywords: "أسعار شات بوت مصر, باقات فهملي بالجنيه, 559 جنيه, تجربة مجانية مصر, chatbot pricing Egypt"
+      desc: "باقات مرنة تبدأ من 559 جنيه مصري شهرياً (99 ريال سعودي). تجربة مجانية 7 أيام بدون بطاقة ائتمان. أسعار واضحة وشفافة.",
+      keywords: "أسعار شات بوت مصر, باقات فهملي بالجنيه, 559 جنيه, 99 ريال, تجربة مجانية مصر, chatbot pricing Egypt"
     }
   },
   ae: {
@@ -65,9 +65,9 @@ export const SEO_DATA = {
       keywords: "حلول أعمال إماراتية, شات بوت مطاعم دبي, بوت عيادات UAE, متاجر إلكترونية الإمارات, AI business solutions UAE"
     },
     pricing: {
-      title: "أسعار فهملي بالدرهم الإماراتي - باقات من 146 درهم شهرياً",
-      desc: "باقات مرنة تبدأ من 146 درهم إماراتي شهرياً. تجربة مجانية 7 أيام بدون بطاقة ائتمان. أسعار واضحة وشفافة.",
-      keywords: "أسعار شات بوت الإمارات, باقات فهملي بالدرهم, 146 درهم, تجربة مجانية UAE, chatbot pricing UAE"
+      title: "أسعار فهملي بالدرهم الإماراتي - باقات من 99 درهم شهرياً",
+      desc: "باقات مرنة تبدأ من 99 درهم إماراتي شهرياً. تجربة مجانية 7 أيام بدون بطاقة ائتمان. أسعار واضحة وشفافة.",
+      keywords: "أسعار شات بوت الإمارات, باقات فهملي بالدرهم, 99 درهم, تجربة مجانية UAE, chatbot pricing UAE"
     }
   },
   kw: {
@@ -87,9 +87,9 @@ export const SEO_DATA = {
       keywords: "حلول أعمال كويتية, شات بوت مطاعم الكويت, بوت عيادات الكويت, محلات تجارية الكويت, AI business solutions Kuwait"
     },
     pricing: {
-      title: "أسعار فهملي بالدينار الكويتي - باقات من 12 دينار شهرياً",
-      desc: "باقات مرنة تبدأ من 12 دينار كويتي شهرياً. تجربة مجانية 7 أيام بدون بطاقة ائتمان. أسعار واضحة وشفافة.",
-      keywords: "أسعار شات بوت الكويت, باقات فهملي بالدينار, 12 دينار, تجربة مجانية الكويت, chatbot pricing Kuwait"
+      title: "أسعار فهملي بالدينار الكويتي - باقات من 8 دينار شهرياً",
+      desc: "باقات مرنة تبدأ من 8 دينار كويتي شهرياً (99 ريال سعودي). تجربة مجانية 7 أيام بدون بطاقة ائتمان. أسعار واضحة وشفافة.",
+      keywords: "أسعار شات بوت الكويت, باقات فهملي بالدينار, 8 دينار, 99 ريال, تجربة مجانية الكويت, chatbot pricing Kuwait"
     }
   },
   en: {
@@ -125,9 +125,9 @@ export const DIALECT_OPTIONS = [
 // Currency Exchange Rates (SAR as base)
 export const CURRENCY_RATES = {
   SAR: 1,
-  EGP: 3.75,  // 1 SAR = 3.75 EGP
-  AED: 0.98,  // 1 SAR = 0.98 AED
-  KWD: 0.082, // 1 SAR = 0.082 KWD
+  EGP: 5.64,  // 1 SAR = 5.64 EGP (updated for new pricing)
+  AED: 1.0,   // 1 SAR = 1.0 AED (approximate parity)
+  KWD: 0.081, // 1 SAR = 0.081 KWD
 };
 
 // Convert price from SAR to target currency
@@ -143,9 +143,9 @@ export const REGIONAL_CONTENT = {
     pricing: {
       currency: "ر.س",
       currencyCode: "SAR",
-      starter: { price: "149", name: "انطلاقة" },
-      pro: { price: "399", name: "نمو" },
-      agency: { price: "999", name: "شركات" }
+      starter: { price: "99", name: "الأساسية" },
+      pro: { price: "299", name: "الاحترافية" },
+      agency: { price: "999", name: "المؤسسات" }
     }
   },
   eg: {
@@ -154,9 +154,9 @@ export const REGIONAL_CONTENT = {
     pricing: {
       currency: "ج.م",
       currencyCode: "EGP",
-      starter: { price: convertCurrency(149, 'EGP').toString(), name: "البداية" },
-      pro: { price: convertCurrency(399, 'EGP').toString(), name: "الاحترافية" },
-      agency: { price: convertCurrency(999, 'EGP').toString(), name: "الوحش" }
+      starter: { price: convertCurrency(99, 'EGP').toString(), name: "الأساسية" },
+      pro: { price: convertCurrency(299, 'EGP').toString(), name: "الاحترافية" },
+      agency: { price: convertCurrency(999, 'EGP').toString(), name: "المؤسسات" }
     }
   },
   ae: {
@@ -165,9 +165,9 @@ export const REGIONAL_CONTENT = {
     pricing: {
       currency: "د.إ",
       currencyCode: "AED",
-      starter: { price: convertCurrency(149, 'AED').toString(), name: "انطلاقة" },
-      pro: { price: convertCurrency(399, 'AED').toString(), name: "نمو" },
-      agency: { price: convertCurrency(999, 'AED').toString(), name: "شركات" }
+      starter: { price: convertCurrency(99, 'AED').toString(), name: "الأساسية" },
+      pro: { price: convertCurrency(299, 'AED').toString(), name: "الاحترافية" },
+      agency: { price: convertCurrency(999, 'AED').toString(), name: "المؤسسات" }
     }
   },
   kw: {
@@ -176,9 +176,9 @@ export const REGIONAL_CONTENT = {
     pricing: {
       currency: "د.ك",
       currencyCode: "KWD",
-      starter: { price: convertCurrency(149, 'KWD').toString(), name: "انطلاقة" },
-      pro: { price: convertCurrency(399, 'KWD').toString(), name: "نمو" },
-      agency: { price: convertCurrency(999, 'KWD').toString(), name: "شركات" }
+      starter: { price: convertCurrency(99, 'KWD').toString(), name: "الأساسية" },
+      pro: { price: convertCurrency(299, 'KWD').toString(), name: "الاحترافية" },
+      agency: { price: convertCurrency(999, 'KWD').toString(), name: "المؤسسات" }
     }
   }
 };

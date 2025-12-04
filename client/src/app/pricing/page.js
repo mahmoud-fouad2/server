@@ -22,8 +22,8 @@ import { convertCurrency } from '@/constants'
 
 // Base prices in SAR
 const BASE_PRICES = {
-  starter: 149,
-  pro: 399,
+  starter: 99,
+  pro: 299,
   agency: 999
 }
 
@@ -204,16 +204,16 @@ export default function PricingPage() {
 
               <ul className="space-y-4 mb-8">
                 <li className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
-                  <Check size={18} className="text-green-500" /> 1,000 محادثة شهرياً
+                  <Check size={18} className="text-green-500" /> 500 محادثة شهرياً
                 </li>
                 <li className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
-                  <Check size={18} className="text-green-500" /> قاعدة معرفية (10 ملفات)
+                  <Check size={18} className="text-green-500" /> 1 قاعدة معرفة
                 </li>
-                <li className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
-                  <Check size={18} className="text-green-500" /> {pricing.starter.agents} موظف خدمة عملاء
+                <li className="flex items-center gap-3 text-gray-400 dark:text-gray-600">
+                  <X size={18} /> موظف خدمة عملاء
                 </li>
-                <li className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
-                  <Check size={18} className="text-green-500" /> تكامل واتساب
+                <li className="flex items-center gap-3 text-gray-400 dark:text-gray-600">
+                  <X size={18} /> تكامل واتساب
                 </li>
                 <li className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
                   <Check size={18} className="text-green-500" /> دعم فني email
@@ -279,25 +279,25 @@ export default function PricingPage() {
                   <div className="w-5 h-5 rounded-full bg-green-500/10 flex items-center justify-center">
                     <Check size={14} className="text-green-500" strokeWidth={3} />
                   </div>
-                  4,000 محادثة شهرياً
+                  1,500 محادثة شهرياً
                 </li>
                   <li className="flex items-center gap-3 text-gray-700 dark:text-gray-300 font-medium">
                     <div className="w-5 h-5 rounded-full bg-green-500/10 flex items-center justify-center">
                       <Check size={14} className="text-green-500" strokeWidth={3} />
                     </div>
-                    قاعدة معرفية (20 ملف)
+                    2 قاعدة معرفة
                   </li>
                   <li className="flex items-center gap-3 text-gray-700 dark:text-gray-300 font-medium">
                     <div className="w-5 h-5 rounded-full bg-green-500/10 flex items-center justify-center">
                       <Check size={14} className="text-green-500" strokeWidth={3} />
                     </div>
-                    {pricing.pro.agents} موظفي خدمة عملاء
+                    1 موظف خدمة عملاء
                   </li>
                   <li className="flex items-center gap-3 text-gray-700 dark:text-gray-300 font-medium">
                     <div className="w-5 h-5 rounded-full bg-green-500/10 flex items-center justify-center">
                       <Check size={14} className="text-green-500" strokeWidth={3} />
                     </div>
-                    تكامل متعدد القنوات
+                    تكامل متعدد القنوات (محدود)
                   </li>
                   <li className="flex items-center gap-3 text-gray-700 dark:text-gray-300 font-medium">
                     <div className="w-5 h-5 rounded-full bg-green-500/10 flex items-center justify-center">
@@ -310,6 +310,12 @@ export default function PricingPage() {
                       <Check size={14} className="text-green-500" strokeWidth={3} />
                     </div>
                     دعم فني ذو أولوية
+                  </li>
+                  <li className="flex items-center gap-3 text-gray-700 dark:text-gray-300 font-medium">
+                    <div className="w-5 h-5 rounded-full bg-green-500/10 flex items-center justify-center">
+                      <Check size={14} className="text-green-500" strokeWidth={3} />
+                    </div>
+                    أولوية الرد
                   </li>
                   <li className="flex items-center gap-3 text-gray-700 dark:text-gray-300 font-medium">
                     <div className="w-5 h-5 rounded-full bg-green-500/10 flex items-center justify-center">
@@ -361,13 +367,16 @@ export default function PricingPage() {
 
               <ul className="space-y-4 mb-8">
                 <li className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
-                  <Check size={18} className="text-green-500" /> محادثات غير محدودة
+                  <Check size={18} className="text-green-500" /> 6,000 محادثة شهرياً
                 </li>
                 <li className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
                   <Check size={18} className="text-green-500" /> قاعدة معرفية غير محدودة
                 </li>
                 <li className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
-                  <Check size={18} className="text-green-500" /> {pricing.agency.agents} موظفي خدمة عملاء
+                  <Check size={18} className="text-green-500" /> 5 موظفي خدمة عملاء
+                </li>
+                <li className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
+                  <Check size={18} className="text-green-500" /> تكامل متعدد القنوات
                 </li>
                 <li className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
                   <Check size={18} className="text-green-500" /> عملاء متعددين (White label)
@@ -380,6 +389,12 @@ export default function PricingPage() {
                 </li>
                 <li className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
                   <Check size={18} className="text-green-500" /> دعم 24/7
+                </li>
+                <li className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
+                  <Check size={18} className="text-green-500" /> أولوية الرد
+                </li>
+                <li className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
+                  <Check size={18} className="text-green-500" /> تدريب مجاني
                 </li>
               </ul>
 
@@ -412,9 +427,10 @@ export default function PricingPage() {
               </thead>
               <tbody>
                 {[
-                  { feature: 'عدد المحادثات', starter: '1,000', pro: '10,000', agency: 'غير محدود' },
-                  { feature: 'قاعدة المعرفة', starter: '10 ملفات', pro: '100 ملف', agency: 'غير محدود' },
-                  { feature: 'تكامل واتساب', starter: true, pro: true, agency: true },
+                  { feature: 'عدد المحادثات', starter: '500', pro: '1,500', agency: '6,000' },
+                  { feature: 'قاعدة المعرفة', starter: '1', pro: '2', agency: 'غير محدود' },
+                  { feature: 'موظفي خدمة عملاء', starter: 'لا', pro: '1', agency: '5' },
+                  { feature: 'تكامل واتساب', starter: false, pro: true, agency: true },
                   { feature: 'تكامل تيليجرام', starter: false, pro: true, agency: true },
                   { feature: 'تقارير متقدمة', starter: false, pro: true, agency: true },
                   { feature: 'API مخصصة', starter: false, pro: false, agency: true },
@@ -444,6 +460,39 @@ export default function PricingPage() {
               </tbody>
             </table>
           </div>
+        </div>
+      </section>
+
+      {/* Agency Section */}
+      <section className="py-20 px-6 bg-gradient-to-br from-brand-500/10 to-purple-500/10">
+        <div className="max-w-4xl mx-auto text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="bg-white dark:bg-cosmic-900 rounded-3xl p-12 border-2 border-brand-500 shadow-2xl"
+          >
+            <div className="text-6xl mb-6">🏢</div>
+            <h2 className="text-4xl font-bold mb-6 text-gray-900 dark:text-white">
+              هل أنت وكالة أو لديك احتياجات خاصة؟
+            </h2>
+            <p className="text-xl text-gray-600 dark:text-gray-400 mb-8 leading-relaxed">
+              نقدم حلول مخصصة للوكالات والمؤسسات الكبرى مع باقات خاصة وأسعار تنافسية.
+              احصل على White Label، API مخصص، ومدير حساب متخصص.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link href="/contact">
+                <Button className="h-14 px-10 text-lg rounded-full bg-brand-600 hover:bg-brand-700 text-white shadow-lg">
+                  تواصل معنا للحصول على عرض خاص
+                </Button>
+              </Link>
+              <a href="https://wa.me/966533333999" target="_blank" rel="noopener noreferrer">
+                <Button variant="outline" className="h-14 px-10 text-lg rounded-full border-2 border-brand-600 text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-950">
+                  تواصل واتساب
+                </Button>
+              </a>
+            </div>
+          </motion.div>
         </div>
       </section>
 
