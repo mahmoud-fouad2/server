@@ -72,8 +72,8 @@ export default function ContactPage() {
             className="space-y-8"
           >
             <div>
-              <h1 className="text-4xl font-bold mb-4">الدعم الفني</h1>
-              <p className="text-muted-foreground text-lg">
+              <h1 className="text-4xl font-bold mb-4 text-gray-900 dark:text-white">الدعم الفني</h1>
+              <p className="text-gray-700 dark:text-gray-300 text-lg font-medium">
                 نحن هنا لمساعدتك. سواء كان لديك استفسار، اقتراح، أو مشكلة، فريقنا جاهز للرد عليك.
               </p>
             </div>
@@ -152,7 +152,7 @@ export default function ContactPage() {
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">الاسم الأول</label>
+                    <label className="text-sm font-bold text-gray-800 dark:text-gray-200">الاسم الأول</label>
                     <Input 
                       required
                       value={formData.firstName}
@@ -161,7 +161,7 @@ export default function ContactPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">اسم العائلة</label>
+                    <label className="text-sm font-bold text-gray-800 dark:text-gray-200">اسم العائلة</label>
                     <Input 
                       required
                       value={formData.lastName}
@@ -172,7 +172,7 @@ export default function ContactPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">البريد الإلكتروني</label>
+                  <label className="text-sm font-bold text-gray-800 dark:text-gray-200">البريد الإلكتروني</label>
                   <Input 
                     required
                     type="email" 
@@ -183,7 +183,7 @@ export default function ContactPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">الموضوع</label>
+                  <label className="text-sm font-bold text-gray-800 dark:text-gray-200">الموضوع</label>
                   <Input 
                     required
                     value={formData.subject}
@@ -193,7 +193,7 @@ export default function ContactPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">الرسالة</label>
+                  <label className="text-sm font-bold text-gray-800 dark:text-gray-200">الرسالة</label>
                   <Textarea 
                     required
                     value={formData.message}

@@ -164,13 +164,13 @@ export default function ServicesPage() {
                     {service.title}
                   </h3>
                   
-                  <p className="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
+                  <p className="text-gray-700 dark:text-gray-300 mb-6 leading-relaxed font-medium">
                     {service.description}
                   </p>
 
                   <ul className="space-y-3">
                     {service.features.map((feature, i) => (
-                      <li key={i} className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
+                      <li key={i} className="flex items-center gap-3 text-sm text-gray-800 dark:text-gray-200 font-medium">
                         <div className="w-5 h-5 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0">
                           <Check size={12} className="text-green-500" strokeWidth={3} />
                         </div>

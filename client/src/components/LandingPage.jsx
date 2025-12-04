@@ -502,13 +502,13 @@ export const LandingPage = ({ lang: initialLang = 'ar', setLang: externalSetLang
           >
             <span className={`inline-flex items-center gap-2 px-6 py-3 rounded-full text-base font-bold mb-8 ${isDark ? 'bg-gradient-to-r from-green-500/20 to-blue-500/20 text-green-300 border-2 border-green-500/30 shadow-lg shadow-green-500/20' : 'bg-gradient-to-r from-green-50 to-blue-50 text-green-700 border-2 border-green-300 shadow-xl'}`}>
               <Globe size={20} />
-              \u0646\u063a\u0637\u064a \u062c\u0645\u064a\u0639 \u062f\u0648\u0644 \u0627\u0644\u0634\u0631\u0642 \u0627\u0644\u0623\u0648\u0633\u0637
+              نغطي جميع دول الشرق الأوسط
             </span>
             <h2 className={`text-5xl lg:text-7xl font-black mb-8 ${isDark ? 'bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent' : 'bg-gradient-to-r from-gray-900 via-blue-600 to-purple-600 bg-clip-text text-transparent'}`}>
-              \u0646\u062a\u062d\u062f\u062b \u0628\u0643\u0644 \u0627\u0644\u0644\u0647\u062c\u0627\u062a \u0627\u0644\u0639\u0631\u0628\u064a\u0629
+              نتحدث بكل اللهجات العربية
             </h2>
             <p className={`text-2xl lg:text-3xl max-w-4xl mx-auto leading-relaxed font-medium ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
-              \u0645\u0646 \u0627\u0644\u062e\u0644\u064a\u062c \u0625\u0644\u0649 \u0627\u0644\u0645\u063a\u0631\u0628\u060c \u0641\u0647\u0645\u0644\u064a \u064a\u0641\u0647\u0645 \u0648\u064a\u062a\u062d\u062f\u062b \u0628\u0644\u0647\u062c\u0629 \u0639\u0645\u0644\u0627\u0626\u0643 \u0627\u0644\u0645\u062d\u0644\u064a\u064a\u0646
+              من الخليج إلى المغرب، فهملي يفهم ويتحدث بلهجة عملائك المحليين
             </p>
           </motion.div>
 
