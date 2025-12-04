@@ -395,9 +395,38 @@ async function healthCheck() {
   return results;
 }
 
+/**
+ * Get provider stats for monitoring
+ */
+function getProviderStats() {
+  return getProviderStatus();
+}
+
+/**
+ * Check providers health summary
+ */
+function checkProvidersHealth() {
+  const status = getProviderStatus();
+  const providers = Object.values(status);
+  
+  const totalConfigured = providers.filter(p => p.enabled).length;
+  const totalAvailable = providers.filter(p => p.available).length;
+  
+  return {
+    totalConfigured,
+    totalAvailable,
+    providers: providers.map(p => ({
+      name: p.name,
+      status: p.available ? 'available' : (p.enabled ? 'rate-limited' : 'disabled')
+    }))
+  };
+}
+
 module.exports = {
   generateResponse,
   getProviderStatus,
+  getProviderStats,
+  checkProvidersHealth,
   healthCheck,
   PROVIDERS
 };
