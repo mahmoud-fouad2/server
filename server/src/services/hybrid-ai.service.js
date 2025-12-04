@@ -50,7 +50,6 @@ const PROVIDERS = {
     rateLimit: { requestsPerMinute: 60, tokensPerMinute: 50000 },
     priority: 2, // SECONDARY - Balance restored, fast and reliable
     enabled: true // Re-enabled after balance added
-    isGemini: true // Special flag for different API format
   }
 };
 
