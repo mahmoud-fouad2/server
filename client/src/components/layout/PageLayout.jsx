@@ -63,7 +63,7 @@ export default function PageLayout({ children }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-full flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="hover:scale-105 transition-transform">
-            <img src="/logo.webp" alt="فهملي" className={`${scrolled ? 'h-12' : 'h-16'} w-auto object-contain transition-all`} />
+            <img src="/logo.webp" alt="Faheemly" className={`${scrolled ? 'h-12' : 'h-16'} w-auto object-contain transition-all`} />
           </Link>
 
           {/* Desktop Menu */}
@@ -128,16 +128,29 @@ export default function PageLayout({ children }) {
           <div className="flex flex-col h-[calc(100%-80px)] overflow-y-auto">
             {/* Navigation Links */}
             <div className="p-6 space-y-2">
-              {menuItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-brand-50 dark:hover:bg-brand-900/20 hover:text-brand-600 dark:hover:text-brand-400 transition-colors font-medium"
-                >
-                  {item.label}
-                </Link>
-              ))}
+              {menuItems.map((item) => {
+                // Translate menu items
+                const labelMap = {
+                  'الرئيسية': 'Home',
+                  'الخدمات': 'Services',
+                  'الحلول': 'Solutions',
+                  'الأسعار': 'Pricing',
+                  'من نحن': 'About Us',
+                  'اتصل بنا': 'Contact Us'
+                };
+                const displayLabel = lang === 'ar' ? item.label : (labelMap[item.label] || item.label);
+                
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-brand-50 dark:hover:bg-brand-900/20 hover:text-brand-600 dark:hover:text-brand-400 transition-colors font-medium"
+                  >
+                    {displayLabel}
+                  </Link>
+                );
+              })}
             </div>
 
             {/* Country Selector */}
@@ -169,7 +182,11 @@ export default function PageLayout({ children }) {
               <h3 className="text-sm font-bold text-gray-500 dark:text-gray-400 mb-3">اللغة</h3>
               <div className="flex gap-2">
                 <button
-                  onClick={() => setLang('ar')}
+                  onClick={() => {
+                    setLang('ar');
+                    document.documentElement.setAttribute('dir', 'rtl');
+                    document.documentElement.setAttribute('lang', 'ar');
+                  }}
                   className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${
                     lang === 'ar'
                       ? 'bg-brand-600 text-white'
@@ -179,7 +196,11 @@ export default function PageLayout({ children }) {
                   عربي
                 </button>
                 <button
-                  onClick={() => setLang('en')}
+                  onClick={() => {
+                    setLang('en');
+                    document.documentElement.setAttribute('dir', 'ltr');
+                    document.documentElement.setAttribute('lang', 'en');
+                  }}
                   className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${
                     lang === 'en'
                       ? 'bg-brand-600 text-white'

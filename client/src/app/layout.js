@@ -269,9 +269,7 @@ export default function RootLayout({ children }) {
           ]
         }) }} />
         
-        {/* Preload critical resources */}
-        <link rel="preload" href="/assets/fonts/Cairo-Regular.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
-        <link rel="preload" href="/assets/fonts/Cairo-Bold.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        {/* Preload critical resources - Removed unused font preloads */}
         
         {/* DNS Prefetch for external resources */}
         <link rel="dns-prefetch" href="https://fonts.googleapis.com" />

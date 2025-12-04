@@ -89,11 +89,11 @@ export const LandingPage = ({ lang: initialLang = 'ar', setLang: externalSetLang
         <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
           <div className="flex items-center gap-3">
              <Link href="/" className="flex items-center group hover:scale-105 transition-transform">
-                <img src={lang === 'en' ? "/logoen.png" : "/logo.webp"} alt="فهملي" className={`${scrolled ? 'w-40 md:w-48' : 'w-48 md:w-64'} h-auto object-contain transition-all`} />
+                <img src="/logo.webp" alt="فهملي" className={`${scrolled ? 'w-40 md:w-48' : 'w-48 md:w-64'} h-auto object-contain transition-all`} />
              </Link>
              {activeCountry === 'eg' && (
                <span className="text-[10px] px-2 py-1 bg-red-500/10 text-red-600 dark:text-red-400 rounded-full border border-red-500/20 font-bold hidden sm:block animate-fade-in">
-                 نسخة مصر
+                 {lang === 'en' ? 'Egypt Edition' : 'نسخة مصر'}
                </span>
              )}
           </div>
@@ -129,8 +129,14 @@ export const LandingPage = ({ lang: initialLang = 'ar', setLang: externalSetLang
 
             {/* Language Toggle - Desktop Only */}
             <button 
-              onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')} 
-              className={`hidden md:block px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${lang === 'en' ? 'bg-brand-600 text-white border-brand-600' : 'bg-transparent border-gray-300 text-gray-600 hover:border-brand-500 hover:text-brand-500'}`}
+              onClick={() => {
+                const newLang = lang === 'ar' ? 'en' : 'ar';
+                setLang(newLang);
+                // Update HTML dir and lang attributes
+                document.documentElement.setAttribute('dir', newLang === 'ar' ? 'rtl' : 'ltr');
+                document.documentElement.setAttribute('lang', newLang === 'ar' ? 'ar' : 'en');
+              }} 
+              className={`hidden md:block px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${lang === 'en' ? 'bg-brand-600 text-white border-brand-600' : 'bg-transparent border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-brand-500 hover:text-brand-500'}`}
             >
               {lang === 'ar' ? 'English' : 'عربي'}
             </button>
@@ -156,16 +162,16 @@ export const LandingPage = ({ lang: initialLang = 'ar', setLang: externalSetLang
             {/* Desktop Menu */}
             <div className="hidden lg:flex items-center gap-6 ml-8">
               <Link href="/" className={`text-sm font-medium transition-colors hover:text-brand-600 dark:hover:text-brand-400 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                الرئيسية
+                {lang === 'ar' ? 'الرئيسية' : 'Home'}
               </Link>
               <Link href="/services" className={`text-sm font-medium transition-colors hover:text-brand-600 dark:hover:text-brand-400 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                الخدمات
+                {lang === 'ar' ? 'الخدمات' : 'Services'}
               </Link>
               <Link href="/solutions" className={`text-sm font-medium transition-colors hover:text-brand-600 dark:hover:text-brand-400 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                الحلول
+                {lang === 'ar' ? 'الحلول' : 'Solutions'}
               </Link>
               <Link href="/pricing" className={`text-sm font-medium transition-colors hover:text-brand-600 dark:hover:text-brand-400 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                الأسعار
+                {lang === 'ar' ? 'الأسعار' : 'Pricing'}
               </Link>
             </div>
 
@@ -218,22 +224,22 @@ export const LandingPage = ({ lang: initialLang = 'ar', setLang: externalSetLang
             {/* Navigation Links */}
             <div className="space-y-2">
               <Link href="/" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-brand-50 dark:hover:bg-brand-900/20 hover:text-brand-600 dark:hover:text-brand-400 transition-colors font-medium">
-                الرئيسية
+                {lang === 'ar' ? 'الرئيسية' : 'Home'}
               </Link>
               <Link href="/services" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-brand-50 dark:hover:bg-brand-900/20 hover:text-brand-600 dark:hover:text-brand-400 transition-colors font-medium">
-                الخدمات
+                {lang === 'ar' ? 'الخدمات' : 'Services'}
               </Link>
               <Link href="/solutions" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-brand-50 dark:hover:bg-brand-900/20 hover:text-brand-600 dark:hover:text-brand-400 transition-colors font-medium">
-                الحلول
+                {lang === 'ar' ? 'الحلول' : 'Solutions'}
               </Link>
               <Link href="/pricing" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-brand-50 dark:hover:bg-brand-900/20 hover:text-brand-600 dark:hover:text-brand-400 transition-colors font-medium">
-                الأسعار
+                {lang === 'ar' ? 'الأسعار' : 'Pricing'}
               </Link>
               <Link href="/about" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-brand-50 dark:hover:bg-brand-900/20 hover:text-brand-600 dark:hover:text-brand-400 transition-colors font-medium">
-                من نحن
+                {lang === 'ar' ? 'من نحن' : 'About Us'}
               </Link>
               <Link href="/contact" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-brand-50 dark:hover:bg-brand-900/20 hover:text-brand-600 dark:hover:text-brand-400 transition-colors font-medium">
-                اتصل بنا
+                {lang === 'ar' ? 'اتصل بنا' : 'Contact Us'}
               </Link>
             </div>
 
@@ -241,7 +247,7 @@ export const LandingPage = ({ lang: initialLang = 'ar', setLang: externalSetLang
             <div className="pt-4 border-t border-gray-200 dark:border-white/10">
               <h3 className="text-sm font-bold text-gray-500 dark:text-gray-400 mb-3 flex items-center gap-2 px-4">
                 <Globe size={16} />
-                اختر الدولة
+                {lang === 'ar' ? 'اختر الدولة' : 'Select Country'}
               </h3>
               <div className="grid grid-cols-2 gap-2">
                 <button onClick={() => { changeCountry('sa'); setMobileMenuOpen(false); }} className={`px-4 py-3 rounded-xl text-sm font-medium transition-colors ${activeCountry === 'sa' ? 'bg-brand-600 text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/10'}`}>
@@ -261,12 +267,20 @@ export const LandingPage = ({ lang: initialLang = 'ar', setLang: externalSetLang
 
             {/* Language Switcher */}
             <div className="pt-4 border-t border-gray-200 dark:border-white/10">
-              <h3 className="text-sm font-bold text-gray-500 dark:text-gray-400 mb-3 px-4">اللغة</h3>
+              <h3 className="text-sm font-bold text-gray-500 dark:text-gray-400 mb-3 px-4">{lang === 'ar' ? 'اللغة' : 'Language'}</h3>
               <div className="flex gap-2">
-                <button onClick={() => setLang('ar')} className={`flex-1 px-4 py-3 rounded-xl text-sm font-bold transition-colors ${lang === 'ar' ? 'bg-brand-600 text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/10'}`}>
+                <button onClick={() => {
+                  setLang('ar');
+                  document.documentElement.setAttribute('dir', 'rtl');
+                  document.documentElement.setAttribute('lang', 'ar');
+                }} className={`flex-1 px-4 py-3 rounded-xl text-sm font-bold transition-colors ${lang === 'ar' ? 'bg-brand-600 text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/10'}`}>
                   عربي
                 </button>
-                <button onClick={() => setLang('en')} className={`flex-1 px-4 py-3 rounded-xl text-sm font-bold transition-colors ${lang === 'en' ? 'bg-brand-600 text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/10'}`}>
+                <button onClick={() => {
+                  setLang('en');
+                  document.documentElement.setAttribute('dir', 'ltr');
+                  document.documentElement.setAttribute('lang', 'en');
+                }} className={`flex-1 px-4 py-3 rounded-xl text-sm font-bold transition-colors ${lang === 'en' ? 'bg-brand-600 text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/10'}`}>
                   English
                 </button>
               </div>
@@ -276,17 +290,17 @@ export const LandingPage = ({ lang: initialLang = 'ar', setLang: externalSetLang
             <div className="pt-4 border-t border-gray-200 dark:border-white/10">
               <button onClick={toggleTheme} className="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors flex items-center justify-center gap-3 text-gray-700 dark:text-gray-300 font-medium">
                 {isDark ? <Sun size={20} /> : <Moon size={20} />}
-                {isDark ? 'الوضع النهاري' : 'الوضع الليلي'}
+                {lang === 'ar' ? (isDark ? 'الوضع النهاري' : 'الوضع الليلي') : (isDark ? 'Light Mode' : 'Dark Mode')}
               </button>
             </div>
 
             {/* CTA Buttons */}
             <div className="space-y-2 pt-4">
               <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="block w-full px-6 py-3 rounded-xl text-center font-bold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors">
-                تسجيل الدخول
+                {lang === 'ar' ? 'تسجيل الدخول' : 'Sign In'}
               </Link>
               <Link href="/register" onClick={() => setMobileMenuOpen(false)} className="block w-full px-6 py-3 rounded-xl text-center font-bold text-white bg-gradient-to-r from-brand-600 to-brand-500 hover:opacity-90 transition-opacity shadow-lg">
-                ابدأ الآن مجاناً
+                {lang === 'ar' ? 'ابدأ الآن مجاناً' : 'Start Free Trial'}
               </Link>
             </div>
           </div>
@@ -449,11 +463,11 @@ export const LandingPage = ({ lang: initialLang = 'ar', setLang: externalSetLang
                 <div className="flex gap-4">
                   <Link href="/register" className="flex-1">
                     <Button className="w-full py-4 text-lg font-bold shadow-lg shadow-brand-500/20 rounded-xl">
-                      ابدأ التجربة المجانية
+                      {t.startFreeTrial}
                     </Button>
                   </Link>
                   <button onClick={() => setSelectedIndustry(null)} className="px-8 py-4 rounded-xl border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 font-bold transition-colors text-gray-700 dark:text-gray-300">
-                    إغلاق
+                    {t.closeBtn}
                   </button>
                 </div>
               </div>
@@ -480,13 +494,13 @@ export const LandingPage = ({ lang: initialLang = 'ar', setLang: externalSetLang
           >
             <span className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold mb-6 ${isDark ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-green-50 text-green-600 border border-green-200'}`}>
               <Globe size={16} />
-              نغطي جميع دول الشرق الأوسط
+              {t.coverageTitle}
             </span>
             <h2 className={`text-4xl lg:text-6xl font-black mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              نتحدث بكل اللهجات العربية
+              {t.coverageSubtitle}
             </h2>
             <p className={`text-xl lg:text-2xl max-w-3xl mx-auto leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-              من الخليج إلى المغرب، فهملي يفهم ويتحدث بلهجة عملائك المحليين
+              {t.coverageDescription}
             </p>
           </motion.div>
 
@@ -537,10 +551,10 @@ export const LandingPage = ({ lang: initialLang = 'ar', setLang: externalSetLang
             className="text-center mb-12"
           >
             <span className={`inline-block px-4 py-2 rounded-full text-sm font-bold mb-4 ${isDark ? 'bg-brand-500/10 text-brand-400' : 'bg-brand-50 text-brand-600'}`}>
-              حلول متخصصة لكل القطاعات
+              {t.solutionsTag}
             </span>
             <h2 className={`text-3xl lg:text-5xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>{t.indTitle}</h2>
-            <p className={`text-xl max-w-2xl mx-auto ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>اختر الحل المناسب لنشاطك التجاري واكتشف كيف يمكن لفهملي أن يحدث فرقاً</p>
+            <p className={`text-xl max-w-2xl mx-auto ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{t.solutionsSubtitle}</p>
             <div className="mt-8 flex justify-center">
               <Link href="/solutions">
                 <Button className="rounded-full px-10 py-4 text-lg shadow-lg font-bold hover:shadow-xl transition-all">

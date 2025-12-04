@@ -473,20 +473,44 @@ export const TRANSLATIONS = {
     privacy: "Privacy Policy",
     terms: "Terms & Conditions",
     
+    // Additional Landing Page translations
+    coverageTitle: "Covering All Middle East Countries",
+    coverageSubtitle: "We Speak All Arabic Dialects",
+    coverageDescription: "From the Gulf to Morocco, Faheemly understands and speaks your local customers' dialect",
+    solutionsTag: "Specialized Solutions for All Sectors",
+    solutionsSubtitle: "Choose the right solution for your business and discover how Faheemly can make a difference",
+    startFreeTrial: "Start Free Trial",
+    closeBtn: "Close",
+    
+    // Menu items
+    home: "Home",
+    services: "Services",
+    solutions: "Solutions",
+    about: "About",
+    contact: "Contact",
+    
     // Industries
     indTitle: "Tailored Solutions",
-    indRestTitle: "Restaurants",
-    indRestDesc: "Smart menu & reservations.",
-    indClinicTitle: "Clinics",
-    indClinicDesc: "Appointments & medical FAQs.",
-    indRetailTitle: "Retail",
-    indRetailDesc: "Sales assistant & tracking.",
+    indRestTitle: "Restaurants & Cafes",
+    indRestDesc: "Display menu with images, table reservations, and answer inquiries about location and working hours.",
+    indRestModalTitle: "Restaurants & Cafes",
+    indRestModalDesc: "Turn your website visitors into regular customers. Faheemly showcases your menu with appetizing images, handles table reservations, and answers questions like 'Do you deliver?' and 'What are your hours?' with a welcoming tone, as if you hired the best receptionist - but available 24/7 without getting tired.",
+    
+    indClinicTitle: "Clinics & Medical Centers",
+    indClinicDesc: "Automatic appointment booking, answering common medical questions, and reminding patients of appointments.",
+    indClinicModalTitle: "Clinics & Medical Centers",
+    indClinicModalDesc: "Reduce no-shows and save reception staff time. Faheemly schedules appointments, answers pricing and service inquiries, and sends patient reminders. Professional handling with complete privacy for your patients' data.",
+    
+    indRetailTitle: "Stores & Agencies",
+    indRetailDesc: "Smart shopping assistant suggesting products, tracking order status, and reducing returns.",
+    indRetailModalTitle: "Online Stores & Agencies",
+    indRetailModalDesc: "Boost your sales with a smart assistant that suggests the right products for each customer based on their preferences. Tracks shipment status, processes returns and exchanges according to your policy, and ensures a smooth shopping experience that increases customer loyalty.",
 
     // Integrations
-    integrationTitle: "Seamless Integrations",
-    whatsappDesc: "WhatsApp Auto-reply",
-    websiteDesc: "Website Widget",
-    apiDesc: "REST API",
+    integrationTitle: "Wherever Your Customer Is",
+    whatsappDesc: "Auto-reply on official WhatsApp",
+    websiteDesc: "Smart chat icon for your website",
+    apiDesc: "API integration with your systems",
 
     // Pricing
     pricingTitle: "Pay As You Grow",

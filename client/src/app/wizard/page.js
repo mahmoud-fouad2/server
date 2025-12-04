@@ -329,7 +329,7 @@ export default function Wizard() {
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
           className="inline-block mb-4"
         >
-          <div className="bg-white dark:bg-cosmic-800 rounded-3xl p-4 shadow-xl inline-block">
+          <div className="rounded-3xl p-4 shadow-xl inline-block" style={{ backgroundColor: '#f6f8fa' }}>
             <FaheemAnimatedLogo size="small" showText={false} />
           </div>
         </motion.div>
@@ -652,20 +652,24 @@ export default function Wizard() {
             </AnimatePresence>
           </CardContent>
           <CardFooter className="flex justify-between pt-6">
-            {step > 1 && (
+            {step > 1 && step < 6 && (
               <Button variant="ghost" onClick={prevStep} disabled={loading}>
                 <ArrowRight className="ml-2 w-4 h-4" /> السابق
               </Button>
             )}
-            {step < 4 ? (
-              <Button className="mr-auto bg-brand-600 hover:bg-brand-700" onClick={nextStep}>
+            {step < 5 ? (
+              <Button 
+                className="mr-auto bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-700 hover:to-brand-600 text-white shadow-lg shadow-brand-500/30 transition-all" 
+                onClick={() => nextStep()}
+                disabled={loading}
+              >
                 التالي <ArrowLeft className="mr-2 w-4 h-4" />
               </Button>
-            ) : (
-              <Button className="mr-auto bg-gradient-to-r from-brand-600 to-brand-700 hover:opacity-90 w-full sm:w-auto" onClick={handleSubmit} disabled={loading}>
+            ) : step === 5 ? (
+              <Button className="mr-auto bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-700 hover:to-brand-600 text-white shadow-lg shadow-brand-500/30 transition-all w-full sm:w-auto" onClick={handleSubmit} disabled={loading}>
                 {loading ? <Loader2 className="mr-2 w-4 h-4 animate-spin" /> : "إطلاق البوت 🚀"}
               </Button>
-            )}
+            ) : null}
           </CardFooter>
         </Card>
       </motion.div>
