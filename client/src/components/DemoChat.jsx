@@ -81,24 +81,36 @@ export default function DemoChat() {
   }
 
   return (
-    <div className="w-full max-w-md mx-auto" dir="rtl">
-      <div className="bg-white dark:bg-cosmic-900 rounded-3xl shadow-2xl border-2 border-brand-500/20 overflow-hidden">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-brand-600 to-brand-500 p-4 text-white">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-              <Sparkles size={24} />
+    <div className="w-full max-w-lg mx-auto" dir="rtl">
+      <div className="bg-white dark:bg-cosmic-900 rounded-2xl shadow-2xl border border-gray-300 dark:border-white/20 overflow-hidden" style={{ minHeight: '600px' }}>
+        {/* macOS Style Header */}
+        <div className="bg-gradient-to-b from-gray-100 to-gray-200 dark:from-cosmic-800 dark:to-cosmic-900 px-4 py-3 border-b border-gray-300 dark:border-white/10">
+          <div className="flex items-center justify-between">
+            {/* macOS Traffic Lights */}
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-red-500 hover:bg-red-600 cursor-pointer"></div>
+              <div className="w-3 h-3 rounded-full bg-yellow-500 hover:bg-yellow-600 cursor-pointer"></div>
+              <div className="w-3 h-3 rounded-full bg-green-500 hover:bg-green-600 cursor-pointer"></div>
             </div>
-            <div className="flex-1">
-              <div className="font-bold text-lg">Faheemly AI</div>
-              <div className="text-xs opacity-90">المساعد الذكي</div>
+            
+            {/* Title */}
+            <div className="flex-1 text-center">
+              <div className="flex items-center justify-center gap-2">
+                <div className="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-600 rounded-lg flex items-center justify-center shadow-md">
+                  <Sparkles size={16} className="text-white" />
+                </div>
+                <span className="font-bold text-sm text-gray-800 dark:text-gray-200">Faheemly AI</span>
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse ml-1"></div>
+              </div>
             </div>
-            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+            
+            {/* Empty space for balance */}
+            <div className="w-16"></div>
           </div>
         </div>
 
         {/* Messages */}
-        <div className="h-[400px] overflow-y-auto p-4 space-y-4 bg-gray-50 dark:bg-cosmic-950/50">
+        <div className="h-[480px] overflow-y-auto p-6 space-y-4 bg-gradient-to-b from-gray-50 to-white dark:from-cosmic-950 dark:to-cosmic-900">
           <AnimatePresence>
             {messages.map((msg, idx) => (
               <motion.div

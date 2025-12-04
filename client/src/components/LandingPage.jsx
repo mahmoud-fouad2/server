@@ -403,21 +403,27 @@ export const LandingPage = ({ lang: initialLang = 'ar', setLang: externalSetLang
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.8 }}
-            className="mt-24 grid grid-cols-2 md:grid-cols-4 gap-8"
+            className="mt-24 grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8"
           >
             {[
-              { number: '500+', label: 'عميل نشط', icon: <Users size={24} /> },
-              { number: '50K+', label: 'محادثة يومياً', icon: <MessageCircle size={24} /> },
-              { number: '99.9%', label: 'وقت التشغيل', icon: <Zap size={24} /> },
-              { number: '24/7', label: 'دعم فني', icon: <Shield size={24} /> }
+              { number: '500+', label: 'عميل نشط', icon: <Users size={28} />, color: 'blue' },
+              { number: '50K+', label: 'محادثة يومياً', icon: <MessageCircle size={28} />, color: 'green' },
+              { number: '99.9%', label: 'وقت التشغيل', icon: <Zap size={28} />, color: 'yellow' },
+              { number: '24/7', label: 'دعم فني', icon: <Shield size={28} />, color: 'purple' }
             ].map((stat, i) => (
-              <div key={i} className={`text-center p-6 rounded-2xl ${isDark ? 'bg-white/5 border border-white/10' : 'bg-white border border-gray-200 shadow-lg'} hover:scale-105 transition-transform`}>
-                <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl ${isDark ? 'bg-brand-500/10' : 'bg-brand-50'} text-brand-500 mb-3`}>
+              <motion.div 
+                key={i} 
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.9 + (i * 0.1) }}
+                className={`text-center p-8 rounded-3xl ${isDark ? 'bg-gradient-to-br from-white/10 to-white/5 border-2 border-white/20' : 'bg-white border-2 border-gray-200 shadow-xl'} hover:scale-110 hover:shadow-2xl transition-all duration-300`}
+              >
+                <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl ${isDark ? `bg-${stat.color}-500/20 border border-${stat.color}-500/30` : `bg-${stat.color}-50 border border-${stat.color}-200`} text-${stat.color}-500 mb-4 shadow-lg`}>
                   {stat.icon}
                 </div>
-                <div className={`text-4xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>{stat.number}</div>
-                <div className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{stat.label}</div>
-              </div>
+                <div className={`text-5xl font-black mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>{stat.number}</div>
+                <div className={`text-sm font-bold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{stat.label}</div>
+              </motion.div>
             ))}
           </motion.div>
 
@@ -478,11 +484,12 @@ export const LandingPage = ({ lang: initialLang = 'ar', setLang: externalSetLang
       </AnimatePresence>
 
       {/* Middle East Coverage Section */}
-      <section className={`py-20 relative overflow-hidden ${isDark ? 'bg-gradient-to-br from-cosmic-900 via-cosmic-900 to-cosmic-800' : 'bg-gradient-to-br from-white via-gray-50 to-blue-50'}`}>
+      <section className={`py-24 relative overflow-hidden ${isDark ? 'bg-gradient-to-br from-cosmic-900 via-cosmic-800 to-brand-900/20' : 'bg-gradient-to-br from-blue-50 via-white to-purple-50'}`}>
         {/* Decorative Background */}
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute top-0 left-0 w-96 h-96 bg-green-500 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-500 rounded-full blur-3xl"></div>
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-green-500 to-blue-500 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-tl from-purple-500 to-pink-500 rounded-full blur-3xl"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full blur-3xl"></div>
         </div>
 
         <div className="max-w-7xl mx-auto px-6 relative z-10">
@@ -493,15 +500,15 @@ export const LandingPage = ({ lang: initialLang = 'ar', setLang: externalSetLang
             transition={{ duration: 0.6 }}
             className="text-center mb-16"
           >
-            <span className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold mb-6 ${isDark ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-green-50 text-green-600 border border-green-200'}`}>
-              <Globe size={16} />
-              {t.coverageTitle}
+            <span className={`inline-flex items-center gap-2 px-6 py-3 rounded-full text-base font-bold mb-8 ${isDark ? 'bg-gradient-to-r from-green-500/20 to-blue-500/20 text-green-300 border-2 border-green-500/30 shadow-lg shadow-green-500/20' : 'bg-gradient-to-r from-green-50 to-blue-50 text-green-700 border-2 border-green-300 shadow-xl'}`}>
+              <Globe size={20} />
+              \u0646\u063a\u0637\u064a \u062c\u0645\u064a\u0639 \u062f\u0648\u0644 \u0627\u0644\u0634\u0631\u0642 \u0627\u0644\u0623\u0648\u0633\u0637
             </span>
-            <h2 className={`text-4xl lg:text-6xl font-black mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              {t.coverageSubtitle}
+            <h2 className={`text-5xl lg:text-7xl font-black mb-8 ${isDark ? 'bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent' : 'bg-gradient-to-r from-gray-900 via-blue-600 to-purple-600 bg-clip-text text-transparent'}`}>
+              \u0646\u062a\u062d\u062f\u062b \u0628\u0643\u0644 \u0627\u0644\u0644\u0647\u062c\u0627\u062a \u0627\u0644\u0639\u0631\u0628\u064a\u0629
             </h2>
-            <p className={`text-xl lg:text-2xl max-w-3xl mx-auto leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-              {t.coverageDescription}
+            <p className={`text-2xl lg:text-3xl max-w-4xl mx-auto leading-relaxed font-medium ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
+              \u0645\u0646 \u0627\u0644\u062e\u0644\u064a\u062c \u0625\u0644\u0649 \u0627\u0644\u0645\u063a\u0631\u0628\u060c \u0641\u0647\u0645\u0644\u064a \u064a\u0641\u0647\u0645 \u0648\u064a\u062a\u062d\u062f\u062b \u0628\u0644\u0647\u062c\u0629 \u0639\u0645\u0644\u0627\u0626\u0643 \u0627\u0644\u0645\u062d\u0644\u064a\u064a\u0646
             </p>
           </motion.div>
 
