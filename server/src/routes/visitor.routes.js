@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const visitorService = require('../services/visitor.service');
-const { protect } = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 
 /**
  * Visitor Routes - Track sessions, page visits, and user analytics
@@ -112,7 +112,7 @@ router.post('/end-session', async (req, res) => {
  * GET /api/visitor/active-sessions
  * الحصول على الجلسات النشطة (محمي)
  */
-router.get('/active-sessions', protect, async (req, res) => {
+router.get('/active-sessions', authenticateToken, async (req, res) => {
   try {
     const businessId = req.user.role === 'SUPERADMIN' 
       ? req.query.businessId 
@@ -135,7 +135,7 @@ router.get('/active-sessions', protect, async (req, res) => {
  * GET /api/visitor/analytics
  * إحصائيات الزوار (محمي)
  */
-router.get('/analytics', protect, async (req, res) => {
+router.get('/analytics', authenticateToken, async (req, res) => {
   try {
     const businessId = req.user.role === 'SUPERADMIN' 
       ? req.query.businessId 
@@ -162,7 +162,7 @@ router.get('/analytics', protect, async (req, res) => {
  * POST /api/visitor/track-user
  * تسجيل نشاط مستخدم (محمي)
  */
-router.post('/track-user', protect, async (req, res) => {
+router.post('/track-user', authenticateToken, async (req, res) => {
   try {
     const { action, metadata } = req.body;
     const businessId = req.user.businesses[0]?.id;
@@ -190,7 +190,7 @@ router.post('/track-user', protect, async (req, res) => {
  * GET /api/visitor/user-activities
  * الحصول على نشاطات المستخدمين (محمي - Admin only)
  */
-router.get('/user-activities', protect, async (req, res) => {
+router.get('/user-activities', authenticateToken, async (req, res) => {
   try {
     if (req.user.role !== 'SUPERADMIN') {
       return res.status(403).json({ success: false, message: 'Forbidden' });
