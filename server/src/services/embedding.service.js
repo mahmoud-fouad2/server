@@ -8,34 +8,56 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 async function generateEmbedding(text) {
   if (!text || typeof text !== 'string') return null;
 
-  // 1. Try Google Gemini Embeddings (Best Free/Cheap Option)
-  if (process.env.GEMINI_API_KEY) {
+  // 1. Try Groq Embeddings FIRST (More reliable)
+  const GROQ_KEY = process.env.GROQ_API_KEY;
+  const GROQ_EMBED_MODEL = process.env.GROQ_EMBED_MODEL || 'nomic-embed-text';
+  
+  if (GROQ_KEY) {
+    try {
+      const resp = await axios.post(
+        'https://api.groq.com/openai/v1/embeddings',
+        { 
+          input: text,
+          model: GROQ_EMBED_MODEL
+        },
+        {
+          headers: { 
+            'Authorization': `Bearer ${GROQ_KEY}`, 
+            'Content-Type': 'application/json' 
+          },
+          timeout: 15000
+        }
+      );
+      const emb = resp.data?.data?.[0]?.embedding;
+      if (Array.isArray(emb)) {
+        console.log(`[Embedding] ✅ Groq embedding generated (${emb.length} dims)`);
+        return emb;
+      }
+    } catch (err) {
+      console.error('[Embedding] Groq failed:', err.response?.data?.error?.message || err.message);
+    }
+  }
+
+  // 2. Try Google Gemini Embeddings (Fallback - may be leaked)
+  if (process.env.GEMINI_API_KEY && !process.env.SKIP_GEMINI_EMBEDDING) {
     try {
       const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
       const model = genAI.getGenerativeModel({ model: "embedding-001" });
       const result = await model.embedContent(text);
       const embedding = result.embedding.values;
-      if (Array.isArray(embedding)) return embedding;
+      if (Array.isArray(embedding)) {
+        console.log(`[Embedding] ✅ Gemini embedding generated (${embedding.length} dims)`);
+        return embedding;
+      }
     } catch (error) {
-      console.error('Gemini embedding error:', error.message);
-      // Continue to next provider...
-    }
-  }
-
-  // 2. Try Groq Embeddings (if configured)
-  const GROQ_KEY = process.env.GROQ_API_KEY;
-  const GROQ_EMBED_URL = process.env.GROQ_EMBED_URL;
-  
-  if (GROQ_KEY && GROQ_EMBED_URL) {
-    try {
-      const resp = await axios.post(GROQ_EMBED_URL, { input: text }, {
-        headers: { 'Authorization': `Bearer ${GROQ_KEY}`, 'Content-Type': 'application/json' },
-        timeout: 15000
-      });
-      const emb = resp.data?.data?.[0]?.embedding || resp.data?.embedding;
-      if (Array.isArray(emb)) return emb;
-    } catch (err) {
-      console.error('Groq embedding error:', err.response?.data || err.message);
+      // Check if API key is leaked
+      if (error.message && error.message.includes('leaked')) {
+        console.error('[Embedding] ❌ Gemini API key is LEAKED! Get new key from https://aistudio.google.com/');
+        // Auto-disable Gemini to prevent further errors
+        process.env.SKIP_GEMINI_EMBEDDING = 'true';
+      } else {
+        console.error('[Embedding] Gemini failed:', error.message);
+      }
     }
   }
 

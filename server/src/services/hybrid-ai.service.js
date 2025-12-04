@@ -14,22 +14,13 @@ const axios = require('axios');
 
 // Provider Configurations
 const PROVIDERS = {
-  DEEPSEEK: {
-    name: 'DeepSeek',
-    endpoint: 'https://api.deepseek.com/v1/chat/completions',
-    apiKey: process.env.DEEPSEEK_API_KEY,
-    model: 'deepseek-chat',
-    rateLimit: { requestsPerMinute: 60, tokensPerMinute: 50000 },
-    priority: 1, // Highest - most generous free tier
-    enabled: true
-  },
   GROQ: {
     name: 'Groq',
     endpoint: 'https://api.groq.com/openai/v1/chat/completions',
     apiKey: process.env.GROQ_API_KEY,
     model: 'llama-3.3-70b-versatile',
     rateLimit: { requestsPerMinute: 30, tokensPerMinute: 14400 },
-    priority: 2,
+    priority: 1, // PRIMARY - Fast and reliable
     enabled: true
   },
   CEREBRAS: {
@@ -38,7 +29,7 @@ const PROVIDERS = {
     apiKey: process.env.CEREBRAS_API_KEY,
     model: 'llama3.1-8b',
     rateLimit: { requestsPerMinute: 30, tokensPerMinute: 30000 },
-    priority: 3,
+    priority: 2,
     enabled: true
   },
   GEMINI: {
@@ -47,8 +38,18 @@ const PROVIDERS = {
     apiKey: process.env.GEMINI_API_KEY,
     model: 'gemini-1.5-flash',
     rateLimit: { requestsPerMinute: 15, tokensPerDay: 1000000 },
-    priority: 4,
+    priority: 3,
     enabled: true,
+    isGemini: true
+  },
+  DEEPSEEK: {
+    name: 'DeepSeek',
+    endpoint: 'https://api.deepseek.com/v1/chat/completions',
+    apiKey: process.env.DEEPSEEK_API_KEY,
+    model: 'deepseek-chat',
+    rateLimit: { requestsPerMinute: 60, tokensPerMinute: 50000 },
+    priority: 4, // LAST - Insufficient balance reported
+    enabled: false // Disabled due to balance issues
     isGemini: true // Special flag for different API format
   }
 };
