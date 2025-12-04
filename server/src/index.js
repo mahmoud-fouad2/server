@@ -197,13 +197,18 @@ async function ensureAdminExists() {
     const bcrypt = require('bcryptjs');
     const adminEmail = 'admin@faheemly.com';
     
-    // SECURITY: Require environment variable for initial password - NO FALLBACK
+    // SECURITY: Use environment variable for initial password
     const initialPassword = process.env.ADMIN_INITIAL_PASSWORD;
     
-    if (!initialPassword || initialPassword.length < 12) {
-      logger.error('FATAL: ADMIN_INITIAL_PASSWORD must be set in .env (minimum 12 characters)');
-      logger.error('Add to .env: ADMIN_INITIAL_PASSWORD=<strong-secure-password>');
-      process.exit(1);
+    if (!initialPassword) {
+      logger.warn('ADMIN_INITIAL_PASSWORD not set - skipping admin creation');
+      logger.info('Admin account must be created manually or password reset via forgot-password');
+      return;
+    }
+    
+    if (initialPassword.length < 12) {
+      logger.error('ADMIN_INITIAL_PASSWORD too short (minimum 12 characters)');
+      return;
     }
 
     const adminPassword = await bcrypt.hash(initialPassword, 10);
@@ -240,6 +245,15 @@ async function ensureAdminExists() {
 
 async function checkServicesStatus() {
   try {
+    // Check Database Connection
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+      logger.info('✅ Database is CONNECTED');
+    } catch (dbError) {
+      logger.error('❌ Database connection FAILED:', dbError.message);
+      logger.warn('⚠️  WARNING: Database connection issues!');
+    }
+
     const redisCache = require('./services/redis-cache.service');
     const vectorSearch = require('./services/vector-search.service');
 
