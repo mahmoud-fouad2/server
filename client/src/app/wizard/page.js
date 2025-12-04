@@ -140,7 +140,10 @@ export default function Wizard() {
     // Step 5: Knowledge
     file: null,
     knowledgeText: "",
-    knowledgeUrl: ""
+    knowledgeUrl: "",
+    
+    // Terms acceptance
+    acceptTerms: false
   })
   
   const router = useRouter()
@@ -739,6 +742,28 @@ export default function Wizard() {
                   <div className="text-center text-xs text-muted-foreground">
                     يمكنك تخطي هذه الخطوة وإضافة المعلومات لاحقاً من لوحة التحكم.
                   </div>
+
+                  {/* Terms & Conditions Checkbox */}
+                  <div className="mt-6 pt-6 border-t border-border">
+                    <label className="flex items-start gap-3 cursor-pointer group">
+                      <input 
+                        type="checkbox" 
+                        checked={formData.acceptTerms}
+                        onChange={(e) => setFormData({ ...formData, acceptTerms: e.target.checked })}
+                        className="mt-1 w-5 h-5 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+                      />
+                      <span className="text-sm text-foreground">
+                        أوافق على{' '}
+                        <Link href="/terms" target="_blank" className="text-brand-600 hover:underline font-medium">
+                          الشروط والأحكام
+                        </Link>
+                        {' '}و{' '}
+                        <Link href="/privacy" target="_blank" className="text-brand-600 hover:underline font-medium">
+                          سياسة الخصوصية
+                        </Link>
+                      </span>
+                    </label>
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -758,7 +783,11 @@ export default function Wizard() {
                 التالي <ArrowLeft className="mr-2 w-4 h-4" />
               </Button>
             ) : step === 5 ? (
-              <Button className="mr-auto bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-700 hover:to-brand-600 text-white shadow-lg shadow-brand-500/30 transition-all w-full sm:w-auto" onClick={handleSubmit} disabled={loading}>
+              <Button 
+                className="mr-auto bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-700 hover:to-brand-600 text-white shadow-lg shadow-brand-500/30 transition-all w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed" 
+                onClick={handleSubmit} 
+                disabled={loading || !formData.acceptTerms}
+              >
                 {loading ? <Loader2 className="mr-2 w-4 h-4 animate-spin" /> : "إطلاق البوت 🚀"}
               </Button>
             ) : null}
