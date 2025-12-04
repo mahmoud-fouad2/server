@@ -135,9 +135,9 @@ export default function ContactPage() {
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="bg-card border border-border rounded-3xl p-8 shadow-sm"
+            className="bg-white dark:bg-card border border-gray-200 dark:border-border rounded-3xl p-8 shadow-xl"
           >
-            <h2 className="text-2xl font-bold mb-6">نموذج التواصل</h2>
+            <h2 className="text-3xl font-bold mb-8 text-gray-900 dark:text-white">نموذج التواصل</h2>
             
             {status === 'success' ? (
               <div className="text-center py-12">
@@ -150,56 +150,60 @@ export default function ContactPage() {
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="text-sm font-bold text-gray-800 dark:text-gray-200">الاسم الأول</label>
+                    <label className="text-sm font-bold text-gray-700 dark:text-gray-300">الاسم الأول</label>
                     <Input 
                       required
                       value={formData.firstName}
                       onChange={e => setFormData({...formData, firstName: e.target.value})}
                       placeholder="محمد" 
+                      className="h-12 bg-gray-50 dark:bg-background border-gray-300 dark:border-input focus:ring-2 focus:ring-brand-500"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-bold text-gray-800 dark:text-gray-200">اسم العائلة</label>
+                    <label className="text-sm font-bold text-gray-700 dark:text-gray-300">اسم العائلة</label>
                     <Input 
                       required
                       value={formData.lastName}
                       onChange={e => setFormData({...formData, lastName: e.target.value})}
                       placeholder="أحمد" 
+                      className="h-12 bg-gray-50 dark:bg-background border-gray-300 dark:border-input focus:ring-2 focus:ring-brand-500"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-gray-800 dark:text-gray-200">البريد الإلكتروني</label>
+                  <label className="text-sm font-bold text-gray-700 dark:text-gray-300">البريد الإلكتروني</label>
                   <Input 
                     required
                     type="email" 
                     value={formData.email}
                     onChange={e => setFormData({...formData, email: e.target.value})}
                     placeholder="name@example.com" 
+                    className="h-12 bg-gray-50 dark:bg-background border-gray-300 dark:border-input focus:ring-2 focus:ring-brand-500"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-gray-800 dark:text-gray-200">الموضوع</label>
+                  <label className="text-sm font-bold text-gray-700 dark:text-gray-300">الموضوع</label>
                   <Input 
                     required
                     value={formData.subject}
                     onChange={e => setFormData({...formData, subject: e.target.value})}
                     placeholder="كيف يمكننا مساعدتك؟" 
+                    className="h-12 bg-gray-50 dark:bg-background border-gray-300 dark:border-input focus:ring-2 focus:ring-brand-500"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-gray-800 dark:text-gray-200">الرسالة</label>
+                  <label className="text-sm font-bold text-gray-700 dark:text-gray-300">الرسالة</label>
                   <Textarea 
                     required
                     value={formData.message}
                     onChange={e => setFormData({...formData, message: e.target.value})}
                     placeholder="اكتب رسالتك هنا..." 
-                    className="min-h-[150px]"
+                    className="min-h-[150px] bg-gray-50 dark:bg-background border-gray-300 dark:border-input focus:ring-2 focus:ring-brand-500 p-4"
                   />
                 </div>
 
@@ -215,7 +219,7 @@ export default function ContactPage() {
                   </div>
                 )}
 
-                <Button type="submit" className="w-full h-12 text-lg" disabled={status === 'loading' || !captchaValid}>
+                <Button type="submit" className="w-full h-14 text-lg font-bold bg-brand-600 hover:bg-brand-700 text-white shadow-lg shadow-brand-500/20 transition-all hover:scale-[1.02]" disabled={status === 'loading' || !captchaValid}>
                   {status === 'loading' ? 'جاري الإرسال...' : 'إرسال الرسالة'}
                 </Button>
               </form>

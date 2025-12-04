@@ -504,10 +504,10 @@ export const LandingPage = ({ lang: initialLang = 'ar', setLang: externalSetLang
               <Globe size={20} />
               نغطي جميع دول الشرق الأوسط
             </span>
-            <h2 className={`text-5xl lg:text-7xl font-black mb-8 ${isDark ? 'bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent' : 'bg-gradient-to-r from-gray-900 via-blue-600 to-purple-600 bg-clip-text text-transparent'}`}>
+            <h2 className={`text-5xl lg:text-7xl font-black mb-8 ${isDark ? 'text-white' : 'text-[#0f172a]'}`}>
               نتحدث بكل اللهجات العربية
             </h2>
-            <p className={`text-2xl lg:text-3xl max-w-4xl mx-auto leading-relaxed font-medium ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
+            <p className={`text-2xl lg:text-3xl max-w-4xl mx-auto leading-relaxed font-bold ${isDark ? 'text-gray-300' : 'text-[#334155]'}`}>
               من الخليج إلى المغرب، فهملي يفهم ويتحدث بلهجة عملائك المحليين
             </p>
           </motion.div>
@@ -944,40 +944,53 @@ export const LandingPage = ({ lang: initialLang = 'ar', setLang: externalSetLang
         </div>
       </section>
 
-      {/* Limited Time Offer - Compact Banner */}
-      <section className={`py-8 ${isDark ? 'bg-cosmic-900/50' : 'bg-gray-50'}`}>
-        <div className="max-w-7xl mx-auto px-6">
+      {/* Limited Time Offer - Improved Banner */}
+      <section className={`py-12 ${isDark ? 'bg-cosmic-900/50' : 'bg-gray-50'}`}>
+        <div className="max-w-5xl mx-auto px-6">
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.3 }}
-            className="relative overflow-hidden rounded-xl bg-gradient-to-r from-orange-500 to-pink-600 p-[1px]"
+            transition={{ duration: 0.4 }}
+            className={`relative overflow-hidden rounded-3xl shadow-2xl ${isDark ? 'bg-gradient-to-r from-brand-900 to-cosmic-900 border border-brand-500/30' : 'bg-white border border-gray-100'}`}
           >
-            <div className={`rounded-xl px-6 py-4 ${isDark ? 'bg-cosmic-900' : 'bg-white'} flex flex-col md:flex-row items-center justify-between gap-4`}>
-              <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4">
-                <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-orange-500 to-pink-500 text-white text-xs font-bold">
-                  <Sparkles size={12} />
-                  عرض لفترة محدودة
+            {/* Background Pattern */}
+            <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#4f46e5_1px,transparent_1px)] [background-size:16px_16px]"></div>
+            
+            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between p-8 md:p-10 gap-8">
+              
+              {/* Text Content */}
+              <div className="flex-1 text-center md:text-right space-y-4">
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 text-sm font-bold animate-pulse">
+                  <Sparkles size={14} />
+                  عرض خاص لفترة محدودة
                 </div>
-                <div className="text-center md:text-right">
-                  <h3 className="text-lg md:text-xl font-bold bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent">
-                    {activeCountry === 'eg' && 'ابدأ من 372 جنيه شهرياً'}
-                    {activeCountry === 'ae' && 'ابدأ من 99 درهم شهرياً'}
-                    {activeCountry === 'kw' && 'ابدأ من 8 دينار شهرياً'}
-                    {activeCountry === 'sa' && 'ابدأ من 99 ريال شهرياً'}
-                  </h3>
-                  <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                    خطة احترافية كاملة 🎉
-                  </p>
-                </div>
+                
+                <h3 className={`text-3xl md:text-4xl font-black ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  {activeCountry === 'eg' && 'ابدأ رحلتك بـ 372 جنيه فقط'}
+                  {activeCountry === 'ae' && 'ابدأ رحلتك بـ 99 درهم فقط'}
+                  {activeCountry === 'kw' && 'ابدأ رحلتك بـ 8 دينار فقط'}
+                  {activeCountry === 'sa' && 'ابدأ رحلتك بـ 99 ريال فقط'}
+                </h3>
+                
+                <p className={`text-lg font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                  احصل على جميع المميزات الاحترافية + دعم فني 24/7
+                </p>
               </div>
-              <Link href="/register">
-                <Button className="px-5 py-2.5 text-sm rounded-lg bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 font-bold whitespace-nowrap">
-                  اشترك الآن
-                  <ArrowRight className="mr-2" size={16} />
-                </Button>
-              </Link>
+
+              {/* Action Button */}
+              <div className="flex-shrink-0">
+                <Link href="/register">
+                  <Button className="h-14 px-8 text-lg rounded-xl bg-brand-600 hover:bg-brand-700 text-white shadow-lg shadow-brand-500/30 hover:shadow-brand-500/50 hover:-translate-y-1 transition-all font-bold flex items-center gap-2">
+                    اشترك الآن
+                    <ArrowRight size={20} />
+                  </Button>
+                </Link>
+                <p className="text-center mt-3 text-xs opacity-60">
+                  * ضمان استرداد الأموال لمدة 30 يوم
+                </p>
+              </div>
+
             </div>
           </motion.div>
         </div>
