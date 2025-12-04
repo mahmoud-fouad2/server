@@ -5,6 +5,7 @@ node_modules/
 
 # Testing
 coverage/
+*.test.js.snap
 
 # Production
 build/
@@ -12,16 +13,15 @@ dist/
 out/
 server_deploy.zip
 
-# Misc
-.DS_Store
-*.pem
-
-# Debug
+# Logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+server.log
+logs/
 
-# Environment Variables
+# Environment Variables (NEVER COMMIT)
 .env
 .env.local
 .env.development.local
@@ -29,8 +29,48 @@ yarn-error.log*
 .env.production.local
 .env.production
 
-# Vercel
-.vercel
+# Database
+*.sqlite
+*.sqlite3
+prisma/dev.db
+
+# Uploads (local development)
+server/uploads/*
+!server/uploads/.gitkeep
+server/public/uploads/*
+!server/public/uploads/.gitkeep
+
+# OS Files
+.DS_Store
+*.pem
+Thumbs.db
+desktop.ini
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary
+.tmp/
+.cache/
+.temp/
 
 # Next.js
 .next/
+client/.next/
+
+# Vercel
+.vercel
+
+# Render
+.render-deploy
+
+# Documentation (generated)
+*.md.backup
+COMPREHENSIVE_REVIEW.md
+DEPLOYMENT_AUDIT_REPORT.md
+STATUS_REPORT.md
+*_SUMMARY.md
