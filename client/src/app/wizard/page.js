@@ -10,52 +10,211 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import FaheemAnimatedLogo from "@/components/FaheemAnimatedLogo"
 import Captcha from "@/components/Captcha"
-import { Upload, Check, ArrowRight, ArrowLeft, Loader2, Home, Sun, Moon, Palette, Bot, FileText } from "lucide-react"
-import { authApi, widgetApi, knowledgeApi } from '@/lib/api'
+import { 
+  Upload, Check, ArrowRight, ArrowLeft, Loader2, Home, Sun, Moon, Palette, Bot, FileText,
+  User, Building2, Crown, Rocket, Copy, CheckCircle2, AlertCircle, Sparkles, Zap
+} from "lucide-react"
+import { authApi, widgetApi, knowledgeApi, businessApi } from '@/lib/api'
+import Confetti from 'react-confetti'
+
+// Plans Configuration
+const PLANS = {
+  TRIAL: {
+    id: 'trial',
+    name: 'تجربة مجانية',
+    duration: '7 أيام',
+    price: 0,
+    features: [
+      '1,000 رسالة',
+      'بوت ذكي واحد',
+      'قاعدة معرفة أساسية',
+      'دعم فني بالإيميل'
+    ],
+    color: 'green'
+  },
+  BASIC: {
+    id: 'basic',
+    name: 'الباقة الأساسية',
+    duration: 'شهرياً',
+    price: 99,
+    features: [
+      '5,000 رسالة شهرياً',
+      '3 بوتات ذكية',
+      'قاعدة معرفة متقدمة',
+      'تحليلات مفصلة',
+      'دعم فني ذو أولوية',
+      'تخصيص كامل'
+    ],
+    color: 'blue',
+    popular: true
+  },
+  PRO: {
+    id: 'pro',
+    name: 'الباقة الاحترافية',
+    duration: 'شهرياً',
+    price: 299,
+    features: [
+      '25,000 رسالة شهرياً',
+      'بوتات غير محدودة',
+      'AI متقدم (GPT-4)',
+      'تكاملات خارجية',
+      'دعم WhatsApp & Telegram',
+      'API Access',
+      'دعم فني 24/7'
+    ],
+    color: 'purple'
+  },
+  ENTERPRISE: {
+    id: 'enterprise',
+    name: 'الباقة المؤسسية',
+    duration: 'حسب الطلب',
+    price: null,
+    features: [
+      'رسائل غير محدودة',
+      'حلول مخصصة',
+      'AI مخصص لعملك',
+      'فريق مخصص',
+      'SLA مضمون',
+      'White Label',
+      'مدير حساب مخصص'
+    ],
+    color: 'gold'
+  }
+}
 
 export default function Wizard() {
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [isDark, setIsDark] = useTheme(true)
   const [isVerified, setIsVerified] = useState(false)
+  const [showConfetti, setShowConfetti] = useState(false)
+  const [errors, setErrors] = useState({})
+  const [lastSaved, setLastSaved] = useState(null)
+  const [copied, setCopied] = useState(false)
+  const [businessId, setBusinessId] = useState(null)
+  
   const [formData, setFormData] = useState({
+    // Step 1: Account
     email: "",
     password: "",
+    confirmPassword: "",
+    
+    // Step 2: Business
     businessName: "",
     businessType: "restaurant",
-    botName: "Faheemly Bot",
+    phone: "",
+    website: "",
+    
+    // Step 3: Plan
+    selectedPlan: "trial",
+    
+    // Step 4: Customization
+    botName: "",
     botTone: "friendly",
     primaryColor: "#4f46e5",
-    file: null
+    welcomeMessage: "",
+    dialect: "sa",
+    
+    // Step 5: Knowledge
+    file: null,
+    knowledgeText: "",
+    knowledgeUrl: ""
   })
+  
   const router = useRouter()
+  const totalSteps = 6
 
-  // Theme is managed by the shared `useTheme` hook which persists to localStorage
+  // Auto-save every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (step > 1 && step < 6) {
+        saveDraft()
+      }
+    }, 30000)
+    return () => clearInterval(interval)
+  }, [formData, step])
+
+  // Load draft on mount
+  useEffect(() => {
+    const draft = localStorage.getItem('wizard_draft')
+    if (draft) {
+      try {
+        const parsed = JSON.parse(draft)
+        setFormData(prev => ({ ...prev, ...parsed }))
+      } catch (e) {
+        console.error('Failed to load draft:', e)
+      }
+    }
+  }, [])
+
+  const saveDraft = () => {
+    localStorage.setItem('wizard_draft', JSON.stringify(formData))
+    setLastSaved(new Date())
+  }
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
     setFormData({ ...formData, [name]: value })
+    setErrors(prev => ({ ...prev, [name]: null }))
   }
 
   const handleFileChange = (e) => {
     setFormData({ ...formData, file: e.target.files[0] })
   }
 
-  const nextStep = () => {
-    if (step === 1 && !isVerified) {
-      alert("يرجى التحقق من أنك لست روبوت");
-      return;
+  const validateStep = (stepNumber) => {
+    const newErrors = {}
+    
+    switch(stepNumber) {
+      case 1:
+        if (!formData.email) newErrors.email = "البريد الإلكتروني مطلوب"
+        else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = "البريد الإلكتروني غير صحيح"
+        
+        if (!formData.password) newErrors.password = "كلمة المرور مطلوبة"
+        else if (formData.password.length < 8) newErrors.password = "كلمة المرور يجب أن تكون 8 أحرف على الأقل"
+        
+        if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "كلمة المرور غير متطابقة"
+        
+        if (!isVerified) newErrors.captcha = "يرجى التحقق من أنك لست روبوت"
+        break
+        
+      case 2:
+        if (!formData.businessName) newErrors.businessName = "اسم النشاط مطلوب"
+        if (!formData.phone) newErrors.phone = "رقم الهاتف مطلوب"
+        break
+        
+      case 4:
+        if (!formData.botName) newErrors.botName = "اسم البوت مطلوب"
+        if (!formData.welcomeMessage) newErrors.welcomeMessage = "رسالة الترحيب مطلوبة"
+        break
     }
-    setStep(step + 1)
+    
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
   }
-  const prevStep = () => setStep(step - 1)
+
+  const nextStep = () => {
+    if (validateStep(step)) {
+      saveDraft()
+      setStep(step + 1)
+    }
+  }
+  
+  const prevStep = () => {
+    if (step > 1) setStep(step - 1)
+  }
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   const handleSubmit = async () => {
     setLoading(true)
     try {
       // Map business types to Prisma Enum
       let activityType = formData.businessType.toUpperCase();
-      if (activityType === 'SERVICE') activityType = 'COMPANY'; // Map service to COMPANY as SERVICE is not in enum
 
       // 1. Register User
       const authData = await authApi.register({
@@ -66,36 +225,76 @@ export default function Wizard() {
       });
 
       const token = authData.token;
-      // Temporarily set token for subsequent requests in this flow
       localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(authData.user))
+      setBusinessId(authData.user.id)
 
-      // 2. Update Widget Config (Color, Tone)
+      // 2. Update Business with plan
+      const planType = formData.selectedPlan.toUpperCase()
+      await businessApi.updatePlan({ planType })
+
+      // 3. Update Widget Config
       await widgetApi.updateConfig({
-        welcomeMessage: `مرحباً بك في ${formData.businessName}! كيف يمكنني مساعدتك؟`,
+        welcomeMessage: formData.welcomeMessage || `مرحباً بك في ${formData.businessName}! كيف يمكنني مساعدتك؟`,
         primaryColor: formData.primaryColor,
         personality: formData.botTone,
-        showBranding: true
+        showBranding: true,
+        botName: formData.botName || 'مساعد فهملي',
+        dialect: formData.dialect
       });
 
-      // 3. Upload Knowledge (if any)
+      // 4. Upload Knowledge
       if (formData.file) {
         const uploadData = new FormData()
         uploadData.append('file', formData.file)
         await knowledgeApi.upload(uploadData);
       }
-
-      // Save token and redirect
-      localStorage.setItem('user', JSON.stringify(authData.user))
       
-      router.push('/dashboard')
+      if (formData.knowledgeText) {
+        await knowledgeApi.addText({
+          text: formData.knowledgeText,
+          title: 'معلومات أساسية'
+        });
+      }
+      
+      if (formData.knowledgeUrl) {
+        await knowledgeApi.addUrl({ url: formData.knowledgeUrl });
+      }
+
+      // Clear draft
+      localStorage.removeItem('wizard_draft')
+      
+      // Show confetti
+      setShowConfetti(true)
+      setTimeout(() => setShowConfetti(false), 5000)
+      
+      // Move to final step
+      setStep(6)
+      
     } catch (error) {
-      alert("Error: " + error.message)
+      alert("خطأ: " + error.message)
+    } finally {
       setLoading(false)
     }
   }
 
+  const widgetCode = `<script 
+  src="https://server-production-0883.up.railway.app/widget/fahimo-widget-enhanced.js" 
+  data-business-id="${businessId || formData.email?.split('@')[0] || 'your-business-id'}"
+></script>`
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-white dark:bg-cosmic-950 p-4 font-sans relative overflow-hidden transition-colors duration-300" dir="rtl">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-cosmic-950 dark:to-cosmic-900 p-4 font-sans relative overflow-hidden transition-colors duration-300" dir="rtl">
+      
+      {showConfetti && (
+        <Confetti
+          width={typeof window !== 'undefined' ? window.innerWidth : 1200}
+          height={typeof window !== 'undefined' ? window.innerHeight : 800}
+          recycle={false}
+          numberOfPieces={500}
+        />
+      )}
+
       {/* Navigation & Theme Toggle */}
       <div className="absolute top-6 left-6 flex gap-3 z-50">
         <Button 
@@ -117,77 +316,108 @@ export default function Wizard() {
         </Link>
       </div>
 
-        <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10">
+      {/* Background Effects */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10">
         <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-brand-500/10 blur-[100px]"></div>
         <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-brand-600/10 blur-[100px]"></div>
       </div>
 
-      <div className="mb-8 text-center">
+      {/* Logo & Title */}
+      <div className="mb-6 text-center">
         <motion.div
-          animate={{ 
-            y: [0, -10, 0],
-            rotate: [0, 5, -5, 0]
-          }}
-          transition={{ 
-            duration: 4,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-          className="inline-block"
+          animate={{ y: [0, -10, 0] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          className="inline-block mb-4"
         >
-          <div className="bg-[#f8f8fa] dark:bg-cosmic-800 rounded-3xl p-6 shadow-lg inline-block">
-            <FaheemAnimatedLogo size="medium" showText={true} className="mx-auto" />
+          <div className="bg-white dark:bg-cosmic-800 rounded-3xl p-4 shadow-xl inline-block">
+            <FaheemAnimatedLogo size="small" showText={false} />
           </div>
         </motion.div>
-        <h1 className="text-3xl md:text-4xl font-bold mb-2 mt-6 bg-gradient-to-r from-brand-600 to-brand-400 bg-clip-text text-transparent">إعداد مساعد فهملي الذكي</h1>
-        <p className="text-base text-muted-foreground">جاهز في 3 دقائق فقط ⚡ | سهل • سريع • ذكي</p>
+        <h1 className="text-2xl md:text-3xl font-bold mb-1 bg-gradient-to-r from-brand-600 to-brand-400 bg-clip-text text-transparent">
+          إطلاق مساعدك الذكي
+        </h1>
+        <p className="text-sm text-muted-foreground">جاهز في 6 خطوات بسيطة ⚡</p>
       </div>
 
       {/* Progress Bar */}
-      <div className="w-full max-w-md mb-8 flex items-center justify-between px-2 relative">
-        {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="flex flex-col items-center gap-2 relative z-10">
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-500 ${
-              step >= i ? "bg-brand-600 text-white shadow-lg shadow-brand-500/30" : "bg-muted text-muted-foreground"
-            }`}>
-              {step > i ? <Check className="w-5 h-5" /> : i}
-            </div>
-            <span className="text-xs text-muted-foreground hidden sm:block">
-              {i === 1 ? "الحساب" : i === 2 ? "النشاط" : i === 3 ? "التخصيص" : "المعرفة"}
+      <div className="w-full max-w-3xl mb-6">
+        <div className="flex items-center justify-between mb-2 px-2">
+          <span className="text-sm font-medium text-muted-foreground">
+            الخطوة {step} من {totalSteps}
+          </span>
+          {lastSaved && step < 6 && (
+            <span className="text-xs text-muted-foreground">
+              آخر حفظ: {lastSaved.toLocaleTimeString('ar-SA')}
             </span>
-          </div>
-        ))}
-        {/* Progress Line */}
-        <div className="absolute top-5 left-0 w-full h-1 bg-muted -z-0">
-          <div 
-            className="h-full bg-brand-600 transition-all duration-500" 
-            style={{ width: `${((step - 1) / 3) * 100}%` }}
-          ></div>
+          )}
+        </div>
+        <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+          <motion.div
+            className="h-full bg-gradient-to-r from-brand-500 to-brand-600"
+            initial={{ width: 0 }}
+            animate={{ width: `${(step / totalSteps) * 100}%` }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+          />
+        </div>
+        
+        {/* Step Indicators */}
+        <div className="flex justify-between mt-4 px-2">
+          {[
+            { num: 1, icon: User, label: 'الحساب' },
+            { num: 2, icon: Building2, label: 'النشاط' },
+            { num: 3, icon: Crown, label: 'الباقة' },
+            { num: 4, icon: Palette, label: 'التخصيص' },
+            { num: 5, icon: FileText, label: 'المعرفة' },
+            { num: 6, icon: Rocket, label: 'الإطلاق' }
+          ].map(({ num, icon: Icon, label }) => (
+            <div key={num} className="flex flex-col items-center gap-1">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
+                step > num ? 'bg-green-500 text-white' :
+                step === num ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/30' :
+                'bg-gray-200 dark:bg-gray-700 text-gray-400'
+              }`}>
+                {step > num ? <Check className="w-5 h-5" /> : <Icon className="w-5 h-5" />}
+              </div>
+              <span className={`text-xs font-medium ${
+                step >= num ? 'text-gray-900 dark:text-white' : 'text-gray-400'
+              } hidden sm:block`}>
+                {label}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
 
+      {/* Main Card */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
+        key={step}
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -20 }}
+        transition={{ duration: 0.3 }}
+        className="w-full max-w-3xl"
       >
-        <Card className="w-full shadow-2xl border-gray-200 dark:border-white/10 bg-[#f8f8fa] dark:bg-cosmic-900">
-          <CardHeader className="bg-[#f8f8fa] dark:bg-cosmic-900 rounded-t-xl">
-            <CardTitle className="text-2xl text-center text-gray-900 dark:text-white">
-              {step === 1 && "إنشاء حساب جديد"}
-              {step === 2 && "تفاصيل النشاط التجاري"}
-              {step === 3 && "تخصيص مظهر البوت"}
-              {step === 4 && "تدريب الذكاء الاصطناعي"}
+        <Card className="shadow-2xl border-gray-200 dark:border-white/10 bg-white dark:bg-cosmic-900">
+          <CardHeader>
+            <CardTitle className="text-2xl flex items-center gap-2">
+              {step === 1 && <><User className="w-6 h-6 text-brand-500" /> إنشاء حساب جديد</>}
+              {step === 2 && <><Building2 className="w-6 h-6 text-brand-500" /> تفاصيل النشاط التجاري</>}
+              {step === 3 && <><Crown className="w-6 h-6 text-brand-500" /> اختر باقتك المناسبة</>}
+              {step === 4 && <><Palette className="w-6 h-6 text-brand-500" /> تخصيص المظهر والشخصية</>}
+              {step === 5 && <><FileText className="w-6 h-6 text-brand-500" /> تدريب الذكاء الاصطناعي</>}
+              {step === 6 && <><Rocket className="w-6 h-6 text-green-500" /> مبروك! جاهز للإطلاق 🎉</>}
             </CardTitle>
-            <CardDescription className="text-center">
-              {step === 1 && "ابدأ فترتك التجربة المجانية لمدة 7 أيام"}
-              {step === 2 && "أخبرنا عن نشاطك لنختار النبرة المناسبة"}
-              {step === 3 && "اختر الألوان والشخصية التي تناسب علامتك"}
-              {step === 4 && "ارفع ملفاتك ليتعلم منها البوت فوراً"}
+            <CardDescription>
+              {step === 1 && "ابدأ فترتك التجربية المجانية لمدة 7 أيام"}
+              {step === 2 && "أخبرنا عن نشاطك لنخصص التجربة"}
+              {step === 3 && "اختر الباقة المناسبة لحجم عملك"}
+              {step === 4 && "صمم البوت ليعكس هوية علامتك التجارية"}
+              {step === 5 && "ارفع ملفاتك أو أضف معلومات ليتعلم منها البوت"}
+              {step === 6 && "كل شيء جاهز! ابدأ في تركيب البوت على موقعك"}
             </CardDescription>
           </CardHeader>
-          <CardContent>
+
+          <CardContent className="space-y-6">
             <AnimatePresence mode="wait">
               {step === 1 && (
                 <motion.div

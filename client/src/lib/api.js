@@ -103,6 +103,7 @@ export const businessApi = {
   getStats: () => apiCall('/api/business/stats'),
   getSettings: () => apiCall('/api/business/settings'),
   updateSettings: (data) => apiCall('/api/business/settings', { method: 'PUT', body: data }),
+  updatePlan: (data) => apiCall('/api/business/plan', { method: 'PUT', body: data }),
   getIntegrations: () => apiCall('/api/business/integrations'),
   getChartData: () => apiCall('/api/business/chart-data'),
   getConversations: () => apiCall('/api/business/conversations'),

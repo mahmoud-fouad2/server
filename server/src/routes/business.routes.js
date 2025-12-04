@@ -119,6 +119,50 @@ router.put('/settings', authenticateToken, async (req, res) => {
   }
 });
 
+// Update Business Plan
+router.put('/plan', authenticateToken, async (req, res) => {
+  try {
+    const { planType } = req.body;
+    const businessId = req.user.businessId;
+
+    // Set quotas based on plan
+    let messageQuota;
+    let trialEndsAt = null;
+    
+    switch (planType.toUpperCase()) {
+      case 'TRIAL':
+        messageQuota = 1000;
+        trialEndsAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
+        break;
+      case 'BASIC':
+        messageQuota = 5000;
+        break;
+      case 'PRO':
+        messageQuota = 25000;
+        break;
+      case 'ENTERPRISE':
+        messageQuota = 999999; // Virtually unlimited
+        break;
+      default:
+        messageQuota = 1000;
+    }
+
+    const updatedBusiness = await prisma.business.update({
+      where: { id: businessId },
+      data: {
+        planType: planType.toUpperCase(),
+        messageQuota,
+        trialEndsAt
+      }
+    });
+
+    res.json({ message: 'Plan updated successfully', business: updatedBusiness });
+  } catch (error) {
+    console.error('Update Plan Error:', error);
+    res.status(500).json({ error: 'Failed to update plan' });
+  }
+});
+
 // Get All Conversations
 router.get('/conversations', authenticateToken, async (req, res) => {
   try {
