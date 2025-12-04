@@ -9,6 +9,7 @@ import { Bot, Zap, X, Moon, Sun, ShoppingBag, Stethoscope, Utensils, MessageCirc
 import Image from 'next/image';
 import { TRANSLATIONS, SEO_DATA, REGIONAL_CONTENT, COMPARISON_DATA } from '../constants';
 import { DemoChatWindow } from './DemoChatWindow';
+import DemoChat from './DemoChat';
 import FaheemAnimatedLogo from './FaheemAnimatedLogo';
 import SalesBot from './SalesBot';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -394,7 +395,7 @@ export const LandingPage = ({ lang: initialLang = 'ar', setLang: externalSetLang
             className="mt-20 relative z-10"
           >
             <div className="absolute inset-0 bg-brand-500/20 blur-[100px] -z-10 rounded-full"></div>
-            <DemoChatWindow />
+            <DemoChat />
           </motion.div>
 
           {/* Stats Section */}
