@@ -305,15 +305,6 @@ router.post('/message', validateChatMessage, async (req, res) => {
       take: 20
     });
 
-    // Get Business Info (مع دمج اللهجة المكتشفة)
-    const business = await prisma.business.findUnique({
-      where: { id: businessId }
-    });
-
-    if (!business) {
-      return res.status(404).json({ error: 'Business not found' });
-    }
-
     // 🎯 دمج اللهجة المكتشفة في widgetConfig
     let widgetConfig = {};
     try {
