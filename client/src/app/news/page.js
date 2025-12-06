@@ -1,23 +1,23 @@
-"use client"
+'use client';
 
-import PageLayout from '@/components/layout/PageLayout'
-import { Calendar } from 'lucide-react'
-import { motion } from 'framer-motion'
+import PageLayout from '@/components/layout/PageLayout';
+import { Calendar } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const news = [
   {
     title: 'إطلاق تحديث فهملي 2.0',
     date: '2025-12-01',
     excerpt: 'تحسينات كبيرة في الأداء ودعم لهجات جديدة',
-    image: '/assets/images/news-1.jpg'
+    image: '/assets/images/news-1.jpg',
   },
   {
     title: 'فهملي يحصل على جائزة أفضل منصة AI',
     date: '2025-11-15',
     excerpt: 'تكريم من مؤتمر التقنية السعودي 2025',
-    image: '/assets/images/news-2.jpg'
-  }
-]
+    image: '/assets/images/news-2.jpg',
+  },
+];
 
 export default function NewsPage() {
   return (
@@ -52,7 +52,9 @@ export default function NewsPage() {
                       <span>{item.date}</span>
                     </div>
                     <h3 className="text-2xl font-bold mb-3">{item.title}</h3>
-                    <p className="text-gray-600 dark:text-gray-400">{item.excerpt}</p>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      {item.excerpt}
+                    </p>
                   </div>
                 </motion.article>
               ))}
@@ -61,5 +63,5 @@ export default function NewsPage() {
         </section>
       </div>
     </PageLayout>
-  )
+  );
 }

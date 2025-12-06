@@ -17,10 +17,10 @@ export default function Captcha({ onVerify }) {
   };
 
   return (
-    <div 
+    <div
       className={`flex items-center p-1 rounded-md border transition-all duration-300 ${
-        verified 
-          ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800' 
+        verified
+          ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800'
           : 'bg-gray-50 border-gray-200 dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700'
       }`}
     >
@@ -40,11 +40,15 @@ export default function Captcha({ onVerify }) {
           )}
           {verified && <CheckCircle size={16} />}
         </button>
-        <span className={`text-sm select-none ${verified ? 'text-green-700 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}`}>
+        <span
+          className={`text-sm select-none ${verified ? 'text-green-700 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}`}
+        >
           {verified ? 'تم التحقق بنجاح' : 'أنا لست روبوت'}
         </span>
         <div className="mr-auto">
-            <ShieldCheck className={`w-5 h-5 ${verified ? 'text-green-500' : 'text-gray-300 dark:text-gray-600'}`} />
+          <ShieldCheck
+            className={`w-5 h-5 ${verified ? 'text-green-500' : 'text-gray-300 dark:text-gray-600'}`}
+          />
         </div>
       </div>
     </div>

@@ -1,10 +1,10 @@
-"use client"
+'use client';
 
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import PageLayout from '@/components/layout/PageLayout'
-import { 
-  GraduationCap, 
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import PageLayout from '@/components/layout/PageLayout';
+import {
+  GraduationCap,
   Check,
   ArrowRight,
   BookOpen,
@@ -15,9 +15,9 @@ import {
   Bell,
   FileText,
   Video,
-  Award
-} from 'lucide-react'
-import { motion } from 'framer-motion'
+  Award,
+} from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function EducationSolution() {
   return (
@@ -26,7 +26,7 @@ export default function EducationSolution() {
         {/* Hero Section */}
         <section className="relative pt-32 pb-20 px-6 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/10 to-transparent"></div>
-          
+
           <div className="max-w-6xl mx-auto relative z-10">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -40,7 +40,8 @@ export default function EducationSolution() {
                 حلول التعليم والتدريب
               </h1>
               <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto mb-10 leading-relaxed">
-                أتمتة العمليات الإدارية وتحسين التواصل مع الطلاب وأولياء الأمور عبر واتساب
+                أتمتة العمليات الإدارية وتحسين التواصل مع الطلاب وأولياء الأمور
+                عبر واتساب
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link href="/register">
@@ -50,7 +51,10 @@ export default function EducationSolution() {
                   </Button>
                 </Link>
                 <Link href="/contact">
-                  <Button variant="outline" className="h-14 px-10 text-lg rounded-full border-2 hover:bg-indigo-50 dark:hover:bg-indigo-950/30">
+                  <Button
+                    variant="outline"
+                    className="h-14 px-10 text-lg rounded-full border-2 hover:bg-indigo-50 dark:hover:bg-indigo-950/30"
+                  >
                     احجز عرضاً توضيحياً
                   </Button>
                 </Link>
@@ -63,8 +67,8 @@ export default function EducationSolution() {
               transition={{ delay: 0.2 }}
               className="rounded-3xl overflow-hidden shadow-2xl border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-cosmic-800"
             >
-              <img 
-                src="/assets/images/education-hero.jpg" 
+              <img
+                src="/assets/images/education-hero.jpg"
                 alt="حلول التعليم"
                 className="w-full h-[500px] object-cover"
                 loading="lazy"
@@ -78,10 +82,22 @@ export default function EducationSolution() {
           <div className="max-w-6xl mx-auto">
             <div className="grid md:grid-cols-4 gap-8">
               {[
-                { icon: <TrendingUp />, number: '65%', label: 'زيادة في التسجيلات' },
-                { icon: <Users />, number: '90%', label: 'أتمتة العمليات الإدارية' },
-                { icon: <Calendar />, number: '75%', label: 'تقليل الاستفسارات المتكررة' },
-                { icon: <Award />, number: '85%', label: 'رضا أولياء الأمور' }
+                {
+                  icon: <TrendingUp />,
+                  number: '65%',
+                  label: 'زيادة في التسجيلات',
+                },
+                {
+                  icon: <Users />,
+                  number: '90%',
+                  label: 'أتمتة العمليات الإدارية',
+                },
+                {
+                  icon: <Calendar />,
+                  number: '75%',
+                  label: 'تقليل الاستفسارات المتكررة',
+                },
+                { icon: <Award />, number: '85%', label: 'رضا أولياء الأمور' },
               ].map((stat, i) => (
                 <motion.div
                   key={i}
@@ -94,8 +110,12 @@ export default function EducationSolution() {
                   <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center mx-auto mb-4 text-indigo-500">
                     {stat.icon}
                   </div>
-                  <div className="text-4xl font-bold text-indigo-500 mb-2">{stat.number}</div>
-                  <div className="text-gray-600 dark:text-gray-400">{stat.label}</div>
+                  <div className="text-4xl font-bold text-indigo-500 mb-2">
+                    {stat.number}
+                  </div>
+                  <div className="text-gray-600 dark:text-gray-400">
+                    {stat.label}
+                  </div>
                 </motion.div>
               ))}
             </div>
@@ -119,33 +139,33 @@ export default function EducationSolution() {
                 {
                   icon: <FileText size={32} />,
                   title: 'تسجيل الطلاب التلقائي',
-                  desc: 'استقبال طلبات التسجيل، جمع البيانات المطلوبة، والتأكيد الفوري للطلاب وأولياء الأمور'
+                  desc: 'استقبال طلبات التسجيل، جمع البيانات المطلوبة، والتأكيد الفوري للطلاب وأولياء الأمور',
                 },
                 {
                   icon: <BookOpen size={32} />,
                   title: 'إرسال المواد التعليمية',
-                  desc: 'توزيع الملفات، الفيديوهات، والواجبات على الطلاب مباشرة عبر واتساب'
+                  desc: 'توزيع الملفات، الفيديوهات، والواجبات على الطلاب مباشرة عبر واتساب',
                 },
                 {
                   icon: <Calendar size={32} />,
                   title: 'متابعة الحضور والغياب',
-                  desc: 'إخطار أولياء الأمور تلقائياً عند غياب أبنائهم ومتابعة معدلات الحضور'
+                  desc: 'إخطار أولياء الأمور تلقائياً عند غياب أبنائهم ومتابعة معدلات الحضور',
                 },
                 {
                   icon: <Bell size={32} />,
                   title: 'تنبيهات الامتحانات',
-                  desc: 'إرسال تذكيرات بمواعيد الاختبارات، الجداول، والنتائج للطلاب وأولياء الأمور'
+                  desc: 'إرسال تذكيرات بمواعيد الاختبارات، الجداول، والنتائج للطلاب وأولياء الأمور',
                 },
                 {
                   icon: <MessageCircle size={32} />,
                   title: 'استشارات أكاديمية',
-                  desc: 'الرد على استفسارات الطلاب حول المناهج، الجداول، والخدمات المقدمة'
+                  desc: 'الرد على استفسارات الطلاب حول المناهج، الجداول، والخدمات المقدمة',
                 },
                 {
                   icon: <Video size={32} />,
                   title: 'إشعارات الحصص الأونلاين',
-                  desc: 'إرسال روابط المحاضرات الافتراضية وتذكير الطلاب بمواعيدها'
-                }
+                  desc: 'إرسال روابط المحاضرات الافتراضية وتذكير الطلاب بمواعيدها',
+                },
               ].map((feature, i) => (
                 <motion.div
                   key={i}
@@ -182,16 +202,19 @@ export default function EducationSolution() {
               {[
                 {
                   title: 'تسجيل طالب جديد',
-                  scenario: 'ولي أمر يرسل "عايز أسجل ابني في دورة إنجليزي" - البوت يقرأ البيانات المتاحة في النظام ويعرض الدورات والمواعيد والأسعار'
+                  scenario:
+                    'ولي أمر يرسل "عايز أسجل ابني في دورة إنجليزي" - البوت يقرأ البيانات المتاحة في النظام ويعرض الدورات والمواعيد والأسعار',
                 },
                 {
                   title: 'استفسار عن الجدول',
-                  scenario: 'طالب يسأل "امتى موعد الامتحان؟" - البوت يقرأ من قاعدة البيانات ويرسل جدول الامتحانات الكامل'
+                  scenario:
+                    'طالب يسأل "امتى موعد الامتحان؟" - البوت يقرأ من قاعدة البيانات ويرسل جدول الامتحانات الكامل',
                 },
                 {
                   title: 'طلب شهادة',
-                  scenario: 'طالب يطلب "عايز شهادة حضور" - البوت يقرأ بيانات الطالب ويرسل رابط تحميل الشهادة أو يوجهه للخطوات المطلوبة'
-                }
+                  scenario:
+                    'طالب يطلب "عايز شهادة حضور" - البوت يقرأ بيانات الطالب ويرسل رابط تحميل الشهادة أو يوجهه للخطوات المطلوبة',
+                },
               ].map((useCase, i) => (
                 <motion.div
                   key={i}
@@ -221,10 +244,16 @@ export default function EducationSolution() {
             <div className="bg-white dark:bg-cosmic-900 rounded-3xl p-10 border-2 border-indigo-200 dark:border-indigo-800 shadow-2xl max-w-md mx-auto">
               <div className="text-center mb-8">
                 <div className="inline-block px-4 py-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-full mb-4">
-                  <span className="text-sm font-bold text-indigo-700 dark:text-indigo-300">باقة التعليم</span>
+                  <span className="text-sm font-bold text-indigo-700 dark:text-indigo-300">
+                    باقة التعليم
+                  </span>
                 </div>
-                <div className="text-5xl font-bold text-indigo-600 dark:text-indigo-400 mb-2">ابدأ بـ 99 ر.س</div>
-                <div className="text-gray-700 dark:text-gray-300 font-medium">شهرياً - جرب مجاناً 7 أيام</div>
+                <div className="text-5xl font-bold text-indigo-600 dark:text-indigo-400 mb-2">
+                  ابدأ بـ 99 ر.س
+                </div>
+                <div className="text-gray-700 dark:text-gray-300 font-medium">
+                  شهرياً - جرب مجاناً 7 أيام
+                </div>
               </div>
               <ul className="text-right space-y-3 mb-8">
                 {[
@@ -233,10 +262,17 @@ export default function EducationSolution() {
                   'متابعة حضور وغياب',
                   'تنبيهات امتحانات ومواعيد',
                   'رد فوري على استفسارات الطلاب',
-                  'دعم فني مباشر 24/7'
+                  'دعم فني مباشر 24/7',
                 ].map((item, i) => (
-                  <li key={i} className="flex items-center gap-3 text-gray-800 dark:text-gray-200">
-                    <Check size={22} className="text-indigo-500 flex-shrink-0" strokeWidth={3} />
+                  <li
+                    key={i}
+                    className="flex items-center gap-3 text-gray-800 dark:text-gray-200"
+                  >
+                    <Check
+                      size={22}
+                      className="text-indigo-500 flex-shrink-0"
+                      strokeWidth={3}
+                    />
                     <span>{item}</span>
                   </li>
                 ))}
@@ -270,5 +306,5 @@ export default function EducationSolution() {
         </section>
       </div>
     </PageLayout>
-  )
+  );
 }

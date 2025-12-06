@@ -1,0 +1,53 @@
+services:
+  - type: web
+    name: faheemly-api
+    runtime: node
+    buildCommand: npm install && npx prisma generate
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        fromSecret: jwt-secret
+      - key: DATABASE_URL
+        fromSecret: database-url
+      - key: GROQ_API_KEY
+        fromSecret: groq-api-key
+      - key: REDIS_URL
+        fromSecret: redis-url
+      - key: CLIENT_URL
+        value: https://faheemly.com
+      - key: ADMIN_INITIAL_PASSWORD
+        fromSecret: admin-password
+    healthCheckPath: /health
+    disk:
+      name: uploads
+      mountPath: /opt/render/project/src/uploads
+      sizeGB: 1
+
+  - type: pserv
+    name: faheemly-worker
+    runtime: node
+    buildCommand: npm install && npx prisma generate
+    startCommand: npm run worker
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        fromSecret: jwt-secret
+      - key: DATABASE_URL
+        fromSecret: database-url
+      - key: GROQ_API_KEY
+        fromSecret: groq-api-key
+      - key: REDIS_URL
+        fromSecret: redis-url
+      - key: CLIENT_URL
+        value: https://faheemly.com
+      - key: ADMIN_INITIAL_PASSWORD
+        fromSecret: admin-password
+
+databases:
+  - name: faheemly-db
+    databaseName: faheemly
+    user: faheemly
+    plan: starter

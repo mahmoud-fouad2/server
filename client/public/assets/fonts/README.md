@@ -1,6 +1,7 @@
 Place your local font files here (woff2 recommended).
 
 Expected filenames (examples used by the project):
+
 - Cairo-Regular.woff2
 - Cairo-Bold.woff2
 - Outfit-Regular.woff2

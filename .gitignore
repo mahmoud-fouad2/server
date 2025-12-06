@@ -28,6 +28,12 @@ logs/
 .env.test.local
 .env.production.local
 .env.production
+.env.*.local
+.env.staging
+
+# Security files
+secrets/
+keys/
 
 # Database
 *.sqlite

@@ -1,4 +1,7 @@
-import { SkeletonDashboardStats, SkeletonChart } from '@/components/ui/Skeleton';
+import {
+  SkeletonDashboardStats,
+  SkeletonChart,
+} from '@/components/ui/Skeleton';
 
 export default function DashboardLoading() {
   return (
@@ -9,20 +12,20 @@ export default function DashboardLoading() {
           <div className="h-10 bg-gray-300 dark:bg-cosmic-800 rounded-lg w-64 mb-4"></div>
           <div className="h-6 bg-gray-200 dark:bg-cosmic-700 rounded w-96"></div>
         </div>
-        
+
         {/* Stats Overview Skeleton */}
         <SkeletonDashboardStats />
-        
+
         {/* Charts Grid Skeleton */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <SkeletonChart />
           <SkeletonChart />
         </div>
-        
+
         {/* Recent Activity Table Skeleton */}
         <div className="glass-panel p-6 animate-pulse">
           <div className="h-6 bg-gray-300 dark:bg-cosmic-700 rounded w-48 mb-6"></div>
-          
+
           <div className="space-y-4">
             {Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="flex items-center gap-4">

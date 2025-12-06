@@ -1,9 +1,9 @@
-"use client"
+'use client';
 
-import PageLayout from '@/components/layout/PageLayout'
-import { Button } from '@/components/ui/button'
-import { Briefcase, MapPin, Clock } from 'lucide-react'
-import { motion } from 'framer-motion'
+import PageLayout from '@/components/layout/PageLayout';
+import { Button } from '@/components/ui/button';
+import { Briefcase, MapPin, Clock } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const jobs = [
   {
@@ -11,16 +11,16 @@ const jobs = [
     department: 'التطوير',
     location: 'الرياض',
     type: 'دوام كامل',
-    description: 'نبحث عن مطور متمرس في React و Node.js'
+    description: 'نبحث عن مطور متمرس في React و Node.js',
   },
   {
     title: 'مهندس AI/ML',
     department: 'الذكاء الاصطناعي',
     location: 'عن بعد',
     type: 'دوام كامل',
-    description: 'خبرة في NLP والنماذج اللغوية'
-  }
-]
+    description: 'خبرة في NLP والنماذج اللغوية',
+  },
+];
 
 export default function CareersPage() {
   return (
@@ -65,7 +65,9 @@ export default function CareersPage() {
                     </div>
                     <Button>تقدم الآن</Button>
                   </div>
-                  <p className="text-gray-600 dark:text-gray-400">{job.description}</p>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    {job.description}
+                  </p>
                 </motion.div>
               ))}
             </div>
@@ -73,5 +75,5 @@ export default function CareersPage() {
         </section>
       </div>
     </PageLayout>
-  )
+  );
 }

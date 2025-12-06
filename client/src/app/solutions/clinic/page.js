@@ -1,10 +1,10 @@
-"use client"
+'use client';
 
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import PageLayout from '@/components/layout/PageLayout'
-import { 
-  Stethoscope, 
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import PageLayout from '@/components/layout/PageLayout';
+import {
+  Stethoscope,
   Check,
   ArrowRight,
   Calendar,
@@ -14,9 +14,9 @@ import {
   MessageCircle,
   Bell,
   FileText,
-  Shield
-} from 'lucide-react'
-import { motion } from 'framer-motion'
+  Shield,
+} from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function ClinicSolution() {
   return (
@@ -25,7 +25,7 @@ export default function ClinicSolution() {
         {/* Hero Section */}
         <section className="relative pt-32 pb-20 px-6 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-blue-500/10 to-transparent"></div>
-          
+
           <div className="max-w-6xl mx-auto relative z-10">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -49,7 +49,10 @@ export default function ClinicSolution() {
                   </Button>
                 </Link>
                 <Link href="/contact">
-                  <Button variant="outline" className="h-14 px-10 text-lg rounded-full border-2 hover:bg-blue-50 dark:hover:bg-blue-950/30">
+                  <Button
+                    variant="outline"
+                    className="h-14 px-10 text-lg rounded-full border-2 hover:bg-blue-50 dark:hover:bg-blue-950/30"
+                  >
                     احجز عرضاً توضيحياً
                   </Button>
                 </Link>
@@ -62,8 +65,8 @@ export default function ClinicSolution() {
               transition={{ delay: 0.2 }}
               className="rounded-3xl overflow-hidden shadow-2xl border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-cosmic-800"
             >
-              <img 
-                src="/assets/images/clinic-hero.jpg" 
+              <img
+                src="/assets/images/clinic-hero.jpg"
                 alt="حلول العيادات"
                 className="w-full h-[500px] object-cover"
                 loading="lazy"
@@ -77,10 +80,22 @@ export default function ClinicSolution() {
           <div className="max-w-6xl mx-auto">
             <div className="grid md:grid-cols-4 gap-8">
               {[
-                { icon: <TrendingUp />, number: '60%', label: 'تقليل المواعيد الفائتة' },
-                { icon: <Clock />, number: '80%', label: 'تقليل المكالمات الهاتفية' },
+                {
+                  icon: <TrendingUp />,
+                  number: '60%',
+                  label: 'تقليل المواعيد الفائتة',
+                },
+                {
+                  icon: <Clock />,
+                  number: '80%',
+                  label: 'تقليل المكالمات الهاتفية',
+                },
                 { icon: <Users />, number: '90%', label: 'رضا المرضى' },
-                { icon: <Calendar />, number: '3x', label: 'زيادة في الحجوزات' }
+                {
+                  icon: <Calendar />,
+                  number: '3x',
+                  label: 'زيادة في الحجوزات',
+                },
               ].map((stat, i) => (
                 <motion.div
                   key={i}
@@ -93,8 +108,12 @@ export default function ClinicSolution() {
                   <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center mx-auto mb-4 text-blue-500">
                     {stat.icon}
                   </div>
-                  <div className="text-4xl font-bold text-blue-500 mb-2">{stat.number}</div>
-                  <div className="text-gray-600 dark:text-gray-400">{stat.label}</div>
+                  <div className="text-4xl font-bold text-blue-500 mb-2">
+                    {stat.number}
+                  </div>
+                  <div className="text-gray-600 dark:text-gray-400">
+                    {stat.label}
+                  </div>
                 </motion.div>
               ))}
             </div>
@@ -118,33 +137,33 @@ export default function ClinicSolution() {
                 {
                   icon: <Calendar size={32} />,
                   title: 'حجز المواعيد التلقائي',
-                  desc: 'يتيح للمرضى حجز مواعيدهم مباشرة عبر واتساب مع التحقق الفوري من التوفر وإرسال تأكيد الحجز'
+                  desc: 'يتيح للمرضى حجز مواعيدهم مباشرة عبر واتساب مع التحقق الفوري من التوفر وإرسال تأكيد الحجز',
                 },
                 {
                   icon: <Bell size={32} />,
                   title: 'تذكيرات ذكية',
-                  desc: 'إرسال تذكيرات تلقائية للمرضى قبل موعدهم بـ 24 ساعة و1 ساعة لتقليل المواعيد الفائتة'
+                  desc: 'إرسال تذكيرات تلقائية للمرضى قبل موعدهم بـ 24 ساعة و1 ساعة لتقليل المواعيد الفائتة',
                 },
                 {
                   icon: <MessageCircle size={32} />,
                   title: 'الإجابة على الاستفسارات الطبية',
-                  desc: 'الرد على الأسئلة الشائعة حول التخصصات، الأسعار، التأمينات المقبولة، وأوقات العمل'
+                  desc: 'الرد على الأسئلة الشائعة حول التخصصات، الأسعار، التأمينات المقبولة، وأوقات العمل',
                 },
                 {
                   icon: <Users size={32} />,
                   title: 'إدارة قوائم الانتظار',
-                  desc: 'تنظيم المرضى في قوائم انتظار ذكية وإخطارهم عند اقتراب دورهم'
+                  desc: 'تنظيم المرضى في قوائم انتظار ذكية وإخطارهم عند اقتراب دورهم',
                 },
                 {
                   icon: <FileText size={32} />,
                   title: 'إرسال التقارير والنتائج',
-                  desc: 'إرسال نتائج التحاليل والتقارير الطبية للمرضى بشكل آمن ومشفر عبر واتساب'
+                  desc: 'إرسال نتائج التحاليل والتقارير الطبية للمرضى بشكل آمن ومشفر عبر واتساب',
                 },
                 {
                   icon: <Shield size={32} />,
                   title: 'حماية البيانات الطبية',
-                  desc: 'نظام آمن ومتوافق مع معايير حماية البيانات الطبية وخصوصية المرضى'
-                }
+                  desc: 'نظام آمن ومتوافق مع معايير حماية البيانات الطبية وخصوصية المرضى',
+                },
               ].map((feature, i) => (
                 <motion.div
                   key={i}
@@ -174,23 +193,28 @@ export default function ClinicSolution() {
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-4xl font-bold mb-4">كيف يعمل النظام؟</h2>
-              <p className="text-xl opacity-90">أمثلة واقعية من الاستخدام اليومي</p>
+              <p className="text-xl opacity-90">
+                أمثلة واقعية من الاستخدام اليومي
+              </p>
             </div>
 
             <div className="grid md:grid-cols-3 gap-8">
               {[
                 {
                   title: 'حجز موعد جديد',
-                  scenario: 'مريض يرسل "عايز أحجز كشف أسنان" - البوت يعرض المواعيد المتاحة ويؤكد الحجز فوراً'
+                  scenario:
+                    'مريض يرسل "عايز أحجز كشف أسنان" - البوت يعرض المواعيد المتاحة ويؤكد الحجز فوراً',
                 },
                 {
                   title: 'إلغاء أو تعديل',
-                  scenario: 'مريض يطلب "عايز أغيّر موعدي" - البوت يعرض المواعيد الجديدة ويعدّل الحجز تلقائياً'
+                  scenario:
+                    'مريض يطلب "عايز أغيّر موعدي" - البوت يعرض المواعيد الجديدة ويعدّل الحجز تلقائياً',
                 },
                 {
                   title: 'استفسار طبي',
-                  scenario: 'مريض يسأل "هل تقبلون تأمين بوبا؟" - البوت يرد فوراً بجميع التأمينات المقبولة'
-                }
+                  scenario:
+                    'مريض يسأل "هل تقبلون تأمين بوبا؟" - البوت يرد فوراً بجميع التأمينات المقبولة',
+                },
               ].map((useCase, i) => (
                 <motion.div
                   key={i}
@@ -220,10 +244,16 @@ export default function ClinicSolution() {
             <div className="bg-white dark:bg-cosmic-900 rounded-3xl p-10 border-2 border-blue-200 dark:border-blue-800 shadow-2xl max-w-md mx-auto">
               <div className="text-center mb-8">
                 <div className="inline-block px-4 py-2 bg-blue-100 dark:bg-blue-900/30 rounded-full mb-4">
-                  <span className="text-sm font-bold text-blue-700 dark:text-blue-300">باقة العيادات</span>
+                  <span className="text-sm font-bold text-blue-700 dark:text-blue-300">
+                    باقة العيادات
+                  </span>
                 </div>
-                <div className="text-5xl font-bold text-blue-600 dark:text-blue-400 mb-2">ابدأ بـ 99 ر.س</div>
-                <div className="text-gray-700 dark:text-gray-300 font-medium">شهرياً - جرب مجاناً 7 أيام</div>
+                <div className="text-5xl font-bold text-blue-600 dark:text-blue-400 mb-2">
+                  ابدأ بـ 99 ر.س
+                </div>
+                <div className="text-gray-700 dark:text-gray-300 font-medium">
+                  شهرياً - جرب مجاناً 7 أيام
+                </div>
               </div>
               <ul className="text-right space-y-3 mb-8">
                 {[
@@ -232,10 +262,17 @@ export default function ClinicSolution() {
                   'إدارة قوائم الانتظار',
                   'حماية بيانات المرضى HIPAA',
                   'رد فوري على الاستفسارات',
-                  'دعم فني مباشر 24/7'
+                  'دعم فني مباشر 24/7',
                 ].map((item, i) => (
-                  <li key={i} className="flex items-center gap-3 text-gray-800 dark:text-gray-200">
-                    <Check size={22} className="text-blue-500 flex-shrink-0" strokeWidth={3} />
+                  <li
+                    key={i}
+                    className="flex items-center gap-3 text-gray-800 dark:text-gray-200"
+                  >
+                    <Check
+                      size={22}
+                      className="text-blue-500 flex-shrink-0"
+                      strokeWidth={3}
+                    />
                     <span>{item}</span>
                   </li>
                 ))}
@@ -269,5 +306,5 @@ export default function ClinicSolution() {
         </section>
       </div>
     </PageLayout>
-  )
+  );
 }

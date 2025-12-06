@@ -1,13 +1,13 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react';
 
 export function setTheme(isDark) {
   try {
     if (isDark) {
-      document.documentElement.classList.add('dark')
-      localStorage.setItem('theme', 'dark')
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
     } else {
-      document.documentElement.classList.remove('dark')
-      localStorage.setItem('theme', 'light')
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
     }
   } catch (e) {
     // ignore (SSR or unavailable localStorage)
@@ -15,31 +15,31 @@ export function setTheme(isDark) {
 }
 
 export function useTheme(defaultPref = false) {
-  const [isDark, setIsDark] = useState(defaultPref)
-  const [mounted, setMounted] = useState(false)
+  const [isDark, setIsDark] = useState(defaultPref);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true)
+    setMounted(true);
     try {
-      const t = localStorage.getItem('theme')
+      const t = localStorage.getItem('theme');
       if (t === 'dark') {
-        setIsDark(true)
+        setIsDark(true);
       } else {
         // Default to light mode regardless of system preference
-        setIsDark(false)
+        setIsDark(false);
       }
     } catch (e) {
       // ignore
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
     if (mounted) {
-      setTheme(isDark)
+      setTheme(isDark);
     }
-  }, [isDark, mounted])
+  }, [isDark, mounted]);
 
-  return [isDark, setIsDark]
+  return [isDark, setIsDark];
 }
 
-export default useTheme
+export default useTheme;

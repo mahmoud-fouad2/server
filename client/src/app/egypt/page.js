@@ -2,11 +2,14 @@ import Link from 'next/link';
 
 export const metadata = {
   title: 'شات بوت ذكي للشركات المصرية | فهيملي - أفضل حل ذكاء اصطناعي في مصر',
-  description: 'أقوى شات بوت بالذكاء الاصطناعي للشركات والمحلات المصرية. خدمة عملاء 24/7 بالمصري، رد تلقائي على واتساب، توفير 70% من تكاليف خدمة العملاء. جرب مجاناً!',
-  keywords: 'شات بوت مصري، ذكاء اصطناعي مصر، خدمة عملاء تلقائية، واتساب بوت، AI Egypt، chatbot مصري',
+  description:
+    'أقوى شات بوت بالذكاء الاصطناعي للشركات والمحلات المصرية. خدمة عملاء 24/7 بالمصري، رد تلقائي على واتساب، توفير 70% من تكاليف خدمة العملاء. جرب مجاناً!',
+  keywords:
+    'شات بوت مصري، ذكاء اصطناعي مصر، خدمة عملاء تلقائية، واتساب بوت، AI Egypt، chatbot مصري',
   openGraph: {
     title: 'شات بوت ذكي بالمصري - فهيملي',
-    description: 'خدمة عملاء ذكية 24/7 لشركتك بالذكاء الاصطناعي. بيفهم المصري ويرد تلقائياً',
+    description:
+      'خدمة عملاء ذكية 24/7 لشركتك بالذكاء الاصطناعي. بيفهم المصري ويرد تلقائياً',
     url: 'https://faheemly.com/egypt',
     siteName: 'فهيملي - Faheemly',
     locale: 'ar_EG',
@@ -18,7 +21,7 @@ export const metadata = {
   robots: {
     index: true,
     follow: true,
-  }
+  },
 };
 
 export default function EgyptPage() {
@@ -36,10 +39,16 @@ export default function EgyptPage() {
             <strong>وفّر 70% من تكاليف خدمة العملاء</strong> واكسب رضا عملائك
           </p>
           <div className="flex gap-4 justify-center flex-wrap">
-            <Link href="/register" className="bg-indigo-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-indigo-700 transition">
+            <Link
+              href="/register"
+              className="bg-indigo-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-indigo-700 transition"
+            >
               جرب مجاناً 14 يوم
             </Link>
-            <Link href="#examples" className="bg-white text-indigo-600 px-8 py-4 rounded-lg text-lg font-semibold border-2 border-indigo-600 hover:bg-indigo-50 transition">
+            <Link
+              href="#examples"
+              className="bg-white text-indigo-600 px-8 py-4 rounded-lg text-lg font-semibold border-2 border-indigo-600 hover:bg-indigo-50 transition"
+            >
               شوف أمثلة
             </Link>
           </div>
@@ -88,7 +97,8 @@ export default function EgyptPage() {
                 <li>✅ متابعة الأوردرات</li>
               </ul>
               <div className="mt-4 p-3 bg-gray-50 rounded text-sm">
-                <strong>مثال:</strong> "عندكو بيتزا كبيرة بكام؟ وبتوصلوا مدينة نصر؟"
+                <strong>مثال:</strong> &quot;عندكو بيتزا كبيرة بكام؟ وبتوصلوا مدينة
+                نصر؟&quot;
               </div>
             </div>
 
@@ -103,14 +113,17 @@ export default function EgyptPage() {
                 <li>✅ متابعة الشحن</li>
               </ul>
               <div className="mt-4 p-3 bg-gray-50 rounded text-sm">
-                <strong>مثال:</strong> "عندكو بلوزة سادة لارج؟ وبكام الشحن للإسكندرية؟"
+                <strong>مثال:</strong> &quot;عندكو بلوزة سادة لارج؟ وبكام الشحن
+                للإسكندرية؟&quot;
               </div>
             </div>
 
             {/* عيادات */}
             <div className="bg-white p-6 rounded-lg shadow-lg">
               <div className="text-4xl mb-4">🏥</div>
-              <h3 className="text-xl font-bold mb-3">العيادات والمراكز الطبية</h3>
+              <h3 className="text-xl font-bold mb-3">
+                العيادات والمراكز الطبية
+              </h3>
               <ul className="text-gray-700 space-y-2">
                 <li>✅ حجز المواعيد</li>
                 <li>✅ الرد على الاستفسارات</li>
@@ -118,7 +131,7 @@ export default function EgyptPage() {
                 <li>✅ إرسال النتائج</li>
               </ul>
               <div className="mt-4 p-3 bg-gray-50 rounded text-sm">
-                <strong>مثال:</strong> "عايز أحجز كشف أسنان، فيه معاد بكرة؟"
+                <strong>مثال:</strong> &quot;عايز أحجز كشف أسنان، فيه معاد بكرة؟&quot;
               </div>
             </div>
           </div>
@@ -141,7 +154,8 @@ export default function EgyptPage() {
                 </div>
               </div>
               <p className="italic mb-3">
-                "فهيملي وفرلنا موظفة كول سنتر. بيرد على 200 أوردر في اليوم تلقائي!"
+                &quot;فهيملي وفرلنا موظفة كول سنتر. بيرد على 200 أوردر في اليوم
+                تلقائي!&quot;
               </p>
               <div className="text-sm opacity-80">
                 📈 زيادة الطلبات: <strong>45%</strong>
@@ -157,7 +171,8 @@ export default function EgyptPage() {
                 </div>
               </div>
               <p className="italic mb-3">
-                "بيرد على العملاء حتى لو أنا نايمة، وبيبعتلي الأوردرات على واتساب!"
+                &quot;بيرد على العملاء حتى لو أنا نايمة، وبيبعتلي الأوردرات على
+                واتساب!&quot;
               </p>
               <div className="text-sm opacity-80">
                 💰 توفير شهري: <strong>3,500 جنيه</strong>
@@ -178,7 +193,7 @@ export default function EgyptPage() {
               <div className="text-5xl mb-4">🇪🇬</div>
               <h3 className="font-bold text-lg mb-2">بيفهم المصري</h3>
               <p className="text-gray-600">
-                مدرّب على اللهجة المصرية الأصلية - بيفهم "عايز" و"محتاج" و"ممكن"
+                مدرّب على اللهجة المصرية الأصلية - بيفهم &quot;عايز&quot; و&quot;محتاج&quot; و&quot;ممكن&quot;
               </p>
             </div>
             <div className="text-center">
@@ -247,7 +262,10 @@ export default function EgyptPage() {
                   دعم فني
                 </li>
               </ul>
-              <Link href="/register" className="block w-full bg-gray-200 text-center py-3 rounded-lg font-semibold hover:bg-gray-300 transition">
+              <Link
+                href="/register"
+                className="block w-full bg-gray-200 text-center py-3 rounded-lg font-semibold hover:bg-gray-300 transition"
+              >
                 ابدأ مجاناً
               </Link>
             </div>
@@ -279,7 +297,10 @@ export default function EgyptPage() {
                   فريق متعدد
                 </li>
               </ul>
-              <Link href="/register" className="block w-full bg-indigo-600 text-white text-center py-3 rounded-lg font-semibold hover:bg-indigo-700 transition">
+              <Link
+                href="/register"
+                className="block w-full bg-indigo-600 text-white text-center py-3 rounded-lg font-semibold hover:bg-indigo-700 transition"
+              >
                 اشترك الآن
               </Link>
             </div>
@@ -308,7 +329,10 @@ export default function EgyptPage() {
                   تدريب الفريق
                 </li>
               </ul>
-              <Link href="/contact" className="block w-full bg-gray-200 text-center py-3 rounded-lg font-semibold hover:bg-gray-300 transition">
+              <Link
+                href="/contact"
+                className="block w-full bg-gray-200 text-center py-3 rounded-lg font-semibold hover:bg-gray-300 transition"
+              >
                 تواصل معنا
               </Link>
             </div>
@@ -325,11 +349,14 @@ export default function EgyptPage() {
           <p className="text-xl mb-8 opacity-90">
             ما تدفعش ولا قرش - ابدأ تجربة 14 يوم مجاناً
           </p>
-          <Link href="/register" className="inline-block bg-white text-indigo-600 px-12 py-4 rounded-lg text-lg font-bold hover:bg-gray-100 transition">
+          <Link
+            href="/register"
+            className="inline-block bg-white text-indigo-600 px-12 py-4 rounded-lg text-lg font-bold hover:bg-gray-100 transition"
+          >
             ابدأ الآن 🚀
           </Link>
           <div className="mt-6 text-sm opacity-75">
-            ✓ ما تحتاجش كريدت كارد  ✓ إلغاء في أي وقت  ✓ دعم فني بالعربي
+            ✓ ما تحتاجش كريدت كارد ✓ إلغاء في أي وقت ✓ دعم فني بالعربي
           </div>
         </div>
       </section>
@@ -346,7 +373,8 @@ export default function EgyptPage() {
                 هل فهيملي يفهم اللهجة المصرية فعلاً؟
               </summary>
               <p className="mt-4 text-gray-700">
-                أيوه طبعاً! فهيملي مدرّب على آلاف المحادثات بالمصري. بيفهم "عايز"، "محتاج"، "ممكن"، "لو سمحت" وكل التعبيرات المصرية.
+                أيوه طبعاً! فهيملي مدرّب على آلاف المحادثات بالمصري. بيفهم
+                &quot;عايز&quot;، &quot;محتاج&quot;، &quot;ممكن&quot;، &quot;لو سمحت&quot; وكل التعبيرات المصرية.
               </p>
             </details>
 
@@ -355,7 +383,8 @@ export default function EgyptPage() {
                 ازاي أدفع بالجنيه المصري؟
               </summary>
               <p className="mt-4 text-gray-700">
-                نقبل الدفع بفودافون كاش، فيزا مصرية، وماستركارد. كل الأسعار بالجنيه المصري.
+                نقبل الدفع بفودافون كاش، فيزا مصرية، وماستركارد. كل الأسعار
+                بالجنيه المصري.
               </p>
             </details>
 
@@ -373,7 +402,8 @@ export default function EgyptPage() {
                 في دعم فني بالعربي؟
               </summary>
               <p className="mt-4 text-gray-700">
-                طبعاً! فريق الدعم الفني بتاعنا مصري 100% وبيرد بالعربي على مدار الساعة.
+                طبعاً! فريق الدعم الفني بتاعنا مصري 100% وبيرد بالعربي على مدار
+                الساعة.
               </p>
             </details>
           </div>

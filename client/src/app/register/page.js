@@ -1,14 +1,14 @@
-"use client"
+'use client';
 
-import { useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function Register() {
-  const router = useRouter()
+  const router = useRouter();
 
   useEffect(() => {
-    router.replace('/wizard')
-  }, [router])
+    router.replace('/wizard');
+  }, [router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white dark:bg-cosmic-950">
@@ -17,5 +17,5 @@ export default function Register() {
         <p className="text-gray-600 dark:text-gray-400">جاري التحويل...</p>
       </div>
     </div>
-  )
+  );
 }

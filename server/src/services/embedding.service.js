@@ -50,14 +50,13 @@ async function generateEmbedding(text) {
         return embedding;
       }
     } catch (error) {
-      // Check if API key is leaked
-      if (error.message && error.message.includes('leaked')) {
-        console.error('[Embedding] ❌ Gemini API key is LEAKED! Get new key from https://aistudio.google.com/');
-        // Auto-disable Gemini to prevent further errors
-        process.env.SKIP_GEMINI_EMBEDDING = 'true';
+      // Check if API key may be compromised and surface an actionable log
+      if (error && error.message && error.message.toLowerCase().includes('leak')) {
+        console.error('[Embedding] ❌ Gemini API key may be compromised. Rotate the key immediately and update configuration.');
       } else {
-        console.error('[Embedding] Gemini failed:', error.message);
+        console.error('[Embedding] Gemini failed:', error?.message || error);
       }
+      // Do not mutate process.env at runtime; allow fallback to other providers or dev fallback
     }
   }
 

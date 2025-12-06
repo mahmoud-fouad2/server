@@ -51,7 +51,7 @@ describe('Authentication Middleware', () => {
     test('should reject request without token', async () => {
       const res = await request(app).get('/test-auth');
       expect(res.status).toBe(401);
-      expect(res.body.error).toContain('مطلوب');
+      expect(res.body.error).toContain('No token provided');
     });
 
     test('should reject request with invalid token', async () => {
@@ -59,7 +59,7 @@ describe('Authentication Middleware', () => {
         .get('/test-auth')
         .set('Authorization', 'Bearer invalid-token-here');
       expect(res.status).toBe(403);
-      expect(res.body.error).toContain('غير صحيح');
+      expect(res.body.error).toContain('Invalid token');
     });
 
     test('should reject expired token', async () => {
@@ -91,7 +91,7 @@ describe('Authentication Middleware', () => {
         .get('/test-admin')
         .set('Authorization', `Bearer ${clientToken}`);
       expect(res.status).toBe(403);
-      expect(res.body.error).toContain('صلاحية');
+      expect(res.body.error).toContain('Insufficient permissions');
     });
 
     test('should allow admin access to admin route', async () => {

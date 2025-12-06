@@ -10,27 +10,27 @@ generator client {
 
 // المستخدمون
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  password      String    // bcrypt hashed
-  name          String
-  role          Role      @default(CLIENT)
-  isActive      Boolean   @default(true)
-  twoFactorSecret String? // للـ 2FA
-  resetToken    String?   // Password reset token (hashed)
+  id               String    @id @default(cuid())
+  email            String    @unique
+  password         String // bcrypt hashed
+  name             String
+  role             Role      @default(CLIENT)
+  isActive         Boolean   @default(true)
+  twoFactorSecret  String? // للـ 2FA
+  resetToken       String? // Password reset token (hashed)
   resetTokenExpiry DateTime? // Token expiration time
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  
-  businesses    Business[]
-  sessions      Session[]
-  
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  businesses Business[]
+  sessions   Session[]
+
   // For Agents
-  employerId    String?
-  employer      Business? @relation("BusinessEmployees", fields: [employerId], references: [id])
-  
+  employerId String?
+  employer   Business? @relation("BusinessEmployees", fields: [employerId], references: [id])
+
   // Tickets
-  tickets       Ticket[]  @relation("TicketCreator")
+  tickets        Ticket[]        @relation("TicketCreator")
   ticketMessages TicketMessage[]
 }
 
@@ -42,35 +42,52 @@ enum Role {
 
 // الأعمال/الشركات
 model Business {
-  id            String    @id @default(cuid())
-  userId        String
-  name          String
-  activityType  ActivityType // مطعم، محل ملابس، شركة...
-  language      String    @default("ar") // ar, en
-  status        BusinessStatus @default(TRIAL)
-  trialEndsAt   DateTime?
-  
+  id           String         @id @default(cuid())
+  userId       String
+  name         String
+  activityType ActivityType // مطعم، محل ملابس، شركة...
+  language     String         @default("ar") // ar, en
+  status       BusinessStatus @default(TRIAL)
+  trialEndsAt  DateTime?
+
   // الإعدادات
-  botTone       String    @default("friendly") // friendly, formal, advisory
-  primaryColor  String    @default("#6366F1")
-  widgetConfig  String?   @db.Text // JSON: { welcomeMessage, personality, showBranding, ... }
-  
+  botTone      String  @default("friendly") // friendly, formal, advisory
+  primaryColor String  @default("#6366F1")
+  widgetConfig String? @db.Text // JSON: { welcomeMessage, personality, showBranding, ... }
+
   // الحصص
-  messageQuota  Int       @default(1000)
-  messagesUsed  Int       @default(0)
-  planType      PlanType  @default(TRIAL)
-  
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  employees     User[]    @relation("BusinessEmployees")
+  messageQuota Int      @default(1000)
+  messagesUsed Int      @default(0)
+  planType     PlanType @default(TRIAL)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user          User            @relation(fields: [userId], references: [id])
+  employees     User[]          @relation("BusinessEmployees")
   knowledgeBase KnowledgeBase[]
   conversations Conversation[]
   integrations  Integration[]
   tickets       Ticket[]
-  
+
+  // Phase 2 Relations
+  customAIModels         CustomAIModel[]
+  whatsAppIntegration    WhatsAppIntegration?
+  telegramIntegration    TelegramIntegration?
+  apiIntegrations        APIIntegration[]
+  crmIntegrations        CRMIntegration[]
+  dashboardConfigs       DashboardConfig[]
+  improvementFeedback    ImprovementFeedback[]
+  knowledgeGaps          KnowledgeGap[]
+  improvementSuggestions ImprovementSuggestion[]
+  improvementGoals       ImprovementGoal[]
+
   @@index([userId])
+  @@index([status])
+  @@index([planType])
+  @@index([createdAt])
+  @@index([userId, status])
+  @@index([userId, createdAt])
 }
 
 enum ActivityType {
@@ -141,18 +158,18 @@ enum PlanType {
 
 // Support Tickets
 model Ticket {
-  id          String   @id @default(cuid())
-  businessId  String
-  creatorId   String
-  subject     String
-  status      TicketStatus @default(OPEN)
-  priority    TicketPriority @default(MEDIUM)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String         @id @default(cuid())
+  businessId String
+  creatorId  String
+  subject    String
+  status     TicketStatus   @default(OPEN)
+  priority   TicketPriority @default(MEDIUM)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
 
-  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  creator     User     @relation("TicketCreator", fields: [creatorId], references: [id])
-  messages    TicketMessage[]
+  business Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  creator  User            @relation("TicketCreator", fields: [creatorId], references: [id])
+  messages TicketMessage[]
 
   @@index([businessId])
   @@index([creatorId])
@@ -161,13 +178,13 @@ model Ticket {
 model TicketMessage {
   id        String   @id @default(cuid())
   ticketId  String
-  senderId  String   // User ID (Client or Admin)
+  senderId  String // User ID (Client or Admin)
   message   String   @db.Text
   isAdmin   Boolean  @default(false)
   createdAt DateTime @default(now())
 
-  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  sender    User     @relation(fields: [senderId], references: [id])
+  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  sender User   @relation(fields: [senderId], references: [id])
 
   @@index([ticketId])
   @@index([senderId])
@@ -189,36 +206,39 @@ enum TicketPriority {
 
 // قاعدة المعرفة
 model KnowledgeBase {
-  id          String    @id @default(cuid())
-  businessId  String
-  type        KnowledgeType // pdf, text, url
-  content     String    @db.Text
-  embedding   Json?     // Vector embeddings
-  metadata    Json?     // {filename, pageCount, etc}
-  
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
-  business    Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  id         String        @id @default(cuid())
+  businessId String
+  type       KnowledgeType // pdf, text, url
+  content    String        @db.Text
+  embedding  Json? // Vector embeddings
+  metadata   Json? // {filename, pageCount, etc}
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  business        Business         @relation(fields: [businessId], references: [id], onDelete: Cascade)
   knowledgeChunks KnowledgeChunk[]
-  
+
   @@index([businessId])
+  @@index([type])
+  @@index([createdAt])
 }
 
 // Knowledge chunks for searchable, smaller pieces of content
 model KnowledgeChunk {
-  id              String    @id @default(cuid())
+  id              String   @id @default(cuid())
   knowledgeBaseId String
   businessId      String
-  content         String    @db.Text
+  content         String   @db.Text
   embedding       Json?
   metadata        Json?
-  createdAt       DateTime  @default(now())
+  createdAt       DateTime @default(now())
 
-  knowledgeBase   KnowledgeBase @relation(fields: [knowledgeBaseId], references: [id], onDelete: Cascade)
+  knowledgeBase KnowledgeBase @relation(fields: [knowledgeBaseId], references: [id], onDelete: Cascade)
 
   @@index([businessId])
   @@index([knowledgeBaseId])
+  @@index([businessId, knowledgeBaseId])
 }
 
 enum KnowledgeType {
@@ -229,30 +249,41 @@ enum KnowledgeType {
 
 // المحادثات
 model Conversation {
-  id          String    @id @default(cuid())
-  businessId  String
-  channel     Channel   @default(WIDGET) // widget, whatsapp
-  externalId  String?   // WhatsApp phone number
-  status      ConversationStatus @default(ACTIVE)
-  rating      Int?      // تقييم من 1-5 نجوم
-  feedback    String?
-  agentId     String?   // الموظف الذي تعامل مع المحادثة
-  agentRating Int?      // تقييم الموظف من 1-5
+  id            String             @id @default(cuid())
+  businessId    String
+  channel       Channel            @default(WIDGET) // widget, whatsapp
+  externalId    String? // WhatsApp phone number
+  status        ConversationStatus @default(ACTIVE)
+  rating        Int? // تقييم من 1-5 نجوم
+  feedback      String?
+  agentId       String? // الموظف الذي تعامل مع المحادثة
+  agentRating   Int? // تقييم الموظف من 1-5
   agentFeedback String?
-  
+
   // Session tracking (ربط مع جلسة الزائر)
   visitorSessionId String?
-  
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
-  business    Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  messages    Message[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  business       Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  messages       Message[]
   visitorSession VisitorSession? @relation(fields: [visitorSessionId], references: [id], onDelete: SetNull)
-  
+
+  // Phase 2 Relations
+  languageDetections LanguageDetection[]
+  sentimentAnalyses  SentimentAnalysis[]
+  analytics          ConversationAnalytics?
+  handoffs           AgentHandoff[]
+
   @@index([businessId])
   @@index([externalId])
   @@index([visitorSessionId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([businessId, createdAt])
+  @@index([businessId, status])
+  @@index([businessId, status, createdAt])
 }
 
 enum ConversationStatus {
@@ -271,9 +302,9 @@ enum Channel {
 // سجلات النظام
 model SystemLog {
   id        String   @id @default(cuid())
-  level     String   // INFO, WARN, ERROR
+  level     String // INFO, WARN, ERROR
   message   String   @db.Text
-  context   Json?    // Stack trace, request body, etc.
+  context   Json? // Stack trace, request body, etc.
   createdAt DateTime @default(now())
 
   @@index([level])
@@ -282,20 +313,23 @@ model SystemLog {
 
 // الرسائل
 model Message {
-  id              String    @id @default(cuid())
-  conversationId  String
-  role            MessageRole
-  content         String    @db.Text
-  tokensUsed      Int       @default(0)
-  wasFromCache    Boolean   @default(false)
-  aiModel         String?   // grok, gpt-4, etc
-  
-  createdAt       DateTime  @default(now())
-  
-  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  
+  id             String      @id @default(cuid())
+  conversationId String
+  role           MessageRole
+  content        String      @db.Text
+  tokensUsed     Int         @default(0)
+  wasFromCache   Boolean     @default(false)
+  aiModel        String? // grok, gpt-4, etc
+
+  createdAt DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
   @@index([conversationId])
   @@index([createdAt])
+  @@index([conversationId, createdAt])
+  @@index([role])
+  @@index([conversationId, role, createdAt])
 }
 
 enum MessageRole {
@@ -306,17 +340,17 @@ enum MessageRole {
 
 // التكاملات (واتساب، إلخ)
 model Integration {
-  id          String    @id @default(cuid())
-  businessId  String
-  type        IntegrationType
-  config      Json      // {phoneNumberId, accessToken, etc}
-  isActive    Boolean   @default(true)
-  
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
-  business    Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  
+  id         String          @id @default(cuid())
+  businessId String
+  type       IntegrationType
+  config     Json // {phoneNumberId, accessToken, etc}
+  isActive   Boolean         @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
   @@index([businessId])
 }
 
@@ -332,98 +366,98 @@ model Session {
   userId    String
   token     String   @unique
   expiresAt DateTime
-  
+
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@index([userId])
   @@index([token])
 }
 
 // Cache للرسائل المتشابهة
 model MessageCache {
-  id          String    @id @default(cuid())
-  businessId  String
-  query       String    @db.Text
-  response    String    @db.Text
-  hitCount    Int       @default(1)
-  
-  createdAt   DateTime  @default(now())
-  lastUsedAt  DateTime  @default(now())
-  
+  id         String @id @default(cuid())
+  businessId String
+  query      String @db.Text
+  response   String @db.Text
+  hitCount   Int    @default(1)
+
+  createdAt  DateTime @default(now())
+  lastUsedAt DateTime @default(now())
+
   @@index([businessId])
   @@index([lastUsedAt])
 }
 
 // نماذج الذكاء الاصطناعي
 model AIModel {
-  id          String    @id @default(cuid())
-  name        String    @unique // grok, gpt-4, gemini
-  apiKey      String
-  endpoint    String
-  maxTokens   Int       @default(1000)
-  isActive    Boolean   @default(true)
-  priority    Int       @default(0) // أعلى رقم = أولوية أعلى
-  
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id        String  @id @default(cuid())
+  name      String  @unique // grok, gpt-4, gemini
+  apiKey    String
+  endpoint  String
+  maxTokens Int     @default(1000)
+  isActive  Boolean @default(true)
+  priority  Int     @default(0) // أعلى رقم = أولوية أعلى
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // إعدادات النظام العامة
 model SystemSetting {
-  key         String    @id
-  value       String    @db.Text
+  key         String   @id
+  value       String   @db.Text
   description String?
-  updatedAt   DateTime  @updatedAt
+  updatedAt   DateTime @updatedAt
 }
 
 // جلسات الزوار - Visitor Sessions & Analytics
 model VisitorSession {
-  id            String    @id @default(cuid())
-  businessId    String
-  
+  id         String @id @default(cuid())
+  businessId String
+
   // Session Info
-  fingerprint   String    // Browser fingerprint
-  isActive      Boolean   @default(true)
-  lastActivity  DateTime  @default(now())
-  
+  fingerprint  String // Browser fingerprint
+  isActive     Boolean  @default(true)
+  lastActivity DateTime @default(now())
+
   // Visitor Info
-  ipAddress     String?
-  country       String?
-  countryCode   String?   // مثل: SA, EG, AE, KW
-  city          String?
-  region        String?
-  timezone      String?
+  ipAddress       String?
+  country         String?
+  countryCode     String? // مثل: SA, EG, AE, KW
+  city            String?
+  region          String?
+  timezone        String?
   detectedDialect String? // اللهجة المكتشفة: sa, eg, uae, kw, standard
-  
+
   // Device Info
-  userAgent     String?   @db.Text
-  browser       String?
+  userAgent      String? @db.Text
+  browser        String?
   browserVersion String?
-  os            String?
-  device        String?   // mobile, tablet, desktop
-  isMobile      Boolean   @default(false)
-  
+  os             String?
+  device         String? // mobile, tablet, desktop
+  isMobile       Boolean @default(false)
+
   // UTM & Referrer
-  referrer      String?   @db.Text
-  utmSource     String?
-  utmMedium     String?
-  utmCampaign   String?
-  utmTerm       String?
-  utmContent    String?
-  
+  referrer    String? @db.Text
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+  utmTerm     String?
+  utmContent  String?
+
   // Engagement
-  pageViews     Int       @default(0)
-  totalDuration Int       @default(0) // بالثواني
-  
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  endedAt       DateTime?
-  
+  pageViews     Int @default(0)
+  totalDuration Int @default(0) // بالثواني
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  endedAt   DateTime?
+
   // Relations
   pageVisits    PageVisit[]
   conversations Conversation[]
-  
+
   @@index([businessId])
   @@index([fingerprint])
   @@index([ipAddress])
@@ -433,25 +467,25 @@ model VisitorSession {
 
 // تتبع الصفحات المزارة
 model PageVisit {
-  id            String    @id @default(cuid())
-  sessionId     String
-  
+  id        String @id @default(cuid())
+  sessionId String
+
   // Page Info
-  url           String    @db.Text
-  title         String?
-  path          String
-  
+  url   String  @db.Text
+  title String?
+  path  String
+
   // Timing
-  duration      Int?      // بالثواني
-  enteredAt     DateTime  @default(now())
-  exitedAt      DateTime?
-  
+  duration  Int? // بالثواني
+  enteredAt DateTime  @default(now())
+  exitedAt  DateTime?
+
   // Interaction
-  scrollDepth   Int?      // 0-100%
-  clicks        Int       @default(0)
-  
-  session       VisitorSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  
+  scrollDepth Int? // 0-100%
+  clicks      Int  @default(0)
+
+  session VisitorSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
   @@index([sessionId])
   @@index([path])
   @@index([enteredAt])
@@ -459,29 +493,529 @@ model PageVisit {
 
 // User Analytics - تحليلات المشتركين
 model UserAnalytics {
-  id            String    @id @default(cuid())
-  businessId    String
-  userId        String
-  
+  id         String @id @default(cuid())
+  businessId String
+  userId     String
+
   // Login Info
-  ipAddress     String?
-  country       String?
-  city          String?
-  
+  ipAddress String?
+  country   String?
+  city      String?
+
   // Device Info
-  userAgent     String?   @db.Text
-  browser       String?
-  os            String?
-  device        String?
-  
+  userAgent String? @db.Text
+  browser   String?
+  os        String?
+  device    String?
+
   // Activity
-  action        String    // login, logout, create_bot, etc
-  metadata      Json?     // Additional data
-  
-  createdAt     DateTime  @default(now())
-  
+  action   String // login, logout, create_bot, etc
+  metadata Json? // Additional data
+
+  createdAt DateTime @default(now())
+
   @@index([businessId])
   @@index([userId])
   @@index([action])
   @@index([createdAt])
+}
+
+// ===== PHASE 2 MODELS =====
+
+// Custom AI Models
+model CustomAIModel {
+  id              String        @id @default(cuid())
+  businessId      String
+  name            String
+  baseModel       String // gpt-3.5-turbo, gpt-4, etc.
+  description     String?
+  status          AIModelStatus @default(TRAINING)
+  trainingData    Json? // Array of training examples
+  hyperparameters Json? // Learning rate, epochs, etc.
+  performance     Json? // Accuracy, loss metrics
+  version         String        @default("1.0.0")
+  isActive        Boolean       @default(false)
+  deployedAt      DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  business     Business             @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  trainingJobs AIModelTrainingJob[]
+  generations  AIModelGeneration[]
+
+  @@index([businessId])
+  @@index([status])
+  @@index([isActive])
+}
+
+model AIModelTrainingJob {
+  id          String         @id @default(cuid())
+  modelId     String
+  status      TrainingStatus @default(PENDING)
+  progress    Float          @default(0.0) // 0-100%
+  error       String?
+  startedAt   DateTime?
+  completedAt DateTime?
+  metrics     Json? // Training metrics
+
+  model CustomAIModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  @@index([modelId])
+  @@index([status])
+}
+
+model AIModelGeneration {
+  id           String @id @default(cuid())
+  modelId      String
+  query        String @db.Text
+  response     String @db.Text
+  tokensUsed   Int
+  responseTime Int // milliseconds
+  feedback     Json? // User feedback on generation
+
+  createdAt DateTime @default(now())
+
+  model CustomAIModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  @@index([modelId])
+  @@index([createdAt])
+}
+
+// Multi-Language Support
+model LanguageDetection {
+  id               String  @id @default(cuid())
+  conversationId   String
+  messageId        String
+  detectedLanguage String // ar, en, etc.
+  detectedDialect  String? // sa, eg, uae, kw, standard
+  confidence       Float
+  translation      String? @db.Text
+  targetLanguage   String?
+
+  createdAt DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@index([detectedLanguage])
+  @@index([detectedDialect])
+}
+
+// Sentiment Analysis
+model SentimentAnalysis {
+  id             String        @id @default(cuid())
+  conversationId String
+  messageId      String
+  sentiment      SentimentType
+  confidence     Float
+  emotions       Json? // Detailed emotion scores
+  keywords       Json? // Extracted keywords
+  intensity      Float // 0-1 scale
+
+  createdAt DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@index([sentiment])
+  @@index([createdAt])
+}
+
+enum SentimentType {
+  POSITIVE
+  NEGATIVE
+  NEUTRAL
+  MIXED
+}
+
+// Conversation Analytics
+model ConversationAnalytics {
+  id             String @id @default(cuid())
+  conversationId String @unique
+  businessId     String
+
+  // Basic Metrics
+  messageCount     Int @default(0)
+  userMessageCount Int @default(0)
+  aiMessageCount   Int @default(0)
+  avgResponseTime  Int // milliseconds
+  totalDuration    Int // seconds
+
+  // Advanced Analytics
+  topics           Json? // Detected topics
+  sentimentTrend   Json? // Sentiment over time
+  engagementScore  Float? // 0-100 scale
+  resolutionStatus String? // resolved, unresolved, transferred
+
+  // Language & Dialect
+  primaryLanguage String?
+  primaryDialect  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@index([businessId])
+  @@index([createdAt])
+}
+
+// Agent Handoff
+model AgentHandoff {
+  id             String          @id @default(cuid())
+  conversationId String
+  businessId     String
+  agentId        String
+  requestedBy    String // user or system
+  reason         String
+  priority       HandoffPriority @default(MEDIUM)
+  status         HandoffStatus   @default(PENDING)
+  qualityScore   Int? // Agent quality score 1-5
+  feedback       String?         @db.Text
+  resolvedAt     DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@index([businessId])
+  @@index([agentId])
+  @@index([status])
+  @@index([priority])
+}
+
+enum HandoffPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum HandoffStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  COMPLETED
+  TIMEOUT
+}
+
+// Enhanced Integrations
+model WhatsAppIntegration {
+  id            String    @id @default(cuid())
+  businessId    String    @unique
+  phoneNumberId String
+  accessToken   String
+  appSecret     String
+  webhookUrl    String
+  isActive      Boolean   @default(true)
+  lastVerified  DateTime?
+  messageQuota  Int       @default(1000)
+  messagesUsed  Int       @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([phoneNumberId])
+}
+
+model TelegramIntegration {
+  id           String    @id @default(cuid())
+  businessId   String    @unique
+  botToken     String
+  botUsername  String
+  webhookUrl   String
+  isActive     Boolean   @default(true)
+  lastVerified DateTime?
+  messageQuota Int       @default(1000)
+  messagesUsed Int       @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([botUsername])
+}
+
+model APIIntegration {
+  id         String    @id @default(cuid())
+  businessId String
+  name       String
+  type       APIType
+  baseUrl    String
+  apiKey     String? // Encrypted
+  authType   String    @default("bearer") // bearer, basic, api-key
+  headers    Json? // Additional headers
+  isActive   Boolean   @default(true)
+  rateLimit  Int       @default(100) // requests per minute
+  lastUsed   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  business  Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  endpoints APIEndpoint[]
+
+  @@index([businessId])
+  @@index([type])
+}
+
+model APIEndpoint {
+  id             String  @id @default(cuid())
+  integrationId  String
+  name           String
+  method         String // GET, POST, PUT, DELETE
+  path           String
+  description    String?
+  parameters     Json? // Expected parameters
+  responseSchema Json? // Expected response structure
+
+  integration APIIntegration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+
+  @@index([integrationId])
+}
+
+model CRMIntegration {
+  id            String    @id @default(cuid())
+  businessId    String
+  type          CRMType
+  apiUrl        String
+  apiKey        String // Encrypted
+  username      String?
+  password      String? // Encrypted
+  isActive      Boolean   @default(true)
+  lastSync      DateTime?
+  syncFrequency Int       @default(3600) // seconds
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([type])
+}
+
+enum APIType {
+  REST
+  GRAPHQL
+  SOAP
+}
+
+enum CRMType {
+  SALESFORCE
+  HUBSPOT
+  ZOHO
+  PIPEDRIVE
+  CUSTOM
+}
+
+// Integration Dashboard
+model DashboardConfig {
+  id         String  @id @default(cuid())
+  businessId String
+  name       String
+  layout     Json // Dashboard layout configuration
+  theme      Json? // Theme settings
+  isDefault  Boolean @default(false)
+  isPublic   Boolean @default(false)
+  shareToken String? @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  business Business          @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  widgets  DashboardWidget[]
+
+  @@index([businessId])
+  @@index([isDefault])
+  @@index([shareToken])
+}
+
+model DashboardWidget {
+  id          String     @id @default(cuid())
+  dashboardId String
+  type        WidgetType
+  title       String
+  config      Json // Widget-specific configuration
+  position    Json // {x, y, width, height}
+  isVisible   Boolean    @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  dashboard DashboardConfig @relation(fields: [dashboardId], references: [id], onDelete: Cascade)
+
+  @@index([dashboardId])
+  @@index([type])
+}
+
+enum WidgetType {
+  CHART
+  METRIC
+  TABLE
+  MAP
+  TIMELINE
+  CUSTOM
+}
+
+// Continuous Improvement
+model ImprovementFeedback {
+  id             String  @id @default(cuid())
+  businessId     String
+  conversationId String?
+  userId         String?
+  rating         Int // 1-5 scale
+  feedback       String? @db.Text
+  category       String? // general, accuracy, speed, etc.
+  source         String  @default("user") // user, system, agent
+
+  createdAt DateTime @default(now())
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([conversationId])
+  @@index([rating])
+  @@index([category])
+  @@index([createdAt])
+}
+
+model KnowledgeGap {
+  id               String      @id @default(cuid())
+  businessId       String
+  query            String      @db.Text
+  frequency        Int         @default(1)
+  lastSeen         DateTime    @default(now())
+  status           GapStatus   @default(OPEN)
+  priority         GapPriority @default(MEDIUM)
+  suggestedContent String?     @db.Text
+  resolvedAt       DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([status])
+  @@index([priority])
+  @@index([lastSeen])
+}
+
+model ImprovementSuggestion {
+  id            String           @id @default(cuid())
+  businessId    String
+  gapId         String?
+  type          SuggestionType
+  title         String
+  description   String           @db.Text
+  impact        SuggestionImpact @default(MEDIUM)
+  effort        SuggestionEffort @default(MEDIUM)
+  status        SuggestionStatus @default(PENDING)
+  implementedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([type])
+  @@index([status])
+  @@index([impact])
+}
+
+model ImprovementGoal {
+  id           String     @id @default(cuid())
+  businessId   String
+  title        String
+  description  String     @db.Text
+  metric       String // accuracy, response_time, satisfaction
+  targetValue  Float
+  currentValue Float      @default(0)
+  deadline     DateTime
+  status       GoalStatus @default(ACTIVE)
+  progress     Float      @default(0) // 0-100%
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([status])
+  @@index([deadline])
+}
+
+enum AIModelStatus {
+  TRAINING
+  READY
+  FAILED
+  DEPLOYED
+}
+
+enum TrainingStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum GapStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  IGNORED
+}
+
+enum GapPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum SuggestionType {
+  CONTENT_UPDATE
+  MODEL_TRAINING
+  FEATURE_ENHANCEMENT
+  INTEGRATION_SETUP
+  WORKFLOW_IMPROVEMENT
+}
+
+enum SuggestionImpact {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum SuggestionEffort {
+  LOW
+  MEDIUM
+  HIGH
+  VERY_HIGH
+}
+
+enum SuggestionStatus {
+  PENDING
+  APPROVED
+  IMPLEMENTED
+  REJECTED
+}
+
+enum GoalStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+  OVERDUE
 }

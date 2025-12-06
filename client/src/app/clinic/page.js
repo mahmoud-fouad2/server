@@ -1,10 +1,17 @@
-"use client"
+'use client';
 
-import PageLayout from '@/components/layout/PageLayout'
-import { Button } from '@/components/ui/button'
-import Link from 'next/link'
-import { Stethoscope, Check, ArrowRight, Clock, Users, TrendingUp } from 'lucide-react'
-import { motion } from 'framer-motion'
+import PageLayout from '@/components/layout/PageLayout';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import {
+  Stethoscope,
+  Check,
+  ArrowRight,
+  Clock,
+  Users,
+  TrendingUp,
+} from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function ClinicPage() {
   return (
@@ -40,12 +47,26 @@ export default function ClinicPage() {
 
         <section className="py-20 px-6">
           <div className="max-w-7xl mx-auto">
-            <h2 className="text-4xl font-bold text-center mb-16">المميزات الرئيسية</h2>
+            <h2 className="text-4xl font-bold text-center mb-16">
+              المميزات الرئيسية
+            </h2>
             <div className="grid md:grid-cols-3 gap-8">
               {[
-                { icon: <Clock size={32} />, title: 'حجز مواعيد تلقائي', desc: 'إدارة ذكية للمواعيد 24/7' },
-                { icon: <Users size={32} />, title: 'تقليل 80% من المكالمات', desc: 'رد تلقائي على الاستفسارات' },
-                { icon: <TrendingUp size={32} />, title: 'تحسين تجربة المريض', desc: 'متابعة وتذكير مستمر' }
+                {
+                  icon: <Clock size={32} />,
+                  title: 'حجز مواعيد تلقائي',
+                  desc: 'إدارة ذكية للمواعيد 24/7',
+                },
+                {
+                  icon: <Users size={32} />,
+                  title: 'تقليل 80% من المكالمات',
+                  desc: 'رد تلقائي على الاستفسارات',
+                },
+                {
+                  icon: <TrendingUp size={32} />,
+                  title: 'تحسين تجربة المريض',
+                  desc: 'متابعة وتذكير مستمر',
+                },
               ].map((item, i) => (
                 <motion.div
                   key={i}
@@ -59,7 +80,9 @@ export default function ClinicPage() {
                     {item.icon}
                   </div>
                   <h3 className="text-2xl font-bold mb-2">{item.title}</h3>
-                  <p className="text-gray-600 dark:text-gray-400">{item.desc}</p>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    {item.desc}
+                  </p>
                 </motion.div>
               ))}
             </div>
@@ -68,18 +91,18 @@ export default function ClinicPage() {
 
         <section className="py-20 px-6 bg-white dark:bg-cosmic-900">
           <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-4xl font-bold mb-6">ابدأ بـ 99 ريال فقط شهرياً</h2>
+            <h2 className="text-4xl font-bold mb-6">
+              ابدأ بـ 99 ريال فقط شهرياً
+            </h2>
             <p className="text-xl text-gray-600 dark:text-gray-400 mb-10">
               تجربة مجانية 7 أيام - بدون بطاقة ائتمانية
             </p>
             <Link href="/register">
-              <Button className="h-16 px-12 text-xl">
-                ابدأ الآن
-              </Button>
+              <Button className="h-16 px-12 text-xl">ابدأ الآن</Button>
             </Link>
           </div>
         </section>
       </div>
     </PageLayout>
-  )
+  );
 }

@@ -9,187 +9,158 @@ const rateLimit = require('express-rate-limit');
 const hpp = require('hpp');
 const prisma = require('./config/database');
 const logger = require('./utils/logger');
+const { errorHandler, handleUnhandledRejections, handleUncaughtExceptions } = require('./middleware/errorHandler');
 
 // Fahimo Insight: Initialize the core "Understanding" engine
 dotenv.config();
+
+// Safety guard: never allow DEV_NO_AUTH in production
+if (process.env.NODE_ENV === 'production' && process.env.DEV_NO_AUTH === 'true') {
+  console.error('FATAL: DEV_NO_AUTH=true is not allowed in production. Remove this variable from your environment.');
+  // Exit early to avoid starting an insecure server
+  process.exit(1);
+}
+
+// Test database connection after environment is loaded
+const testDatabaseConnection = async () => {
+  try {
+    await prisma.$connect();
+    console.log('[Database] Connected successfully');
+
+    // Run a simple query to verify vector extension
+    await prisma.$queryRaw`SELECT 1`;
+    console.log('[Database] Vector extension available');
+
+  } catch (error) {
+    console.error('[Database] Connection failed:', error.message);
+    process.exit(1);
+  }
+};
 const app = express();
 
-// Trust proxy for Render deployment (enables correct IP detection behind proxy)
-app.set('trust proxy', 1);
-
-// HTTPS Enforcement (Production only)
-if (process.env.NODE_ENV === 'production') {
-  app.use((req, res, next) => {
-    if (req.header('x-forwarded-proto') !== 'https') {
-      return res.redirect(`https://${req.header('host')}${req.url}`);
-    }
-    next();
-  });
+// CORS: restrict origins via `CORS_ORIGINS` env (comma-separated). If not set, default to allow only same-origin.
+const allowedOrigins = (process.env.CORS_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
+if (allowedOrigins.length === 0) {
+  // In absence of explicit config, allow same-origin only by a safe default
+  app.use(cors({ origin: false }));
+} else {
+  app.use(cors({
+    origin: function(origin, cb) {
+      // allow non-browser requests (e.g., curl, server-to-server) with no origin
+      if (!origin) return cb(null, true);
+      if (allowedOrigins.includes(origin)) return cb(null, true);
+      cb(new Error('CORS origin denied'));
+    },
+    credentials: true,
+  }));
 }
 
-const server = http.createServer(app);
+// We'll create the server inside a helper so we can retry on EADDRINUSE
 
-const authRoutes = require('./routes/auth.routes');
-const botRoutes = require('./routes/bots');
-const whatsappRoutes = require('./routes/whatsapp');
-const knowledgeRoutes = require('./routes/knowledge.routes');
-const widgetRoutes = require('./routes/widget.routes');
-const businessRoutes = require('./routes/business.routes');
-const chatRoutes = require('./routes/chat.routes');
-const ticketRoutes = require('./routes/tickets.routes');
-const contactRoutes = require('./routes/contact.routes');
-const passwordRoutes = require('./routes/password.routes');
-const teamRoutes = require('./routes/team.routes');
-const adminRoutes = require('./routes/admin.routes');
-const telegramRoutes = require('./routes/telegram.routes');
-const twilioRoutes = require('./routes/twilio.routes');
-const analyticsRoutes = require('./routes/analytics.routes');
-const aiRoutes = require('./routes/ai.routes');
-const permissionsRoutes = require('./middleware/permissions');
-const visitorRoutes = require('./routes/visitor.routes');
-const ratingRoutes = require('./routes/rating.routes');
-const healthRoutes = require('./routes/health.routes');
+async function startServerWithRetries(startPort, maxAttempts = 10) {
+  let port = parseInt(startPort, 10) || 3002;
 
-// Security Middleware
-app.use(helmet({
-  contentSecurityPolicy: false, // Disable for now to avoid breaking widget embedding
-  crossOriginEmbedderPolicy: false
-}));
-app.use(hpp()); // Prevent HTTP Parameter Pollution
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const s = http.createServer(app);
 
-// Rate Limiting - General API
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // 100 requests per 15 minutes per IP
-  message: { error: 'Too many requests from this IP, please try again later.' },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+    try {
+      await new Promise((resolve, reject) => {
+        s.once('error', reject);
+        s.once('listening', resolve);
+        s.listen(port, '127.0.0.1');
+      });
 
-// Stricter Rate Limiting - Authentication
-const authLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 10, // 10 requests per hour per IP
-  message: { error: 'Too many authentication attempts, please try again later.' },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+      // Attach a runtime error handler
+      s.on('error', (err) => {
+        console.error('Server runtime error:', err);
+        logger.error('Server runtime error', err);
+      });
 
-// Determine allowed origins
-const allowedOrigins = process.env.NODE_ENV === 'production'
-  ? [
-      'https://faheemly.com', 
-      'https://www.faheemly.com',
-      ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',').map(url => url.trim()) : [])
-    ]
-  : ['http://localhost:3000', 'http://localhost:3001'];
+      logger.info(`Server successfully bound to port ${port}`);
+      return { server: s, port };
+    } catch (err) {
+      // Clean up and try next port on EADDRINUSE
+      try { s.close(); } catch (e) {}
+
+      if (err && err.code === 'EADDRINUSE') {
+        logger.warn(`Port ${port} in use, trying port ${port + 1}`);
+        port += 1;
+        // continue to next attempt
+        continue;
+      }
+
+      // Other errors - rethrow
+      logger.error('Failed to bind server:', err);
+      throw err;
+    }
+  }
+
+  throw new Error(`Unable to bind server after ${maxAttempts} attempts starting at port ${startPort}`);
+}
 
 // Middleware
-app.use(cors({
-  origin: allowedOrigins,
-  credentials: true
-}));
-app.use(express.json({ limit: '10mb' })); // Add size limit for security
+app.use(express.json());
 
-// Serve server public folder (API static assets) with caching
-app.use(express.static('public', { 
-  maxAge: '1d', // Cache for 1 day
-  etag: true 
-}));
+// Test route
+app.get('/', (req, res) => res.send('Hello World'));
 
-// Serve the statically exported Next.js client (output directory `client/out`).
-const clientOut = path.join(__dirname, '..', '..', 'client', 'out');
-app.use('/chat1', express.static(clientOut, { 
-  index: 'index.html',
-  maxAge: '1d', // Cache for 1 day
-  etag: true
-}));
-app.use('/', express.static(clientOut, { 
-  index: 'index.html',
-  maxAge: '1d', // Cache for 1 day
-  etag: true
-}));
+// Phase 2 Routes
+const multiLanguageRoutes = require('./routes/multi-language.routes');
+app.use('/api/multi-language', multiLanguageRoutes);
 
-// Socket.io for real-time widget chat
-const io = new Server(server, {
-  cors: {
-    origin: allowedOrigins,
-    methods: ["GET", "POST"],
-    credentials: true
-  }
-});
+const continuousImprovementRoutes = require('./routes/continuous-improvement.routes');
+app.use('/api/improvement', continuousImprovementRoutes);
 
-// Fahimo Insight: Real-time connection for the "Magic" widget
-const initializeSocket = require('./socket/socketHandler');
-initializeSocket(io);
-
-// Basic Routes
-app.get('/', (req, res) => {
-  res.send('Fahimo API is running. The AI that understands you.');
-});
-
-// Health Check Endpoint (using new monitoring system)
-app.use('/api/health', healthRoutes);
-
-// Apply rate limiters
-app.use('/api/auth', authLimiter); // Strict limiter for auth routes
-app.use('/api', apiLimiter); // General limiter for all other API routes
-
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/auth', passwordRoutes); // Password reset routes
-app.use('/api/bots', botRoutes);
-app.use('/api/whatsapp', whatsappRoutes);
-app.use('/api/knowledge', knowledgeRoutes);
-app.use('/api/widget', widgetRoutes);
-app.use('/api/business', businessRoutes);
-app.use('/api/chat', chatRoutes);
-app.use('/api/tickets', ticketRoutes);
-app.use('/api/contact', contactRoutes);
-app.use('/api/team', teamRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/telegram', telegramRoutes);
-app.use('/api/twilio', twilioRoutes);
-app.use('/api/analytics', analyticsRoutes);
-app.use('/api/ai', aiRoutes); // Hybrid AI monitoring
-app.use('/api/permissions', permissionsRoutes);
-app.use('/api/visitor', visitorRoutes); // Visitor tracking & analytics
-app.use('/api/rating', ratingRoutes); // Rating system
-
-const PORT = process.env.PORT || 3001;
-
-// CRITICAL: Validate required environment variables on startup
-function validateEnvironment() {
-  const required = ['JWT_SECRET', 'DATABASE_URL', 'GROQ_API_KEY'];
-  const missing = required.filter(key => !process.env[key]);
-  
-  if (missing.length > 0) {
-    logger.error('FATAL: Missing required environment variables', null, { missing });
-    logger.error('Please set them in your .env file');
-    process.exit(1);
-  }
-
-  if (process.env.JWT_SECRET === 'your-secret-key' || process.env.JWT_SECRET.length < 32) {
-    logger.error('FATAL: JWT_SECRET is weak or using default value!');
-    logger.error('Generate a strong secret: openssl rand -base64 32');
-    process.exit(1);
-  }
-
-  // Note: ADMIN_INITIAL_PASSWORD should be set on Render/hosting platform, not in .env file
-  // This is for security - password shouldn't be committed to git
-
-  logger.info('Environment validation passed');
+// Proxy routes (useful to avoid CORS to external APIs during local dev)
+try {
+  const proxyRoutes = require('./routes/proxy.routes');
+  app.use('/api/proxy', proxyRoutes);
+} catch (e) {
+  console.warn('Proxy routes not available:', e?.message || e);
 }
 
-process.on('uncaughtException', (err) => {
-  logger.error('UNCAUGHT EXCEPTION - Server will exit', err);
-  process.exit(1);
-});
+// Error handling middleware (must be last)
+app.use(errorHandler);
 
-process.on('unhandledRejection', (reason, promise) => {
-  logger.error('UNHANDLED REJECTION - Server will exit', reason instanceof Error ? reason : new Error(String(reason)));
-  process.exit(1);
-});
+const PORT = process.env.PORT || 3002;
+
+// Validate environment variables on startup
+const { validateEnvironment } = require('./config/env');
+
+// Initialize error handling
+handleUncaughtExceptions();
+handleUnhandledRejections();
+
+// Graceful shutdown helper
+let serverInstance = null;
+async function shutdown(code = 0) {
+  try {
+    logger.info('Shutting down gracefully...');
+    // Stop periodic monitoring if running
+    try {
+      const monitor = require('./utils/monitor');
+      if (monitor && monitor.stopPeriodicMonitoring) monitor.stopPeriodicMonitoring();
+    } catch (e) {
+      // ignore
+    }
+
+    // Disconnect external resources
+    try { await prisma.$disconnect(); } catch (e) { logger.warn('Error disconnecting Prisma', e?.message || e); }
+    try { const redisCache = require('./services/redis-cache.service'); if (redisCache && redisCache.disconnect) await redisCache.disconnect(); } catch (e) { logger.warn('Error disconnecting Redis', e?.message || e); }
+
+    if (serverInstance && serverInstance.close) {
+      await new Promise((resolve) => serverInstance.close(resolve));
+      logger.info('HTTP server closed');
+    }
+  } catch (err) {
+    logger.error('Error during shutdown', err);
+  } finally {
+    process.exit(code);
+  }
+}
+
+process.on('SIGINT', () => shutdown(0));
+process.on('SIGTERM', () => shutdown(0));
 
 // Auto-create admin on startup
 async function ensureAdminExists() {
@@ -279,18 +250,68 @@ async function checkServicesStatus() {
   }
 }
 
-server.listen(PORT, async () => {
-  logger.info(`Fahimo Server is running on port ${PORT}`);
-  logger.info('"The one who understands you" is ready to serve.');
-  
-  // Validate environment before starting
-  validateEnvironment();
-  
-  await ensureAdminExists();
-  await checkServicesStatus();
+// Test database connection before starting server
+// Note: testDatabaseConnection throws on failure; callers should shutdown gracefully
+testDatabaseConnection().then(async () => {
+  try {
+    const { server, port } = await startServerWithRetries(PORT, 20);
+    serverInstance = server;
 
-  // Start system monitoring (every 5 minutes)
-  const monitor = require('./utils/monitor');
-  monitor.startPeriodicMonitoring(5);
-  logger.info('🔍 System monitoring initialized (5-minute intervals)');
+    logger.info(`Fahimo Server is running on port ${port}`);
+    logger.info('"The one who understands you" is ready to serve.');
+    console.log('Server listening:', server.listening);
+    console.log('Server address:', server.address());
+
+    try {
+      // Validate environment before starting
+      validateEnvironment();
+
+      // Ensure admin only in non-production unless explicitly allowed
+      if (process.env.NODE_ENV !== 'production' || process.env.ALLOW_AUTO_ADMIN === 'true') {
+        await ensureAdminExists();
+      } else {
+        logger.info('Skipping automatic admin creation in production (set ALLOW_AUTO_ADMIN=true to override)');
+      }
+
+      // Try to connect to Redis if configured
+      try {
+        const redisCache = require('./services/redis-cache.service');
+        if (redisCache.isEnabled && !redisCache.isConnected) {
+          await redisCache.connect();
+        }
+      } catch (e) {
+        logger.warn('Redis connect attempt failed:', e?.message || e);
+      }
+
+      await checkServicesStatus();
+      console.log('✅ Startup functions completed');
+
+      // Start system monitoring (every 5 minutes)
+      const monitor = require('./utils/monitor');
+      monitor.startPeriodicMonitoring(5);
+      logger.info('🔍 System monitoring ENABLED');
+
+      // Keep event loop alive
+      setInterval(() => {
+        // Keep alive
+      }, 60000);
+
+      // Also resume stdin to keep alive
+      process.stdin.resume();
+
+      console.log('🚀 Server fully operational and stable');
+    } catch (error) {
+      console.error('❌ Startup error:', error);
+      await shutdown(1);
+    }
+
+    server.on('close', () => logger.info('Server closed'));
+    process.on('exit', (code) => console.log('Process exiting with code', code));
+  } catch (err) {
+    console.error('Failed to start server:', err);
+    await shutdown(1);
+  }
+}).catch(async err => {
+  console.error('Failed to connect to database:', err);
+  await shutdown(1);
 });

@@ -1,6 +1,7 @@
 const axios = require('axios');
 const levenshtein = require('fast-levenshtein');
 const prisma = require('../config/database');
+const vectorSearchService = require('./vector-search.service');
 
 // AI Provider Configuration
 const AI_PROVIDERS = {
@@ -215,11 +216,30 @@ class AIService {
         };
       }
 
-      // 4. Try Local Keyword Search
+      // 4. Try Vector Search on Knowledge Base
+      let vectorResults = null;
+      try {
+        vectorResults = await vectorSearchService.searchKnowledge(businessId, userMessage, 3, 0.7);
+        console.log(`[Vector Search] Found ${vectorResults.length} relevant chunks`);
+      } catch (error) {
+        console.error('[Vector Search] Failed:', error.message);
+      }
+
+      // If vector search found relevant results, use them
+      if (vectorResults && vectorResults.length > 0) {
+        const combinedContent = vectorResults.map(result => result.content).join('\n\n');
+        const snippet = combinedContent.substring(0, 500);
+        const localAnswer = `بناءً على معلوماتنا: ${snippet}... \n\nللمزيد من التفاصيل، يرجى التواصل معنا.`;
+        console.log(`[Vector KB Match] Found ${vectorResults.length} relevant chunks`);
+        this.addToCache(businessId, userMessage, localAnswer);
+        return { response: localAnswer, fromCache: false, tokensUsed: 0, provider: 'knowledge-base' };
+      }
+
+      // 5. Fallback to Local Keyword Search (legacy)
       const keywords = userMessage.toLowerCase().split(/\s+/).filter(w => w.length > 3);
       let bestMatch = null;
       let bestScore = 0;
-      
+
       for (const kb of business.knowledgeBase) {
         const content = kb.content.toLowerCase();
         let score = 0;
@@ -240,8 +260,16 @@ class AIService {
         return { response: localAnswer, fromCache: false, tokensUsed: 0, provider: 'knowledge-base' };
       }
 
-      // 5. Construct Context
-      const context = business.knowledgeBase.map(kb => kb.content).join("\n\n").substring(0, 30000);
+      // 6. Construct Context (include vector results if available)
+      let context = business.knowledgeBase.map(kb => kb.content).join("\n\n");
+
+      // Add vector search results to context if available
+      if (vectorResults && vectorResults.length > 0) {
+        const vectorContext = vectorResults.map(result => result.content).join("\n\n");
+        context = vectorContext + "\n\n" + context;
+      }
+
+      context = context.substring(0, 30000);
 
       // 6. Prepare messages
       const messages = [

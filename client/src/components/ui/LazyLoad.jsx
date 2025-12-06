@@ -5,13 +5,13 @@ import { useEffect, useRef, useState } from 'react';
 /**
  * LazyLoad Component - Loads children only when visible in viewport
  */
-export default function LazyLoad({ 
-  children, 
+export default function LazyLoad({
+  children,
   threshold = 0.1,
   rootMargin = '50px',
   placeholder = null,
   once = true,
-  className = ''
+  className = '',
 }) {
   const [isVisible, setIsVisible] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
@@ -19,8 +19,8 @@ export default function LazyLoad({
 
   useEffect(() => {
     const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
+      entries => {
+        entries.forEach(entry => {
           if (entry.isIntersecting) {
             setIsVisible(true);
             if (once) {
@@ -62,15 +62,15 @@ export default function LazyLoad({
 /**
  * LazyImage Component - Lazy loads images with blur-up effect
  */
-export function LazyImage({ 
-  src, 
-  alt, 
-  width, 
-  height, 
+export function LazyImage({
+  src,
+  alt,
+  width,
+  height,
   className = '',
   blurDataURL,
   priority = false,
-  ...props 
+  ...props
 }) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInView, setIsInView] = useState(priority);
@@ -80,8 +80,8 @@ export function LazyImage({
     if (priority) return;
 
     const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
+      entries => {
+        entries.forEach(entry => {
           if (entry.isIntersecting) {
             setIsInView(true);
             observer.disconnect();
@@ -106,7 +106,7 @@ export function LazyImage({
   }, [priority]);
 
   return (
-    <div 
+    <div
       ref={imgRef}
       className={`relative overflow-hidden ${className}`}
       style={{ width, height }}
@@ -120,7 +120,7 @@ export function LazyImage({
           aria-hidden="true"
         />
       )}
-      
+
       {/* Actual image */}
       {isInView && (
         <img
@@ -136,7 +136,7 @@ export function LazyImage({
           {...props}
         />
       )}
-      
+
       {/* Loading skeleton */}
       {!isLoaded && (
         <div className="absolute inset-0 bg-gray-200 dark:bg-cosmic-700 animate-pulse" />
@@ -148,17 +148,17 @@ export function LazyImage({
 /**
  * LazySection - For lazy loading entire sections
  */
-export function LazySection({ 
-  children, 
+export function LazySection({
+  children,
   fallback = null,
   minHeight = '200px',
-  className = ''
+  className = '',
 }) {
   return (
-    <LazyLoad 
+    <LazyLoad
       placeholder={
         fallback || (
-          <div 
+          <div
             className={`animate-pulse bg-gray-200 dark:bg-cosmic-700 rounded-lg ${className}`}
             style={{ minHeight }}
           />
@@ -181,8 +181,8 @@ export function useLazyLoad(callback, dependencies = []) {
 
   useEffect(() => {
     const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
+      entries => {
+        entries.forEach(entry => {
           if (entry.isIntersecting && !hasLoaded) {
             setIsVisible(true);
             callback();

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const prisma = require('../config/database');
 const { authenticateToken } = require('../middleware/auth');
+const logger = require('../utils/logger');
 
 // Middleware to check if user is SUPERADMIN
 const isAdmin = async (req, res, next) => {
@@ -26,7 +27,7 @@ router.get('/stats', authenticateToken, isAdmin, async (req, res) => {
       totalMessages
     });
   } catch (error) {
-    console.error('Admin Stats Error:', error);
+    logger.error('Admin Stats Error:', error);
     res.status(500).json({ error: 'Failed to fetch stats' });
   }
 });
@@ -42,7 +43,7 @@ router.get('/users', authenticateToken, isAdmin, async (req, res) => {
     });
     res.json(users);
   } catch (error) {
-    console.error('Admin Users Error:', error);
+    logger.error('Admin Users Error:', error);
     res.status(500).json({ error: 'Failed to fetch users' });
   }
 });
@@ -58,7 +59,7 @@ router.get('/settings', authenticateToken, isAdmin, async (req, res) => {
     }, {});
     res.json(settingsObj);
   } catch (error) {
-    console.error('Admin Get Settings Error:', error);
+    logger.error('Admin Get Settings Error:', error);
     res.status(500).json({ error: 'Failed to fetch settings' });
   }
 });
@@ -79,7 +80,7 @@ router.put('/settings', authenticateToken, isAdmin, async (req, res) => {
     await prisma.$transaction(updates);
     res.json({ success: true });
   } catch (error) {
-    console.error('Admin Update Settings Error:', error);
+    logger.error('Admin Update Settings Error:', error);
     res.status(500).json({ error: 'Failed to update settings' });
   }
 });
@@ -94,7 +95,7 @@ router.get('/ai-providers', authenticateToken, isAdmin, async (req, res) => {
         id: 'groq',
         name: 'Groq',
         model: 'llama-3.3-70b-versatile',
-        apiKey: process.env.GROQ_API_KEY || '',
+        apiKey: process.env.GROQ_API_KEY ? 'configured' : 'not-configured', // SECURITY: Don't expose actual key
         isActive: true,
         tier: 'Free',
         status: process.env.GROQ_API_KEY ? 'configured' : 'not-configured'
@@ -103,6 +104,7 @@ router.get('/ai-providers', authenticateToken, isAdmin, async (req, res) => {
         id: 'gemini',
         name: 'Google Gemini',
         model: 'gemini-1.5-flash',
+        apiKey: process.env.GEMINI_API_KEY ? 'configured' : 'not-configured', // SECURITY: Don't expose actual key
         isActive: true,
         tier: 'Free',
         status: process.env.GEMINI_API_KEY ? 'configured' : 'not-configured'
@@ -111,6 +113,7 @@ router.get('/ai-providers', authenticateToken, isAdmin, async (req, res) => {
         id: 'cerebras',
         name: 'Cerebras AI',
         model: 'llama3.1-8b',
+        apiKey: process.env.CEREBRAS_API_KEY ? 'configured' : 'not-configured', // SECURITY: Don't expose actual key
         isActive: true,
         tier: 'Free',
         status: process.env.CEREBRAS_API_KEY ? 'configured' : 'not-configured'
@@ -119,6 +122,7 @@ router.get('/ai-providers', authenticateToken, isAdmin, async (req, res) => {
         id: 'deepseek',
         name: 'Deepseek',
         model: 'deepseek-chat',
+        apiKey: process.env.DEEPSEEK_API_KEY ? 'configured' : 'not-configured', // SECURITY: Don't expose actual key
         isActive: true,
         tier: 'Free',
         status: process.env.DEEPSEEK_API_KEY ? 'configured' : 'not-configured'
@@ -126,7 +130,7 @@ router.get('/ai-providers', authenticateToken, isAdmin, async (req, res) => {
     ];
     res.json(providers);
   } catch (error) {
-    console.error('Admin Get AI Providers Error:', error);
+    logger.error('Admin Get AI Providers Error:', error);
     res.status(500).json({ error: 'Failed to fetch AI providers' });
   }
 });
@@ -154,7 +158,7 @@ router.post('/ai-providers/:id/test', authenticateToken, isAdmin, async (req, re
       fromCache: result.fromCache
     });
   } catch (error) {
-    console.error('Admin Test AI Provider Error:', error);
+    logger.error('Admin Test AI Provider Error:', error);
     res.status(500).json({ error: 'Test failed: ' + error.message });
   }
 });
@@ -183,7 +187,7 @@ router.get('/ai-stats', authenticateToken, isAdmin, async (req, res) => {
       period: '30 days'
     });
   } catch (error) {
-    console.error('Admin Get AI Stats Error:', error);
+    logger.error('Admin Get AI Stats Error:', error);
     res.status(500).json({ error: 'Failed to fetch AI stats' });
   }
 });
@@ -199,7 +203,7 @@ router.get('/logs', authenticateToken, isAdmin, async (req, res) => {
     });
     res.json(logs);
   } catch (error) {
-    console.error('Admin Get Logs Error:', error);
+    logger.error('Admin Get Logs Error:', error);
     res.status(500).json({ error: 'Failed to fetch logs' });
   }
 });
@@ -214,8 +218,40 @@ router.put('/business/:id/plan', authenticateToken, isAdmin, async (req, res) =>
     });
     res.json(business);
   } catch (error) {
-    console.error('Admin Update Plan Error:', error);
+    logger.error('Admin Update Plan Error:', error);
     res.status(500).json({ error: 'Failed to update plan' });
+  }
+});
+
+// --- System Monitoring Dashboard ---
+
+// Get System Monitoring Dashboard
+router.get('/monitoring', authenticateToken, isAdmin, async (req, res) => {
+  try {
+    const monitor = require('../utils/monitor');
+    const report = await monitor.getSystemReport();
+    
+    res.json({
+      system: report.system,
+      business: report.business,
+      alerts: report.alerts,
+      timestamp: report.generatedAt
+    });
+  } catch (error) {
+    logger.error('Admin Monitoring Error:', error);
+    res.status(500).json({ error: 'Failed to fetch monitoring data' });
+  }
+});
+
+// Clear System Alerts
+router.delete('/monitoring/alerts', authenticateToken, isAdmin, async (req, res) => {
+  try {
+    const monitor = require('../utils/monitor');
+    monitor.clearOldAlerts(0); // Clear all alerts
+    res.json({ success: true, message: 'Alerts cleared' });
+  } catch (error) {
+    logger.error('Admin Clear Alerts Error:', error);
+    res.status(500).json({ error: 'Failed to clear alerts' });
   }
 });
 

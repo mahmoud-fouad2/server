@@ -1,10 +1,10 @@
-"use client"
+'use client';
 
-import { useState } from 'react'
-import { Login } from '../../components/Login'
+import { useState } from 'react';
+import { Login } from '../../components/Login';
 
 export default function LoginPage() {
-  const [lang, setLang] = useState('ar')
+  const [lang, setLang] = useState('ar');
 
-  return <Login lang={lang} />
+  return <Login lang={lang} />;
 }

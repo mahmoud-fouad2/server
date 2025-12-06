@@ -1,23 +1,25 @@
-import './globals.css'
-import dynamic from 'next/dynamic'
-import ErrorBoundary from '@/components/ErrorBoundary'
+import './globals.css';
+import dynamic from 'next/dynamic';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
-const SalesBot = dynamic(() => import('@/components/SalesBot'), { ssr: false })
+const SalesBot = dynamic(() => import('@/components/SalesBot'), { ssr: false });
 
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
   userScalable: true,
-}
+};
 
 export const metadata = {
   metadataBase: new URL('https://faheemly.com'),
   title: {
-    default: 'فهملي - شات بوت ذكاء اصطناعي عربي | واتساب للأعمال السعودية ومصر والخليج',
-    template: '%s | فهملي - شات بوت ذكاء اصطناعي'
+    default:
+      'فهملي - شات بوت ذكاء اصطناعي عربي | واتساب للأعمال السعودية ومصر والخليج',
+    template: '%s | فهملي - شات بوت ذكاء اصطناعي',
   },
-  description: 'أقوى منصة شات بوت عربي بالذكاء الاصطناعي للسعودية ومصر والإمارات والكويت. ربط واتساب فوري، رد تلقائي 24/7 بكل اللهجات العربية. للمطاعم والعيادات والمتاجر. جرب مجاناً 7 أيام!',
+  description:
+    'أقوى منصة شات بوت عربي بالذكاء الاصطناعي للسعودية ومصر والإمارات والكويت. ربط واتساب فوري، رد تلقائي 24/7 بكل اللهجات العربية. للمطاعم والعيادات والمتاجر. جرب مجاناً 7 أيام!',
   keywords: [
     'شات بوت',
     'ذكاء اصطناعي',
@@ -51,7 +53,7 @@ export const metadata = {
     'شات بوت إماراتي',
     'شات بوت كويتي',
     'ردود آلية ذكية',
-    'خدمة عملاء 24 ساعة'
+    'خدمة عملاء 24 ساعة',
   ],
   authors: [{ name: 'Ma-Fo.info', url: 'https://ma-fo.info' }],
   creator: 'Ma-Fo.info',
@@ -88,8 +90,10 @@ export const metadata = {
     },
   },
   openGraph: {
-    title: 'فهملي.كوم | الموظف الذكي الذي يفهمك ويفهم عملائك بكل اللهجات العربية',
-    description: 'حول زوار موقعك إلى عملاء دائمين مع فهملي. شات بوت ذكي يفهم اللهجات العربية من الخليج إلى المغرب ويدير أعمالك 24/7. ابدأ الآن بـ99 ريال فقط.',
+    title:
+      'فهملي.كوم | الموظف الذكي الذي يفهمك ويفهم عملائك بكل اللهجات العربية',
+    description:
+      'حول زوار موقعك إلى عملاء دائمين مع فهملي. شات بوت ذكي يفهم اللهجات العربية من الخليج إلى المغرب ويدير أعمالك 24/7. ابدأ الآن بـ99 ريال فقط.',
     url: 'https://faheemly.com',
     siteName: 'Faheemly.com',
     locale: 'ar_SA',
@@ -106,7 +110,8 @@ export const metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'فهملي.كوم | الموظف الذكي الذي لا ينام - AI Chatbot',
-    description: 'أقوى منصة شات بوت عربي للشرق الأوسط. يغطي كل اللهجات العربية. جرب مجاناً الآن!',
+    description:
+      'أقوى منصة شات بوت عربي للشرق الأوسط. يغطي كل اللهجات العربية. جرب مجاناً الآن!',
     creator: '@faheemly_ai',
     site: '@faheemly_ai',
     images: ['/twitter-image.jpg'],
@@ -122,164 +127,221 @@ export const metadata = {
     'apple-mobile-web-app-status-bar-style': 'black-translucent',
     'mobile-web-app-capable': 'yes',
   },
-}
+};
 
 export default function RootLayout({ children }) {
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Beiruti:wght@200..900&display=swap" rel="stylesheet" />
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flag-icons@7.2.3/css/flag-icons.min.css" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Beiruti:wght@200..900&display=swap"
+          rel="stylesheet"
+        />
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/flag-icons@7.2.3/css/flag-icons.min.css"
+        />
+        <meta httpEquiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; img-src 'self' data: https:; font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; connect-src 'self' http://localhost:3001 https://fahimo-api.onrender.com wss://fahimo-api.onrender.com; frame-src 'self';" />
         {/* Inline script to apply saved theme before React mounts (prevents flash) - Default to LIGHT */}
-        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'){document.documentElement.classList.add('dark');}else{document.documentElement.classList.remove('dark');}}catch(e){} })();` }} />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'){document.documentElement.classList.add('dark');}else{document.documentElement.classList.remove('dark');}}catch(e){} })();`,
+          }}
+        />
 
         {/* Quick placeholder override early to avoid other scripts reading null from getElementById */}
-        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var ids=['share-modal','share-button','share-btn','share-trigger','share-modal-root'];var orig=document.getElementById.bind(document);document.getElementById=function(id){try{var f=orig(id);if(f) return f;}catch(e){} if(ids.indexOf(id)!==-1){var el=document.createElement('div');el.id=id;el.style.display='none';el.style.pointerEvents='none';if(document.body)document.body.appendChild(el);else document.documentElement.appendChild(el);return el;} return null;};}catch(e){console.warn('early-placeholder failed',e);} })();` }} />
-        
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var ids=['share-modal','share-button','share-btn','share-trigger','share-modal-root'];var orig=document.getElementById.bind(document);document.getElementById=function(id){try{var f=orig(id);if(f) return f;}catch(e){} if(ids.indexOf(id)!==-1){var el=document.createElement('div');el.id=id;el.style.display='none';el.style.pointerEvents='none';if(document.body)document.body.appendChild(el);else document.documentElement.appendChild(el);return el;} return null;};}catch(e){console.warn('early-placeholder failed',e);} })();`,
+          }}
+        />
+
         {/* Structured Data - Organization */}
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
-          '@context': 'https://schema.org',
-          '@type': 'Organization',
-          name: 'Faheemly - فهملي',
-          alternateName: ['فهملي.كوم', 'Faheemly.com'],
-          url: 'https://faheemly.com',
-          logo: 'https://faheemly.com/logo.webp',
-          description: 'أقوى منصة شات بوت عربي مدعومة بالذكاء الاصطناعي للشرق الأوسط',
-          foundingDate: '2023',
-          contactPoint: {
-            '@type': 'ContactPoint',
-            contactType: 'Customer Service',
-            areaServed: ['SA', 'EG', 'AE', 'KW', 'QA', 'BH', 'JO', 'LB', 'MA'],
-            availableLanguage: ['Arabic', 'English']
-          },
-          sameAs: [
-            'https://twitter.com/faheemly_ai',
-            'https://linkedin.com/company/faheemly',
-            'https://instagram.com/faheemly_ai'
-          ]
-        }) }} />
-        
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'Organization',
+              name: 'Faheemly - فهملي',
+              alternateName: ['فهملي.كوم', 'Faheemly.com'],
+              url: 'https://faheemly.com',
+              logo: 'https://faheemly.com/logo.webp',
+              description:
+                'أقوى منصة شات بوت عربي مدعومة بالذكاء الاصطناعي للشرق الأوسط',
+              foundingDate: '2023',
+              contactPoint: {
+                '@type': 'ContactPoint',
+                contactType: 'Customer Service',
+                areaServed: [
+                  'SA',
+                  'EG',
+                  'AE',
+                  'KW',
+                  'QA',
+                  'BH',
+                  'JO',
+                  'LB',
+                  'MA',
+                ],
+                availableLanguage: ['Arabic', 'English'],
+              },
+              sameAs: [
+                'https://twitter.com/faheemly_ai',
+                'https://linkedin.com/company/faheemly',
+                'https://instagram.com/faheemly_ai',
+              ],
+            }),
+          }}
+        />
+
         {/* Structured Data - Software Application */}
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
-          '@context': 'https://schema.org',
-          '@type': 'SoftwareApplication',
-          name: 'Faheemly AI Chatbot',
-          applicationCategory: 'BusinessApplication',
-          operatingSystem: 'Web',
-          offers: {
-            '@type': 'AggregateOffer',
-            lowPrice: '149',
-            highPrice: '999',
-            priceCurrency: 'SAR',
-            offerCount: '3'
-          },
-          aggregateRating: {
-            '@type': 'AggregateRating',
-            ratingValue: '4.8',
-            reviewCount: '500',
-            bestRating: '5',
-            worstRating: '1'
-          }
-        }) }} />
-        
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'SoftwareApplication',
+              name: 'Faheemly AI Chatbot',
+              applicationCategory: 'BusinessApplication',
+              operatingSystem: 'Web',
+              offers: {
+                '@type': 'AggregateOffer',
+                lowPrice: '149',
+                highPrice: '999',
+                priceCurrency: 'SAR',
+                offerCount: '3',
+              },
+              aggregateRating: {
+                '@type': 'AggregateRating',
+                ratingValue: '4.8',
+                reviewCount: '500',
+                bestRating: '5',
+                worstRating: '1',
+              },
+            }),
+          }}
+        />
+
         {/* Structured Data - Website */}
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
-          '@context': 'https://schema.org',
-          '@type': 'WebSite',
-          name: 'Faheemly',
-          url: 'https://faheemly.com',
-          potentialAction: {
-            '@type': 'SearchAction',
-            target: 'https://faheemly.com/search?q={search_term_string}',
-            'query-input': 'required name=search_term_string'
-          }
-        }) }} />
-        
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'WebSite',
+              name: 'Faheemly',
+              url: 'https://faheemly.com',
+              potentialAction: {
+                '@type': 'SearchAction',
+                target: 'https://faheemly.com/search?q={search_term_string}',
+                'query-input': 'required name=search_term_string',
+              },
+            }),
+          }}
+        />
+
         {/* Structured Data - FAQ */}
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
-          '@context': 'https://schema.org',
-          '@type': 'FAQPage',
-          mainEntity: [
-            {
-              '@type': 'Question',
-              name: 'ما هو فهملي؟',
-              acceptedAnswer: {
-                '@type': 'Answer',
-                text: 'فهملي هي أقوى منصة شات بوت عربي مدعومة بالذكاء الاصطناعي. نساعد الشركات على أتمتة خدمة العملاء وزيادة المبيعات 24/7 بكل اللهجات العربية.'
-              }
-            },
-            {
-              '@type': 'Question',
-              name: 'كيف يعمل فهملي؟',
-              acceptedAnswer: {
-                '@type': 'Answer',
-                text: 'فهملي يستخدم تقنيات الذكاء الاصطناعي المتقدمة لفهم استفسارات العملاء باللهجات العربية المختلفة والرد عليها تلقائياً. يمكن دمجه مع واتساب وموقعك الإلكتروني وتيليجرام.'
-              }
-            },
-            {
-              '@type': 'Question',
-              name: 'ما هي تكلفة استخدام فهملي؟',
-              acceptedAnswer: {
-                '@type': 'Answer',
-                text: 'نوفر عدة خطط تبدأ من 149 ريال شهرياً مع تجربة مجانية 7 أيام. تشمل جميع الخطط الدعم الفني والتحديثات المستمرة.'
-              }
-            },
-            {
-              '@type': 'Question',
-              name: 'هل يدعم فهملي اللهجات العربية المختلفة؟',
-              acceptedAnswer: {
-                '@type': 'Answer',
-                text: 'نعم، فهملي يدعم جميع اللهجات العربية من الخليج إلى المغرب العربي، بما في ذلك السعودية، مصر، الإمارات، الكويت، وغيرها.'
-              }
-            }
-          ]
-        }) }} />
-        
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'FAQPage',
+              mainEntity: [
+                {
+                  '@type': 'Question',
+                  name: 'ما هو فهملي؟',
+                  acceptedAnswer: {
+                    '@type': 'Answer',
+                    text: 'فهملي هي أقوى منصة شات بوت عربي مدعومة بالذكاء الاصطناعي. نساعد الشركات على أتمتة خدمة العملاء وزيادة المبيعات 24/7 بكل اللهجات العربية.',
+                  },
+                },
+                {
+                  '@type': 'Question',
+                  name: 'كيف يعمل فهملي؟',
+                  acceptedAnswer: {
+                    '@type': 'Answer',
+                    text: 'فهملي يستخدم تقنيات الذكاء الاصطناعي المتقدمة لفهم استفسارات العملاء باللهجات العربية المختلفة والرد عليها تلقائياً. يمكن دمجه مع واتساب وموقعك الإلكتروني وتيليجرام.',
+                  },
+                },
+                {
+                  '@type': 'Question',
+                  name: 'ما هي تكلفة استخدام فهملي؟',
+                  acceptedAnswer: {
+                    '@type': 'Answer',
+                    text: 'نوفر عدة خطط تبدأ من 149 ريال شهرياً مع تجربة مجانية 7 أيام. تشمل جميع الخطط الدعم الفني والتحديثات المستمرة.',
+                  },
+                },
+                {
+                  '@type': 'Question',
+                  name: 'هل يدعم فهملي اللهجات العربية المختلفة؟',
+                  acceptedAnswer: {
+                    '@type': 'Answer',
+                    text: 'نعم، فهملي يدعم جميع اللهجات العربية من الخليج إلى المغرب العربي، بما في ذلك السعودية، مصر، الإمارات، الكويت، وغيرها.',
+                  },
+                },
+              ],
+            }),
+          }}
+        />
+
         {/* Structured Data - BreadcrumbList */}
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
-          '@context': 'https://schema.org',
-          '@type': 'BreadcrumbList',
-          itemListElement: [
-            {
-              '@type': 'ListItem',
-              position: 1,
-              name: 'الرئيسية',
-              item: 'https://faheemly.com'
-            },
-            {
-              '@type': 'ListItem',
-              position: 2,
-              name: 'الخدمات',
-              item: 'https://faheemly.com/services'
-            },
-            {
-              '@type': 'ListItem',
-              position: 3,
-              name: 'الأسعار',
-              item: 'https://faheemly.com/pricing'
-            },
-            {
-              '@type': 'ListItem',
-              position: 4,
-              name: 'تواصل معنا',
-              item: 'https://faheemly.com/contact'
-            }
-          ]
-        }) }} />
-        
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'BreadcrumbList',
+              itemListElement: [
+                {
+                  '@type': 'ListItem',
+                  position: 1,
+                  name: 'الرئيسية',
+                  item: 'https://faheemly.com',
+                },
+                {
+                  '@type': 'ListItem',
+                  position: 2,
+                  name: 'الخدمات',
+                  item: 'https://faheemly.com/services',
+                },
+                {
+                  '@type': 'ListItem',
+                  position: 3,
+                  name: 'الأسعار',
+                  item: 'https://faheemly.com/pricing',
+                },
+                {
+                  '@type': 'ListItem',
+                  position: 4,
+                  name: 'تواصل معنا',
+                  item: 'https://faheemly.com/contact',
+                },
+              ],
+            }),
+          }}
+        />
+
         {/* Preload critical resources - Removed unused font preloads */}
-        
+
         {/* DNS Prefetch for external resources */}
         <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
         <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
-        
+
         {/* Performance hints */}
         <meta name="format-detection" content="telephone=no" />
         <meta httpEquiv="x-ua-compatible" content="IE=edge" />
       </head>
-      <body className={`font-sans overflow-x-hidden bg-gray-50 dark:bg-cosmic-950 text-gray-900 dark:text-gray-100 transition-colors duration-300 selection:bg-brand-500/30`}>
+      <body
+        className={`font-sans overflow-x-hidden bg-gray-50 dark:bg-cosmic-950 text-gray-900 dark:text-gray-100 transition-colors duration-300 selection:bg-brand-500/30`}
+      >
         <noscript>
           <style>{`
             .noscript-content {
@@ -289,26 +351,53 @@ export default function RootLayout({ children }) {
               display: none !important;
             }
           `}</style>
-          <div style={{ 
-            padding: '40px 20px', 
-            textAlign: 'center', 
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
-            color: 'white',
-            fontFamily: 'system-ui, -apple-system, sans-serif'
-          }}>
+          <div
+            style={{
+              padding: '40px 20px',
+              textAlign: 'center',
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              fontFamily: 'system-ui, -apple-system, sans-serif',
+            }}
+          >
             <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-              <h1 style={{ fontSize: '32px', marginBottom: '20px', fontWeight: 'bold' }}>فهملي - شات بوت ذكي</h1>
-              <p style={{ fontSize: '18px', marginBottom: '30px', lineHeight: '1.6' }}>
-                أقوى منصة شات بوت عربي مدعومة بالذكاء الاصطناعي. نساعدك على أتمتة خدمة العملاء وزيادة مبيعاتك 24/7.
+              <h1
+                style={{
+                  fontSize: '32px',
+                  marginBottom: '20px',
+                  fontWeight: 'bold',
+                }}
+              >
+                فهملي - شات بوت ذكي
+              </h1>
+              <p
+                style={{
+                  fontSize: '18px',
+                  marginBottom: '30px',
+                  lineHeight: '1.6',
+                }}
+              >
+                أقوى منصة شات بوت عربي مدعومة بالذكاء الاصطناعي. نساعدك على
+                أتمتة خدمة العملاء وزيادة مبيعاتك 24/7.
               </p>
-              <div style={{ 
-                background: 'rgba(255,255,255,0.1)', 
-                padding: '20px', 
-                borderRadius: '12px',
-                marginBottom: '20px'
-              }}>
-                <p style={{ fontSize: '16px', marginBottom: '15px' }}>✨ خدماتنا:</p>
-                <ul style={{ textAlign: 'right', fontSize: '14px', lineSpace: '1.8' }}>
+              <div
+                style={{
+                  background: 'rgba(255,255,255,0.1)',
+                  padding: '20px',
+                  borderRadius: '12px',
+                  marginBottom: '20px',
+                }}
+              >
+                <p style={{ fontSize: '16px', marginBottom: '15px' }}>
+                  ✨ خدماتنا:
+                </p>
+                <ul
+                  style={{
+                    textAlign: 'right',
+                    fontSize: '14px',
+                    lineSpace: '1.8',
+                  }}
+                >
                   <li>✓ تكامل واتساب للأعمال</li>
                   <li>✓ ويدجت ذكي للموقع</li>
                   <li>✓ بوت تيليجرام</li>
@@ -316,14 +405,17 @@ export default function RootLayout({ children }) {
                   <li>✓ دعم كل اللهجات العربية</li>
                 </ul>
               </div>
-              <div style={{
-                background: 'rgba(255,200,50,0.2)',
-                padding: '15px',
-                borderRadius: '8px',
-                marginTop: '20px'
-              }}>
+              <div
+                style={{
+                  background: 'rgba(255,200,50,0.2)',
+                  padding: '15px',
+                  borderRadius: '8px',
+                  marginTop: '20px',
+                }}
+              >
                 <p style={{ fontSize: '14px', margin: 0 }}>
-                  ⚠️ <strong>ملاحظة:</strong> لتفعيل الميزات التفاعلية والحصول على أفضل تجربة، يرجى تفعيل JavaScript في متصفحك.
+                  ⚠️ <strong>ملاحظة:</strong> لتفعيل الميزات التفاعلية والحصول
+                  على أفضل تجربة، يرجى تفعيل JavaScript في متصفحك.
                 </p>
               </div>
               <div style={{ marginTop: '30px', fontSize: '14px' }}>
@@ -339,5 +431,5 @@ export default function RootLayout({ children }) {
         </ErrorBoundary>
       </body>
     </html>
-  )
+  );
 }

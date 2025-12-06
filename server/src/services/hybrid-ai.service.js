@@ -1,4 +1,5 @@
 const axios = require('axios');
+const logger = require('../utils/logger');
 
 /**
  * Hybrid AI Service - Intelligent Load Balancing Across Free Tier Providers
@@ -140,7 +141,7 @@ function getNextProvider() {
   }
 
   // If all providers are rate limited, wait and retry with highest priority
-  console.warn('[HybridAI] All providers rate limited. Using fallback strategy...');
+  logger.warn('[HybridAI] All providers rate limited. Using fallback strategy...');
   return null;
 }
 
@@ -290,7 +291,7 @@ async function generateResponse(messages, options = {}) {
     
     if (!provider) {
       // All providers exhausted, wait a bit and retry
-      console.warn('[HybridAI] All providers unavailable. Waiting 2 seconds...');
+      logger.warn('[HybridAI] All providers unavailable. Waiting 2 seconds...');
       await new Promise(resolve => setTimeout(resolve, 2000));
       continue;
     }
@@ -320,7 +321,7 @@ async function generateResponse(messages, options = {}) {
   }
 
   // All providers failed
-  console.error('[HybridAI] 💥 All providers exhausted. Last error:', lastError?.message);
+  logger.error('[HybridAI] 💥 All providers exhausted. Last error:', lastError?.message);
   throw new Error(`All AI providers failed. Last error: ${lastError?.message || 'Unknown error'}`);
 }
 

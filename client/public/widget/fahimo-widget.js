@@ -1,6 +1,6 @@
-(function() {
+(function () {
   'use strict';
-  
+
   // Fahimo Widget Configuration
   const FahimoWidget = {
     config: {
@@ -8,22 +8,27 @@
       color: '#6366F1',
       position: 'bottom-right',
       apiEndpoint: 'https://fahimo-api.onrender.com/api/chat/message', // Change for production
-      configEndpoint: 'https://fahimo-api.onrender.com/api/widget/config'
+      configEndpoint: 'https://fahimo-api.onrender.com/api/widget/config',
     },
     state: {
       isOpen: false,
       conversationId: null,
       messages: [],
-      settings: null
+      settings: null,
     },
-    
+
     async init() {
       this.loadConfig();
       try {
         await this.fetchSettings(); // Fetch dynamic settings (branding, welcome msg)
       } catch (error) {
         console.warn('Failed to fetch settings, using defaults:', error);
-        this.state.settings = { widgetConfig: { welcomeMessage: "مرحباً! كيف يمكنني مساعدتك؟", showBranding: true } };
+        this.state.settings = {
+          widgetConfig: {
+            welcomeMessage: 'مرحباً! كيف يمكنني مساعدتك؟',
+            showBranding: true,
+          },
+        };
       }
       this.injectStyles();
       this.createDOM();
@@ -33,33 +38,40 @@
       const savedId = localStorage.getItem('fahimo_conv_id');
       if (savedId) this.state.conversationId = savedId;
     },
-    
+
     loadConfig() {
-      const script = document.currentScript || document.querySelector('script[data-business-id]');
+      const script =
+        document.currentScript ||
+        document.querySelector('script[data-business-id]');
       if (script) {
         this.config.businessId = script.getAttribute('data-business-id');
         // Allow override via data attributes, but server config takes precedence usually
-        if (script.getAttribute('data-color')) this.config.color = script.getAttribute('data-color');
-        this.config.position = script.getAttribute('data-position') || this.config.position;
+        if (script.getAttribute('data-color'))
+          this.config.color = script.getAttribute('data-color');
+        this.config.position =
+          script.getAttribute('data-position') || this.config.position;
       }
     },
 
     async fetchSettings() {
       try {
-        const res = await fetch(`${this.config.configEndpoint}/${this.config.businessId}`);
+        const res = await fetch(
+          `${this.config.configEndpoint}/${this.config.businessId}`
+        );
         if (res.ok) {
           const data = await res.json();
           this.state.settings = data;
           // Update local config with server settings
           if (data.widgetConfig) {
-            this.config.color = data.widgetConfig.primaryColor || this.config.color;
+            this.config.color =
+              data.widgetConfig.primaryColor || this.config.color;
           }
         }
       } catch (e) {
-        console.error("Failed to load widget settings", e);
+        console.error('Failed to load widget settings', e);
       }
     },
-    
+
     injectStyles() {
       const style = document.createElement('style');
       style.textContent = `
@@ -191,22 +203,25 @@
       `;
       document.head.appendChild(style);
     },
-    
+
     createDOM() {
       const container = document.createElement('div');
       container.id = 'fahimo-widget-container';
       container.className = `fahimo-pos-${this.config.position}`;
-      
-      const welcomeMsg = this.state.settings?.widgetConfig?.welcomeMessage || "مرحباً! كيف يمكنني مساعدتك اليوم؟";
-      const botName = this.state.settings?.name || "مساعد فاهيمو";
-      
+
+      const welcomeMsg =
+        this.state.settings?.widgetConfig?.welcomeMessage ||
+        'مرحباً! كيف يمكنني مساعدتك اليوم؟';
+      const botName = this.state.settings?.name || 'مساعد فاهيمو';
+
       // Branding Logic: Always show unless plan is PREMIUM (handled by server config usually, but enforced here visually)
       // For now, we assume "showBranding" comes from server config.
       // If showBranding is true (default), we show it.
       // The user requested: "the user cant remove this one ,, only the preimium packedge"
       // We will enforce it here.
-      
-      const showBranding = this.state.settings?.widgetConfig?.showBranding !== false; // Default true
+
+      const showBranding =
+        this.state.settings?.widgetConfig?.showBranding !== false; // Default true
 
       container.innerHTML = `
         <div id="fahimo-chat-window">
@@ -230,10 +245,10 @@
           <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"></path></svg>
         </div>
       `;
-      
+
       document.body.appendChild(container);
     },
-    
+
     attachListeners() {
       const launcher = document.getElementById('fahimo-launcher');
       const window = document.getElementById('fahimo-chat-window');
@@ -243,7 +258,9 @@
 
       // Check if elements exist before adding listeners
       if (!launcher || !window || !close || !input || !send) {
-        console.warn('Fahimo Widget: Some DOM elements not found, retrying in 100ms...');
+        console.warn(
+          'Fahimo Widget: Some DOM elements not found, retrying in 100ms...'
+        );
         setTimeout(() => this.attachListeners(), 100);
         return;
       }
@@ -255,17 +272,17 @@
 
       launcher.addEventListener('click', toggle);
       close.addEventListener('click', toggle);
-      
+
       const sendMessage = async () => {
         const text = input.value.trim();
         if (!text) return;
-        
+
         // Add User Message
         this.addMessage(text, 'user');
         input.value = '';
-        
+
         // Show typing indicator (optional)
-        
+
         try {
           const response = await fetch(this.config.apiEndpoint, {
             method: 'POST',
@@ -273,35 +290,34 @@
             body: JSON.stringify({
               message: text,
               businessId: this.config.businessId,
-              conversationId: this.state.conversationId
-            })
+              conversationId: this.state.conversationId,
+            }),
           });
-          
+
           const data = await response.json();
-          
+
           if (!response.ok) {
-             throw new Error(data.error || 'Server Error');
+            throw new Error(data.error || 'Server Error');
           }
 
           if (data.conversationId) {
             this.state.conversationId = data.conversationId;
             localStorage.setItem('fahimo_conv_id', data.conversationId);
           }
-          
+
           this.addMessage(data.response || '...', 'bot');
-          
         } catch (error) {
           console.error(error);
           this.addMessage('عذراً، حدث خطأ في الاتصال: ' + error.message, 'bot');
         }
       };
-      
+
       send.addEventListener('click', sendMessage);
-      input.addEventListener('keypress', (e) => {
+      input.addEventListener('keypress', e => {
         if (e.key === 'Enter') sendMessage();
       });
     },
-    
+
     addMessage(text, sender) {
       const container = document.getElementById('fahimo-messages');
       const div = document.createElement('div');
@@ -309,9 +325,9 @@
       div.textContent = text;
       container.appendChild(div);
       container.scrollTop = container.scrollHeight;
-    }
+    },
   };
-  
+
   // Prevent double init when script is added multiple times
   if (document.getElementById('fahimo-widget-container')) {
     // Already present — no need to init twice
@@ -323,4 +339,3 @@
     }
   }
 })();
-

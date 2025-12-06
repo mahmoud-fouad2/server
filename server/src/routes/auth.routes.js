@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 
 const { authenticateToken } = require('../middleware/auth');
 const { validateRegister, validateLogin } = require('../middleware/validation');
+const logger = require('../utils/logger');
 
 // Register
 router.post('/register', validateRegister, async (req, res) => {
@@ -71,7 +72,7 @@ router.post('/register', validateRegister, async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
+    logger.error('Registration failed', error);
     res.status(500).json({ error: 'Registration failed' });
   }
 });
@@ -115,7 +116,7 @@ router.post('/login', validateLogin, async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
+    logger.error('Login failed', error);
     res.status(500).json({ error: 'Login failed' });
   }
 });
@@ -138,7 +139,7 @@ router.put('/profile', authenticateToken, async (req, res) => {
 
     res.json({ message: 'Profile updated successfully', user: { id: updatedUser.id, name: updatedUser.name, email: updatedUser.email } });
   } catch (error) {
-    console.error('Update Profile Error:', error);
+    logger.error('Profile update failed', error);
     res.status(500).json({ error: 'Failed to update profile' });
   }
 });

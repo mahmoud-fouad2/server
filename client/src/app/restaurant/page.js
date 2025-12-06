@@ -1,10 +1,17 @@
-"use client"
+'use client';
 
-import PageLayout from '@/components/layout/PageLayout'
-import { Button } from '@/components/ui/button'
-import Link from 'next/link'
-import { Utensils, Check, ArrowRight, Clock, Users, TrendingUp } from 'lucide-react'
-import { motion } from 'framer-motion'
+import PageLayout from '@/components/layout/PageLayout';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import {
+  Utensils,
+  Check,
+  ArrowRight,
+  Clock,
+  Users,
+  TrendingUp,
+} from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function RestaurantPage() {
   return (
@@ -24,7 +31,8 @@ export default function RestaurantPage() {
                 حلول فهملي للمطاعم والمقاهي
               </h1>
               <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto mb-10">
-                زد مبيعاتك 45% مع مساعد ذكي يستقبل الطلبات ويحجز الطاولات تلقائياً على مدار الساعة
+                زد مبيعاتك 45% مع مساعد ذكي يستقبل الطلبات ويحجز الطاولات
+                تلقائياً على مدار الساعة
               </p>
               <div className="flex gap-4 justify-center">
                 <Link href="/register">
@@ -40,12 +48,26 @@ export default function RestaurantPage() {
 
         <section className="py-20 px-6">
           <div className="max-w-7xl mx-auto">
-            <h2 className="text-4xl font-bold text-center mb-16">المميزات الرئيسية</h2>
+            <h2 className="text-4xl font-bold text-center mb-16">
+              المميزات الرئيسية
+            </h2>
             <div className="grid md:grid-cols-3 gap-8">
               {[
-                { icon: <Clock size={32} />, title: 'توفير 70% من الوقت', desc: 'رد تلقائي على الاستفسارات' },
-                { icon: <Users size={32} />, title: 'زيادة الطلبات 45%', desc: 'خدمة 24/7 بدون توقف' },
-                { icon: <TrendingUp size={32} />, title: 'تحسين الخدمة', desc: 'رضا أعلى للعملاء' }
+                {
+                  icon: <Clock size={32} />,
+                  title: 'توفير 70% من الوقت',
+                  desc: 'رد تلقائي على الاستفسارات',
+                },
+                {
+                  icon: <Users size={32} />,
+                  title: 'زيادة الطلبات 45%',
+                  desc: 'خدمة 24/7 بدون توقف',
+                },
+                {
+                  icon: <TrendingUp size={32} />,
+                  title: 'تحسين الخدمة',
+                  desc: 'رضا أعلى للعملاء',
+                },
               ].map((item, i) => (
                 <motion.div
                   key={i}
@@ -59,7 +81,9 @@ export default function RestaurantPage() {
                     {item.icon}
                   </div>
                   <h3 className="text-2xl font-bold mb-2">{item.title}</h3>
-                  <p className="text-gray-600 dark:text-gray-400">{item.desc}</p>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    {item.desc}
+                  </p>
                 </motion.div>
               ))}
             </div>
@@ -68,18 +92,18 @@ export default function RestaurantPage() {
 
         <section className="py-20 px-6 bg-white dark:bg-cosmic-900">
           <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-4xl font-bold mb-6">ابدأ بـ 99 ريال فقط شهرياً</h2>
+            <h2 className="text-4xl font-bold mb-6">
+              ابدأ بـ 99 ريال فقط شهرياً
+            </h2>
             <p className="text-xl text-gray-600 dark:text-gray-400 mb-10">
               تجربة مجانية 7 أيام - بدون بطاقة ائتمانية
             </p>
             <Link href="/register">
-              <Button className="h-16 px-12 text-xl">
-                ابدأ الآن
-              </Button>
+              <Button className="h-16 px-12 text-xl">ابدأ الآن</Button>
             </Link>
           </div>
         </section>
       </div>
     </PageLayout>
-  )
+  );
 }

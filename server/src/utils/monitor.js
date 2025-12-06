@@ -34,7 +34,18 @@ class SystemMonitor {
 
     // Store metrics
     this.metrics = status;
-    
+
+    // Send alerts for critical issues
+    if (!status.memory.healthy) {
+      this.sendAlert('HIGH_MEMORY', `Memory usage: ${status.memory.percentage}%`);
+    }
+    if (!status.database.healthy) {
+      this.sendAlert('DB_CONNECTION', `Database ${status.database.connected ? 'latency high' : 'disconnected'}: ${status.database.latency || status.database.error}`);
+    }
+    if (!status.aiProviders.healthy) {
+      this.sendAlert('AI_UNAVAILABLE', 'All AI providers are down or rate limited');
+    }
+
     return status;
   }
 
@@ -82,10 +93,12 @@ class SystemMonitor {
       await prisma.$queryRaw`SELECT 1`;
       const latency = Date.now() - start;
 
+      const DB_LATENCY_THRESHOLD = parseInt(process.env.DB_LATENCY_THRESHOLD_MS, 10) || 1000;
+
       return {
         connected: true,
         latency: `${latency}ms`,
-        healthy: latency < 100 // Alert if over 100ms
+        healthy: latency < DB_LATENCY_THRESHOLD // Configurable threshold via env
       };
     } catch (error) {
       return {
@@ -103,8 +116,8 @@ class SystemMonitor {
     const hybridAI = require('../services/hybrid-ai.service');
     
     try {
-      const stats = hybridAI.getProviderStats();
-      const health = hybridAI.checkProvidersHealth();
+      const stats = await hybridAI.getProviderStats();
+      const health = await hybridAI.checkProvidersHealth();
 
       return {
         stats,
@@ -134,17 +147,6 @@ class SystemMonitor {
     console.log(`🤖 AI Providers: ${status.aiProviders.health?.totalAvailable || 0} available`);
     console.log('═══════════════════════════════════════════════════\n');
 
-    // Alert if unhealthy
-    if (!status.memory.healthy) {
-      console.warn('⚠️  WARNING: High memory usage detected!');
-    }
-    if (!status.database.healthy) {
-      console.warn('⚠️  WARNING: Database connection issues!');
-    }
-    if (!status.aiProviders.healthy) {
-      console.warn('⚠️  WARNING: No AI providers available!');
-    }
-
     return status;
   }
 
@@ -155,11 +157,15 @@ class SystemMonitor {
     console.log(`🔍 Starting health monitoring (every ${intervalMinutes} minutes)...`);
     
     // Initial check
-    this.logHealthStatus();
+    this.logHealthStatus().catch(error => console.error('Initial health check error:', error));
 
     // Periodic checks
-    setInterval(() => {
-      this.logHealthStatus();
+    setInterval(async () => {
+      try {
+        await this.logHealthStatus();
+      } catch (error) {
+        console.error('Periodic health check error:', error);
+      }
     }, intervalMinutes * 60 * 1000);
   }
 
@@ -207,15 +213,78 @@ class SystemMonitor {
   }
 
   /**
+   * Send alert notification
+   * @param {string} type - Alert type
+   * @param {string} message - Alert message
+   */
+  sendAlert(type, message) {
+    const alert = {
+      type,
+      message,
+      timestamp: new Date().toISOString(),
+      severity: this.getAlertSeverity(type)
+    };
+
+    // Log alert
+    console.error(`🚨 ALERT [${alert.severity}]: ${type} - ${message}`);
+
+    // In production, send to external monitoring service
+    // Example: SendGrid email, Slack webhook, PagerDuty, etc.
+    // this.sendToMonitoringService(alert);
+
+    // Store alert for dashboard
+    this.alerts = this.alerts || [];
+    this.alerts.unshift(alert);
+    
+    // Keep only last 100 alerts
+    if (this.alerts.length > 100) {
+      this.alerts = this.alerts.slice(0, 100);
+    }
+  }
+
+  /**
+   * Get alert severity
+   */
+  getAlertSeverity(type) {
+    const severityMap = {
+      HIGH_MEMORY: 'WARNING',
+      DB_CONNECTION: 'CRITICAL',
+      AI_UNAVAILABLE: 'CRITICAL',
+      RATE_LIMIT: 'WARNING',
+      SYSTEM_ERROR: 'ERROR'
+    };
+    return severityMap[type] || 'INFO';
+  }
+
+  /**
+   * Get recent alerts for dashboard
+   */
+  getRecentAlerts(limit = 10) {
+    return (this.alerts || []).slice(0, limit);
+  }
+
+  /**
+   * Clear old alerts
+   */
+  clearOldAlerts(olderThanHours = 24) {
+    if (!this.alerts) return;
+    
+    const cutoff = new Date(Date.now() - olderThanHours * 60 * 60 * 1000);
+    this.alerts = this.alerts.filter(alert => new Date(alert.timestamp) > cutoff);
+  }
+
+  /**
    * Get detailed system report
    */
   async getSystemReport() {
     const health = await this.getHealthStatus();
     const metrics = await this.getBusinessMetrics();
+    const alerts = this.getRecentAlerts(5);
 
     return {
       system: health,
       business: metrics,
+      alerts: alerts,
       generatedAt: new Date().toISOString()
     };
   }

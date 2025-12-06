@@ -25,7 +25,7 @@ class VectorSearchService {
       // Step 1: Generate embedding for the query
       const queryEmbedding = await embeddingService.generateEmbedding(query);
       
-      if (!queryEmbedding || queryEmbedding.length === 0) {
+      if (!queryEmbedding || !Array.isArray(queryEmbedding) || queryEmbedding.length === 0 || !queryEmbedding.every(n => typeof n === 'number' && Number.isFinite(n))) {
         console.warn('[VectorSearch] Failed to generate query embedding, falling back to keyword search');
         return await this.fallbackKeywordSearch(query, businessId, limit);
       }
@@ -60,13 +60,14 @@ class VectorSearchService {
       return filteredResults;
 
     } catch (error) {
+      const msg = error && (error.message || error.toString());
       // If pgvector is not installed or query fails, fall back to keyword search
-      if (error.message.includes('vector') || error.code === '42883') {
+      if ((msg && msg.includes('vector')) || error?.code === '42883') {
         console.warn('[VectorSearch] pgvector not available, using keyword search');
         return await this.fallbackKeywordSearch(query, businessId, limit);
       }
 
-      console.error('[VectorSearch] Error:', error);
+      console.error('[VectorSearch] Error:', msg || error);
       throw error;
     }
   }
@@ -114,6 +115,12 @@ class VectorSearchService {
    * @returns {Promise<boolean>} - True if pgvector is installed
    */
   async isPgVectorAvailable() {
+    // Allow forcing pgvector availability via environment (useful for managed DBs where
+    // extension check may be restricted or in CI environments)
+    if (process.env.FORCE_PGVECTOR === 'true') {
+      return true;
+    }
+
     try {
       const result = await prisma.$queryRaw`
         SELECT EXISTS (
@@ -122,14 +129,23 @@ class VectorSearchService {
       `;
       return result[0]?.available || false;
     } catch (error) {
-      console.error('[VectorSearch] Error checking pgvector availability:', error);
+      console.error('[VectorSearch] Error checking pgvector availability:', error.message || error);
       return false;
     }
   }
 
   /**
+   * Generate embedding for text using the embedding service
+   * @param {string} text - Text to embed
+   * @returns {Promise<Array>} - Embedding vector
+   */
+  async generateEmbedding(text) {
+    return await embeddingService.generateEmbedding(text);
+  }
+
+  /**
    * Get statistics about vector search performance
-   * 
+   *
    * @param {string} businessId - Business ID
    * @returns {Promise<Object>} - Stats object
    */
@@ -146,7 +162,7 @@ class VectorSearchService {
         }
       });
 
-      const coverage = totalChunks > 0 
+      const coverage = totalChunks > 0
         ? ((chunksWithEmbeddings / totalChunks) * 100).toFixed(2)
         : 0;
 

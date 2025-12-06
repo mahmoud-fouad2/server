@@ -1,11 +1,11 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 
-const FaheemAnimatedLogo = ({ 
+const FaheemAnimatedLogo = ({
   size = 'large',
   showText = true,
   isLoading = false,
-  className = ''
+  className = '',
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [wave, setWave] = useState(0);
@@ -18,10 +18,38 @@ const FaheemAnimatedLogo = ({
   }, []);
 
   const sizes = {
-    small: { width: 280, height: 120, fontSize: 32, container: 'w-72 h-32', textMargin: 'mt-0', textScale: 0.7 },
-    medium: { width: 320, height: 140, fontSize: 60, container: 'w-80 h-36', textMargin: 'mt-1', textScale: 0.6 },
-    large: { width: 500, height: 220, fontSize: 100, container: 'w-[500px] h-[220px]', textMargin: 'mt-2', textScale: 0.5 },
-    xlarge: { width: 640, height: 280, fontSize: 130, container: 'w-[640px] h-[280px]', textMargin: 'mt-2', textScale: 0.48 }
+    small: {
+      width: 280,
+      height: 120,
+      fontSize: 32,
+      container: 'w-72 h-32',
+      textMargin: 'mt-0',
+      textScale: 0.7,
+    },
+    medium: {
+      width: 320,
+      height: 140,
+      fontSize: 60,
+      container: 'w-80 h-36',
+      textMargin: 'mt-1',
+      textScale: 0.6,
+    },
+    large: {
+      width: 500,
+      height: 220,
+      fontSize: 100,
+      container: 'w-[500px] h-[220px]',
+      textMargin: 'mt-2',
+      textScale: 0.5,
+    },
+    xlarge: {
+      width: 640,
+      height: 280,
+      fontSize: 130,
+      container: 'w-[640px] h-[280px]',
+      textMargin: 'mt-2',
+      textScale: 0.48,
+    },
   };
 
   const currentSize = sizes[size] || sizes.large;
@@ -44,10 +72,10 @@ const FaheemAnimatedLogo = ({
     return () => clearInterval(interval);
   }, [mounted]);
 
-  const breatheScale = 1 + Math.sin(breathe * Math.PI / 180) * 0.015;
-  
+  const breatheScale = 1 + Math.sin((breathe * Math.PI) / 180) * 0.015;
+
   // Loading animation - slide/fly effect
-  const loadingTranslate = isLoading ? Math.sin(wave * Math.PI / 60) * 15 : 0;
+  const loadingTranslate = isLoading ? Math.sin((wave * Math.PI) / 60) * 15 : 0;
 
   if (!mounted) {
     return <div className={currentSize.container} />;
@@ -59,10 +87,10 @@ const FaheemAnimatedLogo = ({
         <div className="relative">
           <div className="absolute inset-0 bg-brand-500/20 blur-3xl rounded-full animate-pulse"></div>
           <div className="relative w-80 h-80 flex items-center justify-center p-12 bg-[#f8f8fa] rounded-full overflow-hidden shadow-2xl border-4 border-white/50">
-            <img 
-              src="/logo.webp" 
-              alt="Faheemly" 
-              className="w-full h-full object-contain relative z-10 animate-pulse" 
+            <img
+              src="/logo.webp"
+              alt="Faheemly"
+              className="w-full h-full object-contain relative z-10 animate-pulse"
             />
           </div>
         </div>
@@ -71,23 +99,25 @@ const FaheemAnimatedLogo = ({
   }
 
   return (
-    <div className={`inline-flex flex-col items-center justify-center ${className}`}>
-      <div 
+    <div
+      className={`inline-flex flex-col items-center justify-center ${className}`}
+    >
+      <div
         ref={logoRef}
         className={`relative cursor-pointer transition-all duration-700 ${currentSize.container} overflow-hidden rounded-2xl`}
-        style={{ 
-          transform: `scale(${breatheScale}) translateX(${loadingTranslate}px)`
+        style={{
+          transform: `scale(${breatheScale}) translateX(${loadingTranslate}px)`,
         }}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <img 
-          src="/logo.webp" 
-          alt="Faheemly Logo" 
+        <img
+          src="/logo.webp"
+          alt="Faheemly Logo"
           className="w-full h-full object-contain"
         />
       </div>
-      
+
       {/* Text below logo - REMOVED as per request */}
       {/* {showText && (
         <div className={`text-center font-black font-sans leading-tight ${currentSize.textMargin} relative group-hover:scale-105 transition-transform duration-300`} style={{ direction: 'rtl' }}>
@@ -111,7 +141,7 @@ const FaheemAnimatedLogo = ({
           </span>
         </div>
       )} */}
-      
+
       {/* Loading text - REMOVED as per request */}
       {/* {isLoading && (
         <div className="mt-4 text-center">

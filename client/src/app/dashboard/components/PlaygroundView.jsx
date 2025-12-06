@@ -7,7 +7,10 @@ import { Button } from '@/components/ui/button';
 
 export default function PlaygroundView() {
   const [messages, setMessages] = useState([
-    { role: 'assistant', content: 'مرحباً! أنا مساعدك الذكي. جرّب التحدث معي الآن!' }
+    {
+      role: 'assistant',
+      content: 'مرحباً! أنا مساعدك الذكي. جرّب التحدث معي الآن!',
+    },
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -31,34 +34,46 @@ export default function PlaygroundView() {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://fahimo-api.onrender.com'}/api/chat/test`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ message: userMessage })
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || 'https://fahimo-api.onrender.com'}/api/chat/test`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ message: userMessage }),
+        }
+      );
 
       const data = await res.json();
-      
+
       if (res.ok) {
-        setMessages(prev => [...prev, { 
-          role: 'assistant', 
-          content: data.response || 'عذراً، لم أستطع الرد في الوقت الحالي.'
-        }]);
+        setMessages(prev => [
+          ...prev,
+          {
+            role: 'assistant',
+            content: data.response || 'عذراً، لم أستطع الرد في الوقت الحالي.',
+          },
+        ]);
       } else {
-        setMessages(prev => [...prev, { 
-          role: 'assistant', 
-          content: 'عذراً، حدث خطأ في الاتصال. يرجى المحاولة مرة أخرى.'
-        }]);
+        setMessages(prev => [
+          ...prev,
+          {
+            role: 'assistant',
+            content: 'عذراً، حدث خطأ في الاتصال. يرجى المحاولة مرة أخرى.',
+          },
+        ]);
       }
     } catch (error) {
       console.error('Playground error:', error);
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: 'عذراً، حدث خطأ في الاتصال. يرجى التأكد من إعداداتك.'
-      }]);
+      setMessages(prev => [
+        ...prev,
+        {
+          role: 'assistant',
+          content: 'عذراً، حدث خطأ في الاتصال. يرجى التأكد من إعداداتك.',
+        },
+      ]);
     } finally {
       setIsTyping(false);
     }
@@ -81,7 +96,9 @@ export default function PlaygroundView() {
               تجربة البوت المباشرة
               <Sparkles className="w-5 h-5 text-yellow-500" />
             </h2>
-            <p className="text-sm text-muted-foreground">جرّب محادثة البوت الخاص بك وشاهد كيف يرد على العملاء</p>
+            <p className="text-sm text-muted-foreground">
+              جرّب محادثة البوت الخاص بك وشاهد كيف يرد على العملاء
+            </p>
           </div>
         </div>
       </div>
@@ -98,18 +115,22 @@ export default function PlaygroundView() {
                 animate={{ opacity: 1, y: 0 }}
                 className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
               >
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                  msg.role === 'user' 
-                    ? 'bg-brand-600 text-white' 
-                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                }`}>
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                    msg.role === 'user'
+                      ? 'bg-brand-600 text-white'
+                      : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                  }`}
+                >
                   {msg.role === 'user' ? <User size={16} /> : <Bot size={16} />}
                 </div>
-                <div className={`max-w-[70%] rounded-2xl px-4 py-3 ${
-                  msg.role === 'user'
-                    ? 'bg-brand-600 text-white rounded-br-none'
-                    : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-bl-none'
-                }`}>
+                <div
+                  className={`max-w-[70%] rounded-2xl px-4 py-3 ${
+                    msg.role === 'user'
+                      ? 'bg-brand-600 text-white rounded-br-none'
+                      : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-bl-none'
+                  }`}
+                >
                   <p className="text-sm leading-relaxed">{msg.content}</p>
                 </div>
               </motion.div>
@@ -145,8 +166,8 @@ export default function PlaygroundView() {
             <input
               type="text"
               value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSend()}
               placeholder="اكتب رسالتك هنا..."
               disabled={isTyping}
               className="flex-1 px-4 py-3 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-brand-500 disabled:opacity-50"

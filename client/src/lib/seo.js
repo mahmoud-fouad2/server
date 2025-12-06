@@ -5,7 +5,7 @@
 
 export const generateStructuredData = (type, data) => {
   const baseUrl = 'https://faheemly.com';
-  
+
   const schemas = {
     organization: {
       '@context': 'https://schema.org',
@@ -14,27 +14,28 @@ export const generateStructuredData = (type, data) => {
       alternateName: 'فهملي.كوم',
       url: baseUrl,
       logo: `${baseUrl}/logo.webp`,
-      description: 'أقوى منصة شات بوت عربي مدعومة بالذكاء الاصطناعي للشرق الأوسط',
+      description:
+        'أقوى منصة شات بوت عربي مدعومة بالذكاء الاصطناعي للشرق الأوسط',
       foundingDate: '2023',
       contactPoint: {
         '@type': 'ContactPoint',
         telephone: '+966-XX-XXX-XXXX',
         contactType: 'Customer Service',
         areaServed: ['SA', 'EG', 'AE', 'KW', 'QA', 'BH'],
-        availableLanguage: ['Arabic', 'English']
+        availableLanguage: ['Arabic', 'English'],
       },
       sameAs: [
         'https://twitter.com/faheemly_ai',
         'https://linkedin.com/company/faheemly',
-        'https://instagram.com/faheemly_ai'
+        'https://instagram.com/faheemly_ai',
       ],
       address: {
         '@type': 'PostalAddress',
         addressCountry: 'SA',
-        addressRegion: 'Riyadh'
-      }
+        addressRegion: 'Riyadh',
+      },
     },
-    
+
     softwareApplication: {
       '@context': 'https://schema.org',
       '@type': 'SoftwareApplication',
@@ -45,18 +46,18 @@ export const generateStructuredData = (type, data) => {
         '@type': 'Offer',
         price: data?.price || '149',
         priceCurrency: data?.currency || 'SAR',
-        priceValidUntil: '2025-12-31'
+        priceValidUntil: '2025-12-31',
       },
       aggregateRating: {
         '@type': 'AggregateRating',
         ratingValue: '4.8',
         reviewCount: '500',
         bestRating: '5',
-        worstRating: '1'
+        worstRating: '1',
       },
-      description: data?.description || 'شات بوت ذكي للأعمال العربية'
+      description: data?.description || 'شات بوت ذكي للأعمال العربية',
     },
-    
+
     service: {
       '@context': 'https://schema.org',
       '@type': 'Service',
@@ -64,11 +65,11 @@ export const generateStructuredData = (type, data) => {
       description: data?.description,
       provider: {
         '@type': 'Organization',
-        name: 'Faheemly'
+        name: 'Faheemly',
       },
       areaServed: {
         '@type': 'Country',
-        name: data?.country || 'Saudi Arabia'
+        name: data?.country || 'Saudi Arabia',
       },
       hasOfferCatalog: {
         '@type': 'OfferCatalog',
@@ -78,44 +79,46 @@ export const generateStructuredData = (type, data) => {
             '@type': 'Offer',
             itemOffered: {
               '@type': 'Service',
-              name: 'WhatsApp Integration'
-            }
+              name: 'WhatsApp Integration',
+            },
           },
           {
             '@type': 'Offer',
             itemOffered: {
               '@type': 'Service',
-              name: 'Website Widget'
-            }
-          }
-        ]
-      }
+              name: 'Website Widget',
+            },
+          },
+        ],
+      },
     },
-    
+
     breadcrumb: {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
-      itemListElement: data?.breadcrumbs?.map((item, index) => ({
-        '@type': 'ListItem',
-        position: index + 1,
-        name: item.name,
-        item: `${baseUrl}${item.url}`
-      })) || []
+      itemListElement:
+        data?.breadcrumbs?.map((item, index) => ({
+          '@type': 'ListItem',
+          position: index + 1,
+          name: item.name,
+          item: `${baseUrl}${item.url}`,
+        })) || [],
     },
-    
+
     faq: {
       '@context': 'https://schema.org',
       '@type': 'FAQPage',
-      mainEntity: data?.faqs?.map(faq => ({
-        '@type': 'Question',
-        name: faq.question,
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: faq.answer
-        }
-      })) || []
+      mainEntity:
+        data?.faqs?.map(faq => ({
+          '@type': 'Question',
+          name: faq.question,
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: faq.answer,
+          },
+        })) || [],
     },
-    
+
     product: {
       '@context': 'https://schema.org',
       '@type': 'Product',
@@ -124,7 +127,7 @@ export const generateStructuredData = (type, data) => {
       description: data?.description,
       brand: {
         '@type': 'Brand',
-        name: 'Faheemly'
+        name: 'Faheemly',
       },
       offers: {
         '@type': 'Offer',
@@ -132,20 +135,20 @@ export const generateStructuredData = (type, data) => {
         priceCurrency: data?.currency || 'SAR',
         price: data?.price,
         availability: 'https://schema.org/InStock',
-        priceValidUntil: '2025-12-31'
+        priceValidUntil: '2025-12-31',
       },
       aggregateRating: {
         '@type': 'AggregateRating',
         ratingValue: '4.8',
-        reviewCount: '500'
-      }
-    }
+        reviewCount: '500',
+      },
+    },
   };
-  
+
   return schemas[type] || schemas.organization;
 };
 
-export const generateHreflangTags = (pathname) => {
+export const generateHreflangTags = pathname => {
   const baseUrl = 'https://faheemly.com';
   const languages = [
     { lang: 'ar', region: 'sa', url: `${baseUrl}${pathname}` },
@@ -153,9 +156,9 @@ export const generateHreflangTags = (pathname) => {
     { lang: 'ar', region: 'ae', url: `${baseUrl}/uae${pathname}` },
     { lang: 'ar', region: 'kw', url: `${baseUrl}/kuwait${pathname}` },
     { lang: 'en', region: '', url: `${baseUrl}/en${pathname}` },
-    { lang: 'x-default', region: '', url: `${baseUrl}${pathname}` }
+    { lang: 'x-default', region: '', url: `${baseUrl}${pathname}` },
   ];
-  
+
   return languages;
 };
 
@@ -165,9 +168,9 @@ export const getCanonicalUrl = (pathname, country = 'sa') => {
     sa: '',
     eg: '/egypt',
     ae: '/uae',
-    kw: '/kuwait'
+    kw: '/kuwait',
   };
-  
+
   return `${baseUrl}${countryPaths[country] || ''}${pathname}`;
 };
 
@@ -178,9 +181,9 @@ export const generateRobotsMeta = (noindex = false, nofollow = false) => {
   return 'index, follow';
 };
 
-export const generateOpenGraphTags = (data) => {
+export const generateOpenGraphTags = data => {
   const baseUrl = 'https://faheemly.com';
-  
+
   return {
     'og:type': data.type || 'website',
     'og:url': data.url || baseUrl,
@@ -192,13 +195,13 @@ export const generateOpenGraphTags = (data) => {
     'og:image:alt': data.imageAlt || 'Faheemly AI Chatbot Platform',
     'og:site_name': 'Faheemly.com',
     'og:locale': data.locale || 'ar_SA',
-    'og:locale:alternate': ['ar_EG', 'ar_AE', 'ar_KW', 'en_US']
+    'og:locale:alternate': ['ar_EG', 'ar_AE', 'ar_KW', 'en_US'],
   };
 };
 
-export const generateTwitterTags = (data) => {
+export const generateTwitterTags = data => {
   const baseUrl = 'https://faheemly.com';
-  
+
   return {
     'twitter:card': 'summary_large_image',
     'twitter:site': '@faheemly_ai',
@@ -206,7 +209,7 @@ export const generateTwitterTags = (data) => {
     'twitter:title': data.title,
     'twitter:description': data.description,
     'twitter:image': data.image || `${baseUrl}/twitter-image.jpg`,
-    'twitter:image:alt': data.imageAlt || 'Faheemly AI Chatbot'
+    'twitter:image:alt': data.imageAlt || 'Faheemly AI Chatbot',
   };
 };
 
@@ -226,11 +229,11 @@ export const generateMetaTags = (seoData, country = 'sa', lang = 'ar') => {
     ...generateOpenGraphTags({
       title: seoData.title,
       description: seoData.desc,
-      locale: lang === 'ar' ? `ar_${country.toUpperCase()}` : 'en_US'
+      locale: lang === 'ar' ? `ar_${country.toUpperCase()}` : 'en_US',
     }),
     ...generateTwitterTags({
       title: seoData.title,
-      description: seoData.desc
-    })
+      description: seoData.desc,
+    }),
   };
 };

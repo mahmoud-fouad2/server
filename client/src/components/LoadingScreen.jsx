@@ -1,33 +1,34 @@
-"use client"
+'use client';
 
-import { useState, useEffect } from 'react'
-import FaheemAnimatedLogo from './FaheemAnimatedLogo'
+import { useState, useEffect } from 'react';
+import FaheemAnimatedLogo from './FaheemAnimatedLogo';
 
 export default function LoadingScreen({ onComplete }) {
-  const [progress, setProgress] = useState(0)
-  const [isDark, setIsDark] = useState(false)
+  const [progress, setProgress] = useState(0);
+  const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
-    setIsDark(document.documentElement.classList.contains('dark'))
-  }, [])
+    setIsDark(document.documentElement.classList.contains('dark'));
+  }, []);
 
   useEffect(() => {
     // Simulate loading progress
     const interval = setInterval(() => {
       setProgress(prev => {
         if (prev >= 100) {
-          clearInterval(interval)
-          setTimeout(() => onComplete?.(), 300)
-          return 100
+          clearInterval(interval);
+          setTimeout(() => onComplete?.(), 300);
+          return 100;
         }
         // Faster progress at start, slower at end
-        const increment = prev < 50 ? Math.random() * 15 + 10 : Math.random() * 8 + 3
-        return Math.min(prev + increment, 100)
-      })
-    }, 150)
+        const increment =
+          prev < 50 ? Math.random() * 15 + 10 : Math.random() * 8 + 3;
+        return Math.min(prev + increment, 100);
+      });
+    }, 150);
 
-    return () => clearInterval(interval)
-  }, [onComplete])
+    return () => clearInterval(interval);
+  }, [onComplete]);
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-gradient-to-b from-gray-50 to-gray-100 dark:from-cosmic-950 dark:to-cosmic-900">
@@ -49,7 +50,7 @@ export default function LoadingScreen({ onComplete }) {
         {/* Progress Bar Background */}
         <div className="h-2 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden shadow-inner">
           {/* Progress Bar Fill */}
-          <div 
+          <div
             className="h-full bg-gradient-to-r from-brand-600 to-brand-500 rounded-full transition-all duration-300 ease-out relative overflow-hidden"
             style={{ width: `${progress}%` }}
           >
@@ -68,17 +69,17 @@ export default function LoadingScreen({ onComplete }) {
 
       {/* Loading Dots */}
       <div className="flex gap-2 mt-6">
-        {[0, 1, 2].map((i) => (
+        {[0, 1, 2].map(i => (
           <div
             key={i}
             className="w-2 h-2 bg-brand-500 rounded-full animate-bounce"
             style={{
               animationDelay: `${i * 0.15}s`,
-              animationDuration: '0.6s'
+              animationDuration: '0.6s',
             }}
           />
         ))}
       </div>
     </div>
-  )
+  );
 }

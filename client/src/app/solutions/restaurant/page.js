@@ -1,10 +1,10 @@
-"use client"
+'use client';
 
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import PageLayout from '@/components/layout/PageLayout'
-import { 
-  Utensils, 
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import PageLayout from '@/components/layout/PageLayout';
+import {
+  Utensils,
   Check,
   ArrowRight,
   Star,
@@ -13,9 +13,9 @@ import {
   Users,
   TrendingUp,
   MessageCircle,
-  Smartphone
-} from 'lucide-react'
-import { motion } from 'framer-motion'
+  Smartphone,
+} from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function RestaurantSolution() {
   return (
@@ -24,7 +24,7 @@ export default function RestaurantSolution() {
         {/* Hero Section */}
         <section className="relative pt-32 pb-20 px-6 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-orange-500/10 to-transparent"></div>
-          
+
           <div className="max-w-6xl mx-auto relative z-10">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -48,7 +48,10 @@ export default function RestaurantSolution() {
                   </Button>
                 </Link>
                 <Link href="/contact">
-                  <Button variant="outline" className="h-14 px-10 text-lg rounded-full border-2 hover:bg-orange-50 dark:hover:bg-orange-950/30">
+                  <Button
+                    variant="outline"
+                    className="h-14 px-10 text-lg rounded-full border-2 hover:bg-orange-50 dark:hover:bg-orange-950/30"
+                  >
                     احجز عرضاً توضيحياً
                   </Button>
                 </Link>
@@ -62,8 +65,8 @@ export default function RestaurantSolution() {
               transition={{ delay: 0.2 }}
               className="rounded-3xl overflow-hidden shadow-2xl border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-cosmic-800"
             >
-              <img 
-                src="/assets/images/restaurant-hero.jpg" 
+              <img
+                src="/assets/images/restaurant-hero.jpg"
                 alt="حلول المطاعم"
                 className="w-full h-[500px] object-cover"
                 loading="lazy"
@@ -77,10 +80,18 @@ export default function RestaurantSolution() {
           <div className="max-w-6xl mx-auto">
             <div className="grid md:grid-cols-4 gap-8">
               {[
-                { icon: <TrendingUp />, number: '45%', label: 'زيادة في الطلبات' },
+                {
+                  icon: <TrendingUp />,
+                  number: '45%',
+                  label: 'زيادة في الطلبات',
+                },
                 { icon: <Clock />, number: '70%', label: 'تقليل وقت الانتظار' },
                 { icon: <Users />, number: '85%', label: 'رضا العملاء' },
-                { icon: <DollarSign />, number: '30%', label: 'زيادة في الإيرادات' }
+                {
+                  icon: <DollarSign />,
+                  number: '30%',
+                  label: 'زيادة في الإيرادات',
+                },
               ].map((stat, i) => (
                 <motion.div
                   key={i}
@@ -93,8 +104,12 @@ export default function RestaurantSolution() {
                   <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center mx-auto mb-4 text-orange-500">
                     {stat.icon}
                   </div>
-                  <div className="text-4xl font-bold text-orange-500 mb-2">{stat.number}</div>
-                  <div className="text-gray-600 dark:text-gray-400">{stat.label}</div>
+                  <div className="text-4xl font-bold text-orange-500 mb-2">
+                    {stat.number}
+                  </div>
+                  <div className="text-gray-600 dark:text-gray-400">
+                    {stat.label}
+                  </div>
                 </motion.div>
               ))}
             </div>
@@ -118,33 +133,33 @@ export default function RestaurantSolution() {
                 {
                   icon: <MessageCircle size={32} />,
                   title: 'حجز الطاولات التلقائي',
-                  desc: 'يستقبل البوت طلبات الحجز تلقائياً، يتحقق من التوفر، ويرسل تأكيداً فورياً للعميل مع تفاصيل الحجز'
+                  desc: 'يستقبل البوت طلبات الحجز تلقائياً، يتحقق من التوفر، ويرسل تأكيداً فورياً للعميل مع تفاصيل الحجز',
                 },
                 {
                   icon: <Utensils size={32} />,
                   title: 'قائمة طعام تفاعلية بالصور',
-                  desc: 'عرض المنيو الكامل مع الصور والأسعار، تصنيف حسب الفئات، وإمكانية البحث عن أطباق محددة'
+                  desc: 'عرض المنيو الكامل مع الصور والأسعار، تصنيف حسب الفئات، وإمكانية البحث عن أطباق محددة',
                 },
                 {
                   icon: <Smartphone size={32} />,
                   title: 'استقبال طلبات التوصيل',
-                  desc: 'استقبال الطلبات، حساب المبلغ تلقائياً، تأكيد العنوان، وإرسال وقت التوصيل المتوقع'
+                  desc: 'استقبال الطلبات، حساب المبلغ تلقائياً، تأكيد العنوان، وإرسال وقت التوصيل المتوقع',
                 },
                 {
                   icon: <Clock size={32} />,
                   title: 'إشعارات وتذكيرات ذكية',
-                  desc: 'تذكير العملاء بموعد الحجز، إخطارهم بجاهزية الطلب، وطلب التقييم بعد الخدمة'
+                  desc: 'تذكير العملاء بموعد الحجز، إخطارهم بجاهزية الطلب، وطلب التقييم بعد الخدمة',
                 },
                 {
                   icon: <Star size={32} />,
                   title: 'تقييمات تلقائية',
-                  desc: 'جمع تقييمات العملاء تلقائياً بعد كل طلب، وتحليل الملاحظات لتحسين الخدمة'
+                  desc: 'جمع تقييمات العملاء تلقائياً بعد كل طلب، وتحليل الملاحظات لتحسين الخدمة',
                 },
                 {
                   icon: <Users size={32} />,
                   title: 'إدارة قوائم الانتظار',
-                  desc: 'تنظيم قوائم الانتظار بكفاءة، إخطار العملاء بدورهم، وتقليل الازدحام في المطعم'
-                }
+                  desc: 'تنظيم قوائم الانتظار بكفاءة، إخطار العملاء بدورهم، وتقليل الازدحام في المطعم',
+                },
               ].map((feature, i) => (
                 <motion.div
                   key={i}
@@ -174,23 +189,28 @@ export default function RestaurantSolution() {
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-4xl font-bold mb-4">سيناريوهات حقيقية</h2>
-              <p className="text-xl opacity-90">كيف يستخدم مطعمك فهملي يومياً</p>
+              <p className="text-xl opacity-90">
+                كيف يستخدم مطعمك فهملي يومياً
+              </p>
             </div>
 
             <div className="grid md:grid-cols-3 gap-8">
               {[
                 {
                   title: 'عميل جديد',
-                  scenario: 'يرسل "عايز أحجز طاولة لـ 4 أشخاص الساعة 8 مساءً" - يرد البوت فوراً بالتأكيد والتفاصيل'
+                  scenario:
+                    'يرسل "عايز أحجز طاولة لـ 4 أشخاص الساعة 8 مساءً" - يرد البوت فوراً بالتأكيد والتفاصيل',
                 },
                 {
                   title: 'طلب توصيل',
-                  scenario: 'يطلب "2 برجر و كولا" - البوت يعرض الاختيارات، يحسب المبلغ، يؤكد العنوان، ويُرسل الطلب للمطبخ'
+                  scenario:
+                    'يطلب "2 برجر و كولا" - البوت يعرض الاختيارات، يحسب المبلغ، يؤكد العنوان، ويُرسل الطلب للمطبخ',
                 },
                 {
                   title: 'استفسار عن المنيو',
-                  scenario: 'يسأل "عندكم أكل نباتي؟" - البوت يعرض جميع الخيارات النباتية مع الصور والأسعار'
-                }
+                  scenario:
+                    'يسأل "عندكم أكل نباتي؟" - البوت يعرض جميع الخيارات النباتية مع الصور والأسعار',
+                },
               ].map((useCase, i) => (
                 <motion.div
                   key={i}
@@ -220,10 +240,16 @@ export default function RestaurantSolution() {
             <div className="bg-white dark:bg-cosmic-900 rounded-3xl p-10 border-2 border-orange-200 dark:border-orange-800 shadow-2xl max-w-md mx-auto">
               <div className="text-center mb-8">
                 <div className="inline-block px-4 py-2 bg-orange-100 dark:bg-orange-900/30 rounded-full mb-4">
-                  <span className="text-sm font-bold text-orange-700 dark:text-orange-300">باقة المطاعم</span>
+                  <span className="text-sm font-bold text-orange-700 dark:text-orange-300">
+                    باقة المطاعم
+                  </span>
                 </div>
-                <div className="text-5xl font-bold text-orange-600 dark:text-orange-400 mb-2">ابدأ بـ 99 ر.س</div>
-                <div className="text-gray-700 dark:text-gray-300 font-medium">شهرياً - جرب مجاناً 7 أيام</div>
+                <div className="text-5xl font-bold text-orange-600 dark:text-orange-400 mb-2">
+                  ابدأ بـ 99 ر.س
+                </div>
+                <div className="text-gray-700 dark:text-gray-300 font-medium">
+                  شهرياً - جرب مجاناً 7 أيام
+                </div>
               </div>
               <ul className="text-right space-y-4 mb-8">
                 {[
@@ -232,10 +258,17 @@ export default function RestaurantSolution() {
                   'استقبال طلبات التوصيل',
                   'تقييمات العملاء التلقائية',
                   'رد فوري على الاستفسارات',
-                  'دعم فني مباشر 24/7'
+                  'دعم فني مباشر 24/7',
                 ].map((item, i) => (
-                  <li key={i} className="flex items-center gap-3 text-gray-800 dark:text-gray-200">
-                    <Check size={22} className="text-orange-500 dark:text-orange-400 flex-shrink-0" strokeWidth={3} />
+                  <li
+                    key={i}
+                    className="flex items-center gap-3 text-gray-800 dark:text-gray-200"
+                  >
+                    <Check
+                      size={22}
+                      className="text-orange-500 dark:text-orange-400 flex-shrink-0"
+                      strokeWidth={3}
+                    />
                     <span className="font-medium">{item}</span>
                   </li>
                 ))}
@@ -269,5 +302,5 @@ export default function RestaurantSolution() {
         </section>
       </div>
     </PageLayout>
-  )
+  );
 }

@@ -29,9 +29,9 @@ export default function ResetPasswordPage() {
     }
   }, [searchParams]);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
-    
+
     if (password.length < 6) {
       setError('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
       return;
@@ -63,12 +63,15 @@ export default function ResetPasswordPage() {
       <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-brand-600/20 rounded-full blur-[120px] pointer-events-none opacity-50 dark:opacity-100 animate-pulse-slow" />
       <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[100px] pointer-events-none opacity-50 dark:opacity-100 animate-float" />
 
-      <Link href="/" className="absolute top-6 left-6 z-20 flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-brand-600 dark:hover:text-white transition-colors bg-white/50 dark:bg-white/5 px-4 py-2 rounded-full border border-gray-200 dark:border-white/10 hover:bg-white dark:hover:bg-white/10 backdrop-blur-sm">
+      <Link
+        href="/"
+        className="absolute top-6 left-6 z-20 flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-brand-600 dark:hover:text-white transition-colors bg-white/50 dark:bg-white/5 px-4 py-2 rounded-full border border-gray-200 dark:border-white/10 hover:bg-white dark:hover:bg-white/10 backdrop-blur-sm"
+      >
         <Home size={18} />
         <span className="text-sm font-medium">الرئيسية</span>
       </Link>
 
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md"
@@ -82,13 +85,17 @@ export default function ResetPasswordPage() {
                 <div className="flex justify-center mb-6">
                   <FaheemAnimatedLogo size="medium" showText={false} />
                 </div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">إعادة تعيين كلمة المرور</h1>
-                <p className="text-gray-500 dark:text-gray-400 text-sm">اختر كلمة مرور جديدة وقوية</p>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                  إعادة تعيين كلمة المرور
+                </h1>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">
+                  اختر كلمة مرور جديدة وقوية
+                </p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
                 {error && (
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 text-red-600 dark:text-red-400 text-sm text-center"
@@ -96,18 +103,19 @@ export default function ResetPasswordPage() {
                     {error}
                   </motion.div>
                 )}
-                
+
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                    <Lock size={16} className="text-brand-500" /> كلمة المرور الجديدة
+                    <Lock size={16} className="text-brand-500" /> كلمة المرور
+                    الجديدة
                   </label>
                   <div className="relative">
-                    <Input 
+                    <Input
                       type={showPassword ? 'text' : 'password'}
-                      placeholder="••••••••" 
+                      placeholder="••••••••"
                       required
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={e => setPassword(e.target.value)}
                       className="pl-10 pr-10 bg-gray-50 dark:bg-cosmic-800/50"
                     />
                     <button
@@ -122,24 +130,29 @@ export default function ResetPasswordPage() {
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                    <Lock size={16} className="text-brand-500" /> تأكيد كلمة المرور
+                    <Lock size={16} className="text-brand-500" /> تأكيد كلمة
+                    المرور
                   </label>
-                  <Input 
+                  <Input
                     type={showPassword ? 'text' : 'password'}
-                    placeholder="••••••••" 
+                    placeholder="••••••••"
                     required
                     value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    onChange={e => setConfirmPassword(e.target.value)}
                     className="pl-10 bg-gray-50 dark:bg-cosmic-800/50"
                   />
                 </div>
 
-                <Button 
-                  type="submit" 
-                  className="w-full py-6 text-lg font-bold rounded-xl" 
+                <Button
+                  type="submit"
+                  className="w-full py-6 text-lg font-bold rounded-xl"
                   disabled={loading || !token}
                 >
-                  {loading ? <Loader2 className="animate-spin" /> : 'تعيين كلمة المرور'}
+                  {loading ? (
+                    <Loader2 className="animate-spin" />
+                  ) : (
+                    'تعيين كلمة المرور'
+                  )}
                 </Button>
               </form>
             </>
@@ -150,7 +163,9 @@ export default function ResetPasswordPage() {
               className="text-center py-8"
             >
               <CheckCircle size={64} className="text-green-500 mx-auto mb-6" />
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">تم بنجاح!</h2>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                تم بنجاح!
+              </h2>
               <p className="text-gray-600 dark:text-gray-400 mb-6">
                 تم إعادة تعيين كلمة المرور بنجاح.
                 <br />

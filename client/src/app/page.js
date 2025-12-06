@@ -1,19 +1,30 @@
-"use client"
+'use client';
 
-import { useState } from 'react';
-import { LandingPage } from '@/components/LandingPage';
+import { useState, Suspense, lazy } from 'react';
+
+const LandingPage = lazy(() => import('@/components/LandingPage').then(mod => ({ default: mod.LandingPage })));
 
 export default function Home() {
   const [lang, setLang] = useState('ar');
-  
+
   return (
     <>
       <noscript>
-        <div style={{ padding: '40px', maxWidth: '800px', margin: '0 auto', fontFamily: 'Arial, sans-serif', direction: 'rtl', textAlign: 'center' }}>
+        <div
+          style={{
+            padding: '40px',
+            maxWidth: '800px',
+            margin: '0 auto',
+            fontFamily: 'Arial, sans-serif',
+            direction: 'rtl',
+            textAlign: 'center',
+          }}
+        >
           <h1>فهملي - شات بوت ذكاء اصطناعي عربي</h1>
           <p style={{ fontSize: '18px', lineHeight: '1.8', marginTop: '20px' }}>
-            أقوى منصة شات بوت عربي مدعومة بالذكاء الاصطناعي للسعودية ومصر والإمارات والكويت.
-            ربط واتساب فوري، رد تلقائي 24/7 بكل اللهجات العربية.
+            أقوى منصة شات بوت عربي مدعومة بالذكاء الاصطناعي للسعودية ومصر
+            والإمارات والكويت. ربط واتساب فوري، رد تلقائي 24/7 بكل اللهجات
+            العربية.
           </p>
           <h2>خدماتنا</h2>
           <ul style={{ textAlign: 'right', lineHeight: '2', fontSize: '16px' }}>
@@ -25,7 +36,18 @@ export default function Home() {
           </ul>
           <h2>الأسعار</h2>
           <p>تبدأ من 99 ريال سعودي شهرياً | تجربة مجانية 7 أيام</p>
-          <a href="/register" style={{ display: 'inline-block', padding: '15px 30px', background: '#7C3AED', color: 'white', textDecoration: 'none', borderRadius: '8px', marginTop: '20px' }}>
+          <a
+            href="/register"
+            style={{
+              display: 'inline-block',
+              padding: '15px 30px',
+              background: '#7C3AED',
+              color: 'white',
+              textDecoration: 'none',
+              borderRadius: '8px',
+              marginTop: '20px',
+            }}
+          >
             ابدأ التجربة المجانية
           </a>
           <p style={{ marginTop: '40px', fontSize: '14px', color: '#666' }}>
@@ -33,7 +55,9 @@ export default function Home() {
           </p>
         </div>
       </noscript>
-      <LandingPage country="sa" lang={lang} setLang={setLang} />
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-32 w-32 border-b-2 border-brand-500"></div></div>}>
+        <LandingPage country="sa" lang={lang} setLang={setLang} />
+      </Suspense>
     </>
   );
 }

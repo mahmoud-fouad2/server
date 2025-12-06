@@ -61,30 +61,29 @@ export function useBreakpoint() {
     windowSize,
     isMobile: breakpoint === 'xs' || breakpoint === 'sm',
     isTablet: breakpoint === 'md',
-    isDesktop: breakpoint === 'lg' || breakpoint === 'xl' || breakpoint === '2xl',
+    isDesktop:
+      breakpoint === 'lg' || breakpoint === 'xl' || breakpoint === '2xl',
   };
 }
 
 /**
  * Responsive Container Component
  */
-export default function ResponsiveContainer({ 
-  children, 
+export default function ResponsiveContainer({
+  children,
   className = '',
   maxWidth = '7xl', // default max-w-7xl
   padding = true,
-  ...props 
+  ...props
 }) {
   const { isMobile, isTablet } = useBreakpoint();
 
-  const paddingClasses = padding 
-    ? 'px-4 sm:px-6 lg:px-8'
-    : '';
+  const paddingClasses = padding ? 'px-4 sm:px-6 lg:px-8' : '';
 
   const maxWidthClass = `max-w-${maxWidth}`;
 
   return (
-    <div 
+    <div
       className={`w-full ${maxWidthClass} mx-auto ${paddingClasses} ${className}`}
       data-mobile={isMobile}
       data-tablet={isTablet}
@@ -98,13 +97,13 @@ export default function ResponsiveContainer({
 /**
  * Adaptive Grid - Automatically adjusts columns based on screen size
  */
-export function AdaptiveGrid({ 
-  children, 
+export function AdaptiveGrid({
+  children,
   className = '',
   minColumns = 1,
   maxColumns = 4,
   gap = 4,
-  ...props 
+  ...props
 }) {
   const gapClass = `gap-${gap}`;
 
@@ -114,13 +113,12 @@ export function AdaptiveGrid({
     sm:grid-cols-${Math.min(2, maxColumns)}
     lg:grid-cols-${Math.min(3, maxColumns)}
     xl:grid-cols-${maxColumns}
-  `.trim().replace(/\s+/g, ' ');
+  `
+    .trim()
+    .replace(/\s+/g, ' ');
 
   return (
-    <div 
-      className={`grid ${gridCols} ${gapClass} ${className}`}
-      {...props}
-    >
+    <div className={`grid ${gridCols} ${gapClass} ${className}`} {...props}>
       {children}
     </div>
   );
@@ -129,10 +127,10 @@ export function AdaptiveGrid({
 /**
  * Mobile Optimized Wrapper - Shows/hides content based on screen size
  */
-export function MobileOptimized({ 
-  children, 
+export function MobileOptimized({
+  children,
   showOn = 'mobile', // 'mobile' | 'desktop' | 'all'
-  fallback = null 
+  fallback = null,
 }) {
   const { isMobile } = useBreakpoint();
 
@@ -154,20 +152,20 @@ export function MobileOptimized({
 /**
  * Responsive Stack - Switches between horizontal and vertical layout
  */
-export function ResponsiveStack({ 
-  children, 
+export function ResponsiveStack({
+  children,
   className = '',
   stackAt = 'md', // breakpoint to stack vertically
   gap = 4,
-  ...props 
+  ...props
 }) {
   const { breakpoint } = useBreakpoint();
-  
+
   const shouldStack = BREAKPOINTS[breakpoint] < BREAKPOINTS[stackAt];
   const gapClass = `gap-${gap}`;
 
   return (
-    <div 
+    <div
       className={`flex ${shouldStack ? 'flex-col' : 'flex-row'} ${gapClass} ${className}`}
       {...props}
     >
@@ -179,12 +177,12 @@ export function ResponsiveStack({
 /**
  * Responsive Text - Adjusts font size based on screen size
  */
-export function ResponsiveText({ 
-  children, 
+export function ResponsiveText({
+  children,
   className = '',
   size = 'base', // 'xs' | 'sm' | 'base' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl'
   responsive = true,
-  ...props 
+  ...props
 }) {
   const sizeMap = {
     xs: 'text-xs sm:text-sm',
@@ -211,20 +209,20 @@ export function ResponsiveText({
  */
 export function ShowAt({ breakpoint, children }) {
   const { breakpoint: currentBreakpoint } = useBreakpoint();
-  
+
   if (currentBreakpoint === breakpoint) {
     return <>{children}</>;
   }
-  
+
   return null;
 }
 
 export function HideAt({ breakpoint, children }) {
   const { breakpoint: currentBreakpoint } = useBreakpoint();
-  
+
   if (currentBreakpoint !== breakpoint) {
     return <>{children}</>;
   }
-  
+
   return null;
 }

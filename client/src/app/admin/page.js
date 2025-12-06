@@ -1,119 +1,98 @@
-"use client"
+'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { LayoutDashboard, Users, Bot, Settings, Database, Activity, Shield, LogOut, Search, Save, Trash2, Edit, Plus, Palette, Globe, MessageSquare, Image as ImageIcon, Sun, Moon, Bell, CheckCircle, XCircle, Loader2, LifeBuoy, Share2, Headphones, Zap } from 'lucide-react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import {
+  LayoutDashboard,
+  Users,
+  Bot,
+  Settings,
+  Database,
+  Activity,
+  Shield,
+  LogOut,
+  Search,
+  Save,
+  Trash2,
+  Edit,
+  Plus,
+  Palette,
+  Globe,
+  MessageSquare,
+  Image as ImageIcon,
+  Sun,
+  Moon,
+  Bell,
+  CheckCircle,
+  XCircle,
+  Loader2,
+  LifeBuoy,
+  Share2,
+  Headphones,
+  Zap,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter,
+} from '@/components/ui/card';
 import useTheme from '@/lib/theme';
 import { adminApi, ticketApi } from '@/lib/api';
 
 export default function AdminDashboard() {
+  // 1. All Hooks must be declared at the top level
   const [activeTab, setActiveTab] = useState('overview');
   const [isDark, setIsDark] = useTheme(false); // Default light
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [authorized, setAuthorized] = useState(false);
 
-  // SECURITY: Check authentication and admin role
-  useEffect(() => {
-    const checkAuth = () => {
-      try {
-        const userData = localStorage.getItem('user');
-        if (!userData) {
-          router.push('/login');
-          return;
-        }
-        
-        const user = JSON.parse(userData);
-        if (!user.token) {
-          router.push('/login');
-          return;
-        }
-        
-        // Check if user has admin role
-        if (user.role !== 'ADMIN' && user.role !== 'SUPERADMIN') {
-          router.push('/dashboard');
-          return;
-        }
-        
-        setAuthorized(true);
-      } catch (error) {
-        console.error('Auth check failed:', error);
-        router.push('/login');
-      }
-    };
-    
-    checkAuth();
-  }, [router]);
-
-  // Show loading while checking authorization
-  if (!authorized) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-cosmic-950">
-        <Loader2 className="w-10 h-10 animate-spin text-brand-500" />
-      </div>
-    );
-  }
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalBusinesses: 0,
     totalConversations: 0,
-    totalMessages: 0
+    totalMessages: 0,
   });
   const [users, setUsers] = useState([]);
   const [notifications, setNotifications] = useState(5); // Mock notification count
   const [settings, setSettings] = useState({});
   const [aiModels, setAiModels] = useState([]);
   const [systemLogs, setSystemLogs] = useState([]);
-  const [newModel, setNewModel] = useState({ name: '', apiKey: '', endpoint: '', maxTokens: 1000, priority: 0 });
+  const [newModel, setNewModel] = useState({
+    name: '',
+    apiKey: '',
+    endpoint: '',
+    maxTokens: 1000,
+    priority: 0,
+  });
   const [ticketCount, setTicketCount] = useState(0);
-  
+  const [monitoring, setMonitoring] = useState({
+    system: {},
+    business: {},
+    alerts: []
+  });
+
   // Ticket System State
   const [tickets, setTickets] = useState([]);
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [ticketMessages, setTicketMessages] = useState([]);
   const [ticketReply, setTicketReply] = useState('');
 
-  useEffect(() => {
-    if (activeTab === 'settings') fetchSettings();
-    if (activeTab === 'bots') fetchAiModels();
-    if (activeTab === 'logs') fetchLogs();
-    if (activeTab === 'tickets') fetchTickets();
-  }, [activeTab]);
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const token = localStorage.getItem('token');
-      const userStr = localStorage.getItem('user');
-      
-      if (!token || !userStr) {
-        router.push('/admin/login');
-        return;
-      }
-
-      const user = JSON.parse(userStr);
-      if (user.role !== 'SUPERADMIN') {
-        router.push('/dashboard'); // Redirect non-admins
-        return;
-      }
-
-      // Fetch Data
-      await Promise.all([fetchStats(), fetchUsers(), fetchTicketCount()]);
-      setLoading(false);
-    };
-
-    checkAuth();
-  }, [router]);
-
+  // 2. Helper functions (hoisted or defined before use in effects)
   const fetchTicketCount = async () => {
     try {
       const data = await adminApi.getAllTickets();
-      const count = data.filter(t => t.status === 'OPEN' || t.status === 'IN_PROGRESS').length;
+      const count = data.filter(
+        t => t.status === 'OPEN' || t.status === 'IN_PROGRESS'
+      ).length;
       setTicketCount(count);
     } catch (err) {
-      console.error("Failed to fetch ticket count", err);
+      console.error('Failed to fetch ticket count', err);
     }
   };
 
@@ -122,7 +101,7 @@ export default function AdminDashboard() {
       const data = await adminApi.getStats();
       setStats(data);
     } catch (err) {
-      console.error("Failed to fetch stats", err);
+      console.error('Failed to fetch stats', err);
     }
   };
 
@@ -131,7 +110,7 @@ export default function AdminDashboard() {
       const data = await adminApi.getUsers();
       setUsers(data);
     } catch (err) {
-      console.error("Failed to fetch users", err);
+      console.error('Failed to fetch users', err);
     }
   };
 
@@ -140,7 +119,7 @@ export default function AdminDashboard() {
       const data = await adminApi.getSettings();
       setSettings(data);
     } catch (err) {
-      console.error("Failed to fetch settings", err);
+      console.error('Failed to fetch settings', err);
     }
   };
 
@@ -149,7 +128,7 @@ export default function AdminDashboard() {
       const data = await adminApi.getAIModels();
       setAiModels(data);
     } catch (err) {
-      console.error("Failed to fetch AI models", err);
+      console.error('Failed to fetch AI models', err);
     }
   };
 
@@ -158,7 +137,7 @@ export default function AdminDashboard() {
       const data = await adminApi.getLogs();
       setSystemLogs(data);
     } catch (err) {
-      console.error("Failed to fetch logs", err);
+      console.error('Failed to fetch logs', err);
     }
   };
 
@@ -167,22 +146,77 @@ export default function AdminDashboard() {
       const data = await adminApi.getAllTickets();
       setTickets(data);
     } catch (err) {
-      console.error("Failed to fetch tickets", err);
+      console.error('Failed to fetch tickets', err);
     }
   };
 
-  const selectTicket = async (ticket) => {
+  const fetchMonitoring = async () => {
+    try {
+      const data = await adminApi.getMonitoring();
+      setMonitoring(data);
+    } catch (err) {
+      console.error('Failed to fetch monitoring data', err);
+    }
+  };
+
+  // 3. Effects
+  // SECURITY: Check authentication and admin role
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const userStr = localStorage.getItem('user');
+
+        if (!token || !userStr) {
+          router.push('/admin/login');
+          return;
+        }
+
+        const user = JSON.parse(userStr);
+        const role = user.role?.toUpperCase();
+
+        // Check if user has admin role
+        if (role !== 'ADMIN' && role !== 'SUPERADMIN') {
+          router.push('/dashboard');
+          return;
+        }
+
+        setAuthorized(true);
+
+        // Fetch Data
+        await Promise.all([fetchStats(), fetchUsers(), fetchTicketCount()]);
+        setLoading(false);
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        router.push('/admin/login');
+      }
+    };
+
+    checkAuth();
+  }, [router]);
+
+  useEffect(() => {
+    if (!authorized) return; // Don't fetch if not authorized
+
+    if (activeTab === 'settings') fetchSettings();
+    if (activeTab === 'bots') fetchAiModels();
+    if (activeTab === 'logs') fetchLogs();
+    if (activeTab === 'tickets') fetchTickets();
+    if (activeTab === 'monitoring') fetchMonitoring();
+  }, [activeTab, authorized]);
+
+  const selectTicket = async ticket => {
     setSelectedTicket(ticket);
     try {
       const data = await ticketApi.get(ticket.id);
       setTicketMessages(data.messages);
       // Mark as read or update local state if needed
     } catch (err) {
-      console.error("Failed to fetch ticket details", err);
+      console.error('Failed to fetch ticket details', err);
     }
   };
 
-  const sendTicketReply = async (e) => {
+  const sendTicketReply = async e => {
     e.preventDefault();
     if (!ticketReply.trim() || !selectedTicket) return;
 
@@ -193,18 +227,18 @@ export default function AdminDashboard() {
       // Refresh tickets list to update status/counts
       fetchTickets();
     } catch (err) {
-      console.error("Failed to send reply", err);
+      console.error('Failed to send reply', err);
     }
   };
 
-  const updateTicketStatus = async (status) => {
+  const updateTicketStatus = async status => {
     if (!selectedTicket) return;
     try {
       const updated = await ticketApi.updateStatus(selectedTicket.id, status);
-      setSelectedTicket({...selectedTicket, status: updated.status});
+      setSelectedTicket({ ...selectedTicket, status: updated.status });
       fetchTickets(); // Refresh list
     } catch (err) {
-      console.error("Failed to update status", err);
+      console.error('Failed to update status', err);
     }
   };
 
@@ -213,7 +247,7 @@ export default function AdminDashboard() {
       await adminApi.updateBusinessPlan(businessId, planType);
       fetchUsers(); // Refresh list
     } catch (err) {
-      console.error("Failed to update plan", err);
+      console.error('Failed to update plan', err);
     }
   };
 
@@ -221,29 +255,35 @@ export default function AdminDashboard() {
     try {
       await adminApi.addAIModel(newModel);
       alert('تم إضافة النموذج بنجاح');
-      setNewModel({ name: '', apiKey: '', endpoint: '', maxTokens: 1000, priority: 0 });
+      setNewModel({
+        name: '',
+        apiKey: '',
+        endpoint: '',
+        maxTokens: 1000,
+        priority: 0,
+      });
       fetchAiModels();
     } catch (err) {
-      console.error("Failed to add model", err);
+      console.error('Failed to add model', err);
     }
   };
 
-  const handleDeleteModel = async (id) => {
+  const handleDeleteModel = async id => {
     if (!confirm('هل أنت متأكد من الحذف؟')) return;
     try {
       await adminApi.deleteAIModel(id);
       fetchAiModels();
     } catch (err) {
-      console.error("Failed to delete model", err);
+      console.error('Failed to delete model', err);
     }
   };
 
-  const handleToggleModel = async (id) => {
+  const handleToggleModel = async id => {
     try {
       await adminApi.toggleAIModel(id);
       fetchAiModels();
     } catch (err) {
-      console.error("Failed to toggle model", err);
+      console.error('Failed to toggle model', err);
     }
   };
 
@@ -252,7 +292,7 @@ export default function AdminDashboard() {
       await adminApi.updateSettings(settings);
       alert('تم حفظ الإعدادات بنجاح');
     } catch (err) {
-      console.error("Failed to save settings", err);
+      console.error('Failed to save settings', err);
       alert('حدث خطأ أثناء حفظ الإعدادات');
     }
   };
@@ -267,8 +307,8 @@ export default function AdminDashboard() {
     <button
       onClick={() => setActiveTab(id)}
       className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-        activeTab === id 
-          ? 'bg-brand-600 text-white shadow-md' 
+        activeTab === id
+          ? 'bg-brand-600 text-white shadow-md'
           : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5'
       }`}
     >
@@ -291,33 +331,65 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className={`min-h-screen font-sans transition-colors duration-300 ${isDark ? 'dark bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'} flex`} dir="rtl">
+    <div
+      className={`min-h-screen font-sans transition-colors duration-300 ${isDark ? 'dark bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'} flex`}
+      dir="rtl"
+    >
       {/* Sidebar */}
       <aside className="w-64 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 flex flex-col h-screen sticky top-0 shadow-lg z-10">
         <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center gap-3">
-          <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center text-white font-bold">A</div>
+          <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center text-white font-bold">
+            A
+          </div>
           <div>
-            <h1 className="text-xl font-bold text-brand-600 dark:text-brand-400">Super Admin</h1>
+            <h1 className="text-xl font-bold text-brand-600 dark:text-brand-400">
+              Super Admin
+            </h1>
             <p className="text-xs text-muted-foreground">Control Panel</p>
           </div>
         </div>
-        
+
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-          <SidebarItem id="overview" icon={LayoutDashboard} label="لوحة القيادة" />
-          <SidebarItem id="tickets" icon={LifeBuoy} label="الدعم الفني" badge={ticketCount} />
+          <SidebarItem
+            id="overview"
+            icon={LayoutDashboard}
+            label="لوحة القيادة"
+          />
+          <SidebarItem
+            id="tickets"
+            icon={LifeBuoy}
+            label="الدعم الفني"
+            badge={ticketCount}
+          />
           <SidebarItem id="users" icon={Users} label="المستخدمين" />
           <SidebarItem id="bots" icon={Bot} label="البوتات والذكاء" />
           <SidebarItem id="design" icon={Palette} label="التصميم والألوان" />
           <SidebarItem id="seo" icon={Globe} label="SEO وإعدادات الموقع" />
-          <SidebarItem id="content" icon={MessageSquare} label="النصوص والمحتوى" />
+          <SidebarItem
+            id="content"
+            icon={MessageSquare}
+            label="النصوص والمحتوى"
+          />
           <SidebarItem id="media" icon={ImageIcon} label="الصور والوسائط" />
-          <SidebarItem id="performance" icon={Zap} label="الأداء والتخزين المؤقت" />
+          <SidebarItem
+            id="performance"
+            icon={Zap}
+            label="الأداء والتخزين المؤقت"
+          />
           <SidebarItem id="logs" icon={Activity} label="سجلات النظام" />
+          <SidebarItem
+            id="monitoring"
+            icon={LifeBuoy}
+            label="مراقبة النظام"
+          />
           <SidebarItem id="settings" icon={Settings} label="إعدادات النظام" />
         </nav>
 
         <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-          <button onClick={handleLogout} className="flex items-center gap-2 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 w-full px-4 py-2 rounded-lg transition-colors">
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 w-full px-4 py-2 rounded-lg transition-colors"
+          >
             <LogOut size={20} />
             <span>تسجيل الخروج</span>
           </button>
@@ -335,19 +407,26 @@ export default function AdminDashboard() {
               {activeTab === 'bots' && 'إعدادات البوتات'}
               {activeTab === 'design' && 'التصميم والألوان'}
               {activeTab === 'seo' && 'SEO وإعدادات الموقع'}
+              {activeTab === 'monitoring' && 'مراقبة النظام'}
               {activeTab === 'settings' && 'إعدادات النظام'}
             </h2>
-            <p className="text-sm text-muted-foreground">مرحباً بك في لوحة التحكم المركزية</p>
+            <p className="text-sm text-muted-foreground">
+              مرحباً بك في لوحة التحكم المركزية
+            </p>
           </div>
-          
+
           <div className="flex items-center gap-4">
             {/* Theme Toggle */}
-            <button 
-              onClick={() => setIsDark(!isDark)} 
+            <button
+              onClick={() => setIsDark(!isDark)}
               className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             >
-              {isDark ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-gray-600" />}
+              {isDark ? (
+                <Sun className="w-5 h-5 text-yellow-400" />
+              ) : (
+                <Moon className="w-5 h-5 text-gray-600" />
+              )}
             </button>
 
             {/* Notifications */}
@@ -364,7 +443,9 @@ export default function AdminDashboard() {
 
             <div className="flex items-center gap-3">
               <div className="text-right hidden md:block">
-                <p className="text-sm font-bold text-gray-900 dark:text-white">Super Admin</p>
+                <p className="text-sm font-bold text-gray-900 dark:text-white">
+                  Super Admin
+                </p>
                 <p className="text-xs text-green-500">Online</p>
               </div>
               <div className="w-10 h-10 bg-brand-100 dark:bg-brand-900/30 rounded-full flex items-center justify-center text-brand-600 dark:text-brand-400 font-bold border border-brand-200 dark:border-brand-800">
@@ -379,42 +460,64 @@ export default function AdminDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <Card className="border-none shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-800">
                 <CardHeader className="pb-2 flex flex-row items-center justify-between">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">المستخدمين</CardTitle>
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    المستخدمين
+                  </CardTitle>
                   <Users className="w-4 h-4 text-blue-500" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{stats.totalUsers}</div>
-                  <p className="text-xs text-muted-foreground mt-1">+12% من الشهر الماضي</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    +12% من الشهر الماضي
+                  </p>
                 </CardContent>
               </Card>
               <Card className="border-none shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-800">
                 <CardHeader className="pb-2 flex flex-row items-center justify-between">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">الشركات</CardTitle>
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    الشركات
+                  </CardTitle>
                   <Shield className="w-4 h-4 text-purple-500" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{stats.totalBusinesses}</div>
-                  <p className="text-xs text-muted-foreground mt-1">نشاط تجاري مسجل</p>
+                  <div className="text-2xl font-bold">
+                    {stats.totalBusinesses}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    نشاط تجاري مسجل
+                  </p>
                 </CardContent>
               </Card>
               <Card className="border-none shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-800">
                 <CardHeader className="pb-2 flex flex-row items-center justify-between">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">المحادثات</CardTitle>
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    المحادثات
+                  </CardTitle>
                   <MessageSquare className="w-4 h-4 text-green-500" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{stats.totalConversations}</div>
-                  <p className="text-xs text-muted-foreground mt-1">محادثة نشطة</p>
+                  <div className="text-2xl font-bold">
+                    {stats.totalConversations}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    محادثة نشطة
+                  </p>
                 </CardContent>
               </Card>
               <Card className="border-none shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-800">
                 <CardHeader className="pb-2 flex flex-row items-center justify-between">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">الرسائل</CardTitle>
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    الرسائل
+                  </CardTitle>
                   <Activity className="w-4 h-4 text-orange-500" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{stats.totalMessages}</div>
-                  <p className="text-xs text-muted-foreground mt-1">رسالة تم معالجتها</p>
+                  <div className="text-2xl font-bold">
+                    {stats.totalMessages}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    رسالة تم معالجتها
+                  </p>
                 </CardContent>
               </Card>
             </div>
@@ -427,21 +530,34 @@ export default function AdminDashboard() {
                 <CardContent>
                   <div className="space-y-4">
                     {users.slice(0, 5).map(user => (
-                      <div key={user.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                      <div
+                        key={user.id}
+                        className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                      >
                         <div className="flex items-center gap-4">
                           <div className="w-10 h-10 bg-brand-100 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 rounded-full flex items-center justify-center font-bold">
                             {user.name[0]}
                           </div>
                           <div>
-                            <p className="font-medium text-gray-900 dark:text-white">{user.name}</p>
-                            <p className="text-sm text-muted-foreground">{user.email}</p>
+                            <p className="font-medium text-gray-900 dark:text-white">
+                              {user.name}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {user.email}
+                            </p>
                           </div>
                         </div>
                         <div className="text-right">
-                          <span className={`px-2 py-1 rounded text-xs font-medium ${user.role === 'SUPERADMIN' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+                          <span
+                            className={`px-2 py-1 rounded text-xs font-medium ${user.role === 'SUPERADMIN' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}
+                          >
                             {user.role}
                           </span>
-                          <p className="text-xs text-muted-foreground mt-1">{new Date(user.createdAt).toLocaleDateString('ar-SA')}</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {new Date(user.createdAt).toLocaleDateString(
+                              'ar-SA'
+                            )}
+                          </p>
                         </div>
                       </div>
                     ))}
@@ -458,23 +574,31 @@ export default function AdminDashboard() {
                     <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-100 dark:border-green-800">
                       <div className="flex items-center gap-3">
                         <Database className="w-5 h-5 text-green-600" />
-                        <span className="font-medium text-green-700 dark:text-green-400">قاعدة البيانات</span>
+                        <span className="font-medium text-green-700 dark:text-green-400">
+                          قاعدة البيانات
+                        </span>
                       </div>
                       <CheckCircle className="w-5 h-5 text-green-600" />
                     </div>
                     <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-100 dark:border-green-800">
                       <div className="flex items-center gap-3">
                         <Bot className="w-5 h-5 text-green-600" />
-                        <span className="font-medium text-green-700 dark:text-green-400">خدمات AI</span>
+                        <span className="font-medium text-green-700 dark:text-green-400">
+                          خدمات AI
+                        </span>
                       </div>
                       <CheckCircle className="w-5 h-5 text-green-600" />
                     </div>
                     <div className="flex items-center justify-between p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-100 dark:border-yellow-800">
                       <div className="flex items-center gap-3">
                         <MessageSquare className="w-5 h-5 text-yellow-600" />
-                        <span className="font-medium text-yellow-700 dark:text-yellow-400">واتساب API</span>
+                        <span className="font-medium text-yellow-700 dark:text-yellow-400">
+                          واتساب API
+                        </span>
                       </div>
-                      <span className="text-xs font-bold text-yellow-600">تحقق</span>
+                      <span className="text-xs font-bold text-yellow-600">
+                        تحقق
+                      </span>
                     </div>
                   </div>
                 </CardContent>
@@ -493,27 +617,37 @@ export default function AdminDashboard() {
               </CardHeader>
               <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
                 {tickets.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">لا توجد تذاكر</div>
+                  <div className="text-center py-8 text-muted-foreground">
+                    لا توجد تذاكر
+                  </div>
                 ) : (
                   tickets.map(ticket => (
-                    <div 
-                      key={ticket.id} 
+                    <div
+                      key={ticket.id}
                       onClick={() => selectTicket(ticket)}
                       className={`p-4 rounded-lg cursor-pointer border transition-all ${selectedTicket?.id === ticket.id ? 'bg-brand-500/10 border-brand-500' : 'bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 border-transparent'}`}
                     >
                       <div className="flex justify-between items-start mb-2">
-                        <h4 className="font-bold text-sm truncate">{ticket.subject}</h4>
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full ${
-                          ticket.status === 'OPEN' ? 'bg-green-100 text-green-700' :
-                          ticket.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-700' :
-                          'bg-gray-100 text-gray-700'
-                        }`}>
+                        <h4 className="font-bold text-sm truncate">
+                          {ticket.subject}
+                        </h4>
+                        <span
+                          className={`text-[10px] px-2 py-0.5 rounded-full ${
+                            ticket.status === 'OPEN'
+                              ? 'bg-green-100 text-green-700'
+                              : ticket.status === 'IN_PROGRESS'
+                                ? 'bg-blue-100 text-blue-700'
+                                : 'bg-gray-100 text-gray-700'
+                          }`}
+                        >
                           {ticket.status}
                         </span>
                       </div>
                       <div className="flex justify-between items-center text-xs text-muted-foreground mb-1">
                         <span>{ticket.creator?.name}</span>
-                        <span className={`font-medium ${ticket.priority === 'URGENT' ? 'text-red-500' : ''}`}>
+                        <span
+                          className={`font-medium ${ticket.priority === 'URGENT' ? 'text-red-500' : ''}`}
+                        >
                           {ticket.priority}
                         </span>
                       </div>
@@ -538,16 +672,20 @@ export default function AdminDashboard() {
                   <CardHeader className="border-b border-gray-100 dark:border-gray-700 py-4">
                     <div className="flex justify-between items-center">
                       <div>
-                        <CardTitle className="text-lg">{selectedTicket.subject}</CardTitle>
+                        <CardTitle className="text-lg">
+                          {selectedTicket.subject}
+                        </CardTitle>
                         <CardDescription>
-                          {selectedTicket.creator?.name} ({selectedTicket.creator?.email}) - {selectedTicket.business?.name}
+                          {selectedTicket.creator?.name} (
+                          {selectedTicket.creator?.email}) -{' '}
+                          {selectedTicket.business?.name}
                         </CardDescription>
                       </div>
                       <div className="flex gap-2">
-                        <select 
+                        <select
                           className="text-xs rounded-md border border-gray-200 dark:border-gray-600 bg-transparent px-2 py-1"
                           value={selectedTicket.status}
-                          onChange={(e) => updateTicketStatus(e.target.value)}
+                          onChange={e => updateTicketStatus(e.target.value)}
                         >
                           <option value="OPEN">مفتوحة</option>
                           <option value="IN_PROGRESS">جاري العمل</option>
@@ -559,16 +697,34 @@ export default function AdminDashboard() {
                   </CardHeader>
                   <CardContent className="flex-1 overflow-y-auto p-6 space-y-6 bg-gray-50 dark:bg-gray-900/50">
                     {ticketMessages.map((msg, i) => (
-                      <div key={i} className={`flex gap-4 ${msg.isAdmin ? '' : 'flex-row-reverse'}`}>
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm ${msg.isAdmin ? 'bg-brand-600 text-white' : 'bg-white dark:bg-gray-700'}`}>
-                          {msg.isAdmin ? <Headphones className="w-5 h-5" /> : <Users className="w-5 h-5" />}
+                      <div
+                        key={i}
+                        className={`flex gap-4 ${msg.isAdmin ? '' : 'flex-row-reverse'}`}
+                      >
+                        <div
+                          className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm ${msg.isAdmin ? 'bg-brand-600 text-white' : 'bg-white dark:bg-gray-700'}`}
+                        >
+                          {msg.isAdmin ? (
+                            <Headphones className="w-5 h-5" />
+                          ) : (
+                            <Users className="w-5 h-5" />
+                          )}
                         </div>
                         <div className={`flex-1 max-w-[80%] space-y-1`}>
-                          <div className={`flex items-center gap-2 ${msg.isAdmin ? '' : 'flex-row-reverse'}`}>
-                            <span className="text-xs font-bold">{msg.sender?.name || (msg.isAdmin ? 'الدعم الفني' : 'العميل')}</span>
-                            <span className="text-[10px] text-muted-foreground">{new Date(msg.createdAt).toLocaleString('ar-SA')}</span>
+                          <div
+                            className={`flex items-center gap-2 ${msg.isAdmin ? '' : 'flex-row-reverse'}`}
+                          >
+                            <span className="text-xs font-bold">
+                              {msg.sender?.name ||
+                                (msg.isAdmin ? 'الدعم الفني' : 'العميل')}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground">
+                              {new Date(msg.createdAt).toLocaleString('ar-SA')}
+                            </span>
                           </div>
-                          <div className={`p-4 rounded-xl shadow-sm text-sm leading-relaxed ${msg.isAdmin ? 'bg-brand-600 text-white rounded-tl-none' : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-tr-none'}`}>
+                          <div
+                            className={`p-4 rounded-xl shadow-sm text-sm leading-relaxed ${msg.isAdmin ? 'bg-brand-600 text-white rounded-tl-none' : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-tr-none'}`}
+                          >
                             {msg.message}
                           </div>
                         </div>
@@ -576,14 +732,21 @@ export default function AdminDashboard() {
                     ))}
                   </CardContent>
                   <CardFooter className="border-t border-gray-100 dark:border-gray-700 p-4 bg-white dark:bg-gray-800">
-                    <form onSubmit={sendTicketReply} className="flex w-full gap-3">
-                      <Input 
-                        value={ticketReply} 
-                        onChange={(e) => setTicketReply(e.target.value)} 
-                        placeholder="اكتب ردك هنا..." 
+                    <form
+                      onSubmit={sendTicketReply}
+                      className="flex w-full gap-3"
+                    >
+                      <Input
+                        value={ticketReply}
+                        onChange={e => setTicketReply(e.target.value)}
+                        placeholder="اكتب ردك هنا..."
                         className="flex-1 bg-gray-50 dark:bg-gray-700"
                       />
-                      <Button type="submit" disabled={!ticketReply.trim()} className="bg-brand-600 hover:bg-brand-700">
+                      <Button
+                        type="submit"
+                        disabled={!ticketReply.trim()}
+                        className="bg-brand-600 hover:bg-brand-700"
+                      >
                         <Share2 className="w-4 h-4 ml-2" /> إرسال
                       </Button>
                     </form>
@@ -601,9 +764,14 @@ export default function AdminDashboard() {
               <div className="flex gap-2">
                 <div className="relative">
                   <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <Input placeholder="بحث عن مستخدم..." className="w-64 pr-10 bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600" />
+                  <Input
+                    placeholder="بحث عن مستخدم..."
+                    className="w-64 pr-10 bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600"
+                  />
                 </div>
-                <Button className="bg-brand-600 hover:bg-brand-700"><Plus size={16} className="ml-2" /> إضافة مستخدم</Button>
+                <Button className="bg-brand-600 hover:bg-brand-700">
+                  <Plus size={16} className="ml-2" /> إضافة مستخدم
+                </Button>
               </div>
             </CardHeader>
             <CardContent>
@@ -611,33 +779,59 @@ export default function AdminDashboard() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-gray-200 dark:border-gray-700 text-right">
-                      <th className="pb-3 font-medium text-muted-foreground">الاسم</th>
-                      <th className="pb-3 font-medium text-muted-foreground">البريد الإلكتروني</th>
-                      <th className="pb-3 font-medium text-muted-foreground">الدور</th>
-                      <th className="pb-3 font-medium text-muted-foreground">الباقة</th>
-                      <th className="pb-3 font-medium text-muted-foreground">تاريخ التسجيل</th>
-                      <th className="pb-3 font-medium text-muted-foreground">إجراءات</th>
+                      <th className="pb-3 font-medium text-muted-foreground">
+                        الاسم
+                      </th>
+                      <th className="pb-3 font-medium text-muted-foreground">
+                        البريد الإلكتروني
+                      </th>
+                      <th className="pb-3 font-medium text-muted-foreground">
+                        الدور
+                      </th>
+                      <th className="pb-3 font-medium text-muted-foreground">
+                        الباقة
+                      </th>
+                      <th className="pb-3 font-medium text-muted-foreground">
+                        تاريخ التسجيل
+                      </th>
+                      <th className="pb-3 font-medium text-muted-foreground">
+                        إجراءات
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {users.map(user => (
-                      <tr key={user.id} className="border-b border-gray-100 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                      <tr
+                        key={user.id}
+                        className="border-b border-gray-100 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                      >
                         <td className="py-4 font-medium">{user.name}</td>
-                        <td className="py-4 text-muted-foreground">{user.email}</td>
+                        <td className="py-4 text-muted-foreground">
+                          {user.email}
+                        </td>
                         <td className="py-4">
-                          <span className={`px-2 py-1 rounded text-xs font-medium ${
-                            user.role === 'SUPERADMIN' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' : 
-                            user.role === 'AGENT' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' :
-                            'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
-                          }`}>
+                          <span
+                            className={`px-2 py-1 rounded text-xs font-medium ${
+                              user.role === 'SUPERADMIN'
+                                ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
+                                : user.role === 'AGENT'
+                                  ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'
+                                  : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+                            }`}
+                          >
                             {user.role}
                           </span>
                         </td>
                         <td className="py-4">
                           {user.businesses?.[0] && (
-                            <select 
+                            <select
                               value={user.businesses[0].planType}
-                              onChange={(e) => handleUpdatePlan(user.businesses[0].id, e.target.value)}
+                              onChange={e =>
+                                handleUpdatePlan(
+                                  user.businesses[0].id,
+                                  e.target.value
+                                )
+                              }
                               className="text-xs border rounded p-1 bg-transparent dark:bg-gray-800 dark:border-gray-600"
                             >
                               <option value="TRIAL">Trial</option>
@@ -648,10 +842,24 @@ export default function AdminDashboard() {
                             </select>
                           )}
                         </td>
-                        <td className="py-4 text-muted-foreground">{new Date(user.createdAt).toLocaleDateString('ar-SA')}</td>
+                        <td className="py-4 text-muted-foreground">
+                          {new Date(user.createdAt).toLocaleDateString('ar-SA')}
+                        </td>
                         <td className="py-4 flex gap-2">
-                          <Button variant="ghost" size="sm" className="hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-600"><Edit size={16} /></Button>
-                          <Button variant="ghost" size="sm" className="hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500"><Trash2 size={16} /></Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-600"
+                          >
+                            <Edit size={16} />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500"
+                          >
+                            <Trash2 size={16} />
+                          </Button>
                         </td>
                       </tr>
                     ))}
@@ -665,14 +873,47 @@ export default function AdminDashboard() {
         {activeTab === 'bots' && (
           <div className="space-y-6">
             <Card className="border-none shadow-md bg-white dark:bg-gray-800">
-              <CardHeader><CardTitle>إدارة نماذج الذكاء الاصطناعي</CardTitle></CardHeader>
+              <CardHeader>
+                <CardTitle>إدارة نماذج الذكاء الاصطناعي</CardTitle>
+              </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6 p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
-                  <Input placeholder="اسم النموذج (مثال: llama3-8b)" value={newModel.name} onChange={(e) => setNewModel({...newModel, name: e.target.value})} />
-                  <Input placeholder="API Key" type="password" value={newModel.apiKey} onChange={(e) => setNewModel({...newModel, apiKey: e.target.value})} />
-                  <Input placeholder="Endpoint URL" value={newModel.endpoint} onChange={(e) => setNewModel({...newModel, endpoint: e.target.value})} />
-                  <Input placeholder="Max Tokens" type="number" value={newModel.maxTokens} onChange={(e) => setNewModel({...newModel, maxTokens: e.target.value})} />
-                  <Button onClick={handleAddModel} className="bg-brand-600 hover:bg-brand-700">إضافة نموذج</Button>
+                  <Input
+                    placeholder="اسم النموذج (مثال: llama3-8b)"
+                    value={newModel.name}
+                    onChange={e =>
+                      setNewModel({ ...newModel, name: e.target.value })
+                    }
+                  />
+                  <Input
+                    placeholder="API Key"
+                    type="password"
+                    value={newModel.apiKey}
+                    onChange={e =>
+                      setNewModel({ ...newModel, apiKey: e.target.value })
+                    }
+                  />
+                  <Input
+                    placeholder="Endpoint URL"
+                    value={newModel.endpoint}
+                    onChange={e =>
+                      setNewModel({ ...newModel, endpoint: e.target.value })
+                    }
+                  />
+                  <Input
+                    placeholder="Max Tokens"
+                    type="number"
+                    value={newModel.maxTokens}
+                    onChange={e =>
+                      setNewModel({ ...newModel, maxTokens: e.target.value })
+                    }
+                  />
+                  <Button
+                    onClick={handleAddModel}
+                    className="bg-brand-600 hover:bg-brand-700"
+                  >
+                    إضافة نموذج
+                  </Button>
                 </div>
 
                 <div className="overflow-x-auto">
@@ -688,17 +929,30 @@ export default function AdminDashboard() {
                     </thead>
                     <tbody>
                       {aiModels.map(model => (
-                        <tr key={model.id} className="border-b border-gray-100 dark:border-gray-700 last:border-0">
+                        <tr
+                          key={model.id}
+                          className="border-b border-gray-100 dark:border-gray-700 last:border-0"
+                        >
                           <td className="py-4 font-medium">{model.name}</td>
-                          <td className="py-4 text-sm text-muted-foreground">{model.endpoint || 'Default'}</td>
+                          <td className="py-4 text-sm text-muted-foreground">
+                            {model.endpoint || 'Default'}
+                          </td>
                           <td className="py-4">{model.maxTokens}</td>
                           <td className="py-4">
-                            <span className={`px-2 py-1 rounded text-xs font-medium cursor-pointer ${model.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`} onClick={() => handleToggleModel(model.id)}>
+                            <span
+                              className={`px-2 py-1 rounded text-xs font-medium cursor-pointer ${model.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}
+                              onClick={() => handleToggleModel(model.id)}
+                            >
                               {model.isActive ? 'نشط' : 'متوقف'}
                             </span>
                           </td>
                           <td className="py-4">
-                            <Button variant="ghost" size="sm" className="text-red-500 hover:bg-red-50" onClick={() => handleDeleteModel(model.id)}>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-red-500 hover:bg-red-50"
+                              onClick={() => handleDeleteModel(model.id)}
+                            >
                               <Trash2 size={16} />
                             </Button>
                           </td>
@@ -714,22 +968,36 @@ export default function AdminDashboard() {
 
         {activeTab === 'logs' && (
           <Card className="border-none shadow-md bg-white dark:bg-gray-800">
-            <CardHeader><CardTitle>سجلات النظام والأخطاء</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle>سجلات النظام والأخطاء</CardTitle>
+            </CardHeader>
             <CardContent>
               <div className="space-y-2 font-mono text-sm h-[600px] overflow-y-auto bg-gray-900 text-gray-300 p-4 rounded-lg">
                 {systemLogs.length === 0 ? (
-                  <div className="text-center text-gray-500 py-10">لا توجد سجلات حالياً</div>
+                  <div className="text-center text-gray-500 py-10">
+                    لا توجد سجلات حالياً
+                  </div>
                 ) : (
                   systemLogs.map(log => (
-                    <div key={log.id} className="border-b border-gray-800 pb-2 mb-2 last:border-0">
+                    <div
+                      key={log.id}
+                      className="border-b border-gray-800 pb-2 mb-2 last:border-0"
+                    >
                       <div className="flex items-center gap-2 mb-1">
-                        <span className={`text-xs px-1 rounded ${
-                          log.level === 'ERROR' ? 'bg-red-900 text-red-300' : 
-                          log.level === 'WARN' ? 'bg-yellow-900 text-yellow-300' : 'bg-blue-900 text-blue-300'
-                        }`}>
+                        <span
+                          className={`text-xs px-1 rounded ${
+                            log.level === 'ERROR'
+                              ? 'bg-red-900 text-red-300'
+                              : log.level === 'WARN'
+                                ? 'bg-yellow-900 text-yellow-300'
+                                : 'bg-blue-900 text-blue-300'
+                          }`}
+                        >
                           {log.level}
                         </span>
-                        <span className="text-gray-500 text-xs">{new Date(log.createdAt).toLocaleString()}</span>
+                        <span className="text-gray-500 text-xs">
+                          {new Date(log.createdAt).toLocaleString()}
+                        </span>
                       </div>
                       <p className="break-all">{log.message}</p>
                       {log.context && (
@@ -745,43 +1013,253 @@ export default function AdminDashboard() {
           </Card>
         )}
 
-        {activeTab === 'performance' && (
+        {activeTab === 'monitoring' && (
           <div className="space-y-6">
+            {/* System Health Overview */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <Card className="border-none shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-800">
+                <CardHeader className="pb-2 flex flex-row items-center justify-between">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    حالة النظام
+                  </CardTitle>
+                  <Activity className="w-4 h-4 text-green-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-600">صحي</div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    جميع الخدمات تعمل
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="border-none shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-800">
+                <CardHeader className="pb-2 flex flex-row items-center justify-between">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    وقت التشغيل
+                  </CardTitle>
+                  <Database className="w-4 h-4 text-blue-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {monitoring.system?.uptime?.formatted || 'غير متوفر'}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    منذ آخر إعادة تشغيل
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="border-none shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-800">
+                <CardHeader className="pb-2 flex flex-row items-center justify-between">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    استخدام الذاكرة
+                  </CardTitle>
+                  <Bot className="w-4 h-4 text-purple-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {monitoring.system?.memory?.percentage || 0}%
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {monitoring.system?.memory?.heapUsed || 'غير متوفر'}
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="border-none shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-800">
+                <CardHeader className="pb-2 flex flex-row items-center justify-between">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    التنبيهات
+                  </CardTitle>
+                  <Bell className="w-4 h-4 text-red-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-red-600">
+                    {monitoring.alerts?.length || 0}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    تنبيهات نشطة
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* System Services Status */}
             <Card className="border-none shadow-md bg-white dark:bg-gray-800">
               <CardHeader>
-                <CardTitle>إعدادات الأداء والتخزين المؤقت (Caching)</CardTitle>
-                <CardDescription>تحسين سرعة الموقع وتقليل الحمل على الخادم</CardDescription>
+                <CardTitle>حالة الخدمات</CardTitle>
+                <CardDescription>مراقبة حالة جميع خدمات النظام</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex items-center justify-between p-4 border rounded-lg bg-gray-50 dark:bg-gray-700/30">
-                  <div className="space-y-1">
-                    <h4 className="font-bold">تفعيل التخزين المؤقت للملفات الثابتة</h4>
-                    <p className="text-sm text-muted-foreground">يتم تخزين الصور وملفات CSS/JS في متصفح الزائر لمدة 24 ساعة.</p>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="flex items-center justify-between p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-100 dark:border-green-800">
+                    <div className="flex items-center gap-3">
+                      <Database className="w-5 h-5 text-green-600" />
+                      <span className="font-medium text-green-700 dark:text-green-400">
+                        قاعدة البيانات
+                      </span>
+                    </div>
+                    <CheckCircle className="w-5 h-5 text-green-600" />
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-1 rounded">مفعل تلقائياً</span>
+                  <div className="flex items-center justify-between p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-100 dark:border-green-800">
+                    <div className="flex items-center gap-3">
+                      <Bot className="w-5 h-5 text-green-600" />
+                      <span className="font-medium text-green-700 dark:text-green-400">
+                        خدمات AI
+                      </span>
+                    </div>
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div className="flex items-center justify-between p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-100 dark:border-yellow-800">
+                    <div className="flex items-center gap-3">
+                      <MessageSquare className="w-5 h-5 text-yellow-600" />
+                      <span className="font-medium text-yellow-700 dark:text-yellow-400">
+                        Redis Cache
+                      </span>
+                    </div>
+                    <span className="text-xs font-bold text-yellow-600">
+                      جاري الفحص
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-100 dark:border-green-800">
+                    <div className="flex items-center gap-3">
+                      <Activity className="w-5 h-5 text-green-600" />
+                      <span className="font-medium text-green-700 dark:text-green-400">
+                        الخادم
+                      </span>
+                    </div>
+                    <CheckCircle className="w-5 h-5 text-green-600" />
                   </div>
                 </div>
+              </CardContent>
+            </Card>
 
-                <div className="flex items-center justify-between p-4 border rounded-lg bg-gray-50 dark:bg-gray-700/30">
-                  <div className="space-y-1">
-                    <h4 className="font-bold">مسح ذاكرة التخزين المؤقت (Cache Purge)</h4>
-                    <p className="text-sm text-muted-foreground">اضغط هنا إذا قمت بتحديث صور أو ملفات ولم تظهر التغييرات للزوار.</p>
-                  </div>
-                  <Button variant="outline" onClick={() => alert('تم إرسال طلب مسح الكاش بنجاح!')}>
+            {/* Alerts and Business Metrics */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Recent Alerts */}
+              <Card className="border-none shadow-md bg-white dark:bg-gray-800">
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle>التنبيهات الأخيرة</CardTitle>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => alert('تم مسح جميع التنبيهات')}
+                    className="text-red-600 hover:text-red-700"
+                  >
                     <Trash2 className="w-4 h-4 ml-2" />
-                    مسح الكاش الآن
+                    مسح الكل
                   </Button>
-                </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {monitoring.alerts?.length > 0 ? (
+                      monitoring.alerts.map((alert, index) => (
+                        <div
+                          key={index}
+                          className={`p-3 rounded-lg border ${
+                            alert.severity === 'CRITICAL'
+                              ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+                              : alert.severity === 'WARNING'
+                                ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'
+                                : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <span
+                              className={`text-xs font-bold px-2 py-0.5 rounded ${
+                                alert.severity === 'CRITICAL'
+                                  ? 'bg-red-100 text-red-700'
+                                  : alert.severity === 'WARNING'
+                                    ? 'bg-yellow-100 text-yellow-700'
+                                    : 'bg-blue-100 text-blue-700'
+                              }`}
+                            >
+                              {alert.severity}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(alert.timestamp).toLocaleString('ar-SA')}
+                            </span>
+                          </div>
+                          <p className="text-sm font-medium">{alert.type}</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {alert.message}
+                          </p>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <CheckCircle className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                        <p>لا توجد تنبيهات نشطة</p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
 
-                <div className="flex items-center justify-between p-4 border rounded-lg bg-gray-50 dark:bg-gray-700/30">
-                  <div className="space-y-1">
-                    <h4 className="font-bold">ضغط الملفات (Gzip/Brotli)</h4>
-                    <p className="text-sm text-muted-foreground">تقليل حجم الملفات المرسلة لتسريع التحميل.</p>
+              {/* Business Metrics */}
+              <Card className="border-none shadow-md bg-white dark:bg-gray-800">
+                <CardHeader>
+                  <CardTitle>المقاييس التجارية</CardTitle>
+                  <CardDescription>إحصائيات الأداء والاستخدام</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                      <span className="font-medium">إجمالي المستخدمين</span>
+                      <span className="text-2xl font-bold text-blue-600">
+                        {monitoring.business?.users || 0}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                      <span className="font-medium">الشركات النشطة</span>
+                      <span className="text-2xl font-bold text-green-600">
+                        {monitoring.business?.businesses?.active || 0}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                      <span className="font-medium">إجمالي المحادثات</span>
+                      <span className="text-2xl font-bold text-purple-600">
+                        {monitoring.business?.conversations || 0}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                      <span className="font-medium">الرسائل (آخر 24 ساعة)</span>
+                      <span className="text-2xl font-bold text-orange-600">
+                        {monitoring.business?.messages?.last24h || 0}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-1 rounded">مفعل (Express)</span>
-                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* AI Providers Status */}
+            <Card className="border-none shadow-md bg-white dark:bg-gray-800">
+              <CardHeader>
+                <CardTitle>حالة مزودي الذكاء الاصطناعي</CardTitle>
+                <CardDescription>مراقبة توفر وأداء نماذج AI</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {[
+                    { name: 'Groq', status: 'active', latency: '120ms' },
+                    { name: 'Gemini', status: 'active', latency: '95ms' },
+                    { name: 'Cerebras', status: 'active', latency: '85ms' },
+                    { name: 'DeepSeek', status: 'active', latency: '110ms' },
+                  ].map((provider) => (
+                    <div
+                      key={provider.name}
+                      className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Bot className="w-5 h-5 text-blue-600" />
+                        <div>
+                          <p className="font-medium">{provider.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {provider.latency}
+                          </p>
+                        </div>
+                      </div>
+                      <CheckCircle className="w-5 h-5 text-green-600" />
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
@@ -791,54 +1269,87 @@ export default function AdminDashboard() {
         {activeTab === 'settings' && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card className="bg-white dark:bg-gray-800 border-none shadow-md">
-              <CardHeader><CardTitle>إعدادات Twilio WhatsApp</CardTitle></CardHeader>
+              <CardHeader>
+                <CardTitle>إعدادات Twilio WhatsApp</CardTitle>
+              </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Account SID</label>
-                  <Input 
-                    value={settings.TWILIO_ACCOUNT_SID || ''} 
-                    onChange={(e) => setSettings({...settings, TWILIO_ACCOUNT_SID: e.target.value})}
+                  <Input
+                    value={settings.TWILIO_ACCOUNT_SID || ''}
+                    onChange={e =>
+                      setSettings({
+                        ...settings,
+                        TWILIO_ACCOUNT_SID: e.target.value,
+                      })
+                    }
                     placeholder="AC..."
                     className="bg-gray-50 dark:bg-gray-700"
                   />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Auth Token</label>
-                  <Input 
+                  <Input
                     type="password"
-                    value={settings.TWILIO_AUTH_TOKEN || ''} 
-                    onChange={(e) => setSettings({...settings, TWILIO_AUTH_TOKEN: e.target.value})}
+                    value={settings.TWILIO_AUTH_TOKEN || ''}
+                    onChange={e =>
+                      setSettings({
+                        ...settings,
+                        TWILIO_AUTH_TOKEN: e.target.value,
+                      })
+                    }
                     placeholder="Auth Token"
                     className="bg-gray-50 dark:bg-gray-700"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">رقم الهاتف (Sandbox/Sender)</label>
-                  <Input 
-                    value={settings.TWILIO_PHONE_NUMBER || ''} 
-                    onChange={(e) => setSettings({...settings, TWILIO_PHONE_NUMBER: e.target.value})}
+                  <label className="text-sm font-medium">
+                    رقم الهاتف (Sandbox/Sender)
+                  </label>
+                  <Input
+                    value={settings.TWILIO_PHONE_NUMBER || ''}
+                    onChange={e =>
+                      setSettings({
+                        ...settings,
+                        TWILIO_PHONE_NUMBER: e.target.value,
+                      })
+                    }
                     placeholder="whatsapp:+14155238886"
                     className="bg-gray-50 dark:bg-gray-700"
                   />
                 </div>
-                <Button onClick={saveSettings} className="w-full bg-brand-600 hover:bg-brand-700">حفظ إعدادات Twilio</Button>
+                <Button
+                  onClick={saveSettings}
+                  className="w-full bg-brand-600 hover:bg-brand-700"
+                >
+                  حفظ إعدادات Twilio
+                </Button>
               </CardContent>
             </Card>
 
             <Card className="bg-white dark:bg-gray-800 border-none shadow-md">
-              <CardHeader><CardTitle>إعدادات API أخرى</CardTitle></CardHeader>
+              <CardHeader>
+                <CardTitle>إعدادات API أخرى</CardTitle>
+              </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Groq API Key</label>
-                  <Input 
-                    type="password" 
+                  <Input
+                    type="password"
                     value={settings.GROQ_API_KEY || ''}
-                    onChange={(e) => setSettings({...settings, GROQ_API_KEY: e.target.value})}
-                    placeholder="gsk_..." 
+                    onChange={e =>
+                      setSettings({ ...settings, GROQ_API_KEY: e.target.value })
+                    }
+                    placeholder="gsk_..."
                     className="bg-gray-50 dark:bg-gray-700"
                   />
                 </div>
-                <Button onClick={saveSettings} className="w-full bg-brand-600 hover:bg-brand-700">تحديث المفاتيح</Button>
+                <Button
+                  onClick={saveSettings}
+                  className="w-full bg-brand-600 hover:bg-brand-700"
+                >
+                  تحديث المفاتيح
+                </Button>
               </CardContent>
             </Card>
           </div>
@@ -856,8 +1367,21 @@ export default function AdminDashboard() {
         {/* Footer - Copyright */}
         <footer className="mt-16 pt-8 pb-4 text-center text-sm text-muted-foreground border-t border-border/50 space-y-1">
           <p>© {new Date().getFullYear()} فهملي - جميع الحقوق محفوظة</p>
-          <p className="text-xs">
-            تطوير: <a href="https://github.com/mahmoud-fouad2" target="_blank" rel="noopener noreferrer" className="text-brand-500 hover:text-brand-600 transition-colors">محمود فؤاد</a>
+          <p className="text-xs flex items-center justify-center gap-2">
+            Development By{' '}
+            <a
+              href="https://ma-fo.info"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-brand-500 hover:text-brand-600 transition-colors flex items-center gap-1"
+            >
+              <img
+                src="https://ma-fo.info/logo2.png"
+                alt="Ma-Fo Logo"
+                className="w-4 h-4"
+              />
+              Ma-Fo
+            </a>
           </p>
         </footer>
       </main>

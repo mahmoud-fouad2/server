@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: faheemly
+      POSTGRES_USER: faheemly
+      POSTGRES_PASSWORD: faheemly123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U faheemly"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://faheemly:faheemly123@db:5432/faheemly
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: your-super-secret-key-minimum-32-characters-required
+      GROQ_API_KEY: dummy
+      ADMIN_INITIAL_PASSWORD: admin123456
+      CLIENT_URL: http://localhost:3000
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./server/uploads:/app/uploads
+      - ./server/public/uploads:/app/public/uploads
+    command: npm run dev
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+    depends_on:
+      - api
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+
+volumes:
+  postgres_data:
+  redis_data:

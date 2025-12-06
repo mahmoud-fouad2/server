@@ -1,11 +1,25 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { 
-  Menu, X, LayoutDashboard, MessageSquare, Database, 
-  Settings, LogOut, Moon, Sun, CreditCard, Play, 
-  TrendingUp, FileText, User, Users, Share2, 
-  Headphones, LifeBuoy 
+import {
+  Menu,
+  X,
+  LayoutDashboard,
+  MessageSquare,
+  Database,
+  Settings,
+  LogOut,
+  Moon,
+  Sun,
+  CreditCard,
+  Play,
+  TrendingUp,
+  FileText,
+  User,
+  Users,
+  Share2,
+  Headphones,
+  LifeBuoy,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import FaheemAnimatedLogo from './FaheemAnimatedLogo';
@@ -17,10 +31,14 @@ export default function MobileNav({ activeTab, setActiveTab, userRole }) {
   const isAgent = userRole === 'AGENT';
 
   useEffect(() => {
-    const checkTheme = () => setIsDark(document.documentElement.classList.contains('dark'));
+    const checkTheme = () =>
+      setIsDark(document.documentElement.classList.contains('dark'));
     checkTheme();
     const observer = new MutationObserver(checkTheme);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
     return () => observer.disconnect();
   }, []);
 
@@ -99,7 +117,9 @@ export default function MobileNav({ activeTab, setActiveTab, userRole }) {
             <button
               onClick={toggleTheme}
               className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-cosmic-800 transition-colors focus-visible-ring"
-              aria-label={isDark ? 'التبديل للوضع النهاري' : 'التبديل للوضع الليلي'}
+              aria-label={
+                isDark ? 'التبديل للوضع النهاري' : 'التبديل للوضع الليلي'
+              }
             >
               {isDark ? (
                 <Sun size={20} className="text-yellow-500" />
@@ -162,16 +182,8 @@ export default function MobileNav({ activeTab, setActiveTab, userRole }) {
             />
             {!isAgent && (
               <>
-                <MenuItem
-                  icon={Users}
-                  label="فريق العمل"
-                  id="team"
-                />
-                <MenuItem
-                  icon={Share2}
-                  label="قنوات الاتصال"
-                  id="channels"
-                />
+                <MenuItem icon={Users} label="فريق العمل" id="team" />
+                <MenuItem icon={Share2} label="قنوات الاتصال" id="channels" />
                 <MenuItem
                   icon={FileText}
                   label="قاعدة المعرفة"
@@ -184,18 +196,10 @@ export default function MobileNav({ activeTab, setActiveTab, userRole }) {
                   id="widget"
                   dataTour="sidebar-widget"
                 />
-                <MenuItem
-                  icon={Play}
-                  label="تجربة البوت"
-                  id="playground"
-                />
+                <MenuItem icon={Play} label="تجربة البوت" id="playground" />
               </>
             )}
-            <MenuItem
-              icon={LifeBuoy}
-              label="تذاكر الدعم"
-              id="tickets"
-            />
+            <MenuItem icon={LifeBuoy} label="تذاكر الدعم" id="tickets" />
             <MenuItem
               icon={User}
               label="إعدادات الحساب"

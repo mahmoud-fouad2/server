@@ -1,12 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const groqService = require('../services/groq.service');
-const vectorSearch = require('../services/vector-search.service');
+const { authenticateToken } = require('../middleware/auth');
+const prisma = require('../config/database');
 const redisCache = require('../services/redis-cache.service');
 const visitorSession = require('../services/visitor-session.service');
-const prisma = require('../config/database');
-const { authenticateToken } = require('../middleware/auth');
-const { validateChatMessage, validateRating } = require('../middleware/validation');
+const { validateRating, validateChatMessage } = require('../middleware/validation');
+const groqService = require('../services/groq.service');
+const vectorSearch = require('../services/vector-search.service');
+const responseValidator = require('../services/response-validator.service');
+const logger = require('../utils/logger');
 
 // Protected: Get all conversations for the business
 router.get('/conversations', authenticateToken, async (req, res) => {
@@ -27,7 +29,7 @@ router.get('/conversations', authenticateToken, async (req, res) => {
 
     res.json(conversations);
   } catch (error) {
-    console.error('Get Conversations Error:', error);
+    logger.error('Get Conversations Error:', error);
     res.status(500).json({ error: 'Failed to fetch conversations' });
   }
 });
@@ -42,7 +44,7 @@ router.get('/:conversationId/messages', authenticateToken, async (req, res) => {
     });
     res.json(messages);
   } catch (error) {
-    console.error('Get Messages Error:', error);
+    logger.error('Get Messages Error:', error);
     res.status(500).json({ error: 'Failed to fetch messages' });
   }
 });
@@ -73,7 +75,7 @@ router.get('/handover-requests', authenticateToken, async (req, res) => {
 
     res.json(conversations);
   } catch (error) {
-    console.error('Get Handover Requests Error:', error);
+    logger.error('Get Handover Requests Error:', error);
     res.status(500).json({ error: 'Failed to fetch requests' });
   }
 });
@@ -104,7 +106,7 @@ router.post('/reply', authenticateToken, async (req, res) => {
 
     res.json(newMessage);
   } catch (error) {
-    console.error('Agent Reply Error:', error);
+    logger.error('Agent Reply Error:', error);
     res.status(500).json({ error: 'Failed to send reply' });
   }
 });
@@ -129,7 +131,7 @@ router.post('/rating', validateRating, async (req, res) => {
 
     res.json({ success: true });
   } catch (error) {
-    console.error('Rating Error:', error);
+    logger.error('Rating Error:', error);
     res.status(500).json({ error: 'Failed to submit rating' });
   }
 });
@@ -290,11 +292,11 @@ router.post('/message', validateChatMessage, async (req, res) => {
       });
     }
 
-    // Get Conversation History (last 10 messages)
+    // Get Conversation History (last 20 messages for better context)
     const history = await prisma.message.findMany({
       where: { conversationId: conversation.id },
       orderBy: { createdAt: 'desc' },
-      take: 10
+      take: 20
     });
 
     // Get Business Info (مع دمج اللهجة المكتشفة)
@@ -356,6 +358,19 @@ router.post('/message', validateChatMessage, async (req, res) => {
         knowledgeContext // Use vector search results instead of all knowledge
       );
 
+      // Validate response quality
+      const validation = responseValidator.validateResponse(aiResult.response, {
+        isFirstMessage: formattedHistory.length === 0,
+        expectArabic: business.language === 'ar' || detectedDialect !== 'standard',
+        businessType: business.activityType
+      });
+
+      if (!validation.isValid) {
+        console.warn('[Chat] Response validation failed:', validation.issues);
+        // Log validation issues for monitoring
+        // In production, you might want to regenerate or flag for review
+      }
+
       // Update business message usage
       await prisma.business.update({
         where: { id: businessId },
@@ -390,7 +405,7 @@ router.post('/message', validateChatMessage, async (req, res) => {
       });
 
     } catch (aiError) {
-      console.error('Groq AI Error:', aiError);
+      logger.error('Groq AI Error:', aiError);
       
       // Fallback response
       const fallbackResponse = business.widgetConfig?.dialect === 'sa' 
@@ -416,7 +431,7 @@ router.post('/message', validateChatMessage, async (req, res) => {
     }
 
   } catch (error) {
-    console.error('Chat Error:', error);
+    logger.error('Chat Error:', error);
     res.status(500).json({ error: 'Failed to process message' });
   }
 });

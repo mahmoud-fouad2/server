@@ -168,17 +168,23 @@ class RedisCacheService {
 
     try {
       const pattern = `chat:${businessId}:*`;
-      const keys = await this.client.keys(pattern);
-
-      if (keys.length === 0) {
-        console.log('[RedisCache] No keys to invalidate for business');
-        return 0;
+      // Use scanIterator instead of KEYS for production-safe iteration
+      const toDelete = [];
+      for await (const key of this.client.scanIterator({ MATCH: pattern })) {
+        toDelete.push(key);
+        // Batch delete per 1000 keys
+        if (toDelete.length >= 1000) {
+          await this.client.del(toDelete);
+          toDelete.length = 0;
+        }
       }
 
-      const deleted = await this.client.del(keys);
-      console.log(`[RedisCache] 🗑️ Invalidated ${deleted} cache entries for business`);
-      
-      return deleted;
+      if (toDelete.length > 0) {
+        await this.client.del(toDelete);
+      }
+
+      console.log('[RedisCache] 🗑️ Invalidated cache entries for business');
+      return 1; // best-effort: we deleted keys (exact count not always available with stream)
 
     } catch (error) {
       console.error('[RedisCache] Invalidation error:', error);
@@ -199,20 +205,23 @@ class RedisCacheService {
 
     try {
       const pattern = `chat:${businessId}:*`;
-      const keys = await this.client.keys(pattern);
-      const cacheKeys = keys.filter(k => !k.includes(':hits'));
-
+      let totalCached = 0;
       let totalHits = 0;
-      for (const key of keys.filter(k => k.includes(':hits'))) {
-        const hits = await this.client.get(key);
-        totalHits += parseInt(hits || 0);
+
+      for await (const key of this.client.scanIterator({ MATCH: pattern })) {
+        if (key.includes(':hits')) {
+          const hits = await this.client.get(key);
+          totalHits += parseInt(hits || 0);
+        } else {
+          totalCached += 1;
+        }
       }
 
       return {
         enabled: true,
-        totalCachedQueries: cacheKeys.length,
+        totalCachedQueries: totalCached,
         totalCacheHits: totalHits,
-        hitRate: cacheKeys.length > 0 ? (totalHits / cacheKeys.length).toFixed(2) : 0
+        hitRate: totalCached > 0 ? Number((totalHits / totalCached).toFixed(2)) : 0
       };
 
     } catch (error) {
@@ -256,8 +265,8 @@ class RedisCacheService {
 const redisCache = new RedisCacheService();
 
 // Auto-connect on module load
-redisCache.connect().catch(err => {
-  console.error('[RedisCache] Auto-connect failed:', err);
-});
+// redisCache.connect().catch(err => {
+//   console.error('[RedisCache] Auto-connect failed:', err);
+// });
 
 module.exports = redisCache;

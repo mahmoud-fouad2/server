@@ -8,6 +8,7 @@ const cheerio = require('cheerio');
 const path = require('path');
 const prisma = require('../config/database');
 const { authenticateToken } = require('../middleware/auth');
+const logger = require('../utils/logger');
 const { generateEmbedding } = require('../services/embedding.service');
 const { WebCrawler, scrapeSinglePage } = require('../services/crawler.service');
 const redisCache = require('../services/redis-cache.service');
@@ -117,15 +118,15 @@ async function createChunksForKB(kb) {
               // polite throttle
               await new Promise(r => setTimeout(r, 150));
             } catch (err) {
-              console.error('Sync post-chunk processing error:', err);
+              logger.error('Sync post-chunk processing error:', err);
             }
           }
         }
       } catch (err) {
-        console.error('Post-chunk processing error:', err);
+        logger.error('Post-chunk processing error:', err);
       }
   } catch (err) {
-    console.error('Chunk creation error:', err);
+    logger.error('Chunk creation error:', err);
   }
 }
 
@@ -214,7 +215,7 @@ router.post('/upload', authenticateToken, (req, res, next) => {
     });
 
     // Create chunks for search and retrieval
-    try { await createChunksForKB(kb); } catch (e) { console.error('createChunksForKB failed:', e); }
+    try { await createChunksForKB(kb); } catch (e) { logger.error('createChunksForKB failed:', e); }
 
     // Invalidate Redis cache since knowledge base changed
     await redisCache.invalidate(businessId);
@@ -225,7 +226,7 @@ router.post('/upload', authenticateToken, (req, res, next) => {
     res.json({ message: 'Knowledge base updated', id: kb.id });
 
   } catch (error) {
-    console.error('Upload Error:', error);
+    logger.error('Upload Error:', error);
     if (req.file && fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path);
     }
@@ -244,7 +245,7 @@ router.post('/text', authenticateToken, async (req, res) => {
     // Resolve and validate businessId
     const businessId = await resolveBusinessId(req);
     if (!businessId) {
-      console.error("Missing or invalid businessId in token");
+      logger.error("Missing or invalid businessId in token");
       // Provide helpful debug info in development to speed up fixing client tokens
       if (process.env.NODE_ENV !== 'production') {
         const authHeader = req.headers['authorization'] || null;
@@ -255,7 +256,7 @@ router.post('/text', authenticateToken, async (req, res) => {
     }
 
     if (!text) {
-      console.error("Missing text in body");
+      logger.error("Missing text in body");
       return res.status(400).json({ error: 'Text is required' });
     }
 
@@ -275,7 +276,7 @@ router.post('/text', authenticateToken, async (req, res) => {
       }
     });
     // Create chunks for the saved text
-    try { await createChunksForKB(kb); } catch (e) { console.error('createChunksForKB failed:', e); }
+    try { await createChunksForKB(kb); } catch (e) { logger.error('createChunksForKB failed:', e); }
     console.log("Created KB:", kb.id);
 
     // Invalidate Redis cache since knowledge base changed
@@ -283,7 +284,7 @@ router.post('/text', authenticateToken, async (req, res) => {
 
     res.json({ message: 'Text added successfully', id: kb.id });
   } catch (error) {
-    console.error('Text Add Error:', error);
+    logger.error('Text Add Error:', error);
     // Send the actual error message to the client for debugging
     res.status(500).json({ error: 'Failed to add text: ' + error.message, details: error.toString() });
   }
@@ -343,7 +344,7 @@ router.post('/url', authenticateToken, async (req, res) => {
           }
         });
 
-        await createChunksForKB(kb).catch(e => console.error('Chunk creation failed:', e));
+        await createChunksForKB(kb).catch(e => logger.error('Chunk creation failed:', e));
         savedPages.push(kb.id);
       }
 
@@ -462,14 +463,14 @@ router.post('/url', authenticateToken, async (req, res) => {
     });
 
     // Create chunks for the scraped URL content
-    try { await createChunksForKB(kb); } catch (e) { console.error('createChunksForKB failed:', e); }
+    try { await createChunksForKB(kb); } catch (e) { logger.error('createChunksForKB failed:', e); }
 
     // Invalidate Redis cache since knowledge base changed
     await redisCache.invalidate(businessId);
 
     res.json({ message: 'URL scraped successfully', id: kb.id });
   } catch (error) {
-    console.error('URL Scrape Error:', error.message);
+    logger.error('URL Scrape Error:', error.message);
     res.status(500).json({ error: `Failed to scrape URL: ${error.message}`, details: error.toString() });
   }
 });
@@ -489,7 +490,7 @@ router.get('/', authenticateToken, async (req, res) => {
     }));
     res.json(parsedList);
   } catch (error) {
-    console.error("Fetch Knowledge Error:", error);
+    logger.error("Fetch Knowledge Error:", error);
     res.status(500).json({ error: 'Failed to fetch knowledge base' });
   }
 });
@@ -538,14 +539,14 @@ router.put('/:id', authenticateToken, async (req, res) => {
       where: { knowledgeBaseId: id }
     });
 
-    await createChunksForKB(updated).catch(e => console.error('Chunk creation failed:', e));
+    await createChunksForKB(updated).catch(e => logger.error('Chunk creation failed:', e));
 
     // Invalidate Redis cache
     await redisCache.invalidate(businessId);
 
     res.json({ message: 'Knowledge base updated successfully', id: updated.id });
   } catch (error) {
-    console.error("Update Knowledge Error:", error);
+    logger.error("Update Knowledge Error:", error);
     res.status(500).json({ error: 'Failed to update knowledge base' });
   }
 });
@@ -568,7 +569,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
     
     res.json({ message: 'Deleted successfully' });
   } catch (error) {
-    console.error("Delete Knowledge Error:", error);
+    logger.error("Delete Knowledge Error:", error);
     res.status(500).json({ error: 'Failed to delete' });
   }
 });
@@ -616,13 +617,13 @@ router.post('/chunks/embed', authenticateToken, async (req, res) => {
         }
         await new Promise(r => setTimeout(r, 150));
       } catch (err) {
-        console.error(`Embedding failed for chunk ${c.id}:`, err.message || err);
+        logger.error(`Embedding failed for chunk ${c.id}:`, err.message || err);
       }
     }
 
     res.json({ message: 'Embedding process completed', processed });
   } catch (error) {
-    console.error('Chunks embed error:', error);
+    logger.error('Chunks embed error:', error);
     res.status(500).json({ error: 'Failed to embed chunks', details: error.message });
   }
 });

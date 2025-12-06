@@ -1,37 +1,37 @@
-"use client"
+'use client';
 
-import { useEffect, useState } from "react"
-import Sidebar from "@/components/Sidebar"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Loader2 } from "lucide-react"
-import { businessApi } from "@/lib/api"
+import { useEffect, useState } from 'react';
+import Sidebar from '@/components/Sidebar';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Loader2 } from 'lucide-react';
+import { businessApi } from '@/lib/api';
 
 export default function SettingsPage() {
-  const [settings, setSettings] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [settings, setSettings] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const data = await businessApi.getSettings()
-        setSettings(data)
+        const data = await businessApi.getSettings();
+        setSettings(data);
       } catch (error) {
-        console.error(error)
+        console.error(error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
-    fetchSettings()
-  }, [])
+    };
+    fetchSettings();
+  }, []);
 
   return (
     <div className="min-h-screen bg-background font-sans flex">
       <Sidebar />
       <main className="flex-1 p-8 overflow-y-auto">
         <h1 className="text-3xl font-bold mb-8">إعدادات البوت</h1>
-        
+
         {loading ? (
           <Loader2 className="w-8 h-8 animate-spin" />
         ) : (
@@ -81,5 +81,5 @@ export default function SettingsPage() {
         )}
       </main>
     </div>
-  )
+  );
 }
