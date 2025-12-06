@@ -11,4 +11,8 @@ npx prisma generate
 echo "🗄️ Pushing database schema..."
 npx prisma db push || echo "⚠️ Schema push failed or no changes needed"
 
+# Seed the database with initial data
+echo "🌱 Seeding database..."
+npm run db:seed || echo "⚠️ Seeding failed or already seeded"
+
 echo "✅ Post-deployment tasks completed!"
