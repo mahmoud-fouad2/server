@@ -96,7 +96,7 @@ class VisitorSessionService {
     const referrer = req.headers['referer'] || req.headers['referrer'] || null;
     const utmParams = this.extractUTM(req.query);
 
-    return {
+    const info = {
       ipAddress,
       country: geoData.country || null,
       city: geoData.city || null,
@@ -117,8 +117,10 @@ class VisitorSessionService {
       
       pageViews: 0,
       totalDuration: 0,
-      fingerprint: this.generateFingerprint(visitorInfo) // إضافة fingerprint
+      fingerprint: this.generateFingerprint(info) // إضافة fingerprint
     };
+
+    return info;
   }
 
   /**

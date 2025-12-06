@@ -182,16 +182,19 @@ router.post('/message', validateChatMessage, async (req, res) => {
       });
     }
 
+    // Ensure we use a valid business id for all downstream operations
+    const resolvedBusinessId = business.id;
+
     // 🎯 إنشاء أو استرجاع جلسة الزائر (مع كشف اللهجة)
     let visitorSessionData = null;
     let detectedDialect = 'standard';
     
     try {
-      visitorSessionData = await visitorSession.getOrCreateSession(businessId, sessionId, req);
+      visitorSessionData = await visitorSession.getOrCreateSession(resolvedBusinessId, sessionId, req);
       detectedDialect = visitorSessionData.detectedDialect || 'standard';
       console.log(`[Chat] 🌍 Visitor from ${visitorSessionData.country} | Dialect: ${detectedDialect}`);
     } catch (visitorError) {
-      console.warn('[Chat] Visitor session error:', visitorError.message);
+      console.warn('[Chat] Visitor session error:', visitorError.message || visitorError);
     }
 
     // Find or create conversation (ربط بالجلسة)
@@ -203,7 +206,7 @@ router.post('/message', validateChatMessage, async (req, res) => {
     if (!conversation) {
       conversation = await prisma.conversation.create({
         data: {
-          businessId,
+          businessId: resolvedBusinessId,
           channel: 'WIDGET',
           status: 'ACTIVE',
           visitorSessionId: visitorSessionData?.id || null
