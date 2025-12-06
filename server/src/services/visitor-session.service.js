@@ -117,8 +117,16 @@ class VisitorSessionService {
       
       pageViews: 0,
       totalDuration: 0,
-      fingerprint: this.generateFingerprint(info) // إضافة fingerprint
+      // fingerprint will be generated after info is constructed
     };
+
+    // Generate fingerprint now that `info` is initialized
+    try {
+      info.fingerprint = this.generateFingerprint(info);
+    } catch (err) {
+      console.warn('[Fingerprint] generation failed:', err?.message || err);
+      info.fingerprint = null;
+    }
 
     return info;
   }

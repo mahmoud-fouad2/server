@@ -179,11 +179,19 @@ router.post('/webhook/:integrationId', async (req, res) => {
     // 6. Send Reply
     await telegramService.sendMessage(token, chatId, aiResult.response);
 
-    // Update usage
-    await prisma.business.update({
-      where: { id: integration.businessId },
-      data: { messagesUsed: { increment: 1 } }
-    });
+    // Update usage (defensive)
+    try {
+      await prisma.business.update({
+        where: { id: integration.businessId },
+        data: { messagesUsed: { increment: 1 } }
+      });
+    } catch (e) {
+      if (e && e.code === 'P2025') {
+        console.warn('Telegram: business not found when updating usage', { businessId: integration.businessId });
+      } else {
+        console.error('Telegram: error updating business usage', e);
+      }
+    }
 
     res.status(200).send('OK');
 

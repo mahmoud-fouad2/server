@@ -402,13 +402,19 @@ router.post('/message', validateChatMessage, async (req, res) => {
         // In production, you might want to regenerate or flag for review
       }
 
-      // Update business message usage
-      await prisma.business.update({
-        where: { id: businessId },
-        data: {
-          messagesUsed: { increment: 1 }
+      // Update business message usage (defensive)
+      try {
+        await prisma.business.update({
+          where: { id: businessId },
+          data: { messagesUsed: { increment: 1 } }
+        });
+      } catch (e) {
+        if (e && e.code === 'P2025') {
+          logger.warn('Chat route: business not found when updating usage', { businessId });
+        } else {
+          logger.error('Chat route: error updating business usage', e);
         }
-      });
+      }
 
       // Save AI Message
       const aiMessage = await prisma.message.create({

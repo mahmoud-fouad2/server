@@ -137,11 +137,19 @@ router.post('/webhook', async (req, res) => {
       body: aiResult.response
     });
 
-    // Update usage
-    await prisma.business.update({
-      where: { id: business.id },
-      data: { messagesUsed: { increment: 1 } }
-    });
+    // Update usage (defensive)
+    try {
+      await prisma.business.update({
+        where: { id: business.id },
+        data: { messagesUsed: { increment: 1 } }
+      });
+    } catch (e) {
+      if (e && e.code === 'P2025') {
+        console.warn('[Twilio] Business not found when updating usage', { businessId: business.id });
+      } else {
+        console.error('[Twilio] Error updating business usage', e);
+      }
+    }
 
     res.status(200).send('<Response></Response>');
 

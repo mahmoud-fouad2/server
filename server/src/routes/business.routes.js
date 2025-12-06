@@ -103,16 +103,20 @@ router.put('/settings', authenticateToken, async (req, res) => {
     const { name, activityType, botTone } = req.body;
     const businessId = req.user.businessId;
 
-    const updatedBusiness = await prisma.business.update({
-      where: { id: businessId },
-      data: {
-        name,
-        activityType,
-        botTone
+    // Defensive update: ensure business exists and catch P2025
+    try {
+      const updatedBusiness = await prisma.business.update({
+        where: { id: businessId },
+        data: { name, activityType, botTone }
+      });
+      res.json({ message: 'Business settings updated', business: updatedBusiness });
+    } catch (e) {
+      if (e && e.code === 'P2025') {
+        return res.status(404).json({ error: 'Business not found' });
       }
-    });
-
-    res.json({ message: 'Business settings updated', business: updatedBusiness });
+      console.error('Update Settings Error:', e);
+      res.status(500).json({ error: 'Failed to update settings' });
+    }
   } catch (error) {
     console.error('Update Settings Error:', error);
     res.status(500).json({ error: 'Failed to update settings' });
@@ -175,16 +179,23 @@ router.put('/plan', authenticateToken, async (req, res) => {
         messageQuota = 1000;
     }
 
-    const updatedBusiness = await prisma.business.update({
-      where: { id: businessId },
-      data: {
-        planType: planType.toUpperCase(),
-        messageQuota,
-        trialEndsAt
+    try {
+      const updatedBusiness = await prisma.business.update({
+        where: { id: businessId },
+        data: {
+          planType: planType.toUpperCase(),
+          messageQuota,
+          trialEndsAt
+        }
+      });
+      res.json({ message: 'Plan updated successfully', business: updatedBusiness });
+    } catch (e) {
+      if (e && e.code === 'P2025') {
+        return res.status(404).json({ error: 'Business not found' });
       }
-    });
-
-    res.json({ message: 'Plan updated successfully', business: updatedBusiness });
+      console.error('Update Plan Error:', e);
+      res.status(500).json({ error: 'Failed to update plan' });
+    }
   } catch (error) {
     console.error('Update Plan Error:', error);
     res.status(500).json({ error: 'Failed to update plan' });

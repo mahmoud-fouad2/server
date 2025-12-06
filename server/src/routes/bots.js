@@ -38,11 +38,19 @@ router.post('/create', async (req, res) => {
     };
     if (typeMap[businessType]) industry = typeMap[businessType];
 
-    // 3. Update Business Industry
-    await prisma.business.update({
+    // 3. Update Business Industry (defensive)
+    try {
+      await prisma.business.update({
         where: { id: user.businessId },
         data: { industry: industry }
-    });
+      });
+    } catch (e) {
+      if (e && e.code === 'P2025') {
+        return res.status(404).json({ error: 'Business not found' });
+      }
+      console.error('Failed to update business industry', e);
+      return res.status(500).json({ error: 'Failed to update business industry' });
+    }
 
     // 4. Create Bot
     const bot = await prisma.bot.create({

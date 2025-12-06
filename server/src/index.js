@@ -151,6 +151,38 @@ try {
   console.warn('Widget routes not available:', e?.message || e);
 }
 
+// Fallback widget endpoints if widget routes failed to load
+try {
+  // noop - placeholder to preserve similarity; the real require happened above
+} catch (e) {}
+
+// If the widgetRoutes require failed earlier, ensure the frontend still gets JSON
+// instead of an HTML 404 page (which causes "Unexpected token '<'" on the client).
+if (!app._router || !app._router.stack.some(layer => layer.route && layer.route.path && layer.route.path.startsWith && layer.route.path.startsWith('/api/widget'))) {
+  const defaultWidgetConfig = {
+    name: 'Demo Business',
+    widgetConfig: {
+      welcomeMessage: "مرحباً! كيف يمكنني مساعدتك اليوم؟",
+      primaryColor: "#003366",
+      personality: "friendly",
+      showBranding: true,
+      avatar: "robot"
+    }
+  };
+
+  app.get('/api/widget/config/:businessId', (req, res) => {
+    res.json(defaultWidgetConfig);
+  });
+
+  app.post('/api/widget/config', (req, res) => {
+    res.status(503).json({ error: 'Widget service unavailable' });
+  });
+
+  app.post('/api/widget/upload-icon', (req, res) => {
+    res.status(503).json({ error: 'Widget service unavailable' });
+  });
+}
+
 // Health endpoint (JSON) to let frontends assert health without parsing HTML
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

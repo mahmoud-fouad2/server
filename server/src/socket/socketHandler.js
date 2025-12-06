@@ -144,15 +144,20 @@ function initializeSocket(io) {
           }
         });
 
-        // Update business message count
-        await prisma.business.update({
-          where: { id: businessId },
-          data: {
-            messagesUsed: {
-              increment: 1
-            }
+        // Update business message count (defensive)
+        try {
+          await prisma.business.update({
+            where: { id: businessId },
+            data: { messagesUsed: { increment: 1 } }
+          });
+        } catch (e) {
+          // Prisma P2025 = Record to update not found
+          if (e && e.code === 'P2025') {
+            logger.warn('Failed to update business usage: business not found', { businessId });
+          } else {
+            logger.error('Unexpected error updating business usage', e);
           }
-        });
+        }
 
         // Simulate "Thinking" Delay (1.5s - 3s) to feel more natural
         const delay = Math.floor(Math.random() * 1500) + 1500;

@@ -212,11 +212,19 @@ router.get('/logs', authenticateToken, isAdmin, async (req, res) => {
 router.put('/business/:id/plan', authenticateToken, isAdmin, async (req, res) => {
   try {
     const { planType } = req.body;
-    const business = await prisma.business.update({
-      where: { id: req.params.id },
-      data: { planType }
-    });
-    res.json(business);
+    try {
+      const business = await prisma.business.update({
+        where: { id: req.params.id },
+        data: { planType }
+      });
+      res.json(business);
+    } catch (e) {
+      logger.error('Admin Update Plan Error:', e);
+      if (e && e.code === 'P2025') {
+        return res.status(404).json({ error: 'Business not found' });
+      }
+      res.status(500).json({ error: 'Failed to update plan' });
+    }
   } catch (error) {
     logger.error('Admin Update Plan Error:', error);
     res.status(500).json({ error: 'Failed to update plan' });
