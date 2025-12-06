@@ -104,6 +104,10 @@ app.use(express.json());
 // Test route
 app.get('/', (req, res) => res.send('Hello World'));
 
+// Auth routes
+const authRoutes = require('./routes/auth.routes');
+app.use('/api/auth', authRoutes);
+
 // Phase 2 Routes
 const multiLanguageRoutes = require('./routes/multi-language.routes');
 app.use('/api/multi-language', multiLanguageRoutes);
