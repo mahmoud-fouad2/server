@@ -143,6 +143,19 @@ try {
   console.warn('Proxy routes not available:', e?.message || e);
 }
 
+// Widget routes (config endpoint used by client widget)
+try {
+  const widgetRoutes = require('./routes/widget.routes');
+  app.use('/api/widget', widgetRoutes);
+} catch (e) {
+  console.warn('Widget routes not available:', e?.message || e);
+}
+
+// Health endpoint (JSON) to let frontends assert health without parsing HTML
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 // Error handling middleware (must be last)
 app.use(errorHandler);
 

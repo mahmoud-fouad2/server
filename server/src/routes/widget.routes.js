@@ -1,6 +1,40 @@
 const express = require('express');
 const router = express.Router();
 const prisma = require('../config/database');
+const logger = require('../utils/logger');
+
+// Simple widget config endpoint
+// GET /api/widget/config/:id
+router.get('/config/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ error: 'Widget/business id required' });
+
+    // Try to resolve business by id
+    const business = await prisma.business.findUnique({ where: { id } });
+    if (!business) return res.status(404).json({ error: 'Business not found' });
+
+    // Minimal config returned to widget
+    const config = {
+      id: business.id,
+      name: business.name || 'Unknown',
+      locale: business.locale || 'en',
+      timezone: business.timezone || 'UTC',
+      // Expose widget-specific flags if present in metadata
+      widget: (business.metadata && business.metadata.widget) || { enabled: true }
+    };
+
+    res.json({ config });
+  } catch (err) {
+    logger.error('Widget config error', err);
+    res.status(500).json({ error: 'Failed to fetch widget config' });
+  }
+});
+
+module.exports = router;
+const express = require('express');
+const router = express.Router();
+const prisma = require('../config/database');
 const { authenticateToken } = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
