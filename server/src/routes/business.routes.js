@@ -119,6 +119,34 @@ router.put('/settings', authenticateToken, async (req, res) => {
   }
 });
 
+// Get Business Plan
+router.get('/plan', authenticateToken, async (req, res) => {
+  try {
+    const businessId = req.user.businessId;
+
+    const business = await prisma.business.findUnique({
+      where: { id: businessId },
+      select: {
+        id: true,
+        planType: true,
+        messageQuota: true,
+        messagesUsed: true,
+        trialEndsAt: true,
+        status: true
+      }
+    });
+
+    if (!business) {
+      return res.status(404).json({ error: 'Business not found' });
+    }
+
+    res.json(business);
+  } catch (error) {
+    console.error('Get Plan Error:', error);
+    res.status(500).json({ error: 'Failed to get plan information' });
+  }
+});
+
 // Update Business Plan
 router.put('/plan', authenticateToken, async (req, res) => {
   try {

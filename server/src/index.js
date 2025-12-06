@@ -112,6 +112,10 @@ app.use('/api/auth', authRoutes);
 const chatRoutes = require('./routes/chat.routes');
 app.use('/api/chat', chatRoutes);
 
+// Business routes
+const businessRoutes = require('./routes/business.routes');
+app.use('/api/business', businessRoutes);
+
 // Phase 2 Routes
 const multiLanguageRoutes = require('./routes/multi-language.routes');
 app.use('/api/multi-language', multiLanguageRoutes);
