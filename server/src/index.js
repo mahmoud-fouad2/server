@@ -108,6 +108,10 @@ app.get('/', (req, res) => res.send('Hello World'));
 const authRoutes = require('./routes/auth.routes');
 app.use('/api/auth', authRoutes);
 
+// Chat routes
+const chatRoutes = require('./routes/chat.routes');
+app.use('/api/chat', chatRoutes);
+
 // Phase 2 Routes
 const multiLanguageRoutes = require('./routes/multi-language.routes');
 app.use('/api/multi-language', multiLanguageRoutes);
