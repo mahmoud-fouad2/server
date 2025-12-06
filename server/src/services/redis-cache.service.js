@@ -170,21 +170,33 @@ class RedisCacheService {
       const pattern = `chat:${businessId}:*`;
       // Use scanIterator instead of KEYS for production-safe iteration
       const toDelete = [];
+      let totalDeleted = 0;
       for await (const key of this.client.scanIterator({ MATCH: pattern })) {
-        toDelete.push(key);
+        // Defensive: ensure keys are strings
+        toDelete.push(String(key));
         // Batch delete per 1000 keys
         if (toDelete.length >= 1000) {
-          await this.client.del(toDelete);
+          try {
+            const deleted = await this.client.del(...toDelete);
+            totalDeleted += Number(deleted || 0);
+          } catch (err) {
+            console.error('[RedisCache] Batch delete error:', err);
+          }
           toDelete.length = 0;
         }
       }
 
       if (toDelete.length > 0) {
-        await this.client.del(toDelete);
+        try {
+          const deleted = await this.client.del(...toDelete);
+          totalDeleted += Number(deleted || 0);
+        } catch (err) {
+          console.error('[RedisCache] Final batch delete error:', err);
+        }
       }
 
-      console.log('[RedisCache] 🗑️ Invalidated cache entries for business');
-      return 1; // best-effort: we deleted keys (exact count not always available with stream)
+      console.log('[RedisCache] 🗑️ Invalidated cache entries for business, deleted:', totalDeleted);
+      return totalDeleted; // return actual count of deleted keys when possible
 
     } catch (error) {
       console.error('[RedisCache] Invalidation error:', error);
