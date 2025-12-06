@@ -145,6 +145,12 @@ router.post('/message', validateChatMessage, async (req, res) => {
       return res.status(400).json({ error: 'Message and Business ID are required' });
     }
 
+    // Validate business exists
+    const business = await prisma.business.findUnique({ where: { id: businessId } });
+    if (!business) {
+      return res.status(404).json({ error: 'Business not found' });
+    }
+
     // 🎯 إنشاء أو استرجاع جلسة الزائر (مع كشف اللهجة)
     let visitorSessionData = null;
     let detectedDialect = 'standard';

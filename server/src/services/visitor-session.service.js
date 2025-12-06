@@ -116,7 +116,8 @@ class VisitorSessionService {
       ...utmParams,
       
       pageViews: 0,
-      totalDuration: 0
+      totalDuration: 0,
+      fingerprint: this.generateFingerprint(visitorInfo) // إضافة fingerprint
     };
   }
 
@@ -376,6 +377,15 @@ class VisitorSessionService {
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10)
       .map(([path, count]) => ({ path, count }));
+  }
+
+  /**
+   * إنشاء fingerprint للزائر
+   */
+  generateFingerprint(visitorInfo) {
+    const crypto = require('crypto');
+    const data = `${visitorInfo.ipAddress}-${visitorInfo.userAgent}-${visitorInfo.browser}-${visitorInfo.os}`;
+    return crypto.createHash('md5').update(data).digest('hex');
   }
 }
 
