@@ -67,7 +67,7 @@ async function startServerWithRetries(startPort, maxAttempts = 10) {
       await new Promise((resolve, reject) => {
         s.once('error', reject);
         s.once('listening', resolve);
-        s.listen(port, '127.0.0.1');
+        s.listen(port, '0.0.0.0');
       });
 
       // Attach a runtime error handler
