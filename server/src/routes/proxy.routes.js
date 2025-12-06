@@ -5,7 +5,8 @@ const router = express.Router();
  * Simple proxy endpoints to forward requests to external APIs and avoid CORS
  * Example: POST /api/proxy/chat/message -> forwards to EXTERNAL_API_BASE + /api/chat/message
  */
-const EXTERNAL_API_BASE = process.env.EXTERNAL_API_BASE || 'https://fahimo-api.onrender.com';
+// Default to the canonical production API host (faheemly) but allow override via env
+const EXTERNAL_API_BASE = process.env.EXTERNAL_API_BASE || 'https://faheemly.com';
 
 // Generic POST forwarder for chat/message
 router.post('/chat/message', async (req, res) => {

@@ -108,7 +108,6 @@ class VisitorSessionService {
       browser: result.browser.name || null,
       browserVersion: result.browser.version || null,
       os: result.os.name || null,
-      osVersion: result.os.version || null,
       device: result.device.type || 'desktop',
       isMobile: result.device.type === 'mobile' || result.device.type === 'tablet',
       
