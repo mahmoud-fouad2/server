@@ -7,8 +7,8 @@
       businessId: null,
       color: '#6366F1',
       position: 'bottom-right',
-      apiEndpoint: 'https://faheemly-server.onrender.com/api/chat/message', // Change for production
-      configEndpoint: 'https://faheemly-server.onrender.com/api/widget/config',
+      apiEndpoint: 'https://fahimo-api.onrender.com/api/chat/message', // Change for production
+      configEndpoint: 'https://fahimo-api.onrender.com/api/widget/config',
     },
     state: {
       isOpen: false,

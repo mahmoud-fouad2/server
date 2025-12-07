@@ -35,7 +35,7 @@ export default function PlaygroundView() {
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'https://faheemly-server.onrender.com'}/api/chat/test`,
+        `${process.env.NEXT_PUBLIC_API_URL || 'https://fahimo-api.onrender.com'}/api/chat/test`,
         {
           method: 'POST',
           headers: {

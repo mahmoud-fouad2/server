@@ -522,22 +522,6 @@ export default function Documentation() {
             {/* Footer */}
             <footer className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
               <div className="text-center space-y-4">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Development By{' '}
-                  <a
-                    href="https://ma-fo.info"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                  >
-                    <img
-                      src="https://ma-fo.info/logo2.png"
-                      alt="Ma-Fo Logo"
-                      className="w-4 h-4"
-                    />
-                    Ma-Fo
-                  </a>
-                </p>
                 <p className="text-xs text-gray-400 dark:text-gray-500">
                   © 2025 جميع الحقوق محفوظة لشركة فهملي
                 </p>

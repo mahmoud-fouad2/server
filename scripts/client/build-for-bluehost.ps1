@@ -129,7 +129,7 @@ Phone: +966 530047640
 
 ## 🔗 Important URLs
 - Frontend: https://faheemly.com
-- API: https://faheemly-server.onrender.com
+- API: https://fahimo-api.onrender.com
 "@
 
 Set-Content -Path "deployment\README-DEPLOYMENT.md" -Value $readme

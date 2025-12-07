@@ -180,7 +180,7 @@ export default function StatsOverview({
 
   const copyWidgetCode = () => {
     const businessId = user?.businessId || 'YOUR_BUSINESS_ID';
-    const code = `<script src="https://faheemly.com/widget/fahimo-widget.js" data-business-id="${businessId}"></script>`;
+    const code = `<script src="https://fahimo-api.onrender.com/widget/fahimo-widget.js" data-business-id="${businessId}"></script>`;
     navigator.clipboard.writeText(code);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -757,7 +757,7 @@ export default function StatsOverview({
             <div className="relative group" dir="ltr">
               <div className="bg-muted p-4 rounded-lg font-mono text-xs break-all border border-border">
                 &lt;script
-                src=&quot;https://faheemly.com/widget/fahimo-widget.js&quot;
+                src=&quot;https://fahimo-api.onrender.com/widget/fahimo-widget.js&quot;
                 data-business-id=&quot;{user?.businessId}&quot;&gt;&lt;/script&gt;
               </div>
               <div className="absolute top-2 right-2 flex gap-2">
