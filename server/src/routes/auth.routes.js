@@ -121,6 +121,69 @@ router.post('/login', validateLogin, async (req, res) => {
   }
 });
 
+// Demo login (safe helper for testing / demo environments)
+router.post('/demo-login', async (req, res) => {
+  try {
+    const demoEmail = 'hello@faheemly.com';
+    const demoPassword = 'FaheemlyDemo2025!';
+    const { email, password } = req.body || {};
+
+    if (email !== demoEmail || password !== demoPassword) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    // Find existing user (with businesses)
+    let user = await prisma.user.findUnique({ where: { email }, include: { businesses: true } });
+
+    // If not found, create demo user + business in a transaction
+    if (!user) {
+      const hashedPassword = await bcrypt.hash(demoPassword, 10);
+      const result = await prisma.$transaction(async (prismaTx) => {
+        const newUser = await prismaTx.user.create({
+          data: {
+            name: 'Faheemly Demo',
+            email: demoEmail,
+            password: hashedPassword,
+            role: 'CLIENT'
+          }
+        });
+
+        const business = await prismaTx.business.create({
+          data: {
+            userId: newUser.id,
+            name: 'Faheemly Demo Business',
+            activityType: 'OTHER',
+            planType: 'TRIAL',
+            trialEndsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+          }
+        });
+
+        return { newUser, business };
+      });
+
+      user = { ...result.newUser, businesses: [result.business] };
+    }
+
+    const businessId = user.businesses[0]?.id;
+
+    const token = jwt.sign(
+      { userId: user.id, email: user.email, role: user.role, businessId },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.json({
+      message: 'Demo login successful',
+      token,
+      user: { id: user.id, name: user.name, email: user.email, role: user.role, businessId },
+      businessId
+    });
+  } catch (error) {
+    logger.error('Demo login failed', error);
+    res.status(500).json({ error: 'Demo login failed' });
+  }
+});
+
 // Update Profile
 router.put('/profile', authenticateToken, async (req, res) => {
   try {
