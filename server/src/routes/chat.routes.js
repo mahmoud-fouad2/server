@@ -2,10 +2,10 @@ const express = require('express');
 const router = express.Router();
 const { authenticateToken } = require('../middleware/auth');
 const prisma = require('../config/database');
-const redisCache = require('../services/redis-cache.service');
+const cacheService = require('../services/cache.service');
 const visitorSession = require('../services/visitor-session.service');
 const { validateRating, validateChatMessage } = require('../middleware/validation');
-const groqService = require('../services/groq.service');
+const aiService = require('../services/ai.service');
 const vectorSearch = require('../services/vector-search.service');
 const responseValidator = require('../services/response-validator.service');
 const logger = require('../utils/logger');
@@ -14,34 +14,40 @@ const logger = require('../utils/logger');
 router.get('/conversations', authenticateToken, async (req, res) => {
   try {
     const { businessId } = req.user;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
     if (!businessId) return res.status(400).json({ error: 'Business ID required' });
 
-    const conversations = await prisma.conversation.findMany({
-      where: { businessId },
-      include: {
-        messages: {
-          orderBy: { createdAt: 'desc' },
-          take: 1
-        }
-      },
-      orderBy: { updatedAt: 'desc' }
-    });
+    const [conversations, total] = await Promise.all([
+      prisma.conversation.findMany({
+        where: { businessId },
+        include: {
+          messages: {
+            orderBy: { createdAt: 'desc' },
+            take: 1
+          }
+        },
+        orderBy: { updatedAt: 'desc' },
+        skip,
+        take: limit
+      }),
+      prisma.conversation.count({ where: { businessId } })
+    ]);
 
-    res.json(conversations);
+    res.json({
+      data: conversations,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
   } catch (error) {
     logger.error('Get Conversations Error:', error);
     res.status(500).json({ error: 'Failed to fetch conversations' });
-  }
-});
-
-// Lightweight test endpoint to verify chat API routing (useful for remote checks)
-router.post('/test', async (req, res) => {
-  try {
-    const payload = req.body || {};
-    return res.json({ success: true, message: 'chat test OK', payload });
-  } catch (err) {
-    console.error('Chat test error:', err);
-    return res.status(500).json({ success: false, message: 'chat test failed' });
   }
 });
 
@@ -49,11 +55,27 @@ router.post('/test', async (req, res) => {
 router.get('/:conversationId/messages', authenticateToken, async (req, res) => {
   try {
     const { conversationId } = req.params;
-    const messages = await prisma.message.findMany({
+    const limit = parseInt(req.query.limit) || 50;
+    const cursor = req.query.cursor;
+
+    const queryOptions = {
       where: { conversationId },
-      orderBy: { createdAt: 'asc' }
+      orderBy: { createdAt: 'asc' },
+      take: limit
+    };
+
+    if (cursor) {
+      queryOptions.cursor = { id: cursor };
+      queryOptions.skip = 1;
+    }
+
+    const messages = await prisma.message.findMany(queryOptions);
+    const nextCursor = messages.length === limit ? messages[messages.length - 1].id : null;
+
+    res.json({
+      data: messages,
+      pagination: { nextCursor }
     });
-    res.json(messages);
   } catch (error) {
     logger.error('Get Messages Error:', error);
     res.status(500).json({ error: 'Failed to fetch messages' });

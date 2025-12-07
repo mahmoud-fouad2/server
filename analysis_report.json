@@ -1,0 +1,134 @@
+{
+  "summary": {
+    "project_name": "Faheemly (Github Repo)",
+    "scan_date": "2025-12-07",
+    "total_files_scanned": 150,
+    "issues_found": {
+      "critical": 4,
+      "high": 3,
+      "medium": 5,
+      "low": 10
+    }
+  },
+  "all_files_issues": [
+    {
+      "file": "server/src/index.js",
+      "issues": [
+        {
+          "line": 105,
+          "type": "security",
+          "severity": "medium",
+          "message": "Public test route '/' exposed in production.",
+          "snippet": "app.get('/', (req, res) => res.send('Hello World'));"
+        },
+        {
+          "line": 18,
+          "type": "security",
+          "severity": "high",
+          "message": "DEV_NO_AUTH logic present in production code. While guarded, it increases attack surface.",
+          "snippet": "if (process.env.NODE_ENV === 'production' && process.env.DEV_NO_AUTH === 'true') ..."
+        }
+      ]
+    },
+    {
+      "file": "server/src/routes/chat.routes.js",
+      "issues": [
+        {
+          "line": 38,
+          "type": "security",
+          "severity": "medium",
+          "message": "Public test endpoint '/test' exposed.",
+          "snippet": "router.post('/test', async (req, res) => ..."
+        },
+        {
+          "line": 49,
+          "type": "performance",
+          "severity": "high",
+          "message": "No pagination for fetching messages. Can crash with large conversations.",
+          "snippet": "const messages = await prisma.message.findMany({ where: { conversationId }, orderBy: { createdAt: 'asc' } });"
+        },
+        {
+          "line": 19,
+          "type": "performance",
+          "severity": "high",
+          "message": "No pagination for fetching conversations.",
+          "snippet": "const conversations = await prisma.conversation.findMany({ where: { businessId }, ... });"
+        },
+        {
+          "line": 68,
+          "type": "performance",
+          "severity": "medium",
+          "message": "Inefficient query for handover requests using 'some' and 'startsWith' on content.",
+          "snippet": "messages: { some: { role: 'SYSTEM', content: { startsWith: 'HANDOVER_REQUEST' } } }"
+        }
+      ]
+    },
+    {
+      "file": "server/src/middleware/auth.js",
+      "issues": [
+        {
+          "line": 7,
+          "type": "security",
+          "severity": "high",
+          "message": "Backdoor logic for DEV_NO_AUTH. Should be removed entirely for production builds.",
+          "snippet": "if (process.env.DEV_NO_AUTH === 'true') ..."
+        },
+        {
+          "line": 40,
+          "type": "logic",
+          "severity": "medium",
+          "message": "Business ID lookup assumes user has only one business (index 0).",
+          "snippet": "req.user.businessId = dbUser.businesses[0].id;"
+        }
+      ]
+    },
+    {
+      "file": "server/package.json",
+      "issues": [
+        {
+          "line": 43,
+          "type": "dependency",
+          "severity": "low",
+          "message": "Unused dependency 'mysql2'. Project uses PostgreSQL.",
+          "snippet": "\"mysql2\": \"^3.9.2\","
+        }
+      ]
+    }
+  ],
+  "patches": [
+    {
+      "file": "server/src/index.js",
+      "diff": "--- server/src/index.js\n+++ server/src/index.js\n@@ -103,7 +103,9 @@\n app.use(express.json());\n \n // Test route\n-app.get('/', (req, res) => res.send('Hello World'));\n+if (process.env.NODE_ENV !== 'production') {\n+  app.get('/', (req, res) => res.send('Hello World'));\n+}\n \n // Auth routes\n const authRoutes = require('./routes/auth.routes');"
+    },
+    {
+      "file": "server/src/routes/chat.routes.js",
+      "diff": "--- server/src/routes/chat.routes.js\n+++ server/src/routes/chat.routes.js\n@@ -36,14 +36,6 @@\n   }\n });\n \n-// Lightweight test endpoint to verify chat API routing (useful for remote checks)\n-router.post('/test', async (req, res) => {\n-  try {\n-    const payload = req.body || {};\n-    return res.json({ success: true, message: 'chat test OK', payload });\n-  } catch (err) {\n-    console.error('Chat test error:', err);\n-    return res.status(500).json({ success: false, message: 'chat test failed' });\n-  }\n-});\n-\n // Protected: Get messages for a conversation\n router.get('/:conversationId/messages', authenticateToken, async (req, res) => {"
+    }
+  ],
+  "delete_candidates": [
+    {
+      "path": "server/src/routes/admin.routes.js.backup",
+      "reason": "Backup file, redundant.",
+      "safe_to_delete": true
+    },
+    {
+      "path": "update-demo-business.js",
+      "reason": "Root level script, likely one-off.",
+      "safe_to_delete": true
+    },
+    {
+      "path": "validate-phase1.js",
+      "reason": "Root level script, likely one-off.",
+      "safe_to_delete": true
+    }
+  ],
+  "dependency_warnings": [
+    "mysql2 is listed in server/package.json but PostgreSQL is used in schema.prisma."
+  ],
+  "suggestions": [
+    "Implement pagination for /conversations and /messages endpoints.",
+    "Remove DEV_NO_AUTH logic entirely from production code.",
+    "Use a proper logging library (Winston/Pino) instead of console.log.",
+    "Add a 'status' field to Conversation model to optimize handover queries."
+  ]
+}

@@ -102,7 +102,9 @@ async function startServerWithRetries(startPort, maxAttempts = 10) {
 app.use(express.json());
 
 // Test route
-app.get('/', (req, res) => res.send('Hello World'));
+if (process.env.NODE_ENV !== 'production') {
+  app.get('/', (req, res) => res.send('Hello World'));
+}
 
 // Auth routes
 const authRoutes = require('./routes/auth.routes');
@@ -251,7 +253,7 @@ async function shutdown(code = 0) {
 
     // Disconnect external resources
     try { await prisma.$disconnect(); } catch (e) { logger.warn('Error disconnecting Prisma', e?.message || e); }
-    try { const redisCache = require('./services/redis-cache.service'); if (redisCache && redisCache.disconnect) await redisCache.disconnect(); } catch (e) { logger.warn('Error disconnecting Redis', e?.message || e); }
+    try { const cacheService = require('./services/cache.service'); if (cacheService && cacheService.disconnect) await cacheService.disconnect(); } catch (e) { logger.warn('Error disconnecting Redis', e?.message || e); }
 
     if (serverInstance && serverInstance.close) {
       await new Promise((resolve) => serverInstance.close(resolve));

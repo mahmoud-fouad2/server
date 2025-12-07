@@ -3,17 +3,6 @@ const prisma = require('../config/database');
 
 // Enhanced authenticateToken: verifies JWT and ensures req.user.businessId
 const authenticateToken = async (req, res, next) => {
-  // Development bypass: allow unauthenticated access only in non-production environments
-  if (process.env.DEV_NO_AUTH === 'true') {
-    if (process.env.NODE_ENV === 'production') {
-      // This should be blocked earlier at startup, but add a hard fail here as a last defense
-      console.error('SECURITY: DEV_NO_AUTH=true detected in production. Aborting request.');
-      return res.status(500).json({ error: 'Server misconfiguration' });
-    }
-    req.user = { businessId: process.env.DEV_BUSINESS_ID || 'demo', role: 'developer' };
-    return next();
-  }
-
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 

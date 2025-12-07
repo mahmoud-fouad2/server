@@ -20,6 +20,8 @@ yarn-debug.log*
 yarn-error.log*
 server.log
 logs/
+server/logs/*.json
+server/*.log
 
 # Environment Variables (NEVER COMMIT)
 .env
@@ -67,9 +69,12 @@ desktop.ini
 # Next.js
 .next/
 client/.next/
+client/out/
+client/deployment/
 
 # Generated client export zip
 client-out-updated.zip
+*.zip
 
 # Vercel
 .vercel
