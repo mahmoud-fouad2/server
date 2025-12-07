@@ -165,13 +165,6 @@ export default function RootLayout({ children }) {
           }}
         />
 
-        {/* Quick placeholder override early to avoid other scripts reading null from getElementById */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var ids=['share-modal','share-button','share-btn','share-trigger','share-modal-root'];var orig=document.getElementById.bind(document);document.getElementById=function(id){try{var f=orig(id);if(f) return f;}catch(e){} if(ids.indexOf(id)!==-1){var el=document.createElement('div');el.id=id;el.style.display='none';el.style.pointerEvents='none';if(document.body)document.body.appendChild(el);else document.documentElement.appendChild(el);return el;} return null;};}catch(e){console.warn('early-placeholder failed',e);} })();`,
-          }}
-        />
-
         {/* Structured Data - Organization */}
         <script
           type="application/ld+json"

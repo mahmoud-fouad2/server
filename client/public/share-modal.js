@@ -11,7 +11,7 @@
           return;
         }
 
-        if (!shareBtn || typeof shareBtn.addEventListener !== 'function') {
+        if (typeof shareBtn.addEventListener !== 'function') {
           return;
         }
 

@@ -24,7 +24,10 @@
     "test:watch": "jest --watch",
     "test:unit": "jest tests/unit --verbose",
     "test:integration": "jest tests/integration --verbose",
-    "test:health": "jest tests/monitoring --verbose"
+    "test:health": "jest tests/monitoring --verbose",
+    "test:comprehensive": "node tests/comprehensive-test.js",
+    "test:create-users": "node scripts/create-test-users.js",
+    "test:full": "npm run test:create-users && npm run test:comprehensive"
   },
   "keywords": [],
   "author": "ma-fo.info",
@@ -36,6 +39,7 @@
     "bcryptjs": "^2.4.3",
     "bullmq": "^5.0.0",
     "cheerio": "^1.1.2",
+    "concurrently": "9.2.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.18.3",
@@ -53,13 +57,13 @@
     "node-fetch": "^3.3.2",
     "nodemailer": "^7.0.11",
     "pdf-parse": "^1.1.1",
+    "prisma": "^5.10.2",
     "redis": "^5.10.0",
     "sanitize-html": "^2.17.0",
     "socket.io": "^4.7.4",
     "twilio": "^5.10.6",
     "ua-parser-js": "^2.0.6",
-    "zod": "^4.1.13",
-    "prisma": "^5.10.2"
+    "zod": "^4.1.13"
   },
   "devDependencies": {
     "jest": "^29.7.0",

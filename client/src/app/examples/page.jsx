@@ -140,7 +140,7 @@ export default function ExamplesPage() {
                 <FaRobot className="text-white text-xl" />
               </div>
               <span className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                فهيملي
+                فهملي
               </span>
             </Link>
 
@@ -182,7 +182,7 @@ export default function ExamplesPage() {
               </span>
             </h1>
             <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-              جرّب أمثلة حية لكيفية تفاعل بوت فهيملي الذكي مع عملائك في مختلف الصناعات
+              جرّب أمثلة حية لكيفية تفاعل بوت فهملي الذكي مع عملائك في مختلف الصناعات
             </p>
           </motion.div>
 
@@ -503,7 +503,7 @@ export default function ExamplesPage() {
             </div>
           </div>
           <div className="border-t border-gray-800 pt-8 text-center">
-            <p>&copy; 2024 فهيملي. جميع الحقوق محفوظة.</p>
+            <p>&copy; 2024 فهملي. جميع الحقوق محفوظة.</p>
           </div>
         </div>
       </footer>
