@@ -1,7 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FaRobot,
@@ -15,7 +14,13 @@ import {
   FaGraduationCap,
   FaPlay,
   FaArrowRight,
+  FaArrowLeft,
 } from 'react-icons/fa';
+import Navigation from '@/components/landing/Navigation';
+import Footer from '@/components/layout/Footer';
+import useTheme from '@/lib/theme';
+import { TRANSLATIONS } from '@/constants';
+import { useRouter } from 'next/navigation';
 
 const industries = [
   {
@@ -99,6 +104,25 @@ export default function ExamplesPage() {
   const [selectedIndustry, setSelectedIndustry] = useState(industries[0]);
   const [chatMessages, setChatMessages] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
+  
+  // Navigation State
+  const [lang, setLang] = useState('ar');
+  const [isDark, setIsDark] = useTheme();
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const toggleTheme = () => setIsDark(!isDark);
+  const changeCountry = (code) => {
+    if (code === 'sa') router.push('/');
+    else router.push(`/${code}`);
+  };
 
   const handleQuestionClick = async (question) => {
     // Add user message
@@ -130,46 +154,22 @@ export default function ExamplesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
-      {/* Navbar */}
-      <nav className="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link href="/" className="flex items-center space-x-2 space-x-reverse">
-              <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center">
-                <FaRobot className="text-white text-xl" />
-              </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                فهملي
-              </span>
-            </Link>
-
-            <div className="hidden md:flex items-center space-x-6 space-x-reverse">
-              <Link href="/" className="text-gray-700 hover:text-indigo-600 transition">
-                الرئيسية
-              </Link>
-              <Link href="/docs" className="text-gray-700 hover:text-indigo-600 transition">
-                الوثائق
-              </Link>
-              <Link href="/api" className="text-gray-700 hover:text-indigo-600 transition">
-                API
-              </Link>
-              <Link href="/pricing" className="text-gray-700 hover:text-indigo-600 transition">
-                الأسعار
-              </Link>
-              <Link
-                href="/register"
-                className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-2 rounded-lg hover:shadow-lg transition"
-              >
-                ابدأ مجاناً
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
+    <div className={`min-h-screen ${isDark ? 'bg-cosmic-950 text-white' : 'bg-gradient-to-br from-slate-50 via-white to-blue-50 text-gray-900'}`}>
+      <Navigation
+        lang={lang}
+        setLang={setLang}
+        activeCountry="sa"
+        changeCountry={changeCountry}
+        isDark={isDark}
+        toggleTheme={toggleTheme}
+        scrolled={scrolled}
+        mobileMenuOpen={mobileMenuOpen}
+        setMobileMenuOpen={setMobileMenuOpen}
+        t={TRANSLATIONS[lang]}
+      />
 
       {/* Hero Section */}
-      <section className="py-20 px-4">
+      <section className="pt-40 pb-20 px-4">
         <div className="max-w-7xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -181,7 +181,7 @@ export default function ExamplesPage() {
                 شاهد البوت في العمل
               </span>
             </h1>
-            <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+            <p className={`text-xl mb-8 max-w-3xl mx-auto ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
               جرّب أمثلة حية لكيفية تفاعل بوت فهملي الذكي مع عملائك في مختلف الصناعات
             </p>
           </motion.div>
@@ -199,11 +199,11 @@ export default function ExamplesPage() {
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.2 * index }}
-                className="bg-white rounded-2xl p-6 shadow-lg"
+                className={`${isDark ? 'bg-white/5 border border-white/10' : 'bg-white shadow-lg'} rounded-2xl p-6`}
               >
-                <div className="text-3xl text-indigo-600 mb-2">{stat.icon}</div>
-                <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
-                <div className="text-sm text-gray-600">{stat.label}</div>
+                <div className="text-3xl text-indigo-600 mb-2 flex justify-center">{stat.icon}</div>
+                <div className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{stat.value}</div>
+                <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{stat.label}</div>
               </motion.div>
             ))}
           </div>
@@ -211,9 +211,9 @@ export default function ExamplesPage() {
       </section>
 
       {/* Industry Selection */}
-      <section className="py-12 px-4 bg-white">
+      <section className={`py-12 px-4 ${isDark ? 'bg-cosmic-900' : 'bg-white'}`}>
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-12">اختر مجال عملك</h2>
+          <h2 className={`text-3xl font-bold text-center mb-12 ${isDark ? 'text-white' : 'text-gray-900'}`}>اختر مجال عملك</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {industries.map((industry) => (
               <motion.button
@@ -227,10 +227,12 @@ export default function ExamplesPage() {
                 className={`relative p-6 rounded-2xl transition-all ${
                   selectedIndustry.id === industry.id
                     ? `bg-gradient-to-br ${industry.color} text-white shadow-2xl`
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    : isDark 
+                      ? 'bg-white/5 text-gray-300 hover:bg-white/10' 
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                <div className="text-4xl mb-3">{industry.icon}</div>
+                <div className="text-4xl mb-3 flex justify-center">{industry.icon}</div>
                 <div className="font-bold text-lg">{industry.name}</div>
                 {selectedIndustry.id === industry.id && (
                   <motion.div
@@ -254,8 +256,8 @@ export default function ExamplesPage() {
               animate={{ opacity: 1, x: 0 }}
               className="space-y-4"
             >
-              <div className="bg-white rounded-2xl p-6 shadow-xl">
-                <h3 className="text-2xl font-bold mb-6 flex items-center">
+              <div className={`${isDark ? 'bg-white/5 border border-white/10' : 'bg-white shadow-xl'} rounded-2xl p-6`}>
+                <h3 className={`text-2xl font-bold mb-6 flex items-center ${isDark ? 'text-white' : 'text-gray-900'}`}>
                   <FaPlay className="ml-3 text-indigo-600" />
                   جرّب هذه الأسئلة
                 </h3>
@@ -266,10 +268,14 @@ export default function ExamplesPage() {
                       whileHover={{ scale: 1.02, x: 5 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => handleQuestionClick(question)}
-                      className="w-full text-right p-4 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 hover:from-indigo-50 hover:to-purple-50 border border-gray-200 hover:border-indigo-300 transition-all group"
+                      className={`w-full text-right p-4 rounded-xl border transition-all group ${
+                        isDark 
+                          ? 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-indigo-500/50' 
+                          : 'bg-gradient-to-r from-gray-50 to-gray-100 hover:from-indigo-50 hover:to-purple-50 border-gray-200 hover:border-indigo-300'
+                      }`}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-gray-700 group-hover:text-indigo-700">
+                        <span className={`${isDark ? 'text-gray-300 group-hover:text-indigo-400' : 'text-gray-700 group-hover:text-indigo-700'}`}>
                           {question}
                         </span>
                         <FaArrowRight className="text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -279,11 +285,11 @@ export default function ExamplesPage() {
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-6 border border-indigo-200">
-                <h4 className="font-bold text-lg mb-3 text-indigo-900">
+              <div className={`rounded-2xl p-6 border ${isDark ? 'bg-indigo-900/20 border-indigo-500/30' : 'bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200'}`}>
+                <h4 className={`font-bold text-lg mb-3 ${isDark ? 'text-indigo-300' : 'text-indigo-900'}`}>
                   💡 نصيحة احترافية
                 </h4>
-                <p className="text-gray-700">
+                <p className={`${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                   البوت يتعلم من قاعدة معرفتك ويتحسن مع كل محادثة. كل ما أضفت معلومات أكثر،
                   كانت الردود أدق وأفضل!
                 </p>
@@ -294,7 +300,7 @@ export default function ExamplesPage() {
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="bg-white rounded-2xl shadow-2xl overflow-hidden"
+              className={`${isDark ? 'bg-cosmic-900' : 'bg-white'} rounded-2xl shadow-2xl overflow-hidden border ${isDark ? 'border-white/10' : 'border-transparent'}`}
             >
               {/* Chat Header */}
               <div className={`bg-gradient-to-r ${selectedIndustry.color} p-6 text-white`}>
@@ -310,7 +316,7 @@ export default function ExamplesPage() {
               </div>
 
               {/* Chat Messages */}
-              <div className="h-[500px] overflow-y-auto p-6 bg-gray-50">
+              <div className={`h-[500px] overflow-y-auto p-6 ${isDark ? 'bg-black/20' : 'bg-gray-50'}`}>
                 <AnimatePresence>
                   {chatMessages.length === 0 ? (
                     <motion.div
@@ -319,8 +325,8 @@ export default function ExamplesPage() {
                       className="h-full flex items-center justify-center text-center"
                     >
                       <div>
-                        <FaComments className="text-6xl text-gray-300 mx-auto mb-4" />
-                        <p className="text-gray-500">
+                        <FaComments className={`text-6xl mx-auto mb-4 ${isDark ? 'text-gray-700' : 'text-gray-300'}`} />
+                        <p className={`${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
                           اختر سؤالاً من القائمة لبدء المحادثة
                         </p>
                       </div>
@@ -341,7 +347,9 @@ export default function ExamplesPage() {
                             className={`max-w-[80%] rounded-2xl p-4 ${
                               message.type === 'user'
                                 ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white'
-                                : 'bg-white shadow-md text-gray-800'
+                                : isDark 
+                                  ? 'bg-white/10 text-gray-200' 
+                                  : 'bg-white shadow-md text-gray-800'
                             }`}
                           >
                             <div className="text-sm mb-1">{message.text}</div>
@@ -362,7 +370,7 @@ export default function ExamplesPage() {
                           animate={{ opacity: 1 }}
                           className="flex justify-start mb-4"
                         >
-                          <div className="bg-white shadow-md rounded-2xl p-4">
+                          <div className={`${isDark ? 'bg-white/10' : 'bg-white shadow-md'} rounded-2xl p-4`}>
                             <div className="flex space-x-2">
                               <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
                               <div
@@ -383,7 +391,7 @@ export default function ExamplesPage() {
               </div>
 
               {/* Chat Footer */}
-              <div className="p-4 bg-white border-t border-gray-200">
+              <div className={`p-4 border-t ${isDark ? 'bg-cosmic-900 border-white/10' : 'bg-white border-gray-200'}`}>
                 {chatMessages.length > 0 && (
                   <button
                     onClick={resetChat}
@@ -406,21 +414,23 @@ export default function ExamplesPage() {
             ابدأ مجاناً اليوم واحصل على بوت ذكي يعمل 24/7 لخدمة عملائك
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
+            <a
               href="/register"
               className="bg-white text-indigo-600 px-8 py-4 rounded-xl font-bold hover:shadow-2xl transition text-lg"
             >
               ابدأ مجاناً الآن
-            </Link>
-            <Link
+            </a>
+            <a
               href="/docs"
               className="bg-white/10 backdrop-blur-sm text-white px-8 py-4 rounded-xl font-bold hover:bg-white/20 transition text-lg border-2 border-white/30"
             >
               اطلع على الوثائق
-            </Link>
+            </a>
           </div>
         </div>
       </section>
+
+      <Footer />
     </div>
   );
 }

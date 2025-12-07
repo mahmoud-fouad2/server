@@ -9,6 +9,7 @@ const rateLimit = require('express-rate-limit');
 const hpp = require('hpp');
 const prisma = require('./config/database');
 const logger = require('./utils/logger');
+const redisCache = require('./services/cache.service');
 const { errorHandler, handleUnhandledRejections, handleUncaughtExceptions } = require('./middleware/errorHandler');
 
 // Fahimo Insight: Initialize the core "Understanding" engine
@@ -30,6 +31,9 @@ const testDatabaseConnection = async () => {
     // Run a simple query to verify vector extension
     await prisma.$queryRaw`SELECT 1`;
     logger.info('Vector extension available');
+
+    // Connect to Redis
+    await redisCache.connect();
 
   } catch (error) {
     logger.error('Database connection failed', error);
