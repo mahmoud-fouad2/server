@@ -46,7 +46,7 @@ const SalesBot = ({ lang = 'ar' }) => {
 
     try {
       // Using production chat endpoint with Faheemly business ID
-      const FAHEEMLY_BUSINESS_ID = 'cmir2oyaz00013ltwis4xc4tp'; // Faheemly's business ID
+      const FAHEEMLY_BUSINESS_ID = 'cmivd3c0z0003ulrrn7m1jtjf'; // Faheemly's business ID
 
       const res = await fetch(`${API_CONFIG.BASE_URL}/api/chat/message`, {
         method: 'POST',
