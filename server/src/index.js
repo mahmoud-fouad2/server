@@ -86,6 +86,11 @@ async function startServerWithRetries(startPort, maxAttempts = 10) {
         logger.error('Server runtime error', err);
       });
 
+      // Initialize Socket.IO
+      const socketIO = require('./socket');
+      socketIO.init(s);
+      logger.info('Socket.IO initialized');
+
       logger.info(`Server successfully bound to port ${port}`);
       return { server: s, port };
     } catch (err) {

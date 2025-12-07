@@ -8,8 +8,7 @@
  */
 
 const asyncHandler = require('express-async-handler');
-const bcrypt = require('bcryptjs');
-const prisma = require('../config/database');
+const adminUserService = require('../services/admin-users.service');
 const logger = require('../utils/logger');
 
 /**
@@ -18,70 +17,8 @@ const logger = require('../utils/logger');
  * @access  Private (SUPERADMIN only)
  */
 exports.getAllUsers = asyncHandler(async (req, res) => {
-  const { 
-    page = 1, 
-    limit = 10, 
-    search = '', 
-    role = '', 
-    status = '',
-    sortBy = 'createdAt',
-    sortOrder = 'desc'
-  } = req.query;
-
-  const skip = (parseInt(page) - 1) * parseInt(limit);
-
-  // Build where clause
-  const where = {
-    deletedAt: null, // Exclude soft-deleted users
-    ...(search && {
-      OR: [
-        { email: { contains: search, mode: 'insensitive' } },
-        { name: { contains: search, mode: 'insensitive' } }
-      ]
-    }),
-    ...(role && { role }),
-    ...(status === 'active' && { isActive: true }),
-    ...(status === 'inactive' && { isActive: false })
-  };
-
-  // Execute queries in parallel
-  const [users, total] = await Promise.all([
-    prisma.user.findMany({
-      where,
-      skip,
-      take: parseInt(limit),
-      orderBy: { [sortBy]: sortOrder },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        isActive: true,
-        createdAt: true,
-        updatedAt: true,
-        lastLoginAt: true,
-        lastLoginIp: true,
-        businesses: {
-          select: {
-            id: true,
-            name: true,
-            status: true
-          }
-        }
-      }
-    }),
-    prisma.user.count({ where })
-  ]);
-
-  res.json({
-    users,
-    pagination: {
-      page: parseInt(page),
-      limit: parseInt(limit),
-      total,
-      totalPages: Math.ceil(total / parseInt(limit))
-    }
-  });
+  const result = await adminUserService.getAllUsers(req.query);
+  res.json(result);
 });
 
 /**
@@ -90,21 +27,7 @@ exports.getAllUsers = asyncHandler(async (req, res) => {
  * @access  Private (SUPERADMIN only)
  */
 exports.getUserById = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-
-  const user = await prisma.user.findUnique({
-    where: { id },
-    include: {
-      businesses: {
-        include: {
-          knowledgeBase: { take: 5 },
-          conversations: { take: 5, orderBy: { createdAt: 'desc' } }
-        }
-      },
-      sessions: { take: 5, orderBy: { createdAt: 'desc' } },
-      tickets: { take: 5, orderBy: { createdAt: 'desc' } }
-    }
-  });
+  const user = await adminUserService.getUserById(req.params.id);
 
   if (!user) {
     res.status(404);
