@@ -9,6 +9,7 @@
     "worker": "node src/queue/worker.js",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
+    "prisma:push:force": "prisma db push --accept-data-loss",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "install:pgvector": "node scripts/install-pgvector.js",

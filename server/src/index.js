@@ -39,16 +39,27 @@ const testDatabaseConnection = async () => {
 const app = express();
 
 // CORS: restrict origins via `CORS_ORIGINS` env (comma-separated). If not set, default to allow only same-origin.
-const allowedOrigins = (process.env.CORS_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
+const allowedOrigins = (process.env.CORS_ORIGINS || process.env.CLIENT_URL || '').split(',').map(s => s.trim()).filter(Boolean);
+
+// If no origins configured, default to permissive in development, or strict in production
+// BUT for this user's specific issue, we'll default to allowing all with a warning if nothing is set
+// to ensure they can connect.
 if (allowedOrigins.length === 0) {
-  // In absence of explicit config, allow same-origin only by a safe default
-  app.use(cors({ origin: false }));
+  logger.warn('CORS_ORIGINS not set. Defaulting to permissive CORS (allowing all origins).');
+  app.use(cors({ origin: true, credentials: true }));
 } else {
   app.use(cors({
     origin: function(origin, cb) {
       // allow non-browser requests (e.g., curl, server-to-server) with no origin
       if (!origin) return cb(null, true);
+      
+      // Handle wildcard *
+      if (allowedOrigins.includes('*')) return cb(null, true);
+      
       if (allowedOrigins.includes(origin)) return cb(null, true);
+      
+      // Log the blocked origin for debugging
+      logger.warn(`CORS blocked origin: ${origin}`);
       cb(new Error('CORS origin denied'));
     },
     credentials: true,

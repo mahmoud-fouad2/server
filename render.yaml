@@ -17,6 +17,8 @@ services:
         fromSecret: redis-url
       - key: CLIENT_URL
         value: https://faheemly.com
+      - key: CORS_ORIGINS
+        value: https://faheemly.com,http://localhost:3000,http://localhost:3001,https://faheemly-server.onrender.com
       - key: ADMIN_INITIAL_PASSWORD
         fromSecret: admin-password
     healthCheckPath: /health
@@ -43,6 +45,8 @@ services:
         fromSecret: redis-url
       - key: CLIENT_URL
         value: https://faheemly.com
+      - key: CORS_ORIGINS
+        value: https://faheemly.com,http://localhost:3000,http://localhost:3001,https://faheemly-server.onrender.com
       - key: ADMIN_INITIAL_PASSWORD
         fromSecret: admin-password
 
