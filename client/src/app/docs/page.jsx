@@ -113,7 +113,7 @@ const sections = [
               <tr>
                 <td className="py-3 px-4 font-mono text-indigo-600">position</td>
                 <td className="py-3 px-4 text-sm">String</td>
-                <td className="py-3 px-4 text-sm">مكان البوت: 'left' أو 'right'</td>
+                <td className="py-3 px-4 text-sm">مكان البوت: &apos;left&apos; أو &apos;right&apos;</td>
               </tr>
               <tr>
                 <td className="py-3 px-4 font-mono text-indigo-600">greeting_msg</td>
@@ -315,7 +315,7 @@ export default function DocsPage() {
               {filteredSections.length === 0 && (
                 <div className="text-center py-20">
                   <FaSearch className="text-6xl mx-auto mb-4 text-gray-300 dark:text-gray-700" />
-                  <p className="text-xl text-gray-500">لا توجد نتائج بحث مطابقة لـ "{searchQuery}"</p>
+                  <p className="text-xl text-gray-500">لا توجد نتائج بحث مطابقة لـ &quot;{searchQuery}&quot;</p>
                 </div>
               )}
             </div>
