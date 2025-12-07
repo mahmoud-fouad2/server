@@ -150,11 +150,11 @@ export default function RootLayout({ children }) {
         {/* Content Security Policy: allow API host from env */}
         {
           (() => {
-            const apiHost = process.env.NEXT_PUBLIC_API_URL || 'https://faheemly-server.onrender.com/api';
+            const apiHost = process.env.NEXT_PUBLIC_API_URL || 'https://fahimo-api.onrender.com';
             const apiOrigin = apiHost.replace(/\/api$/, '');
             const apiWs = apiOrigin.replace(/^http/, 'ws');
 
-            const csp = `default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; img-src 'self' data: https:; font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; connect-src 'self' ${apiOrigin} ${apiWs}; frame-src 'self';`;
+            const csp = `default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://fonts.googleapis.com ${apiOrigin}; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; img-src 'self' data: https:; font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; connect-src 'self' ${apiOrigin} ${apiWs}; frame-src 'self';`;
             return <meta httpEquiv="Content-Security-Policy" content={csp} />;
           })()
         }
