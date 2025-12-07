@@ -16,6 +16,7 @@ model User {
   name             String
   role             Role      @default(CLIENT)
   isActive         Boolean   @default(true)
+  loginAttempts    Int       @default(0) // Deprecated: Kept to prevent data loss error during deployment
   twoFactorSecret  String? // للـ 2FA
   resetToken       String? // Password reset token (hashed)
   resetTokenExpiry DateTime? // Token expiration time
