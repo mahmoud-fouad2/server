@@ -137,10 +137,10 @@ async function startServerWithRetries(startPort, maxAttempts = 10) {
 // Middleware
 app.use(express.json());
 
-// Test route
-if (process.env.NODE_ENV !== 'production') {
-  app.get('/', (req, res) => res.send('Hello World'));
-}
+// Test route - Always enabled to verify server is running
+app.get('/', (req, res) => {
+  res.send('Fahimo Server Started - The one who understands you is ready to serve.');
+});
 
 // Auth routes
 const authRoutes = require('./routes/auth.routes');
@@ -258,6 +258,15 @@ if (!app._router || !app._router.stack.some(layer => layer.route && layer.route.
 // Health endpoint (JSON) to let frontends assert health without parsing HTML
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// API Root endpoint - Friendly message instead of 404
+app.get('/api', (req, res) => {
+  res.json({ 
+    message: 'Fahimo API v1', 
+    status: 'running', 
+    documentation: 'https://faheemly.com/docs/api' 
+  });
 });
 
 // If any /api/* route was not matched above, return JSON 404 instead of an HTML page.
