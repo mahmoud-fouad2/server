@@ -277,8 +277,8 @@ router.post('/run-seed', authenticateToken, isAdmin, async (req, res) => {
     const business = await seed.seedFaheemly();
 
     res.json({ success: true, message: 'Seed executed', businessId: business?.id || null });
-// Update Demo Business for hello@faheemly.com
-router.post('/update-demo-business', authenticateToken, isAdmin, async (req, res) => {
+// Update Demo Business for hello@faheemly.com (temporary endpoint)
+router.post('/update-demo-business', authenticateToken, async (req, res) => {
   try {
     logger.info('Admin updating demo business...');
 
