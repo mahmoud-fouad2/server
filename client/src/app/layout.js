@@ -1,9 +1,8 @@
 import './globals.css';
-import dynamic from 'next/dynamic';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import '@/lib/fetch-proxy';
-
-const SalesBot = dynamic(() => import('@/components/SalesBot'), { ssr: false });
+import ClientLayout from './ClientLayout';
+import { getOrganizationSchema } from '@/lib/structured-data';
 
 export const viewport = {
   width: 'device-width',
@@ -352,6 +351,9 @@ export default function RootLayout({ children }) {
       <body
         className={`font-sans overflow-x-hidden bg-gray-50 dark:bg-cosmic-950 text-gray-900 dark:text-gray-100 transition-colors duration-300 selection:bg-brand-500/30`}
       >
+        <ErrorBoundary>
+          <ClientLayout>{children}</ClientLayout>
+        </ErrorBoundary>
         <noscript>
           <style>{`
             .noscript-content {
@@ -436,8 +438,7 @@ export default function RootLayout({ children }) {
           </div>
         </noscript>
         <ErrorBoundary>
-          <SalesBot />
-          {children}
+          <ClientLayout>{children}</ClientLayout>
         </ErrorBoundary>
       </body>
     </html>

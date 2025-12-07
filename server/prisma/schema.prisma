@@ -16,11 +16,17 @@ model User {
   name             String
   role             Role      @default(CLIENT)
   isActive         Boolean   @default(true)
+  deletedAt        DateTime? // Soft delete timestamp
   twoFactorSecret  String? // للـ 2FA
   resetToken       String? // Password reset token (hashed)
   resetTokenExpiry DateTime? // Token expiration time
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
+  
+  // Phase 2 fields
+  lastLoginAt      DateTime?
+  lastLoginIp      String?
+  loginAttempts    Int       @default(0)
 
   businesses Business[]
   sessions   Session[]
@@ -32,6 +38,14 @@ model User {
   // Tickets
   tickets        Ticket[]        @relation("TicketCreator")
   ticketMessages TicketMessage[]
+  
+  // Phase 2 relations
+  auditLogs    AuditLog[]
+  tourProgress TourProgress[]
+  
+  @@index([email])
+  @@index([role, isActive])
+  @@index([deletedAt])
 }
 
 enum Role {
@@ -408,7 +422,11 @@ model SystemSetting {
   key         String   @id
   value       String   @db.Text
   description String?
+  version     Int      @default(1)
+  updatedBy   String?  // userId who made the change
   updatedAt   DateTime @updatedAt
+  
+  @@index([key, version])
 }
 
 // جلسات الزوار - Visitor Sessions & Analytics
@@ -1018,4 +1036,234 @@ enum GoalStatus {
   COMPLETED
   CANCELLED
   OVERDUE
+}
+
+// ==========================================
+// PHASE 2: SaaS Infrastructure Models
+// ==========================================
+
+// Audit Log for tracking all admin/user actions
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  action     String   // CREATE, UPDATE, DELETE, LOGIN, LOGOUT, PASSWORD_RESET
+  entity     String   // User, Business, Conversation, SystemSetting, etc.
+  entityId   String
+  changes    Json?    // { before: {...}, after: {...} }
+  
+  ipAddress  String?
+  userAgent  String?
+  metadata   Json?    // Additional context
+  
+  createdAt  DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([entity, entityId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+// Feature Flags for gradual rollouts and A/B testing
+model FeatureFlag {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  enabled     Boolean  @default(false)
+  rollout     Int      @default(0) // 0-100 percentage
+  
+  // Targeting
+  businesses  String[] // Array of businessIds to enable for
+  roles       String[] // Array of roles (SUPERADMIN, CLIENT, AGENT)
+  
+  metadata    Json?    // Additional configuration
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([enabled])
+  @@index([name, enabled])
+}
+
+// System Version tracking for migrations and rollbacks
+model SystemVersion {
+  id           String    @id @default(cuid())
+  version      String    @unique // Semantic version: 2.0.0
+  releaseDate  DateTime
+  changelog    String    @db.Text
+  migrations   String[]  // Array of migration file names
+  
+  deployed     Boolean   @default(false)
+  deployedAt   DateTime?
+  deployedBy   String?   // userId
+  
+  // Rollback info
+  canRollback  Boolean   @default(true)
+  rollbackTo   String?   // Previous version
+  
+  metadata     Json?
+  
+  createdAt    DateTime  @default(now())
+  
+  @@index([version])
+  @@index([deployed])
+  @@index([releaseDate])
+}
+
+// System Prompts with versioning
+model SystemPrompt {
+  id         String   @id @default(cuid())
+  name       String   // base-system, restaurant-specific, clinic-specific
+  category   String   // GENERAL, RESTAURANT, CLINIC, RETAIL, etc.
+  content    String   @db.Text
+  
+  version    Int      @default(1)
+  active     Boolean  @default(true)
+  
+  // Metadata
+  description String?
+  variables   String[] // Available variables like {businessName}, {language}
+  
+  createdBy  String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  
+  @@unique([name, version])
+  @@index([category, active])
+  @@index([name, active])
+}
+
+// API Configuration for endpoints
+model ApiConfiguration {
+  id          String   @id @default(cuid())
+  endpoint    String   @unique // /api/chat/message
+  method      String   // GET, POST, PUT, DELETE
+  
+  enabled     Boolean  @default(true)
+  rateLimit   Int      @default(100) // requests per minute
+  
+  // Authentication
+  requireAuth Boolean  @default(true)
+  allowedRoles String[] @default(["CLIENT", "BUSINESS_OWNER", "SUPERADMIN"])
+  
+  // CORS
+  corsOrigins String[]
+  
+  // Documentation
+  description String?
+  deprecated  Boolean  @default(false)
+  
+  updatedAt   DateTime @updatedAt
+  
+  @@index([enabled])
+  @@index([endpoint, enabled])
+}
+
+// AI Provider Configuration (runtime)
+model AiProviderConfig {
+  id          String   @id @default(cuid())
+  provider    String   @unique // groq, gemini, cerebras, deepseek, openai
+  
+  enabled     Boolean  @default(true)
+  priority    Int      @default(50) // Higher = used first
+  
+  // API Configuration
+  apiKey      String? // Encrypted
+  model       String  // llama-3.3-70b-versatile, gemini-1.5-flash, etc.
+  baseUrl     String?
+  
+  // Limits
+  rateLimit   Int      @default(100) // per minute
+  maxTokens   Int      @default(4096)
+  temperature Float    @default(0.7)
+  
+  // Monitoring
+  lastHealth  DateTime?
+  healthStatus String   @default("UNKNOWN") // HEALTHY, DEGRADED, DOWN
+  errorCount  Int      @default(0)
+  
+  metadata    Json?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([enabled, priority])
+  @@index([provider, enabled])
+}
+
+// User soft delete support
+model UserDeletion {
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  deletedBy  String   // Admin userId who deleted
+  reason     String?
+  
+  // Backup data before deletion
+  userData   Json
+  
+  deletedAt  DateTime @default(now())
+  canRestore Boolean  @default(true)
+  restoreUntil DateTime // 30 days from deletion
+  
+  @@index([deletedAt])
+  @@index([canRestore, restoreUntil])
+}
+
+// Business soft delete support
+model BusinessDeletion {
+  id          String   @id @default(cuid())
+  businessId  String   @unique
+  deletedBy   String   // Admin userId who deleted
+  reason      String?
+  
+  // Backup data before deletion
+  businessData Json
+  
+  deletedAt    DateTime @default(now())
+  canRestore   Boolean  @default(true)
+  restoreUntil DateTime // 30 days from deletion
+  
+  @@index([deletedAt])
+  @@index([canRestore, restoreUntil])
+}
+
+// Training Tour Progress (for admin onboarding)
+model TourProgress {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  tourName   String   // admin-dashboard, business-setup, knowledge-base
+  completed  Boolean  @default(false)
+  currentStep Int     @default(0)
+  
+  skipped    Boolean  @default(false)
+  startedAt  DateTime @default(now())
+  completedAt DateTime?
+  
+  @@unique([userId, tourName])
+  @@index([userId, completed])
+}
+
+// System Health Metrics
+model HealthMetric {
+  id          String   @id @default(cuid())
+  
+  // Metric details
+  name        String   // api_latency, database_connections, cache_hit_rate
+  value       Float
+  unit        String?  // ms, percentage, count
+  
+  // Categorization
+  category    String   // performance, availability, security
+  severity    String   @default("INFO") // INFO, WARNING, ERROR, CRITICAL
+  
+  // Metadata
+  metadata    Json?
+  timestamp   DateTime @default(now())
+  
+  @@index([name, timestamp])
+  @@index([category, timestamp])
+  @@index([severity, timestamp])
 }

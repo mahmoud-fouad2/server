@@ -1,17 +1,41 @@
+# ========================================
+# Faheemly™ - Git Ignore Configuration
+# Copyright © 2024-2025 Faheemly.com
+# PROPRIETARY - All Rights Reserved
+# ========================================
+
+# ⚠️ CRITICAL: Never commit sensitive data!
+# This file protects secrets, keys, and proprietary information.
+
+# ========================================
 # Dependencies
+# ========================================
 node_modules/
 .pnp
 .pnp.js
+.yarn/cache/
+.yarn/install-state.gz
+.yarn/unplugged/
 
+# ========================================
 # Testing
+# ========================================
 coverage/
 *.test.js.snap
+.nyc_output/
+test-results/
+playwright-report/
 
-# Production
+# ========================================
+# Production Builds
+# ========================================
 build/
 dist/
 out/
 server_deploy.zip
+client_deploy.zip
+*.tar.gz
+*.tgz
 
 # Logs
 *.log
@@ -33,9 +57,53 @@ server/*.log
 .env.*.local
 .env.staging
 
-# Security files
+# ========================================
+# 🔐 SECURITY - NEVER COMMIT THESE!
+# ========================================
+# Keys & Certificates
+*.key
+*.pem
+*.cert
+*.crt
+*.p12
+*.pfx
 secrets/
 keys/
+certs/
+ssl/
+
+# SSH Keys
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+known_hosts
+
+# API Keys & Tokens
+*-api-key.txt
+*-token.txt
+*-secret.txt
+
+# JWT Secrets
+jwt-secret.txt
+refresh-token-secret.txt
+
+# Database Credentials
+db-credentials.txt
+postgres-password.txt
+
+# Service Account Keys
+service-account.json
+firebase-adminsdk.json
+
+# AWS Credentials
+.aws/
+credentials.csv
+
+# Digital Signatures (Faheemly IP Protection)
+build-signature.txt
+.signature
+integrity.hash
 
 # Database
 *.sqlite
@@ -82,10 +150,100 @@ client-out-updated.zip
 # Render
 .render-deploy
 
-# Documentation (generated)
+# ========================================
+# Documentation (generated/temporary)
+# ========================================
 *.md.backup
+*.md.tmp
 COMPREHENSIVE_REVIEW.md
 DEPLOYMENT_AUDIT_REPORT.md
 STATUS_REPORT.md
 *_SUMMARY.md
 RENDER_ENV_FIX.md
+API_DOCUMENTATION_GENERATED.md
+
+# ========================================
+# Backups
+# ========================================
+*.backup
+*.bak
+*.old
+backup/
+backups/
+*.dump
+*.sql.gz
+
+# ========================================
+# Monitoring & Analytics
+# ========================================
+server/logs/db_diagnostics_*.json
+server/logs/db_inspect_*.json
+analytics/
+metrics/
+
+# ========================================
+# Docker & Containers
+# ========================================
+docker-compose.override.yml
+.dockerignore.local
+*.dockerfile.local
+
+# ========================================
+# CI/CD
+# ========================================
+.github/workflows/*.local.yml
+.circleci/local.yml
+.travis.local.yml
+
+# ========================================
+# Proprietary Assets
+# ========================================
+# Faheemly proprietary algorithms (if extracted)
+algorithms/
+proprietary/
+trade-secrets/
+
+# ========================================
+# User Data (Development)
+# ========================================
+# Never commit real user data
+user-data/
+customer-data/
+test-accounts.csv
+real-data.json
+
+# ========================================
+# Audit & Compliance
+# ========================================
+audit-logs/*.csv
+compliance-reports/
+gdpr-exports/
+
+# ========================================
+# Performance Profiling
+# ========================================
+*.prof
+*.perf
+flamegraph.svg
+profiler-output/
+
+# ========================================
+# Legal & Contracts
+# ========================================
+contracts/
+legal/private/
+signed-nda/
+
+# ========================================
+# Notes & Drafts
+# ========================================
+TODO.private.md
+NOTES.md
+DRAFT_*.md
+scratch/
+
+# ========================================
+# END OF GITIGNORE
+# ========================================
+# Questions? Contact: hello@faheemly.com
+# Security? Contact: security@faheemly.com

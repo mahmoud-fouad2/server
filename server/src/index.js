@@ -133,6 +133,15 @@ try {
   console.warn('Admin routes not available:', e?.message || e);
 }
 
+// Admin Extended routes (Phase 2: User Management & System Control)
+try {
+  const adminExtendedRoutes = require('./routes/admin-extended.routes');
+  app.use('/api/admin', adminExtendedRoutes);
+  logger.info('✅ Admin Extended routes loaded (User Management & System Control)');
+} catch (e) {
+  logger.warn('Admin Extended routes not available:', e?.message || e);
+}
+
 // Tickets routes
 const ticketsRoutes = require('./routes/tickets.routes');
 app.use('/api/tickets', ticketsRoutes);
@@ -331,7 +340,7 @@ async function checkServicesStatus() {
       logger.warn('⚠️  WARNING: Database connection issues!');
     }
 
-    const redisCache = require('./services/redis-cache.service');
+    const redisCache = require('./services/cache.service');
     const vectorSearch = require('./services/vector-search.service');
 
     // Check Redis
@@ -381,7 +390,7 @@ testDatabaseConnection().then(async () => {
 
       // Try to connect to Redis if configured
       try {
-        const redisCache = require('./services/redis-cache.service');
+        const redisCache = require('./services/cache.service');
         if (redisCache.isEnabled && !redisCache.isConnected) {
           await redisCache.connect();
         }

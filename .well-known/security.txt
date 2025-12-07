@@ -1,0 +1,56 @@
+# 🌐 .well-known/security.txt
+# Security Information for Faheemly Platform
+# RFC 9116: https://datatracker.ietf.org/doc/html/rfc9116
+
+Contact: mailto:security@faheemly.com
+Contact: https://faheemly.com/security
+Expires: 2025-12-31T23:59:59Z
+Encryption: https://faheemly.com/.well-known/pgp-key.txt
+Preferred-Languages: en, ar
+Canonical: https://faheemly.com/.well-known/security.txt
+
+# Policy
+Policy: https://faheemly.com/security-policy
+
+# Acknowledgments
+Acknowledgments: https://faheemly.com/security-hall-of-fame
+
+# Hiring
+Hiring: https://faheemly.com/careers
+
+# CSAF
+# CSAF: https://faheemly.com/.well-known/csaf/provider-metadata.json
+
+# Additional Information
+# This is the OFFICIAL Faheemly platform.
+# Unauthorized copies do not have security support.
+# 
+# Scope: Only report vulnerabilities on:
+# - https://faheemly.com
+# - https://www.faheemly.com
+# - https://api.faheemly.com
+# 
+# Out of scope:
+# - Unauthorized forks or clones
+# - Third-party integrations
+# - User-generated content
+# 
+# Response Timeline:
+# - Acknowledgment: 24 hours
+# - Triage: 3 business days
+# - Fix: 7-14 days (critical), 30 days (moderate)
+# 
+# Safe Harbor:
+# We commit to not pursuing legal action against researchers who:
+# - Follow responsible disclosure
+# - Act in good faith
+# - Do not access/modify user data
+# - Do not cause harm
+# 
+# Rewards:
+# We offer recognition and rewards for critical vulnerabilities.
+# Contact security@faheemly.com for details.
+# 
+# Thank you for helping keep Faheemly secure!
+# 
+# © 2024-2025 Faheemly.com - All Rights Reserved

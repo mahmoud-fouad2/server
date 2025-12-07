@@ -11,13 +11,13 @@ const jwt = require('jsonwebtoken');
 const prisma = new PrismaClient();
 
 // Mock the app and its dependencies
-jest.mock('../../src/services/redis-cache.service');
+jest.mock('../../src/services/cache.service');
 jest.mock('../../src/services/visitor-session.service');
 jest.mock('../../src/services/vector-search.service');
 jest.mock('../../src/services/groq.service');
 jest.mock('../../src/services/response-validator.service');
 
-const redisCache = require('../../src/services/redis-cache.service');
+const redisCache = require('../../src/services/cache.service');
 const visitorSession = require('../../src/services/visitor-session.service');
 const vectorSearch = require('../../src/services/vector-search.service');
 const groqService = require('../../src/services/groq.service');

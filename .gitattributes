@@ -1,0 +1,95 @@
+# Faheemly™ - Git Attributes
+# Copyright © 2024-2025 Faheemly.com - All Rights Reserved
+
+# ⚠️ PROPRIETARY CODE PROTECTION
+
+# Mark sensitive files as "export-ignore" to exclude from git archive
+# This prevents accidental distribution of proprietary code
+
+# Environment files (never commit)
+.env export-ignore
+.env.* export-ignore
+*.key export-ignore
+*.pem export-ignore
+
+# Source code marked as proprietary
+server/src/** linguist-language=JavaScript linguist-vendored=false
+client/src/** linguist-language=JavaScript linguist-vendored=false
+
+# Prisma schema (proprietary database design)
+server/prisma/schema.prisma linguist-language=Prisma
+
+# Configuration files
+*.config.js linguist-language=JavaScript
+
+# Documentation
+*.md linguist-documentation
+
+# Legal files (always include)
+COPYRIGHT.md -export-ignore
+LICENSE -export-ignore
+PATENTS_PENDING.md -export-ignore
+SECURITY_POLICY.md -export-ignore
+
+# Line ending normalization
+* text=auto
+
+# JavaScript/TypeScript files
+*.js text eol=lf
+*.jsx text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.json text eol=lf
+
+# Markdown files
+*.md text eol=lf
+
+# Shell scripts
+*.sh text eol=lf
+*.bash text eol=lf
+
+# PowerShell scripts
+*.ps1 text eol=crlf
+
+# Config files
+.gitignore text eol=lf
+.gitattributes text eol=lf
+.editorconfig text eol=lf
+.npmrc text eol=lf
+
+# Docker files
+Dockerfile text eol=lf
+docker-compose*.yml text eol=lf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.pdf binary
+*.zip binary
+*.tar binary
+*.gz binary
+
+# Archives should use Git LFS (if enabled)
+# *.zip filter=lfs diff=lfs merge=lfs -text
+# *.tar.gz filter=lfs diff=lfs merge=lfs -text
+
+# Exclude from language statistics (vendored/generated code)
+node_modules/** linguist-vendored
+client/node_modules/** linguist-vendored
+server/node_modules/** linguist-vendored
+client/.next/** linguist-generated
+client/out/** linguist-generated
+client/deployment/** linguist-generated
+coverage/** linguist-generated
+*.min.js linguist-generated
+
+# Copyright notice in all text files
+* text copyright-notice="© 2024-2025 Faheemly.com - All Rights Reserved"

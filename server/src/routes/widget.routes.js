@@ -162,7 +162,7 @@ router.post('/chat', async (req, res) => {
     // Call the chat message handler logic (simplified)
     // Since we can't easily call the handler, duplicate the core logic
     const visitorSession = require('../services/visitor-session.service');
-    const redisCache = require('../services/redis-cache.service');
+    const redisCache = require('../services/cache.service');
     const groqService = require('../services/groq.service');
     const vectorSearch = require('../services/vector-search.service');
     const responseValidator = require('../services/response-validator.service');

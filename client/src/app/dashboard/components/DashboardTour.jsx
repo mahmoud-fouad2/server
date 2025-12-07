@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Joyride, { ACTIONS, EVENTS, STATUS } from 'react-joyride';
+// import Joyride, { ACTIONS, EVENTS, STATUS } from 'react-joyride'; // Temporarily disabled due to React 19 incompatibility
 
 /**
  * Dashboard Onboarding Tour
@@ -57,19 +57,27 @@ const TOUR_STEPS = [
 ];
 
 export default function DashboardTour({ run, onComplete }) {
+  // Temporarily disabled due to React 19 incompatibility
+  useEffect(() => {
+    if (run && onComplete) {
+      console.log('Dashboard tour disabled for React 19 compatibility');
+      onComplete(true);
+    }
+  }, [run, onComplete]);
+
+  return null;
+  
+  /* React 18 version - will be restored when react-joyride supports React 19
   const [stepIndex, setStepIndex] = useState(0);
 
   const handleJoyrideCallback = data => {
     const { action, index, status, type } = data;
 
     if ([EVENTS.STEP_AFTER, EVENTS.TARGET_NOT_FOUND].includes(type)) {
-      // Update state to advance the tour
       setStepIndex(index + (action === ACTIONS.PREV ? -1 : 1));
     } else if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status)) {
-      // Tour finished or skipped
       setStepIndex(0);
 
-      // Mark tour as completed
       if (status === STATUS.FINISHED) {
         localStorage.setItem('dashboardTourCompleted', 'true');
         localStorage.setItem(
@@ -78,7 +86,6 @@ export default function DashboardTour({ run, onComplete }) {
         );
       }
 
-      // Call parent callback
       if (onComplete) onComplete(status === STATUS.FINISHED);
     }
   };
@@ -148,7 +155,7 @@ export default function DashboardTour({ run, onComplete }) {
         },
       }}
     />
-  );
+  */
 }
 
 /**

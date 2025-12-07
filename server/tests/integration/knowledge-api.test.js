@@ -14,12 +14,12 @@ const prisma = new PrismaClient();
 
 // Mock services
 jest.mock('../../src/services/embedding.service');
-jest.mock('../../src/services/redis-cache.service');
+jest.mock('../../src/services/cache.service');
 jest.mock('../../src/services/crawler.service');
 jest.mock('../../src/services/summarizer.service');
 
 const embeddingService = require('../../src/services/embedding.service');
-const redisCache = require('../../src/services/redis-cache.service');
+const redisCache = require('../../src/services/cache.service');
 const crawlerService = require('../../src/services/crawler.service');
 const summarizerService = require('../../src/services/summarizer.service');
 

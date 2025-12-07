@@ -1,0 +1,58 @@
+# Faheemly™ - Robots.txt for Repository
+# Copyright © 2024-2025 Faheemly.com - All Rights Reserved
+
+# ⚠️ PROPRIETARY CODE - NOT FOR SCRAPING
+# This repository contains copyrighted, patented, and trade secret material.
+# Unauthorized scraping, copying, or indexing is prohibited.
+
+# Block AI training bots
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: Claude-Web
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: Omgilibot
+Disallow: /
+
+User-agent: FacebookBot
+Disallow: /
+
+# Block web scrapers
+User-agent: *
+Crawl-delay: 10
+Disallow: /server/src/
+Disallow: /client/src/
+Disallow: /.env*
+Disallow: /server/prisma/
+Disallow: /uploads/
+Disallow: /logs/
+Disallow: /node_modules/
+Disallow: /.git/
+
+# Allow public documentation
+Allow: /README.md
+Allow: /COPYRIGHT.md
+Allow: /LICENSE
+Allow: /SECURITY_POLICY.md
+Allow: /CODE_OF_CONDUCT.md
+
+# Sitemap (if applicable)
+# Sitemap: https://github.com/username/repo/sitemap.xml
+
+# Legal Notice
+# Violating these rules may constitute copyright infringement
+# and unauthorized access under applicable law.
+# Report violations: abuse@faheemly.com

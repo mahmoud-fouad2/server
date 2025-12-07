@@ -24,7 +24,6 @@ const nextConfig = {
   },
 
   // Performance optimizations
-  swcMinify: true,
   compress: true,
 
   // Compiler optimizations
