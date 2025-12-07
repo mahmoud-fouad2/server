@@ -156,6 +156,20 @@
     <priority>0.75</priority>
   </url>
   
+  <!-- لوحة التحكم (محمية) -->
+  <url>
+    <loc>https://faheemly.com/admin</loc>
+    <lastmod>2025-12-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.30</priority>
+  </url>
+  <url>
+    <loc>https://faheemly.com/admin/login</loc>
+    <lastmod>2025-12-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.30</priority>
+  </url>
+  
   <!-- سياسة الخصوصية -->
   <url>
     <loc>https://faheemly.com/privacy</loc>
