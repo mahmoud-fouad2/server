@@ -22,14 +22,14 @@ export const metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('http://localhost:3001'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://faheemly.com'),
   alternates: {
     canonical: '/docs/troubleshooting',
   },
   openGraph: {
     title: 'دليل استكشاف الأخطاء - فهملي',
     description: 'دليل شامل لحل المشاكل الشائعة في بوت فهملي. تعلم كيفية إصلاح مشاكل عدم الرد وتحسين دقة الإجابات.',
-    url: 'http://localhost:3001/docs/troubleshooting',
+    url: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://faheemly.com'}/docs/troubleshooting`,
     siteName: 'فهملي',
     images: [
       {

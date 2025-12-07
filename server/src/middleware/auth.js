@@ -29,13 +29,15 @@ const authenticateToken = async (req, res, next) => {
           req.user.businessId = dbUser.businesses[0].id;
         }
       } catch (e) {
-        console.warn('authenticateToken: failed to lookup businessId', e?.message || e);
+        const logger = require('../utils/logger');
+        logger.warn('authenticateToken: failed to lookup businessId', { error: e?.message || e });
       }
     }
 
     next();
   } catch (error) {
-    console.error('[auth] token verify failed:', error && (error.message || error));
+    const logger = require('../utils/logger');
+    logger.error('Token verification failed', error);
     res.status(403).json({ error: 'Invalid token' });
   }
 };

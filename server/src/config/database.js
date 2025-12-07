@@ -30,14 +30,14 @@ const prisma = new PrismaClient({
 async function testConnection() {
   try {
     await prisma.$connect();
-    console.log('[Database] Connected successfully');
+    logger.info('Database connected successfully');
 
     // Run a simple query to verify vector extension
     await prisma.$queryRaw`SELECT 1`;
-    console.log('[Database] Basic test query executed');
+    logger.info('Database basic test query executed');
 
   } catch (error) {
-    console.error('[Database] Connection failed:', error.message || error);
+    logger.error('Database connection failed', error);
     // Throw error to allow caller to perform graceful shutdown
     throw error;
   }

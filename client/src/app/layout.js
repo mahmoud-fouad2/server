@@ -148,13 +148,13 @@ export default function RootLayout({ children }) {
           rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/flag-icons@7.2.3/css/flag-icons.min.css"
         />
-        {/* Content Security Policy: allow API host from env and localhost only in development */}
+        {/* Content Security Policy: allow API host from env */}
         {
           (() => {
-            const apiHost = process.env.NEXT_PUBLIC_API_URL || 'https://fahimo-api.onrender.com';
+            const apiHost = process.env.NEXT_PUBLIC_API_URL || 'https://faheemly-server.onrender.com';
             const apiWs = apiHost.replace(/^http/, 'ws');
-            const devLocal = process.env.NODE_ENV === 'development' ? ' http://localhost:3001' : '';
-            const csp = `default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; img-src 'self' data: https:; font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; connect-src 'self' ${apiHost} ${apiWs}${devLocal}; frame-src 'self';`;
+
+            const csp = `default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; img-src 'self' data: https:; font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; connect-src 'self' ${apiHost} ${apiWs}; frame-src 'self';`;
             return <meta httpEquiv="Content-Security-Policy" content={csp} />;
           })()
         }

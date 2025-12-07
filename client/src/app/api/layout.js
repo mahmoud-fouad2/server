@@ -21,14 +21,14 @@ export const metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('http://localhost:3001'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://faheemly.com'),
   alternates: {
     canonical: '/api',
   },
   openGraph: {
     title: 'مرجع API الشامل - فهملي',
     description: 'دليل شامل لواجهة برمجة التطبيقات (API) لفهملي. تعلم كيفية التكامل مع نظام الشات بوت الذكي.',
-    url: 'http://localhost:3001/api',
+    url: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://faheemly.com'}/api`,
     siteName: 'فهملي',
     images: [
       {

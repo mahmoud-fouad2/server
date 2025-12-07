@@ -21,14 +21,14 @@ export const metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('http://localhost:3001'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://faheemly.com'),
   alternates: {
     canonical: '/docs',
   },
   openGraph: {
     title: 'التوثيق الشامل - فهملي',
     description: 'دليل شامل ومفصل لاستخدام فهملي. تعلم كيفية إعداد وتخصيص الشات بوت الذكي.',
-    url: 'http://localhost:3001/docs',
+    url: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://faheemly.com'}/docs`,
     siteName: 'فهملي',
     images: [
       {

@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+const rateLimit = require('express-rate-limit');
+const sanitizeHtml = require('sanitize-html');
 const { authenticateToken } = require('../middleware/auth');
 const prisma = require('../config/database');
 const cacheService = require('../services/cache.service');
@@ -9,6 +11,15 @@ const aiService = require('../services/ai.service');
 const vectorSearch = require('../services/vector-search.service');
 const responseValidator = require('../services/response-validator.service');
 const logger = require('../utils/logger');
+
+// Rate limiter for public chat endpoint
+const chatLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 20, // 20 requests per minute per IP
+  message: 'Too many messages from this IP, please try again after a minute',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // Protected: Get all conversations for the business
 router.get('/conversations', authenticateToken, async (req, res) => {
@@ -169,14 +180,20 @@ router.post('/rating', validateRating, async (req, res) => {
   }
 });
 
-// Public Chat Endpoint (for Widget)
-router.post('/message', validateChatMessage, async (req, res) => {
+// Public Chat Endpoint (for Widget) - with rate limiting
+router.post('/message', chatLimiter, validateChatMessage, async (req, res) => {
   try {
-    const { message, businessId, conversationId, sessionId } = req.body;
+    let { message, businessId, conversationId, sessionId } = req.body;
 
     if (!message || !businessId) {
       return res.status(400).json({ error: 'Message and Business ID are required' });
     }
+
+    // Sanitize user message to prevent XSS attacks
+    message = sanitizeHtml(message, {
+      allowedTags: [], // No HTML tags allowed
+      allowedAttributes: {}
+    });
 
     // Validate business exists (temporarily disabled for testing)
     // const business = await prisma.business.findUnique({ where: { id: businessId } });

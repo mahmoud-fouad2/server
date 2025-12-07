@@ -16,7 +16,7 @@ dotenv.config();
 
 // Safety guard: never allow DEV_NO_AUTH in production
 if (process.env.NODE_ENV === 'production' && process.env.DEV_NO_AUTH === 'true') {
-  console.error('FATAL: DEV_NO_AUTH=true is not allowed in production. Remove this variable from your environment.');
+  logger.error('FATAL: DEV_NO_AUTH=true is not allowed in production. Remove this variable from your environment.');
   // Exit early to avoid starting an insecure server
   process.exit(1);
 }
@@ -25,14 +25,14 @@ if (process.env.NODE_ENV === 'production' && process.env.DEV_NO_AUTH === 'true')
 const testDatabaseConnection = async () => {
   try {
     await prisma.$connect();
-    console.log('[Database] Connected successfully');
+    logger.info('Database connected successfully');
 
     // Run a simple query to verify vector extension
     await prisma.$queryRaw`SELECT 1`;
-    console.log('[Database] Vector extension available');
+    logger.info('Vector extension available');
 
   } catch (error) {
-    console.error('[Database] Connection failed:', error.message);
+    logger.error('Database connection failed', error);
     process.exit(1);
   }
 };
@@ -72,7 +72,6 @@ async function startServerWithRetries(startPort, maxAttempts = 10) {
 
       // Attach a runtime error handler
       s.on('error', (err) => {
-        console.error('Server runtime error:', err);
         logger.error('Server runtime error', err);
       });
 

@@ -48,19 +48,22 @@ function validateEnvironment() {
 
   if (missing.length > 0) {
     const message = `❌ FATAL: Missing required environment variables: ${missing.join(', ')}`;
-    console.error(message);
-    missing.forEach(varName => console.error(`   - ${varName}`));
-    console.error('\n💡 Copy .env.example to .env and fill in the values');
+    const logger = require('../utils/logger');
+    logger.error(message, null, { missing });
+    missing.forEach(varName => logger.error(`Missing: ${varName}`));
+    logger.error('Copy .env.example to .env and fill in the values');
     // Throw an error so callers can decide how to handle (tests can catch, index.js can shutdown)
     throw new Error(message);
   }
 
   if (warnings.length > 0) {
-    console.warn('⚠️  Environment warnings:');
-    warnings.forEach(warning => console.warn(`   - ${warning}`));
+    const logger = require('../utils/logger');
+    logger.warn('Environment warnings', { warnings });
+    warnings.forEach(warning => logger.warn(warning));
   }
 
-  console.log('✅ Environment validation passed');
+  const logger = require('../utils/logger');
+  logger.info('Environment validation passed');
 }
 
 module.exports = {

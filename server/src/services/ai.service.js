@@ -93,7 +93,10 @@ function isProviderAvailable(providerKey) {
 
   // Check request rate limit
   if (tracker.requests.length >= limits.requestsPerMinute) {
-    console.log(`[HybridAI] ${provider.name} rate limit reached: ${tracker.requests.length}/${limits.requestsPerMinute} req/min`);
+    logger.warn(`${provider.name} rate limit reached`, {
+      current: tracker.requests.length,
+      limit: limits.requestsPerMinute
+    });
     return false;
   }
 

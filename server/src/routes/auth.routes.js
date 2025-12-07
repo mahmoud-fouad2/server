@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const rateLimit = require('express-rate-limit');
 const prisma = require('../config/database');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -8,8 +9,26 @@ const { authenticateToken } = require('../middleware/auth');
 const { validateRegister, validateLogin } = require('../middleware/validation');
 const logger = require('../utils/logger');
 
-// Register
-router.post('/register', validateRegister, async (req, res) => {
+// Rate limiter for login attempts (prevent brute force)
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // 5 attempts per 15 minutes
+  message: 'Too many login attempts, please try again after 15 minutes',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Rate limiter for registration
+const registerLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 3, // 3 registrations per hour per IP
+  message: 'Too many accounts created from this IP, please try again after an hour',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Register - with rate limiting
+router.post('/register', registerLimiter, validateRegister, async (req, res) => {
   try {
     const { name, email, password, businessName, activityType } = req.body;
 
@@ -77,8 +96,8 @@ router.post('/register', validateRegister, async (req, res) => {
   }
 });
 
-// Login
-router.post('/login', validateLogin, async (req, res) => {
+// Login - with rate limiting to prevent brute force
+router.post('/login', loginLimiter, validateLogin, async (req, res) => {
   try {
     const { email, password } = req.body;
 
