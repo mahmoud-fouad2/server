@@ -41,6 +41,19 @@ const app = express();
 // CORS: restrict origins via `CORS_ORIGINS` env (comma-separated). If not set, default to allow only same-origin.
 const allowedOrigins = (process.env.CORS_ORIGINS || process.env.CLIENT_URL || '').split(',').map(s => s.trim()).filter(Boolean);
 
+// Explicitly add known domains to allowedOrigins to prevent configuration errors
+const knownDomains = [
+  'https://faheemly.com',
+  'https://www.faheemly.com',
+  'http://localhost:3000',
+  'http://localhost:3001'
+];
+knownDomains.forEach(domain => {
+  if (!allowedOrigins.includes(domain)) {
+    allowedOrigins.push(domain);
+  }
+});
+
 // Enable Pre-Flight for all routes
 app.options('*', cors());
 
@@ -59,11 +72,15 @@ if (allowedOrigins.length === 0) {
       // Handle wildcard *
       if (allowedOrigins.includes('*')) return cb(null, true);
       
+      // Check if origin is allowed
       if (allowedOrigins.includes(origin)) return cb(null, true);
       
       // Log the blocked origin for debugging
       logger.warn(`CORS blocked origin: ${origin}`);
-      cb(null, true); // TEMPORARY FIX: Allow all origins even if not in list, but log warning
+      
+      // TEMPORARY: Allow all origins to fix production issues while debugging
+      // In the future, uncomment the line below and remove the cb(null, true)
+      cb(null, true); 
       // cb(new Error('CORS origin denied'));
     },
     credentials: true,
