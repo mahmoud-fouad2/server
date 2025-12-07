@@ -4,7 +4,7 @@
 
 export const API_CONFIG = {
   BASE_URL:
-    process.env.NEXT_PUBLIC_API_URL || 'https://faheemly.com',
+    process.env.NEXT_PUBLIC_API_URL || 'https://faheemly-server.onrender.com/api',
   TIMEOUT: 30000, // 30 seconds
 };
 
