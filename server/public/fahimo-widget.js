@@ -4,7 +4,9 @@
     
     const scriptTag = document.currentScript;
     const businessId = scriptTag.getAttribute('data-business-id');
-    const apiUrl = 'http://localhost:3001'; // Change for production
+    // Auto-detect API URL based on script source, or fallback to production
+    const scriptSrc = scriptTag.src;
+    const apiUrl = scriptSrc ? new URL(scriptSrc).origin : 'https://fahimo-api.onrender.com';
 
     if (!businessId) {
         console.error('Fahimo: Business ID is missing.');

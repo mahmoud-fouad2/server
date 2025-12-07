@@ -10,7 +10,8 @@ async function generateEmbedding(text) {
 
   // 1. Try Groq Embeddings FIRST (More reliable)
   const GROQ_KEY = process.env.GROQ_API_KEY;
-  const GROQ_EMBED_MODEL = process.env.GROQ_EMBED_MODEL || 'nomic-embed-text';
+  // Use v1.5 which is the current supported model, fallback to v1
+  const GROQ_EMBED_MODEL = process.env.GROQ_EMBED_MODEL || 'nomic-embed-text-v1_5';
   
   if (GROQ_KEY) {
     try {
