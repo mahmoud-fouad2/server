@@ -311,4 +311,39 @@ router.get('/integrations', authenticateToken, async (req, res) => {
   }
 });
 
+// Update demo business (temporary endpoint)
+router.post('/update-demo', authenticateToken, async (req, res) => {
+  try {
+    // Only allow for hello@faheemly.com user
+    if (req.user.email !== 'hello@faheemly.com') {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    const businessId = req.user.businesses[0]?.id;
+    if (!businessId) {
+      return res.status(404).json({ error: 'Business not found' });
+    }
+
+    // Update business
+    const updatedBusiness = await prisma.business.update({
+      where: { id: businessId },
+      data: {
+        name: 'فهملي - Faheemly',
+        messageQuota: 999999,
+        messagesUsed: 0,
+        planType: 'ENTERPRISE'
+      }
+    });
+
+    res.json({
+      success: true,
+      message: 'Business updated successfully',
+      business: updatedBusiness
+    });
+  } catch (error) {
+    console.error('Update demo business error:', error);
+    res.status(500).json({ error: 'Failed to update business' });
+  }
+});
+
 module.exports = router;
