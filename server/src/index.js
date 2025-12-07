@@ -134,13 +134,14 @@ try {
 }
 
 // Admin Extended routes (Phase 2: User Management & System Control)
-try {
-  const adminExtendedRoutes = require('./routes/admin-extended.routes');
-  app.use('/api/admin', adminExtendedRoutes);
-  logger.info('✅ Admin Extended routes loaded (User Management & System Control)');
-} catch (e) {
-  logger.warn('Admin Extended routes not available:', e?.message || e);
-}
+// TEMPORARILY DISABLED - Requires database migration
+// try {
+//   const adminExtendedRoutes = require('./routes/admin-extended.routes');
+//   app.use('/api/admin', adminExtendedRoutes);
+//   logger.info('✅ Admin Extended routes loaded (User Management & System Control)');
+// } catch (e) {
+//   logger.warn('Admin Extended routes not available:', e?.message || e);
+// }
 
 // Tickets routes
 const ticketsRoutes = require('./routes/tickets.routes');

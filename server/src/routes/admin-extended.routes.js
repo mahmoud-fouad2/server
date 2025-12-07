@@ -482,7 +482,7 @@ router.get(
   requirePermission('system:read'),
   async (req, res) => {
     try {
-      const { prisma } = require('../config/database');
+      const prisma = require('../config/database');
       const { page = 1, limit = 50, action, userId, startDate, endDate } = req.query;
       
       const where = {};
@@ -538,7 +538,7 @@ router.get(
   requirePermission('system:read'),
   async (req, res) => {
     try {
-      const { prisma } = require('../config/database');
+      const prisma = require('../config/database');
       
       const [
         totalUsers,

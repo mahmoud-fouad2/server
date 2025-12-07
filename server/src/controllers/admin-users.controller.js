@@ -672,3 +672,18 @@ exports.exportUserData = asyncHandler(async (req, res) => {
     userData: user
   });
 });
+
+// Export all controller functions
+module.exports = {
+  getAllUsers: exports.getAllUsers,
+  getUserById: exports.getUserById,
+  createUser: exports.createUser,
+  updateUser: exports.updateUser,
+  changeUserPassword: exports.changeUserPassword,
+  toggleUserStatus: exports.toggleUserStatus,
+  deleteUser: exports.deleteUser,
+  hardDeleteUser: exports.hardDeleteUser,
+  restoreUser: exports.restoreUser,
+  getUserAuditLog: exports.getUserAuditLog,
+  exportUserData: exports.exportUserData
+};

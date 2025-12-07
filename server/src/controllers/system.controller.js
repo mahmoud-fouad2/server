@@ -698,3 +698,38 @@ exports.createSystemVersion = asyncHandler(async (req, res) => {
     version: newVersion
   });
 });
+
+// Export all controller functions
+module.exports = {
+  // AI Providers
+  getAiProviders: exports.getAiProviders,
+  updateAiProvider: exports.updateAiProvider,
+  testAiProvider: exports.testAiProvider,
+  
+  // System Prompts
+  getSystemPrompts: exports.getSystemPrompts,
+  createSystemPrompt: exports.createSystemPrompt,
+  updateSystemPrompt: exports.updateSystemPrompt,
+  rollbackSystemPrompt: exports.rollbackSystemPrompt,
+  
+  // API Configuration
+  getApiConfiguration: exports.getApiConfiguration,
+  updateApiConfiguration: exports.updateApiConfiguration,
+  
+  // Feature Flags
+  getFeatureFlags: exports.getFeatureFlags,
+  upsertFeatureFlag: exports.upsertFeatureFlag,
+  toggleFeatureFlag: exports.toggleFeatureFlag,
+  
+  // System Settings
+  getSystemSettings: exports.getSystemSettings,
+  updateSystemSetting: exports.updateSystemSetting,
+  
+  // Health Monitoring
+  getSystemHealth: exports.getSystemHealth,
+  recordHealthMetric: exports.recordHealthMetric,
+  
+  // System Versions
+  getSystemVersions: exports.getSystemVersions,
+  createSystemVersion: exports.createSystemVersion
+};

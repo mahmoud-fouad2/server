@@ -10,7 +10,7 @@
  * @module middleware/permission
  */
 
-const logger = require('../config/logger');
+const logger = require('../utils/logger');
 
 /**
  * Permission map - defines what each role can do

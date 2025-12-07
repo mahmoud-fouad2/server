@@ -277,6 +277,12 @@ router.post('/run-seed', authenticateToken, isAdmin, async (req, res) => {
     const business = await seed.seedFaheemly();
 
     res.json({ success: true, message: 'Seed executed', businessId: business?.id || null });
+  } catch (error) {
+    logger.error('Run Seed Error:', error);
+    res.status(500).json({ error: 'Failed to run seed: ' + (error?.message || error) });
+  }
+});
+
 // Update Demo Business for hello@faheemly.com (temporary endpoint)
 router.post('/update-demo-business', authenticateToken, async (req, res) => {
   try {
