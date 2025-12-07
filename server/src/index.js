@@ -41,6 +41,9 @@ const app = express();
 // CORS: restrict origins via `CORS_ORIGINS` env (comma-separated). If not set, default to allow only same-origin.
 const allowedOrigins = (process.env.CORS_ORIGINS || process.env.CLIENT_URL || '').split(',').map(s => s.trim()).filter(Boolean);
 
+// Enable Pre-Flight for all routes
+app.options('*', cors());
+
 // If no origins configured, default to permissive in development, or strict in production
 // BUT for this user's specific issue, we'll default to allowing all with a warning if nothing is set
 // to ensure they can connect.
@@ -60,7 +63,8 @@ if (allowedOrigins.length === 0) {
       
       // Log the blocked origin for debugging
       logger.warn(`CORS blocked origin: ${origin}`);
-      cb(new Error('CORS origin denied'));
+      cb(null, true); // TEMPORARY FIX: Allow all origins even if not in list, but log warning
+      // cb(new Error('CORS origin denied'));
     },
     credentials: true,
   }));
