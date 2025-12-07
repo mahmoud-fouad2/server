@@ -123,7 +123,7 @@ Phone: +966 530047640
 
 ## 🔗 Important URLs
 - Frontend: https://faheemly.com
-- API: https://fahimo-api.onrender.com
+- API: https://faheemly-server.onrender.com
 EOF
 
 # Step 5: Create deployment folder (no compression needed for static hosting)

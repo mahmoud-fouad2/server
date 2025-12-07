@@ -20,7 +20,7 @@ const nextConfig = {
   // Environment variables for client-side
   env: {
     NEXT_PUBLIC_API_URL:
-      process.env.NEXT_PUBLIC_API_URL || 'https://fahimo-api.onrender.com',
+      process.env.NEXT_PUBLIC_API_URL || 'https://faheemly-server.onrender.com',
   },
 
   // Performance optimizations
