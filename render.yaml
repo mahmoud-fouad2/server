@@ -2,7 +2,7 @@ services:
   - type: web
     name: faheemly-api
     runtime: node
-    buildCommand: npm install && npx prisma generate
+    buildCommand: npm install --legacy-peer-deps && npx prisma generate
     startCommand: cd server && npm run start:prod
     envVars:
       - key: NODE_ENV

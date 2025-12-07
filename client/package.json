@@ -42,7 +42,7 @@
     "tailwind-merge": "^2.2.1",
     "tailwindcss-animate": "^1.0.7",
     "zustand": "^4.5.2",
-    "@sentry/nextjs": "^7.105.0"
+    "@sentry/nextjs": "^8.0.0"
   },
   "devDependencies": {
     "@next/bundle-analyzer": "^16.0.7",
