@@ -2,7 +2,8 @@ services:
   - type: web
     name: faheemly-api
     runtime: node
-    buildCommand: cd server && npm install && npx prisma generate
+    rootDir: server
+    buildCommand: npm install && npx prisma generate
     startCommand: npm run start:prod
     envVars:
       - key: NODE_ENV
@@ -32,8 +33,9 @@ services:
   - type: pserv
     name: faheemly-worker
     runtime: node
-    buildCommand: cd server && npm install && npx prisma generate
-    startCommand: cd server && npm run worker
+    rootDir: server
+    buildCommand: npm install && npx prisma generate
+    startCommand: npm run worker
     envVars:
       - key: NODE_ENV
         value: production
