@@ -7,7 +7,7 @@
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "worker": "node src/queue/worker.js",
-    "prisma:generate": "prisma generate",
+    "prisma:generate": "npx prisma generate",
     "prisma:push": "prisma db push",
     "prisma:push:force": "prisma db push --accept-data-loss",
     "prisma:migrate": "prisma migrate dev",
@@ -58,12 +58,12 @@
     "socket.io": "^4.7.4",
     "twilio": "^5.10.6",
     "ua-parser-js": "^2.0.6",
-    "zod": "^4.1.13"
+    "zod": "^4.1.13",
+    "prisma": "^5.10.2"
   },
   "devDependencies": {
     "jest": "^29.7.0",
     "nodemon": "^3.1.0",
-    "prisma": "^5.10.2",
     "supertest": "^7.0.0"
   },
   "jest": {
