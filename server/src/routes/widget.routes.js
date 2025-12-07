@@ -132,4 +132,133 @@ router.post('/config', authenticateToken, async (req, res) => {
   }
 });
 
+// Widget Chat Endpoint (Public) - Forwards to chat/message
+router.post('/chat', async (req, res) => {
+  try {
+    const { businessId, message, conversationId, sessionId } = req.body;
+
+    if (!message || !businessId) {
+      return res.status(400).json({ error: 'Message and Business ID are required' });
+    }
+
+    // Import chat logic (simple forward for now)
+    const chatRoutes = require('./chat.routes');
+    // Since it's the same app, we can simulate the request
+    // For simplicity, duplicate the logic or call the handler
+
+    // Temporarily duplicate the validation and business check from chat.routes.js
+    const business = await prisma.business.findUnique({ where: { id: businessId } });
+    if (!business) {
+      return res.status(404).json({ error: 'Business not found' });
+    }
+
+    // Create a mock req object for the chat handler
+    const mockReq = {
+      body: { message, businessId, conversationId, sessionId },
+      ip: req.ip,
+      headers: req.headers
+    };
+
+    // Call the chat message handler logic (simplified)
+    // Since we can't easily call the handler, duplicate the core logic
+    const visitorSession = require('../services/visitor-session.service');
+    const redisCache = require('../services/redis-cache.service');
+    const groqService = require('../services/groq.service');
+    const vectorSearch = require('../services/vector-search.service');
+    const responseValidator = require('../services/response-validator.service');
+    const logger = require('../utils/logger');
+
+    // Find or create conversation
+    let conversation;
+    if (conversationId) {
+      conversation = await prisma.conversation.findUnique({ where: { id: conversationId } });
+    }
+    if (!conversation) {
+      conversation = await prisma.conversation.create({
+        data: {
+          businessId,
+          channel: 'WIDGET',
+          status: 'ACTIVE'
+        }
+      });
+    }
+
+    // Save User Message
+    await prisma.message.create({
+      data: {
+        conversationId: conversation.id,
+        role: 'USER',
+        content: message
+      }
+    });
+
+    // Check cache
+    const cachedResponse = await redisCache.get(businessId, message);
+    if (cachedResponse) {
+      await prisma.message.create({
+        data: {
+          conversationId: conversation.id,
+          role: 'ASSISTANT',
+          content: cachedResponse.response.response || cachedResponse.response,
+          tokensUsed: 0,
+          wasFromCache: true,
+          aiModel: 'cached'
+        }
+      });
+      return res.json({
+        response: cachedResponse.response.response || cachedResponse.response,
+        conversationId: conversation.id,
+        fromCache: true,
+        tokensUsed: 0,
+        model: 'redis-cache'
+      });
+    }
+
+    // Get history
+    const history = await prisma.message.findMany({
+      where: { conversationId: conversation.id },
+      orderBy: { createdAt: 'desc' },
+      take: 20
+    });
+
+    // Generate response
+    const aiResult = await groqService.generateChatResponse(
+      message,
+      business,
+      history.reverse().map(msg => ({
+        role: msg.role === 'USER' ? 'user' : 'assistant',
+        content: msg.content
+      })),
+      []
+    );
+
+    // Save AI Message
+    await prisma.message.create({
+      data: {
+        conversationId: conversation.id,
+        role: 'ASSISTANT',
+        content: aiResult.response,
+        tokensUsed: aiResult.tokensUsed || 0,
+        wasFromCache: false,
+        aiModel: aiResult.model || 'groq-llama'
+      }
+    });
+
+    // Cache
+    await redisCache.set(businessId, message, aiResult, 7 * 24 * 60 * 60);
+
+    res.json({
+      response: aiResult.response,
+      conversationId: conversation.id,
+      fromCache: false,
+      tokensUsed: aiResult.tokensUsed,
+      model: aiResult.model
+    });
+
+  } catch (error) {
+    logger.error('Widget Chat Error:', error);
+    res.status(500).json({ error: 'Failed to process message' });
+  }
+});
+
 module.exports = router;
