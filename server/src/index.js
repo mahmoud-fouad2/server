@@ -124,6 +124,14 @@ app.use('/api/knowledge', knowledgeRoutes);
 const teamRoutes = require('./routes/team.routes');
 app.use('/api/team', teamRoutes);
 
+// Admin routes
+try {
+  const adminRoutes = require('./routes/admin.routes');
+  app.use('/api/admin', adminRoutes);
+} catch (e) {
+  console.warn('Admin routes not available:', e?.message || e);
+}
+
 // Tickets routes
 const ticketsRoutes = require('./routes/tickets.routes');
 app.use('/api/tickets', ticketsRoutes);
@@ -149,6 +157,22 @@ try {
   app.use('/api/widget', widgetRoutes);
 } catch (e) {
   console.warn('Widget routes not available:', e?.message || e);
+}
+
+// Analytics routes
+try {
+  const analyticsRoutes = require('./routes/conversation-analytics.routes');
+  app.use('/api/analytics', analyticsRoutes);
+} catch (e) {
+  console.warn('Analytics routes not available:', e?.message || e);
+}
+
+// Visitor routes
+try {
+  const visitorRoutes = require('./routes/visitor.routes');
+  app.use('/api/visitor', visitorRoutes);
+} catch (e) {
+  console.warn('Visitor routes not available:', e?.message || e);
 }
 
 // Fallback widget endpoints if widget routes failed to load

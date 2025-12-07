@@ -263,4 +263,24 @@ router.delete('/monitoring/alerts', authenticateToken, isAdmin, async (req, res)
   }
 });
 
+// --- Utility: Run Seeding Script (PROTECTED) ---
+// NOTE: This endpoint executes the local prisma seed script. It MUST be protected
+// and only accessible by SUPERADMIN. Use with caution on production databases.
+router.post('/run-seed', authenticateToken, isAdmin, async (req, res) => {
+  try {
+    // Load the seed helper and run it
+    const seed = require('../../prisma/seed-faheemly');
+    if (!seed || typeof seed.seedFaheemly !== 'function') {
+      return res.status(500).json({ error: 'Seed script not available' });
+    }
+
+    const business = await seed.seedFaheemly();
+
+    res.json({ success: true, message: 'Seed executed', businessId: business?.id || null });
+  } catch (error) {
+    logger.error('Admin Run Seed Error:', error);
+    res.status(500).json({ error: 'Failed to run seed: ' + (error?.message || error) });
+  }
+});
+
 module.exports = router;
