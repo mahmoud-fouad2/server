@@ -162,35 +162,44 @@ router.post('/message', validateChatMessage, async (req, res) => {
     //   return res.status(404).json({ error: 'Business not found' });
     // }
 
-    // Use a default business for testing
-    let business = await prisma.business.findFirst();
-    if (!business) {
-      // Find existing user or create one
-      let defaultUser = await prisma.user.findFirst();
-      if (!defaultUser) {
-        defaultUser = await prisma.user.create({
+    // Prefer an explicit businessId passed by the client. If provided but not found, return 404.
+    let business = null;
+    if (businessId) {
+      business = await prisma.business.findUnique({ where: { id: businessId } });
+      if (!business) {
+        return res.status(404).json({ error: 'Business not found' });
+      }
+    } else {
+      // No businessId provided — fall back to a safe default business (for demo sites only)
+      business = await prisma.business.findFirst();
+      if (!business) {
+        // Find existing user or create one
+        let defaultUser = await prisma.user.findFirst();
+        if (!defaultUser) {
+          defaultUser = await prisma.user.create({
+            data: {
+              email: 'default@faheemly.com',
+              password: await require('bcryptjs').hash('default123', 10),
+              name: 'Default User',
+              role: 'CLIENT'
+            }
+          });
+        }
+        
+        // Create a default business
+        business = await prisma.business.create({
           data: {
-            email: 'default@faheemly.com',
-            password: await require('bcryptjs').hash('default123', 10),
-            name: 'Default User',
-            role: 'CLIENT'
+            userId: defaultUser.id,
+            name: 'Default Business',
+            activityType: 'COMPANY',
+            botTone: 'friendly',
+            status: 'ACTIVE',
+            planType: 'ENTERPRISE',
+            messageQuota: 999999,
+            messagesUsed: 0
           }
         });
       }
-      
-      // Create a default business
-      business = await prisma.business.create({
-        data: {
-          userId: defaultUser.id,
-          name: 'Default Business',
-          activityType: 'COMPANY',
-          botTone: 'friendly',
-          status: 'ACTIVE',
-          planType: 'ENTERPRISE',
-          messageQuota: 999999,
-          messagesUsed: 0
-        }
-      });
     }
 
     // Ensure we use a valid business id for all downstream operations
