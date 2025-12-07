@@ -117,14 +117,24 @@ class SystemMonitor {
       // Check if ai.service exists (fallback for hybrid-ai)
       const aiService = require('../services/ai.service');
       
+      // Count configured providers based on env vars
+      let available = 0;
+      if (process.env.GROQ_API_KEY) available++;
+      if (process.env.GEMINI_API_KEY) available++;
+      if (process.env.CEREBRAS_API_KEY) available++;
+      if (process.env.DEEPSEEK_API_KEY) available++;
+      if (process.env.OPENAI_API_KEY) available++;
+
       return {
         healthy: true,
-        message: 'AI service operational'
+        message: 'AI service operational',
+        totalAvailable: available
       };
     } catch (error) {
       return {
         error: error.message,
-        healthy: false
+        healthy: false,
+        totalAvailable: 0
       };
     }
   }
@@ -141,7 +151,7 @@ class SystemMonitor {
     console.log(`⏱️  Uptime: ${status.uptime.formatted}`);
     console.log(`💾 Memory: ${status.memory.heapUsed} / ${status.memory.heapTotal} (${status.memory.percentage}%)`);
     console.log(`🗄️  Database: ${status.database.connected ? '✅ Connected' : '❌ Disconnected'} (${status.database.latency})`);
-    console.log(`🤖 AI Providers: ${status.aiProviders.health?.totalAvailable || 0} available`);
+    console.log(`🤖 AI Providers: ${status.aiProviders.totalAvailable || 0} available`);
     console.log('═══════════════════════════════════════════════════\n');
 
     return status;
