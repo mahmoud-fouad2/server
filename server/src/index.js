@@ -188,6 +188,18 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// If any /api/* route was not matched above, return JSON 404 instead of an HTML page.
+app.use('/api', (req, res) => {
+  // Log the unmatched API request to help diagnose 404/403 issues on the host
+  try {
+    logger.warn('Unmatched API request', { method: req.method, path: req.originalUrl, ip: req.ip });
+  } catch (e) {
+    console.warn('Unmatched API request', req.method, req.originalUrl);
+  }
+
+  res.status(404).json({ success: false, error: { message: 'API route not found' } });
+});
+
 // Error handling middleware (must be last)
 app.use(errorHandler);
 

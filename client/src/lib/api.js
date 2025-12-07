@@ -54,17 +54,26 @@ export const apiCall = async (endpoint, options = {}) => {
     try {
       const response = await fetch(url, config);
 
-      // Handle 401 Unauthorized - Redirect to login
+      // Handle 401 Unauthorized - let caller deal with redirects/auth
       if (response.status === 401) {
-        if (typeof window !== 'undefined') {
-          // Optional: Clear token?
-          // localStorage.removeItem('token');
-          // window.location.href = '/login';
-          // Better to let the caller handle redirect or use a global event
-        }
+        // no-op here; callers may handle
       }
 
-      const data = await response.json().catch(() => ({})); // Handle empty responses gracefully
+      // Decide how to parse the body based on Content-Type
+      const contentType = (response.headers.get('content-type') || '').toLowerCase();
+      let data = null;
+
+      if (contentType.includes('application/json')) {
+        data = await response.json().catch(() => null);
+      } else {
+        // Non-JSON response (HTML error pages or plain text)
+        const text = await response.text().catch(() => null);
+        // If response is OK but non-JSON, return raw text under a `raw` key so callers can inspect it
+        if (response.ok) return { raw: text };
+        // On non-ok responses return an Error with the text (if available)
+        const message = text || 'Server returned a non-JSON error response';
+        throw new Error(message);
+      }
 
       if (!response.ok) {
         // Don't retry on 4xx client errors (except 429 Too Many Requests)
@@ -73,11 +82,11 @@ export const apiCall = async (endpoint, options = {}) => {
           response.status < 500 &&
           response.status !== 429
         ) {
-          throw new Error(data.error || data.message || 'Something went wrong');
+          throw new Error((data && (data.error || data.message)) || 'Something went wrong');
         }
 
         // Retry on 5xx server errors or 429
-        throw new Error(data.error || data.message || 'Server error');
+        throw new Error((data && (data.error || data.message)) || 'Server error');
       }
 
       return data;

@@ -34,6 +34,17 @@ router.get('/conversations', authenticateToken, async (req, res) => {
   }
 });
 
+// Lightweight test endpoint to verify chat API routing (useful for remote checks)
+router.post('/test', async (req, res) => {
+  try {
+    const payload = req.body || {};
+    return res.json({ success: true, message: 'chat test OK', payload });
+  } catch (err) {
+    console.error('Chat test error:', err);
+    return res.status(500).json({ success: false, message: 'chat test failed' });
+  }
+});
+
 // Protected: Get messages for a conversation
 router.get('/:conversationId/messages', authenticateToken, async (req, res) => {
   try {

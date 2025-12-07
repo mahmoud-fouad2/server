@@ -1,6 +1,7 @@
 import './globals.css';
 import dynamic from 'next/dynamic';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import '@/lib/fetch-proxy';
 
 const SalesBot = dynamic(() => import('@/components/SalesBot'), { ssr: false });
 
@@ -147,7 +148,16 @@ export default function RootLayout({ children }) {
           rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/flag-icons@7.2.3/css/flag-icons.min.css"
         />
-        <meta httpEquiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; img-src 'self' data: https:; font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; connect-src 'self' http://localhost:3001 https://fahimo-api.onrender.com wss://fahimo-api.onrender.com; frame-src 'self';" />
+        {/* Content Security Policy: allow API host from env and localhost only in development */}
+        {
+          (() => {
+            const apiHost = process.env.NEXT_PUBLIC_API_URL || 'https://fahimo-api.onrender.com';
+            const apiWs = apiHost.replace(/^http/, 'ws');
+            const devLocal = process.env.NODE_ENV === 'development' ? ' http://localhost:3001' : '';
+            const csp = `default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; img-src 'self' data: https:; font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; connect-src 'self' ${apiHost} ${apiWs}${devLocal}; frame-src 'self';`;
+            return <meta httpEquiv="Content-Security-Policy" content={csp} />;
+          })()
+        }
         {/* Inline script to apply saved theme before React mounts (prevents flash) - Default to LIGHT */}
         <script
           dangerouslySetInnerHTML={{
