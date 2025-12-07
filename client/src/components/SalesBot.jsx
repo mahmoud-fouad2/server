@@ -26,6 +26,8 @@ const SalesBot = ({ lang = 'ar' }) => {
     '/login',
     '/register',
     '/wizard',
+    '/examples',
+    '/docs',
   ];
   const shouldHide = hiddenPaths.some(path => pathname?.startsWith(path));
 

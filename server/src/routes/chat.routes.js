@@ -366,7 +366,7 @@ router.post('/message', chatLimiter, validateChatMessage, async (req, res) => {
     }
 
     // Check Redis cache first (significant cost savings!)
-    const cachedResponse = await redisCache.get(businessId, message);
+    const cachedResponse = await cacheService.get(businessId, message);
     if (cachedResponse) {
       console.log('[Chat] ✅ Using cached response');
       
@@ -439,14 +439,27 @@ router.post('/message', chatLimiter, validateChatMessage, async (req, res) => {
       content: msg.content
     }));
 
-    // Generate AI Response using Groq with vector search results
+    // Generate AI Response using Hybrid AI Service
     try {
-      const aiResult = await groqService.generateChatResponse(
-        message,
-        { ...business, widgetConfig },
-        formattedHistory,
-        knowledgeContext // Use vector search results instead of all knowledge
-      );
+      // Construct System Prompt
+      const systemPrompt = `
+You are an AI assistant for ${business.name}, a ${business.activityType || 'business'}.
+Your tone should be ${business.botTone || 'friendly'}.
+${widgetConfig.dialect ? `You should speak in the ${widgetConfig.dialect} dialect.` : ''}
+
+Use the following knowledge base context to answer the user's question. If the answer is not in the context, answer politely that you don't know or ask for more details.
+
+Context:
+${knowledgeContext.map(k => k.content).join('\n\n')}
+      `.trim();
+
+      const messages = [
+        { role: 'system', content: systemPrompt },
+        ...formattedHistory,
+        { role: 'user', content: message }
+      ];
+
+      const aiResult = await aiService.generateResponse(messages);
 
       // Validate response quality
       const validation = responseValidator.validateResponse(aiResult.response, {
@@ -488,7 +501,7 @@ router.post('/message', chatLimiter, validateChatMessage, async (req, res) => {
       });
 
       // Cache the response for future queries (7 days TTL)
-      await redisCache.set(businessId, message, aiResult, 7 * 24 * 60 * 60);
+      await cacheService.set(businessId, message, aiResult, 7 * 24 * 60 * 60);
 
       res.json({
         response: aiResult.response,
