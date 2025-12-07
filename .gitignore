@@ -68,6 +68,9 @@ desktop.ini
 .next/
 client/.next/
 
+# Generated client export zip
+client-out-updated.zip
+
 # Vercel
 .vercel
 
