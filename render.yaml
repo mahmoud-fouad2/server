@@ -3,7 +3,7 @@ services:
     name: faheemly-api
     runtime: node
     buildCommand: npm install && npx prisma generate
-    startCommand: npm start
+    startCommand: cd server && npm run start:prod
     envVars:
       - key: NODE_ENV
         value: production
