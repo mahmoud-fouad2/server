@@ -50,9 +50,14 @@ router.get('/dashboard/:days?', authenticateToken, async (req, res) => {
     const businessId = req.user.businessId || req.params.businessId;
 
     if (!businessId) {
+      console.warn('[Analytics] Missing businessId in request', { 
+        user: req.user, 
+        params: req.params,
+        headers: req.headers['authorization'] ? 'Auth Header Present' : 'No Auth Header'
+      });
       return res.status(400).json({
         success: false,
-        message: 'Business ID is required'
+        message: 'Business ID is required. Please ensure you are logged in.'
       });
     }
 

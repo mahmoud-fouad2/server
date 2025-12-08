@@ -95,6 +95,20 @@ exports.getSettings = asyncHandler(async (req, res) => {
     throw new Error('Business not found');
   }
 
+  // Fix: Replace localhost URLs in widgetConfig with current API URL
+  if (business.widgetConfig) {
+    try {
+      const config = JSON.parse(business.widgetConfig);
+      if (config.customIconUrl && config.customIconUrl.includes('localhost')) {
+        const baseUrl = process.env.API_URL || 'https://fahimo-api.onrender.com';
+        config.customIconUrl = config.customIconUrl.replace(/http:\/\/localhost:\d+/, baseUrl);
+        business.widgetConfig = JSON.stringify(config);
+      }
+    } catch (e) {
+      // Ignore parsing errors
+    }
+  }
+
   res.json(business);
 });
 
