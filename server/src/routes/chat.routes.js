@@ -545,4 +545,46 @@ ${knowledgeContext.map(k => k.content).join('\n\n')}
   }
 });
 
+// Test endpoint for widget/examples page
+router.post('/test', chatLimiter, async (req, res) => {
+  try {
+    const { message, businessId } = req.body;
+    
+    if (!message) {
+      return res.status(400).json({ error: 'Message is required' });
+    }
+
+    // Use default business if not provided
+    let business;
+    if (businessId) {
+      business = await prisma.business.findUnique({ where: { id: businessId } });
+    } else {
+      business = await prisma.business.findFirst();
+    }
+
+    if (!business) {
+      return res.status(404).json({ error: 'No business found' });
+    }
+
+    // Simple AI response for testing
+    const aiResponse = await aiService.chat(
+      [{ role: 'user', content: message }],
+      business.id,
+      'groq'
+    );
+
+    res.json({
+      response: aiResponse?.content || 'مرحباً! كيف يمكنني مساعدتك؟',
+      businessId: business.id
+    });
+
+  } catch (error) {
+    logger.error('Test Chat Error:', error);
+    res.status(500).json({ 
+      error: 'Failed to process message',
+      response: 'عذراً، حدث خطأ. حاول مرة أخرى.'
+    });
+  }
+});
+
 module.exports = router;
