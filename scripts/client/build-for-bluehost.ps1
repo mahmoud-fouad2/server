@@ -38,6 +38,12 @@ New-Item -ItemType Directory -Path "deployment" -Force | Out-Null
 # Copy static export files (out directory)
 if (Test-Path "out") {
     Copy-Item -Path "out\*" -Destination "deployment\" -Recurse -Force
+    
+    # Clean up sensitive files (Next.js trace files)
+    Write-Host "🧹 Removing sensitive files..." -ForegroundColor Yellow
+    Get-ChildItem -Path "deployment" -Recurse -Filter "index.txt" | Remove-Item -Force
+    Get-ChildItem -Path "deployment" -Recurse -Filter "*.json" -Exclude "site.webmanifest" | Remove-Item -Force
+    Write-Host "✅ Cleaned up trace and config files" -ForegroundColor Green
 } else {
     Write-Host "❌ 'out' directory not found! Build may have failed." -ForegroundColor Red
     exit 1

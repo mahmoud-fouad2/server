@@ -16,6 +16,11 @@ const { validateEnv, getEnvSummary } = require('./config/env.validator');
 // Initialize environment variables
 dotenv.config();
 
+// Set default CLIENT_URL if not provided (before validation)
+if (!process.env.CLIENT_URL) {
+  process.env.CLIENT_URL = 'https://faheemly.com';
+}
+
 const isTestEnvironment = process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID !== undefined;
 
 // Validate environment configuration
@@ -53,11 +58,6 @@ const testDatabaseConnection = async () => {
   }
 };
 const app = express();
-
-// Set default CLIENT_URL if not provided
-if (!process.env.CLIENT_URL) {
-  process.env.CLIENT_URL = 'https://faheemly.com';
-}
 
 // CORS: restrict origins via `CORS_ORIGINS` env (comma-separated). If not set, default to allow only same-origin.
 const allowedOrigins = (process.env.CORS_ORIGINS || process.env.CLIENT_URL || '').split(',').map(s => s.trim()).filter(Boolean);
