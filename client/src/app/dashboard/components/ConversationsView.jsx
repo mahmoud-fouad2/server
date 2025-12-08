@@ -27,10 +27,13 @@ export default function ConversationsView() {
 
   const fetchConversations = async () => {
     try {
-      const data = await chatApi.getConversations();
-      setConversations(data);
+      const response = await chatApi.getConversations();
+      // Handle both array and paginated response format
+      const conversationsList = Array.isArray(response) ? response : (response.data || []);
+      setConversations(conversationsList);
     } catch (err) {
       console.error(err);
+      setConversations([]);
     } finally {
       setLoading(false);
     }
@@ -39,10 +42,13 @@ export default function ConversationsView() {
   const selectConversation = async conv => {
     setSelectedConversation(conv);
     try {
-      const messages = await chatApi.getMessages(conv.id);
-      setConversationMessages(messages);
+      const response = await chatApi.getMessages(conv.id);
+      // Handle both array and paginated response format
+      const messagesList = Array.isArray(response) ? response : (response.data || []);
+      setConversationMessages(messagesList);
     } catch (err) {
       console.error(err);
+      setConversationMessages([]);
     }
   };
 
