@@ -93,12 +93,14 @@ export default function StatsOverview({
         const data = payload.data || payload;
 
         // Map to chart-friendly formats with fallbacks
-        setConversationDataState((data.trends && data.trends.daily) || conversationData);
+        setConversationDataState(
+          Array.isArray(data.trends?.daily) ? data.trends.daily : conversationData
+        );
         setResponseTimeState(
-          (data.performance && data.performance.responseTimes) || responseTimeData
+          Array.isArray(data.performance?.responseTimes) ? data.performance.responseTimes : responseTimeData
         );
         setSatisfactionState(
-          (data.performance && data.performance.satisfactionDistribution) || satisfactionData
+          Array.isArray(data.performance?.satisfactionDistribution) ? data.performance.satisfactionDistribution : satisfactionData
         );
       } catch (e) {
         console.warn('Failed to fetch analytics:', e.message || e);
@@ -113,9 +115,11 @@ export default function StatsOverview({
         const res = await fetch(`/api/analytics/vector-stats`);
         if (!res.ok) throw new Error('vector stats fetch failed');
         const payload = await res.json();
-        if (mounted) setVectorStats(payload.data || payload);
+        const stats = payload.data || payload;
+        if (mounted && stats) setVectorStats(stats);
       } catch (e) {
-        // ignore
+        // keep default/empty stats
+        console.warn('Vector stats unavailable:', e.message);
       }
     })();
     return () => { mounted = false; };
