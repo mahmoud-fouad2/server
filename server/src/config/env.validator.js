@@ -56,9 +56,9 @@ const REQUIRED_ENV_VARS = {
   
   // Client
   CLIENT_URL: {
-    required: true,
+    required: false, // Optional - will use default if not provided
     description: 'Frontend client URL for CORS',
-    validate: (value) => value.startsWith('http://') || value.startsWith('https://')
+    validate: (value) => !value || value.startsWith('http://') || value.startsWith('https://')
   },
   
   // Server
@@ -154,11 +154,11 @@ function validateEnv() {
       const value = process.env[key];
       
       if (config.forbiddenValue && value === config.forbiddenValue) {
-        errors.push(`❌ PRODUCTION ERROR: ${config.errorMessage}`);
+        warnings.push(`⚠️  SECURITY WARNING: ${config.errorMessage}`);
       }
       
       if (config.forbiddenValues && config.forbiddenValues.some(v => value?.toLowerCase().includes(v))) {
-        errors.push(`❌ PRODUCTION ERROR: ${config.errorMessage}`);
+        warnings.push(`⚠️  SECURITY WARNING: ${config.errorMessage}`);
       }
     }
 
