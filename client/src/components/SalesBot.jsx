@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 const SalesBot = () => {
   const pathname = usePathname();
 
-  // Hide on dashboard, admin, login, register, wizard pages
+  // Hide on dashboard, admin, login, register, wizard, examples, docs pages
   const hiddenPaths = [
     '/dashboard',
     '/admin',
@@ -16,7 +16,8 @@ const SalesBot = () => {
     '/examples',
     '/docs',
   ];
-  const shouldHide = hiddenPaths.some(path => pathname?.startsWith(path));
+  // Only hide if pathname matches these specific paths, not the homepage
+  const shouldHide = pathname && hiddenPaths.some(path => pathname.startsWith(path));
 
   useEffect(() => {
     if (shouldHide) return;

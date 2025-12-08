@@ -16,10 +16,17 @@
         }
 
         var shareModal = document.getElementById('share-modal');
+        
+        // Additional null check before addEventListener
+        if (!shareModal) {
+          return;
+        }
 
         shareBtn.addEventListener('click', function () {
           try {
-            if (shareModal) shareModal.style.display = 'flex';
+            if (shareModal && shareModal.style) {
+              shareModal.style.display = 'flex';
+            }
           } catch (e) {
             // Silent fail
           }

@@ -443,7 +443,7 @@ window.addEventListener('faheemly:closed', function() {
           <h4 className="font-bold text-purple-700 dark:text-purple-300 mb-2">📚 الوثائق الكاملة</h4>
           <p className="text-sm">
             لمزيد من التفاصيل حول جميع الـ Endpoints، المعاملات، والأمثلة، 
-            قم بزيارة <a href="/api" className="underline font-bold">صفحة API Reference</a> الكاملة.
+            قم بزيارة <a href="/docs/api" className="underline font-bold">صفحة API Reference</a> الكاملة.
           </p>
         </div>
 

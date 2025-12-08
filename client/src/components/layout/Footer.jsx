@@ -116,7 +116,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="/api"
+                  href="/docs/api"
                   className="hover:text-brand-500 transition-colors"
                 >
                   مرجع API
