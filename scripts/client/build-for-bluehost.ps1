@@ -4,6 +4,13 @@
 Write-Host "🚀 Starting Faheemly Frontend Build Process..." -ForegroundColor Green
 Write-Host "================================================" -ForegroundColor Cyan
 
+# Get script directory and navigate to client folder
+$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$clientDir = Join-Path (Split-Path (Split-Path $scriptDir -Parent) -Parent) "client"
+Set-Location $clientDir
+
+Write-Host "📁 Working directory: $clientDir" -ForegroundColor Cyan
+
 # Step 1: Clean previous builds
 Write-Host "🧹 Cleaning previous builds..." -ForegroundColor Yellow
 Remove-Item -Path ".next" -Recurse -Force -ErrorAction SilentlyContinue

@@ -54,6 +54,11 @@ const testDatabaseConnection = async () => {
 };
 const app = express();
 
+// Set default CLIENT_URL if not provided
+if (!process.env.CLIENT_URL) {
+  process.env.CLIENT_URL = 'https://faheemly.com';
+}
+
 // CORS: restrict origins via `CORS_ORIGINS` env (comma-separated). If not set, default to allow only same-origin.
 const allowedOrigins = (process.env.CORS_ORIGINS || process.env.CLIENT_URL || '').split(',').map(s => s.trim()).filter(Boolean);
 
@@ -415,11 +420,15 @@ async function checkServicesStatus() {
     }
 
     // Check pgvector
-    const isPgVector = await vectorSearch.isPgVectorAvailable();
-    if (isPgVector) {
-      logger.info('✅ pgvector extension is INSTALLED and READY');
-    } else {
-      logger.warn('⚠️ pgvector extension is NOT INSTALLED. Falling back to keyword search.');
+    try {
+      const isPgVector = await vectorSearch.isPgVectorAvailable();
+      if (isPgVector) {
+        logger.info('✅ pgvector extension is INSTALLED and READY');
+      } else {
+        logger.info('ℹ️  pgvector extension not available - using keyword search fallback');
+      }
+    } catch (pgError) {
+      logger.info('ℹ️  pgvector check skipped (permissions may be restricted) - will auto-detect during search');
     }
 
   } catch (error) {

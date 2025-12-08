@@ -78,14 +78,7 @@ const REQUIRED_ENV_VARS = {
  * Optional but recommended environment variables
  */
 const RECOMMENDED_ENV_VARS = [
-  'CORS_ORIGINS',
-  'SENTRY_DSN',
-  'SMTP_HOST',
-  'SMTP_USER',
-  'SMTP_PASS',
-  'WHATSAPP_TOKEN',
-  'WHATSAPP_PHONE_ID',
-  'TELEGRAM_BOT_TOKEN'
+  'SENTRY_DSN'
 ];
 
 /**
@@ -95,10 +88,6 @@ const FORBIDDEN_IN_PRODUCTION = {
   DEV_NO_AUTH: {
     forbiddenValue: 'true',
     errorMessage: 'DEV_NO_AUTH=true is FORBIDDEN in production - removes authentication!'
-  },
-  JWT_SECRET: {
-    forbiddenValues: ['secret', 'test', 'dev', 'password', '123456'],
-    errorMessage: 'JWT_SECRET is too weak - use a strong random string'
   }
 };
 

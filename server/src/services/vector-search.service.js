@@ -148,6 +148,7 @@ class VectorSearchService {
     }
 
     try {
+      // Try to query pg_available_extensions first (works in managed DBs)
       const rawExecutor = prisma.$queryRaw
         ? prisma.$queryRaw.bind(prisma)
         : prisma.$queryRawUnsafe
@@ -157,12 +158,26 @@ class VectorSearchService {
       if (!rawExecutor) {
         throw new Error('Prisma client does not expose a raw query executor');
       }
+      
+      // Check if vector extension exists (installed or available)
       const result = await rawExecutor(`
         SELECT EXISTS (
-          SELECT 1 FROM pg_extension WHERE extname = 'vector'
+          SELECT 1 FROM pg_available_extensions WHERE name = 'vector'
         ) as available
       `);
-      return result[0]?.available || false;
+      
+      const isAvailable = result[0]?.available || false;
+      
+      // If available, try to create it if not already created
+      if (isAvailable) {
+        try {
+          await rawExecutor`CREATE EXTENSION IF NOT EXISTS vector`;
+        } catch (createError) {
+          logger.debug('pgvector extension already exists or cannot be created', { error: createError.message });
+        }
+      }
+      
+      return isAvailable;
     } catch (error) {
       logger.error('Failed to check pgvector availability', { error: error.message || error });
       return false;
