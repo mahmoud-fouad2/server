@@ -11,6 +11,23 @@ exports.register = async (req, res) => {
       return res.status(400).json({ error: 'Name, email, and password are required' });
     }
 
+    // ✅ PASSWORD STRENGTH VALIDATION
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters long' });
+    }
+    
+    if (!/[A-Z]/.test(password)) {
+      return res.status(400).json({ error: 'Password must contain at least one uppercase letter' });
+    }
+    
+    if (!/[a-z]/.test(password)) {
+      return res.status(400).json({ error: 'Password must contain at least one lowercase letter' });
+    }
+    
+    if (!/[0-9]/.test(password)) {
+      return res.status(400).json({ error: 'Password must contain at least one number' });
+    }
+
     // Check if user exists
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
@@ -116,8 +133,14 @@ exports.login = async (req, res) => {
 
 exports.demoLogin = async (req, res) => {
   try {
-    const demoEmail = 'hello@faheemly.com';
-    const demoPassword = 'FaheemlyDemo2025!';
+    // ✅ USE ENVIRONMENT VARIABLES INSTEAD OF HARDCODED
+    const demoEmail = process.env.DEMO_USER_EMAIL || 'hello@faheemly.com';
+    const demoPassword = process.env.DEMO_USER_PASSWORD;
+    
+    if (!demoPassword) {
+      return res.status(503).json({ error: 'Demo login not configured. Contact administrator.' });
+    }
+    
     const { email, password } = req.body || {};
 
     if (email !== demoEmail || password !== demoPassword) {

@@ -1,5 +1,6 @@
 const axios = require('axios');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const logger = require('../utils/logger');
 
 /**
  * Embedding service using Google Gemini (primary) or Groq (if configured).
@@ -12,6 +13,7 @@ async function generateEmbedding(text) {
   const GROQ_KEY = process.env.GROQ_API_KEY;
   // Use v1.5 which is the current supported model, fallback to v1
   const GROQ_EMBED_MODEL = process.env.GROQ_EMBED_MODEL || 'nomic-embed-text-v1_5';
+  const skipGeminiRequested = process.env.SKIP_GEMINI_EMBEDDING === 'true';
   
   if (GROQ_KEY) {
     try {
@@ -34,13 +36,14 @@ async function generateEmbedding(text) {
         console.log(`[Embedding] ✅ Groq embedding generated (${emb.length} dims)`);
         return emb;
       }
+      // Missing embedding payload should fall through to other providers gracefully
     } catch (err) {
       console.error('[Embedding] Groq failed:', err.response?.data?.error?.message || err.message);
     }
   }
 
   // 2. Try Google Gemini Embeddings (Fallback - may be leaked)
-  if (process.env.GEMINI_API_KEY && !process.env.SKIP_GEMINI_EMBEDDING) {
+  if (process.env.GEMINI_API_KEY && !skipGeminiRequested) {
     try {
       const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
       const model = genAI.getGenerativeModel({ model: "embedding-001" });
@@ -54,15 +57,16 @@ async function generateEmbedding(text) {
       // Check if API key may be compromised and surface an actionable log
       if (error && error.message && error.message.toLowerCase().includes('leak')) {
         console.error('[Embedding] ❌ Gemini API key may be compromised. Rotate the key immediately and update configuration.');
+        process.env.SKIP_GEMINI_EMBEDDING = 'true';
       } else {
         console.error('[Embedding] Gemini failed:', error?.message || error);
       }
-      // Do not mutate process.env at runtime; allow fallback to other providers or dev fallback
+      return null;
     }
   }
 
   // 3. Development Fallback (ONLY for local dev without keys)
-  if (process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV === 'development' || skipGeminiRequested) {
     console.warn('⚠️ WARNING: Using FAKE embeddings. Vector search will NOT work correctly.');
     // Simple hash -> vector generator (768 dims to match Gemini/BERT roughly)
     const seed = Array.from(text).reduce((s, c) => (s * 31 + c.charCodeAt(0)) >>> 0, 17);
@@ -74,7 +78,11 @@ async function generateEmbedding(text) {
     return vec;
   }
 
-  throw new Error('No embedding provider configured. Set GEMINI_API_KEY or GROQ_API_KEY/GROQ_EMBED_URL.');
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('No embedding provider configured. Set GEMINI_API_KEY or GROQ_API_KEY/GROQ_EMBED_URL.');
+  }
+
+  return null;
 }
 
 module.exports = { generateEmbedding };

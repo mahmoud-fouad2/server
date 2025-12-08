@@ -1,6 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const UAParser = require('ua-parser-js');
+const logger = require('../utils/logger');
 
 /**
  * 🎯 نظام إدارة جلسات الزوار - Visitor Session Management
@@ -37,7 +38,7 @@ class VisitorSessionService {
             data: { lastActivity: new Date() }
           });
           
-          console.log(`[Session] ♻️ Restored existing session: ${sessionId}`);
+          logger.debug('Session restored', { sessionId, businessId });
           return existingSession;
         }
       }
@@ -58,11 +59,11 @@ class VisitorSessionService {
         }
       });
 
-      console.log(`[Session] ✨ Created new session: ${newSession.id} | Country: ${visitorInfo.country} | Dialect: ${detectedDialect}`);
+      logger.info('New visitor session created', { sessionId: newSession.id, businessId, country: visitorInfo.country, dialect: detectedDialect });
       return newSession;
 
     } catch (error) {
-      console.error('[Session] Error in getOrCreateSession:', error);
+      logger.error('Failed to get or create session', { businessId, sessionId, error: error.message });
       throw error;
     }
   }
@@ -89,7 +90,7 @@ class VisitorSessionService {
     try {
       geoData = await this.getGeoLocation(ipAddress);
     } catch (error) {
-      console.error('[GeoIP] Error:', error.message);
+      logger.warn('GeoIP lookup failed', { ipAddress, error: error.message });
     }
 
     // 📊 Referrer & UTM Parameters
@@ -123,7 +124,7 @@ class VisitorSessionService {
     try {
       info.fingerprint = this.generateFingerprint(info);
     } catch (err) {
-      console.warn('[Fingerprint] generation failed:', err?.message || err);
+      logger.warn('Visitor fingerprint generation failed', { error: err?.message || err });
       info.fingerprint = null;
     }
 
@@ -163,7 +164,7 @@ class VisitorSessionService {
         };
       }
     } catch (error) {
-      console.error('[GeoIP] API Error:', error.message);
+      logger.error('GeoIP API error', { ipAddress, error: error.message });
     }
     
     return { country: 'Unknown', countryCode: 'XX' };
@@ -195,7 +196,7 @@ class VisitorSessionService {
     };
 
     const dialect = dialectMap[country] || 'standard';
-    console.log(`[Dialect] 🌍 ${country} → ${dialect}`);
+    logger.debug('Dialect detected from country', { country, dialect });
     return dialect;
   }
 
@@ -236,11 +237,11 @@ class VisitorSessionService {
         }
       });
 
-      console.log(`[PageVisit] 📄 ${pageData.path} | Session: ${sessionId}`);
+      logger.debug('Page visit tracked', { sessionId, path: pageData.path, title: pageData.title });
       return visit;
 
     } catch (error) {
-      console.error('[PageVisit] Error:', error);
+      logger.error('Failed to track page visit', { sessionId, error: error.message });
       throw error;
     }
   }
@@ -258,7 +259,7 @@ class VisitorSessionService {
         }
       });
     } catch (error) {
-      console.error('[PageDuration] Error:', error);
+      logger.error('Failed to update page duration', { visitId, duration, error: error.message });
       throw error;
     }
   }
@@ -289,11 +290,11 @@ class VisitorSessionService {
         }
       });
 
-      console.log(`[Session] 🛑 Ended: ${sessionId} | Duration: ${Math.floor(totalDuration)}s`);
+      logger.info('Visitor session ended', { sessionId, totalDuration: Math.floor(totalDuration) });
       return ended;
 
     } catch (error) {
-      console.error('[Session] End error:', error);
+      logger.error('Failed to end session', { sessionId, error: error.message });
       throw error;
     }
   }
@@ -325,7 +326,7 @@ class VisitorSessionService {
         take: 50
       });
     } catch (error) {
-      console.error('[ActiveSessions] Error:', error);
+      logger.error('Failed to get active sessions', { businessId, error: error.message });
       throw error;
     }
   }
@@ -362,7 +363,7 @@ class VisitorSessionService {
         topPages: this.getTopPages(sessions)
       };
     } catch (error) {
-      console.error('[Analytics] Error:', error);
+      logger.error('Failed to get visitor analytics', { businessId, error: error.message });
       throw error;
     }
   }

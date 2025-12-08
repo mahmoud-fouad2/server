@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { Moon, Sun, Menu, X, Globe } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
-import Footer from './Footer';
 
 export default function PageLayout({ children }) {
   const router = useRouter();
@@ -267,8 +266,7 @@ export default function PageLayout({ children }) {
       {/* Content */}
       <div className="pt-20">{children}</div>
 
-      {/* Footer */}
-      <Footer />
+      {/* Footer is loaded globally in ClientLayout */}
     </>
   );
 }

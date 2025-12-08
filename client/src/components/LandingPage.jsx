@@ -46,9 +46,7 @@ import {
 import { DemoChatWindow } from './DemoChatWindow';
 import DemoChat from './DemoChat';
 import FaheemAnimatedLogo from './FaheemAnimatedLogo';
-import SalesBot from './SalesBot';
 import { motion, AnimatePresence } from 'framer-motion';
-import Footer from './layout/Footer';
 import LoadingScreen from './LoadingScreen';
 import { useRouter } from 'next/navigation';
 
@@ -146,7 +144,7 @@ export const LandingPage = ({
     <div
       className={`min-h-screen font-sans overflow-x-hidden relative selection:bg-brand-500/30 transition-colors duration-500 bg-gray-50 dark:bg-cosmic-950 text-gray-900 dark:text-white`}
     >
-      <SalesBot lang={lang} />
+      {/* SalesBot is loaded globally in ClientLayout */}
 
       {/* Dynamic Background */}
       {mounted && isDark && (
@@ -210,8 +208,7 @@ export const LandingPage = ({
       {/* Limited Time Offer */}
       <LimitedTimeOffer t={t} activeCountry={activeCountry} isDark={isDark} />
 
-      {/* Footer */}
-      <Footer />
+      {/* Footer is loaded globally in ClientLayout */}
     </div>
   );
 };

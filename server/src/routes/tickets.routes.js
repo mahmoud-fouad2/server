@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { authenticateToken } = require('../middleware/auth');
 const prisma = require('../config/database');
+const logger = require('../utils/logger');
 
 // Create a new ticket
 router.post('/', authenticateToken, async (req, res) => {

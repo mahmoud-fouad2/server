@@ -51,4 +51,5 @@ if (typeof window !== 'undefined' && window.fetch) {
   };
 }
 
-export default null;
+const fetchProxy = null;
+export default fetchProxy;

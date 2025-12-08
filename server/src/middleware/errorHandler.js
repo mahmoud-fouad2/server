@@ -21,14 +21,18 @@ const errorHandler = (err, req, res, next) => {
   let error = { ...err };
   error.message = err.message;
 
+  // ✅ SANITIZE REQUEST DATA before logging
+  const sanitizedBody = sanitizeLogData(req.body);
+
   // Log error
   logger.error('API Error', {
     message: err.message,
-    stack: err.stack,
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
     url: req.originalUrl,
     method: req.method,
     ip: req.ip,
-    userAgent: req.get('User-Agent')
+    userAgent: req.get('User-Agent'),
+    body: sanitizedBody
   });
 
   // Mongoose bad ObjectId
@@ -111,6 +115,32 @@ const handleUncaughtExceptions = () => {
     }
   });
 };
+
+// ✅ HELPER FUNCTION to sanitize sensitive data from logs
+function sanitizeLogData(data) {
+  if (!data || typeof data !== 'object') return {};
+  
+  const sanitized = { ...data };
+  const sensitiveFields = [
+    'password',
+    'token',
+    'apikey',
+    'secret',
+    'authorization',
+    'creditcard',
+    'ssn',
+    'pin',
+    'jwt'
+  ];
+  
+  Object.keys(sanitized).forEach(key => {
+    if (sensitiveFields.some(field => key.toLowerCase().includes(field))) {
+      sanitized[key] = '[REDACTED]';
+    }
+  });
+  
+  return sanitized;
+}
 
 module.exports = {
   AppError,

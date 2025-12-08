@@ -1,5 +1,6 @@
 const prisma = require('../config/database');
 const vectorSearchService = require('./vector-search.service');
+const logger = require('../utils/logger');
 
 class KnowledgeBaseService {
   /**
@@ -11,12 +12,12 @@ class KnowledgeBaseService {
    */
   async processKnowledgeBase(businessId, content, title = '') {
     try {
-      console.log(`[KB Processing] Starting for business ${businessId}`);
+      logger.info('Knowledge base processing started', { businessId, contentLength: content.length });
 
       // Split content into chunks (roughly 500 words each)
       const chunks = this.splitIntoChunks(content, 500);
 
-      console.log(`[KB Processing] Created ${chunks.length} chunks`);
+      logger.debug('Content split into chunks', { businessId, chunksCount: chunks.length });
 
       // Generate embeddings for each chunk
       const chunkPromises = chunks.map(async (chunkContent, index) => {
@@ -35,7 +36,7 @@ class KnowledgeBaseService {
             }
           };
         } catch (error) {
-          console.error(`[KB Processing] Failed to embed chunk ${index}:`, error.message);
+          logger.warn('Failed to generate embedding for knowledge chunk', { businessId, chunkIndex: index, error: error.message });
           return null;
         }
       });
@@ -48,7 +49,7 @@ class KnowledgeBaseService {
         skipDuplicates: true
       });
 
-      console.log(`[KB Processing] Stored ${createdChunks.count} chunks in database`);
+      logger.info('Knowledge base chunks stored', { businessId, chunksStored: createdChunks.count });
 
       return {
         success: true,
@@ -58,7 +59,7 @@ class KnowledgeBaseService {
       };
 
     } catch (error) {
-      console.error('[KB Processing] Error:', error);
+      logger.error('Knowledge base processing failed', { businessId, error: error.message });
       return {
         success: false,
         error: error.message,
@@ -106,7 +107,7 @@ class KnowledgeBaseService {
    */
   async updateKnowledgeBaseChunks(businessId) {
     try {
-      console.log(`[KB Update] Starting for business ${businessId}`);
+      logger.info('Knowledge base update started', { businessId });
 
       // Get all knowledge base entries for the business
       const knowledgeBases = await prisma.knowledgeBase.findMany({
@@ -128,7 +129,7 @@ class KnowledgeBaseService {
         }
       }
 
-      console.log(`[KB Update] Completed for business ${businessId}, total chunks: ${totalChunks}`);
+      logger.info('Knowledge base update completed', { businessId, totalChunks, knowledgeBasesProcessed: knowledgeBases.length });
 
       return {
         success: true,
@@ -138,7 +139,7 @@ class KnowledgeBaseService {
       };
 
     } catch (error) {
-      console.error('[KB Update] Error:', error);
+      logger.error('Knowledge base update failed', { businessId, error: error.message });
       return {
         success: false,
         error: error.message,
@@ -167,7 +168,7 @@ class KnowledgeBaseService {
       };
 
     } catch (error) {
-      console.error('[KB Stats] Error:', error);
+      logger.error('Failed to get knowledge base statistics', { businessId, error: error.message });
       return {
         businessId,
         error: error.message

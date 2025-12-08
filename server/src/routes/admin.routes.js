@@ -139,21 +139,27 @@ router.get('/ai-providers', authenticateToken, isAdmin, async (req, res) => {
 router.post('/ai-providers/:id/test', authenticateToken, isAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    const aiService = require('../services/aiService');
-    
+    const aiService = require('../services/ai.service');
+
     // Simple test message
     const testMessage = "مرحباً، هل أنت تعمل؟";
     const testBusinessId = req.user.businesses?.[0]?.id;
-    
+
     if (!testBusinessId) {
       return res.status(400).json({ error: 'No business found for testing' });
     }
 
-    const result = await aiService.generateResponse(testMessage, testBusinessId, []);
+    const providerKey = id?.toUpperCase();
+    const messages = [
+      { role: 'system', content: 'You are the official Faheemly assistant. Keep replies short.' },
+      { role: 'user', content: testMessage }
+    ];
+
+    const result = await aiService.generateResponseWithProvider(providerKey, messages);
     
     res.json({
       success: true,
-      provider: result.provider,
+      provider: result.provider || providerKey,
       response: result.response,
       fromCache: result.fromCache
     });

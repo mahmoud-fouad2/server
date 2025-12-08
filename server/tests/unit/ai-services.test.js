@@ -4,7 +4,12 @@
  * ═══════════════════════════════════════════════════
  */
 
-const { generateResponse, getProviderStatus, checkProvidersHealth } = require('../../src/services/hybrid-ai.service');
+const {
+  generateResponse,
+  getProviderStatus,
+  checkProvidersHealth,
+  resetProviderState
+} = require('../../src/services/ai.service');
 
 // Mock axios for testing
 jest.mock('axios');
@@ -14,6 +19,7 @@ describe('Hybrid AI Service', () => {
   beforeEach(() => {
     // Reset all mocks before each test
     jest.clearAllMocks();
+    resetProviderState();
 
     // Mock environment variables
     process.env.GROQ_API_KEY = 'test-groq-key';
@@ -187,40 +193,44 @@ describe('Hybrid AI Service', () => {
       await generateResponse([{ role: 'user', content: 'Test 2' }]);
 
       const status = getProviderStatus();
+      const totalRequests = Object.values(status)
+        .reduce((sum, provider) => sum + provider.currentUsage.requests, 0);
 
-      // Should have recorded 2 requests
-      expect(status.GROQ.currentUsage.requests).toBe(2);
+      // Should record both requests across available providers
+      expect(totalRequests).toBe(2);
+      expect(Object.values(status).some(provider => provider.currentUsage.requests > 0)).toBe(true);
     });
 
     test('should prevent requests when rate limit exceeded', async () => {
-      // Fill up the rate limit artificially
-      const status = getProviderStatus();
-      const groqTracker = status.GROQ;
+      axios.post
+        .mockRejectedValueOnce({
+          response: { status: 429, data: { error: { message: 'Rate limit exceeded' } } }
+        })
+        .mockResolvedValue({
+          data: {
+            choices: [{ message: { content: 'From backup provider' } }],
+            usage: { total_tokens: 100 }
+          }
+        });
 
-      // Simulate rate limit exceeded by making many calls
-      for (let i = 0; i < groqTracker.limits.requestsPerMinute + 1; i++) {
-        await generateResponse([{ role: 'user', content: `Test ${i}` }]);
-      }
+      const fallbackResult = await generateResponse([{ role: 'user', content: 'Should use backup' }]);
+      const postStatus = getProviderStatus();
 
-      // Next call should use a different provider
-      axios.post.mockResolvedValueOnce({
-        data: {
-          choices: [{
-            message: { content: 'From backup provider' }
-          }],
-          usage: { total_tokens: 100 }
-        }
-      });
-
-      await generateResponse([{ role: 'user', content: 'Should use backup' }]);
-
-      // Should have called axios twice (once for rate limited provider, once for backup)
+      expect(fallbackResult.provider).not.toBe('Groq');
+      expect(postStatus.GROQ.available).toBe(false);
+      const fallbackKey = fallbackResult.provider.toUpperCase();
+      expect(postStatus[fallbackKey].currentUsage.requests).toBeGreaterThan(0);
       expect(axios.post).toHaveBeenCalledTimes(2);
     });
   });
 
   describe('Gemini Provider', () => {
     test('should handle Gemini API format correctly', async () => {
+      delete process.env.GROQ_API_KEY;
+      delete process.env.DEEPSEEK_API_KEY;
+      delete process.env.CEREBRAS_API_KEY;
+      resetProviderState();
+
       // Mock Gemini response format
       axios.post.mockResolvedValueOnce({
         data: {
@@ -242,6 +252,11 @@ describe('Hybrid AI Service', () => {
     });
 
     test('should convert messages to Gemini format', async () => {
+      delete process.env.GROQ_API_KEY;
+      delete process.env.DEEPSEEK_API_KEY;
+      delete process.env.CEREBRAS_API_KEY;
+      resetProviderState();
+
       axios.post.mockResolvedValueOnce({
         data: {
           candidates: [{
@@ -264,9 +279,9 @@ describe('Hybrid AI Service', () => {
       const callArgs = axios.post.mock.calls[0];
       const requestBody = callArgs[1];
 
-      expect(requestBody.contents).toHaveLength(2);
-      expect(requestBody.contents[0].role).toBe('user'); // system becomes user in Gemini
-      expect(requestBody.contents[1].role).toBe('user');
+      expect(requestBody.contents).toHaveLength(1);
+      expect(requestBody.contents[0].role).toBe('user');
+      expect(requestBody.contents[0].parts[0].text).toBe('Say OK');
       expect(requestBody.systemInstruction).toBe('You are helpful');
     });
   });

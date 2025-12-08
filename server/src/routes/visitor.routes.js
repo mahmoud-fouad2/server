@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const visitorService = require('../services/visitor.service');
 const { authenticateToken } = require('../middleware/auth');
+const logger = require('../utils/logger');
 
 /**
  * Visitor Routes - Track sessions, page visits, and user analytics
@@ -35,7 +36,7 @@ router.post('/session', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Session error:', error);
+    logger.error('Visitor session endpoint error', { error: error.message });
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
@@ -59,7 +60,7 @@ router.post('/page-visit', async (req, res) => {
 
     res.json({ success: true, visitId: visit.id });
   } catch (error) {
-    console.error('Page visit error:', error);
+    logger.error('Page visit endpoint error', { error: error.message });
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
@@ -82,7 +83,7 @@ router.put('/page-visit/:id', async (req, res) => {
 
     res.json({ success: true, visit });
   } catch (error) {
-    console.error('Update page visit error:', error);
+    logger.error('Update page visit endpoint error', { visitId: req.params.id, error: error.message });
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
@@ -103,7 +104,7 @@ router.post('/end-session', async (req, res) => {
 
     res.json({ success: true, session });
   } catch (error) {
-    console.error('End session error:', error);
+    logger.error('End session endpoint error', { error: error.message });
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
@@ -126,7 +127,7 @@ router.get('/active-sessions', authenticateToken, async (req, res) => {
 
     res.json({ success: true, sessions });
   } catch (error) {
-    console.error('Active sessions error:', error);
+    logger.error('Active sessions endpoint error', { error: error.message });
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
@@ -153,7 +154,7 @@ router.get('/analytics', authenticateToken, async (req, res) => {
 
     res.json({ success: true, analytics });
   } catch (error) {
-    console.error('Analytics error:', error);
+    logger.error('Visitor analytics endpoint error', { error: error.message });
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
@@ -181,7 +182,7 @@ router.post('/track-user', authenticateToken, async (req, res) => {
 
     res.json({ success: true, activity });
   } catch (error) {
-    console.error('Track user error:', error);
+    logger.error('Track user activity endpoint error', { error: error.message });
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
@@ -208,7 +209,7 @@ router.get('/user-activities', authenticateToken, async (req, res) => {
 
     res.json({ success: true, activities });
   } catch (error) {
-    console.error('User activities error:', error);
+    logger.error('User activities endpoint error', { error: error.message });
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });

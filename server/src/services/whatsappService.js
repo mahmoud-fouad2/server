@@ -18,9 +18,15 @@ async function sendMessage(to, text) {
         text: { body: text },
       },
     });
-    console.log(`WhatsApp response sent to ${to}`);
+    const logger = require('../utils/logger');
+    logger.info('WhatsApp message sent successfully', { to });
   } catch (error) {
-    console.error('Error sending WhatsApp message:', error.response ? error.response.data : error.message);
+    const logger = require('../utils/logger');
+    logger.error('WhatsApp message send failed', { 
+      error: error.message,
+      response: error.response?.data,
+      statusCode: error.response?.status
+    });
   }
 }
 

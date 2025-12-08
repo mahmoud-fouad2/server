@@ -3,6 +3,7 @@ const router = express.Router();
 const twilio = require('twilio');
 const prisma = require('../config/database');
 const groqService = require('../services/groq.service');
+const logger = require('../utils/logger');
 
 // Helper to get Twilio Client dynamically
 const getTwilioClient = async () => {

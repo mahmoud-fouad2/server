@@ -1,6 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const UAParser = require('ua-parser-js');
+const logger = require('../utils/logger');
 
 class VisitorService {
   /**
@@ -61,7 +62,7 @@ class VisitorService {
 
       return session;
     } catch (error) {
-      console.error('Error in getOrCreateSession:', error);
+      logger.error('Failed to get or create visitor session', { businessId, fingerprint, error: error.message });
       throw error;
     }
   }
@@ -86,7 +87,7 @@ class VisitorService {
     try {
       geoData = await this.getGeoLocation(ipAddress);
     } catch (error) {
-      console.error('Geo location error:', error);
+      logger.warn('Geo location lookup failed', { ipAddress, error: error.message });
     }
 
     // Referrer & UTM
@@ -133,7 +134,7 @@ class VisitorService {
         };
       }
     } catch (error) {
-      console.error('GeoLocation API error:', error);
+      logger.error('GeoLocation API request failed', { ip, error: error.message });
     }
     return {};
   }
@@ -176,7 +177,7 @@ class VisitorService {
 
       return visit;
     } catch (error) {
-      console.error('Error tracking page visit:', error);
+      logger.error('Failed to track page visit', { sessionId, error: error.message });
       throw error;
     }
   }
@@ -194,7 +195,7 @@ class VisitorService {
         }
       });
     } catch (error) {
-      console.error('Error updating page visit:', error);
+      logger.error('Failed to update page visit', { visitId, error: error.message });
       throw error;
     }
   }
@@ -225,7 +226,7 @@ class VisitorService {
         }
       });
     } catch (error) {
-      console.error('Error ending session:', error);
+      logger.error('Failed to end visitor session', { sessionId, error: error.message });
       throw error;
     }
   }
@@ -255,7 +256,7 @@ class VisitorService {
         orderBy: { lastActivity: 'desc' }
       });
     } catch (error) {
-      console.error('Error getting active sessions:', error);
+      logger.error('Failed to get active sessions', { businessId, error: error.message });
       throw error;
     }
   }
@@ -305,7 +306,7 @@ class VisitorService {
 
       return analytics;
     } catch (error) {
-      console.error('Error getting analytics:', error);
+      logger.error('Failed to get session analytics', { businessId, error: error.message });
       throw error;
     }
   }
@@ -374,7 +375,7 @@ class VisitorService {
         }
       });
     } catch (error) {
-      console.error('Error tracking user activity:', error);
+      logger.error('Failed to track user activity', { businessId, userId, action, error: error.message });
       throw error;
     }
   }
@@ -396,7 +397,7 @@ class VisitorService {
         take: 100
       });
     } catch (error) {
-      console.error('Error getting user activities:', error);
+      logger.error('Failed to get user activities', { businessId, error: error.message });
       throw error;
     }
   }

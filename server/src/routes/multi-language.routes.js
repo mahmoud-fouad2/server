@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 // const { authenticateToken } = require('../middleware/auth');
 const MultiLanguageService = require('../services/multi-language.service');
+const logger = require('../utils/logger');
 
 /**
  * @route GET /api/multi-language/dialects
@@ -16,7 +17,7 @@ router.get('/dialects', async (req, res) => {
       data: dialects
     });
   } catch (error) {
-    console.error('[MultiLanguage Routes] Get dialects error:', error);
+    logger.error('Multi-language dialects endpoint error', { error: error.message });
     res.status(500).json({
       success: false,
       message: 'Failed to get supported dialects',
@@ -47,7 +48,7 @@ router.post('/detect', async (req, res) => {
       data: detection
     });
   } catch (error) {
-    console.error('[MultiLanguage Routes] Detect language error:', error);
+    logger.error('Multi-language detect endpoint error', { error: error.message });
     res.status(500).json({
       success: false,
       message: 'Failed to detect language',
@@ -83,7 +84,7 @@ router.post('/translate', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('[MultiLanguage Routes] Translate error:', error);
+    logger.error('Multi-language translate endpoint error', { fromDialect, toDialect, error: error.message });
     res.status(500).json({
       success: false,
       message: 'Failed to translate text',
@@ -139,7 +140,7 @@ router.post('/process', async (req, res) => {
       data: processed
     });
   } catch (error) {
-    console.error('[MultiLanguage Routes] Process message error:', error);
+    logger.error('Multi-language process endpoint error', { error: error.message });
     res.status(500).json({
       success: false,
       message: 'Failed to process message',
@@ -203,7 +204,7 @@ router.post('/generate-response', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('[MultiLanguage Routes] Generate response error:', error);
+    logger.error('Multi-language generate endpoint error', { targetDialect, error: error.message });
     res.status(500).json({
       success: false,
       message: 'Failed to generate dialect response',

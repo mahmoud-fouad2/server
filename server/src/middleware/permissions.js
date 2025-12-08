@@ -110,7 +110,8 @@ router.get('/permissions/:businessId/:userId', authenticateToken, async (req, re
     });
 
   } catch (error) {
-    console.error('Get permissions error:', error);
+    const logger = require('../utils/logger');
+    logger.error('Get permissions error', { error: error.message, stack: error.stack });
     res.status(500).json({ error: 'فشل جلب الصلاحيات' });
   }
 });
@@ -164,7 +165,8 @@ router.put('/role/:businessId/:userId', authenticateToken, async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Update role error:', error);
+    const logger = require('../utils/logger');
+    logger.error('Update role error', { error: error.message, stack: error.stack });
     res.status(500).json({ error: 'فشل تحديث الدور' });
   }
 });
@@ -215,7 +217,8 @@ router.get('/activity-logs/:businessId', authenticateToken, async (req, res) => 
     });
 
   } catch (error) {
-    console.error('Activity logs error:', error);
+    const logger = require('../utils/logger');
+    logger.error('Activity logs error', { error: error.message, stack: error.stack });
     res.status(500).json({ error: 'فشل جلب سجل النشاطات' });
   }
 });
@@ -257,7 +260,8 @@ function hasPermission(permission) {
 
       next();
     } catch (error) {
-      console.error('Permission check error:', error);
+      const logger = require('../utils/logger');
+      logger.error('Permission check error', { error: error.message, stack: error.stack });
       res.status(500).json({ error: 'فشل التحقق من الصلاحيات' });
     }
   };
@@ -266,8 +270,8 @@ function hasPermission(permission) {
 // Activity logging helper
 async function logActivity({ businessId, userId, action, targetUserId, details }) {
   try {
-    // Store in a simple log format (you can create ActivityLog model later)
-    console.log('Activity Log:', {
+    const logger = require('../utils/logger');
+    logger.info('Team activity', {
       businessId,
       userId,
       action,
@@ -276,9 +280,10 @@ async function logActivity({ businessId, userId, action, targetUserId, details }
       timestamp: new Date()
     });
     
-    // TODO: Create ActivityLog table in schema and save to DB
+    // Future: Create ActivityLog table in schema for persistent storage
   } catch (error) {
-    console.error('Activity log error:', error);
+    const logger = require('../utils/logger');
+    logger.error('Activity log error', { error: error.message });
   }
 }
 

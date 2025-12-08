@@ -1,6 +1,6 @@
 const prisma = require('../config/database');
 const logger = require('../utils/logger');
-const aiService = require('../services/aiService');
+const aiService = require('../services/ai.service');
 
 /**
  * Initialize Socket.IO handlers
@@ -125,12 +125,20 @@ function initializeSocket(io) {
           take: 10
         });
 
-        // Generate AI Response using aiService
-        const aiResult = await aiService.generateResponse(
-          content, 
-          businessId, 
-          history.reverse()
-        );
+        // Format conversation for the hybrid AI service
+        const formattedHistory = history.reverse().map(msg => ({
+          role: msg.role === 'USER' ? 'user' : 'assistant',
+          content: msg.content
+        }));
+
+        const systemPrompt = `You are the official assistant for ${business.name}. Keep answers concise and helpful.`;
+        const messages = [
+          { role: 'system', content: systemPrompt },
+          ...formattedHistory,
+          { role: 'user', content }
+        ];
+
+        const aiResult = await aiService.generateResponse(messages);
 
         // Save AI Message
         await prisma.message.create({

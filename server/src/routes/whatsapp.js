@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const prisma = require('../config/database');
-const aiService = require('../services/aiService');
+const aiService = require('../services/ai.service');
 const whatsappService = require('../services/whatsappService');
 
 // Fahimo Insight: WhatsApp Integration (Meta Cloud API)
@@ -21,7 +21,8 @@ router.get('/webhook', (req, res) => {
 
   if (mode && token) {
     if (mode === 'subscribe' && token === verifyToken) {
-      console.log('WEBHOOK_VERIFIED');
+      const logger = require('../utils/logger');
+      logger.info('WhatsApp webhook verified successfully');
       res.status(200).send(challenge);
     } else {
       res.sendStatus(403);
@@ -45,7 +46,8 @@ router.post('/webhook', async (req, res) => {
         const from = body.entry[0].changes[0].value.messages[0].from;
         const msgBody = body.entry[0].changes[0].value.messages[0].text.body;
 
-        console.log(`WhatsApp Message from ${from}: ${msgBody}`);
+        const logger = require('../utils/logger');
+        logger.info('WhatsApp message received', { from, messageLength: msgBody.length });
 
         // Find the bot associated with this WhatsApp Phone Number ID
         const whatsappAccount = await prisma.whatsAppAccount.findFirst({
@@ -54,7 +56,8 @@ router.post('/webhook', async (req, res) => {
         });
 
         if (!whatsappAccount || !whatsappAccount.business || whatsappAccount.business.bots.length === 0) {
-            console.error(`No bot found for phoneNumberId: ${phoneNumberId}`);
+            const logger = require('../utils/logger');
+            logger.error('WhatsApp bot not found', { phoneNumberId });
             return res.sendStatus(200); // Return 200 to stop Meta from retrying
         }
 
@@ -63,17 +66,24 @@ router.post('/webhook', async (req, res) => {
         const botId = bot.id;
 
         // Generate AI Response
-        const aiResponse = await aiService.generateResponse(botId, msgBody);
+        const systemPrompt = `You are the WhatsApp assistant for ${whatsappAccount.business?.name || 'our business'}. Keep answers brief and helpful.`;
+        const messages = [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: msgBody }
+        ];
+
+        const aiResponse = await aiService.generateResponse(messages);
 
         // Send Response back to WhatsApp
-        await whatsappService.sendMessage(from, aiResponse);
+        await whatsappService.sendMessage(from, aiResponse.response);
       }
       res.sendStatus(200);
     } else {
       res.sendStatus(404);
     }
   } catch (error) {
-    console.error(error);
+    const logger = require('../utils/logger');
+    logger.error('WhatsApp webhook error', { error: error.message, stack: error.stack });
     res.sendStatus(500);
   }
 });

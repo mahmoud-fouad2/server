@@ -1,0 +1,231 @@
+/**
+ * Faheemly™ - Environment Variables Validator
+ * Copyright © 2024-2025 Faheemly.com - All Rights Reserved
+ * 
+ * Validates required environment variables on server startup
+ * Prevents production deployment with missing or weak configurations
+ * 
+ * @module config/env.validator
+ */
+
+const logger = require('../utils/logger');
+
+/**
+ * Required environment variables for production
+ */
+const REQUIRED_ENV_VARS = {
+  // Database
+  DATABASE_URL: {
+    required: true,
+    description: 'PostgreSQL database connection string',
+    validate: (value) => value.startsWith('postgresql://') || value.startsWith('postgres://')
+  },
+  
+  // Security
+  JWT_SECRET: {
+    required: true,
+    description: 'Secret key for JWT token signing',
+    validate: (value) => value.length >= 32,
+    errorMessage: 'JWT_SECRET must be at least 32 characters for security'
+  },
+  
+  // Redis Cache
+  REDIS_URL: {
+    required: true,
+    description: 'Redis connection URL for caching',
+    validate: (value) => value.includes('redis://')
+  },
+  
+  // AI Services (at least one required)
+  GROQ_API_KEY: {
+    required: false,
+    description: 'Groq API key for AI responses'
+  },
+  DEEPSEEK_API_KEY: {
+    required: false,
+    description: 'DeepSeek API key for AI responses'
+  },
+  CEREBRAS_API_KEY: {
+    required: false,
+    description: 'Cerebras API key for AI responses'
+  },
+  GEMINI_API_KEY: {
+    required: false,
+    description: 'Google Gemini API key for AI responses'
+  },
+  
+  // Client
+  CLIENT_URL: {
+    required: true,
+    description: 'Frontend client URL for CORS',
+    validate: (value) => value.startsWith('http://') || value.startsWith('https://')
+  },
+  
+  // Server
+  PORT: {
+    required: false,
+    description: 'Server port (default: 3002)',
+    validate: (value) => !isNaN(parseInt(value))
+  },
+  NODE_ENV: {
+    required: false,
+    description: 'Node environment (development/production/test)',
+    validate: (value) => ['development', 'production', 'test'].includes(value)
+  }
+};
+
+/**
+ * Optional but recommended environment variables
+ */
+const RECOMMENDED_ENV_VARS = [
+  'CORS_ORIGINS',
+  'SENTRY_DSN',
+  'SMTP_HOST',
+  'SMTP_USER',
+  'SMTP_PASS',
+  'WHATSAPP_TOKEN',
+  'WHATSAPP_PHONE_ID',
+  'TELEGRAM_BOT_TOKEN'
+];
+
+/**
+ * Dangerous configurations that should never be in production
+ */
+const FORBIDDEN_IN_PRODUCTION = {
+  DEV_NO_AUTH: {
+    forbiddenValue: 'true',
+    errorMessage: 'DEV_NO_AUTH=true is FORBIDDEN in production - removes authentication!'
+  },
+  JWT_SECRET: {
+    forbiddenValues: ['secret', 'test', 'dev', 'password', '123456'],
+    errorMessage: 'JWT_SECRET is too weak - use a strong random string'
+  }
+};
+
+/**
+ * Validate all environment variables
+ * @throws {Error} If critical validation fails
+ */
+function validateEnv() {
+  const errors = [];
+  const warnings = [];
+  const isProduction = process.env.NODE_ENV === 'production';
+  const isTest = process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID !== undefined;
+
+  // Skip validation in test environment
+  if (isTest) {
+    logger.info('⚠️  Test environment detected - skipping strict env validation');
+    return { success: true, warnings: [], errors: [] };
+  }
+
+  logger.info('🔍 Validating environment variables...');
+
+  // Check required variables
+  for (const [key, config] of Object.entries(REQUIRED_ENV_VARS)) {
+    const value = process.env[key];
+
+    if (!value) {
+      if (config.required) {
+        errors.push(`❌ Missing required: ${key} - ${config.description}`);
+      } else {
+        warnings.push(`⚠️  Optional missing: ${key} - ${config.description}`);
+      }
+      continue;
+    }
+
+    // Validate format if validator provided
+    if (config.validate && !config.validate(value)) {
+      const message = config.errorMessage || `Invalid format for ${key}`;
+      errors.push(`❌ ${message}`);
+    }
+  }
+
+  // Check for at least one AI provider
+  const hasAnyAIProvider = ['GROQ_API_KEY', 'DEEPSEEK_API_KEY', 'CEREBRAS_API_KEY', 'GEMINI_API_KEY']
+    .some(key => process.env[key]);
+  
+  if (!hasAnyAIProvider) {
+    errors.push('❌ At least one AI provider API key required (GROQ/DEEPSEEK/CEREBRAS/GEMINI)');
+  }
+
+  // Check production-specific restrictions
+  if (isProduction) {
+    for (const [key, config] of Object.entries(FORBIDDEN_IN_PRODUCTION)) {
+      const value = process.env[key];
+      
+      if (config.forbiddenValue && value === config.forbiddenValue) {
+        errors.push(`❌ PRODUCTION ERROR: ${config.errorMessage}`);
+      }
+      
+      if (config.forbiddenValues && config.forbiddenValues.some(v => value?.toLowerCase().includes(v))) {
+        errors.push(`❌ PRODUCTION ERROR: ${config.errorMessage}`);
+      }
+    }
+
+    // Ensure HTTPS in production
+    if (process.env.CLIENT_URL && !process.env.CLIENT_URL.startsWith('https://')) {
+      warnings.push('⚠️  CLIENT_URL should use HTTPS in production');
+    }
+  }
+
+  // Check recommended variables
+  for (const key of RECOMMENDED_ENV_VARS) {
+    if (!process.env[key]) {
+      warnings.push(`⚠️  Recommended but missing: ${key}`);
+    }
+  }
+
+  // Log results
+  if (errors.length > 0) {
+    logger.error('❌ Environment validation FAILED:');
+    errors.forEach(err => logger.error(err));
+    
+    if (isProduction) {
+      logger.error('🚨 Cannot start server in production with invalid configuration');
+      process.exit(1);
+    } else {
+      logger.error('⚠️  Server will start but may have issues');
+    }
+  }
+
+  if (warnings.length > 0) {
+    logger.warn('⚠️  Environment warnings:');
+    warnings.forEach(warn => logger.warn(warn));
+  }
+
+  if (errors.length === 0 && warnings.length === 0) {
+    logger.info('✅ Environment validation passed - all required variables set');
+  }
+
+  return {
+    success: errors.length === 0,
+    errors,
+    warnings
+  };
+}
+
+/**
+ * Get environment info summary (safe for logging - no secrets)
+ */
+function getEnvSummary() {
+  return {
+    nodeEnv: process.env.NODE_ENV || 'development',
+    port: process.env.PORT || '3002',
+    hasDatabase: !!process.env.DATABASE_URL,
+    hasRedis: !!process.env.REDIS_URL,
+    hasJWT: !!process.env.JWT_SECRET && process.env.JWT_SECRET.length >= 32,
+    aiProviders: {
+      groq: !!process.env.GROQ_API_KEY,
+      deepseek: !!process.env.DEEPSEEK_API_KEY,
+      cerebras: !!process.env.CEREBRAS_API_KEY,
+      gemini: !!process.env.GEMINI_API_KEY
+    },
+    hasClientURL: !!process.env.CLIENT_URL,
+    hasCORSOrigins: !!process.env.CORS_ORIGINS
+  };
+}
+
+module.exports = {
+  validateEnv,
+  getEnvSummary
+};

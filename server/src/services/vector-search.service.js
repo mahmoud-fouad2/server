@@ -1,5 +1,12 @@
 const prisma = require('../config/database');
 const embeddingService = require('./embedding.service');
+const logger = require('../utils/logger');
+
+const STOP_WORDS = new Set([
+  'the', 'and', 'for', 'are', 'with', 'from', 'this', 'that', 'have', 'has',
+  'you', 'your', 'about', 'into', 'onto', 'over', 'under', 'than', 'then',
+  'them', 'was', 'were', 'will', 'shall', 'would', 'could'
+]);
 
 /**
  * Vector Search Service
@@ -21,18 +28,23 @@ class VectorSearchService {
    * @returns {Promise<Array>} - Array of relevant knowledge chunks
    */
   async searchKnowledge(query, businessId, limit = 5) {
+    const originalQuery = query;
     try {
       // Step 1: Generate embedding for the query
       const queryEmbedding = await embeddingService.generateEmbedding(query);
       
       if (!queryEmbedding || !Array.isArray(queryEmbedding) || queryEmbedding.length === 0 || !queryEmbedding.every(n => typeof n === 'number' && Number.isFinite(n))) {
-        console.warn('[VectorSearch] Failed to generate query embedding, falling back to keyword search');
+        logger.warn('Vector search: failed to generate query embedding, using keyword fallback', { businessId });
         return await this.fallbackKeywordSearch(query, businessId, limit);
       }
 
       // Step 2: Perform vector similarity search using raw SQL
       // Note: Prisma doesn't support vector operations natively yet
-      const results = await prisma.$queryRaw`
+      const limitValue = Math.max(1, Math.min(Number(limit) || 5, 50));
+      const embeddingVector = queryEmbedding.map(num => Number.isFinite(num) ? Number(num) : 0);
+      const embeddingLiteral = `'[${embeddingVector.join(',')}]'::vector`;
+      const sanitizedBusinessId = String(businessId || '').replace(/'/g, "''");
+      const sql = `
         SELECT 
           id,
           "knowledgeBaseId",
@@ -40,31 +52,41 @@ class VectorSearchService {
           content,
           metadata,
           "createdAt",
-          1 - (embedding <=> ${queryEmbedding}::vector) as similarity
+          1 - (embedding <=> ${embeddingLiteral}) as similarity
         FROM "KnowledgeChunk"
-        WHERE "businessId" = ${businessId}
+        WHERE "businessId" = '${sanitizedBusinessId}'
           AND embedding IS NOT NULL
-        ORDER BY embedding <=> ${queryEmbedding}::vector
-        LIMIT ${limit}
+        ORDER BY embedding <=> ${embeddingLiteral}
+        LIMIT ${limitValue}
       `;
+      const rawExecutor = prisma.$queryRaw
+        ? prisma.$queryRaw.bind(prisma)
+        : prisma.$queryRawUnsafe
+          ? prisma.$queryRawUnsafe.bind(prisma)
+          : null;
+
+      if (!rawExecutor) {
+        throw new Error('Prisma client does not expose a raw query executor');
+      }
+      const results = await rawExecutor(sql);
 
       // Step 3: Filter results by similarity threshold (0.7 = 70% similar)
       const filteredResults = results.filter(r => r.similarity >= 0.7);
 
       if (filteredResults.length === 0) {
-        console.log('[VectorSearch] No high-similarity results found, trying keyword search');
-        return await this.fallbackKeywordSearch(query, businessId, limit);
+        logger.debug('Vector search: no high-similarity results, using keyword fallback', { businessId });
+        return await this.fallbackKeywordSearch(originalQuery, businessId, limit);
       }
 
-      console.log(`[VectorSearch] Found ${filteredResults.length} relevant chunks with similarity > 0.7`);
-      return filteredResults;
+      logger.debug('Vector search completed', { businessId, resultsCount: filteredResults.length, threshold: 0.7 });
+      return filteredResults.slice(0, limitValue);
 
     } catch (error) {
       const msg = error && (error.message || error.toString());
       // If pgvector is not installed or query fails, fall back to keyword search
       if ((msg && msg.includes('vector')) || error?.code === '42883') {
-        console.warn('[VectorSearch] pgvector not available, using keyword search');
-        return await this.fallbackKeywordSearch(query, businessId, limit);
+        logger.warn('Vector search: pgvector extension not available, using keyword fallback', { businessId, error: msg });
+        return await this.fallbackKeywordSearch(originalQuery, businessId, limit);
       }
 
       console.error('[VectorSearch] Error:', msg || error);
@@ -84,7 +106,11 @@ class VectorSearchService {
   async fallbackKeywordSearch(query, businessId, limit = 5) {
     try {
       // Simple keyword matching with case-insensitive search
-      const keywords = query.toLowerCase().split(' ').filter(w => w.length > 2);
+      const keywords = query
+        .toLowerCase()
+        .split(/\s+/)
+        .map(w => w.trim())
+        .filter(w => w.length > 2 && !STOP_WORDS.has(w));
       
       const results = await prisma.knowledgeChunk.findMany({
         where: {
@@ -100,11 +126,11 @@ class VectorSearchService {
         take: limit
       });
 
-      console.log(`[KeywordSearch] Found ${results.length} results for query`);
+      logger.debug('Keyword search completed', { businessId, resultsCount: results.length });
       return results;
 
     } catch (error) {
-      console.error('[KeywordSearch] Error:', error);
+      logger.error('Keyword search failed', { businessId, error: error.message });
       return []; // Return empty array on error
     }
   }
@@ -122,14 +148,23 @@ class VectorSearchService {
     }
 
     try {
-      const result = await prisma.$queryRaw`
+      const rawExecutor = prisma.$queryRaw
+        ? prisma.$queryRaw.bind(prisma)
+        : prisma.$queryRawUnsafe
+          ? prisma.$queryRawUnsafe.bind(prisma)
+          : null;
+
+      if (!rawExecutor) {
+        throw new Error('Prisma client does not expose a raw query executor');
+      }
+      const result = await rawExecutor(`
         SELECT EXISTS (
           SELECT 1 FROM pg_extension WHERE extname = 'vector'
         ) as available
-      `;
+      `);
       return result[0]?.available || false;
     } catch (error) {
-      console.error('[VectorSearch] Error checking pgvector availability:', error.message || error);
+      logger.error('Failed to check pgvector availability', { error: error.message || error });
       return false;
     }
   }
@@ -173,7 +208,7 @@ class VectorSearchService {
         isPgVectorAvailable: await this.isPgVectorAvailable()
       };
     } catch (error) {
-      console.error('[VectorSearch] Error getting stats:', error);
+      logger.error('Failed to get vector search statistics', { businessId, error: error.message });
       return null;
     }
   }

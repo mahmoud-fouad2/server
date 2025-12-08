@@ -95,19 +95,18 @@ export const apiCall = async (endpoint, options = {}) => {
 
       // If this is the last attempt, throw the error
       if (attempt === retries) {
-        console.error(
-          `API Error (${endpoint}) after ${retries + 1} attempts:`,
-          error
-        );
+        // Log API error for debugging (browser console only)
+        if (process.env.NODE_ENV === 'development') {
+          console.error(`API Error (${endpoint}) after ${retries + 1} attempts:`, error);
+        }
         throw error;
       }
 
       // Calculate exponential backoff: retryDelay * 2^attempt
       const delay = retryDelay * Math.pow(2, attempt);
-      console.warn(
-        `API call failed (attempt ${attempt + 1}/${retries + 1}), retrying in ${delay}ms...`,
-        error
-      );
+      if (process.env.NODE_ENV === 'development') {
+        console.warn(`API retry (${attempt + 1}/${retries + 1}) in ${delay}ms`, { endpoint, error: error.message });
+      }
 
       // Wait before retrying
       await new Promise(resolve => setTimeout(resolve, delay));

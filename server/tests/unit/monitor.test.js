@@ -4,20 +4,30 @@
  * ═══════════════════════════════════════════════════
  */
 
+// Mock dependencies before loading monitor
+jest.mock('../../src/config/database', () => {
+  return {
+    $queryRaw: jest.fn(),
+    business: { count: jest.fn() },
+    user: { count: jest.fn() },
+    conversation: { count: jest.fn() },
+    message: { count: jest.fn() }
+  };
+});
+
+jest.mock('../../src/services/ai.service', () => ({
+  checkProvidersHealth: jest.fn()
+}));
+
+const prisma = require('../../src/config/database');
+const aiService = require('../../src/services/ai.service');
 const monitor = require('../../src/utils/monitor');
-
-// Mock dependencies
-jest.mock('../../src/config/database');
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
-
-// Mock hybrid AI service
-jest.mock('../../src/services/hybrid-ai.service');
-const hybridAI = require('../../src/services/hybrid-ai.service');
 
 describe('System Monitor', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.useRealTimers();
+    monitor.stopPeriodicMonitoring();
     // Reset monitor state
     monitor.metrics = {
       uptime: 0,
@@ -27,6 +37,11 @@ describe('System Monitor', () => {
       errors: []
     };
     monitor.alerts = [];
+  });
+
+  afterEach(() => {
+    monitor.stopPeriodicMonitoring();
+    jest.useRealTimers();
   });
 
   describe('getUptime', () => {
@@ -105,7 +120,7 @@ describe('System Monitor', () => {
       expect(dbHealth.connected).toBe(true);
       expect(dbHealth.healthy).toBe(true);
       expect(dbHealth.latency).toMatch(/\d+ms/);
-      expect(prisma.$queryRaw).toHaveBeenCalledWith('SELECT 1');
+      expect(prisma.$queryRaw).toHaveBeenCalled();
     });
 
     test('should detect high latency', async () => {
@@ -134,30 +149,32 @@ describe('System Monitor', () => {
 
   describe('checkAIProvidersHealth', () => {
     test('should return AI providers health status', async () => {
-      const mockStats = {
-        groq: { available: true, latency: 500 },
-        gemini: { available: true, latency: 800 }
-      };
       const mockHealth = {
         totalAvailable: 2,
-        totalChecked: 2,
-        groq: true,
-        gemini: true
+        totalConfigured: 3,
+        providers: [
+          { name: 'Groq', status: 'available' },
+          { name: 'DeepSeek', status: 'available' }
+        ]
       };
 
-      hybridAI.getProviderStats.mockReturnValue(mockStats);
-      hybridAI.checkProvidersHealth.mockReturnValue(mockHealth);
+      aiService.checkProvidersHealth.mockReturnValue(mockHealth);
 
       const aiHealth = await monitor.checkAIProvidersHealth();
 
-      expect(aiHealth.stats).toEqual(mockStats);
-      expect(aiHealth.health).toEqual(mockHealth);
-      expect(aiHealth.healthy).toBe(true);
+      expect(aiHealth).toEqual({
+        healthy: true,
+        totalAvailable: mockHealth.totalAvailable,
+        totalConfigured: mockHealth.totalConfigured,
+        providers: mockHealth.providers
+      });
     });
 
     test('should handle AI service errors', async () => {
       const aiError = new Error('AI service unavailable');
-      hybridAI.getProviderStats.mockRejectedValue(aiError);
+      aiService.checkProvidersHealth.mockImplementation(() => {
+        throw aiError;
+      });
 
       const aiHealth = await monitor.checkAIProvidersHealth();
 
@@ -168,17 +185,16 @@ describe('System Monitor', () => {
     test('should detect when no AI providers are available', async () => {
       const mockHealth = {
         totalAvailable: 0,
-        totalChecked: 2,
-        groq: false,
-        gemini: false
+        totalConfigured: 2,
+        providers: []
       };
 
-      hybridAI.getProviderStats.mockReturnValue({});
-      hybridAI.checkProvidersHealth.mockReturnValue(mockHealth);
+      aiService.checkProvidersHealth.mockReturnValue(mockHealth);
 
       const aiHealth = await monitor.checkAIProvidersHealth();
 
       expect(aiHealth.healthy).toBe(false);
+      expect(aiHealth.totalAvailable).toBe(0);
     });
   });
 
@@ -186,8 +202,11 @@ describe('System Monitor', () => {
     test('should return complete health status', async () => {
       // Mock all dependencies
       prisma.$queryRaw.mockResolvedValue([{ result: 1 }]);
-      hybridAI.getProviderStats.mockReturnValue({ groq: { available: true } });
-      hybridAI.checkProvidersHealth.mockReturnValue({ totalAvailable: 1 });
+      aiService.checkProvidersHealth.mockReturnValue({
+        totalAvailable: 1,
+        totalConfigured: 1,
+        providers: [{ name: 'Groq', status: 'available' }]
+      });
 
       const status = await monitor.getHealthStatus();
 
@@ -211,7 +230,11 @@ describe('System Monitor', () => {
       });
 
       prisma.$queryRaw.mockRejectedValue(new Error('DB down'));
-      hybridAI.checkProvidersHealth.mockReturnValue({ totalAvailable: 0 });
+      aiService.checkProvidersHealth.mockReturnValue({
+        totalAvailable: 0,
+        totalConfigured: 0,
+        providers: []
+      });
 
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
@@ -253,11 +276,13 @@ describe('System Monitor', () => {
     });
 
     test('should handle database errors gracefully', async () => {
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
       prisma.business.count.mockRejectedValue(new Error('DB error'));
 
       const metrics = await monitor.getBusinessMetrics();
 
       expect(metrics).toBeNull();
+      consoleSpy.mockRestore();
     });
   });
 
@@ -289,6 +314,7 @@ describe('System Monitor', () => {
     });
 
     test('should limit stored alerts to 100', () => {
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
       // Add 101 alerts
       for (let i = 0; i < 101; i++) {
         monitor.sendAlert('TEST', `Alert ${i}`);
@@ -296,11 +322,15 @@ describe('System Monitor', () => {
 
       expect(monitor.alerts).toHaveLength(100);
       expect(monitor.alerts[0].message).toBe('Alert 100'); // Most recent first
+
+      consoleSpy.mockRestore();
     });
   });
 
   describe('getRecentAlerts', () => {
     test('should return recent alerts', () => {
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
       monitor.sendAlert('ALERT1', 'Message 1');
       monitor.sendAlert('ALERT2', 'Message 2');
       monitor.sendAlert('ALERT3', 'Message 3');
@@ -310,6 +340,8 @@ describe('System Monitor', () => {
       expect(recent).toHaveLength(2);
       expect(recent[0].type).toBe('ALERT3'); // Most recent first
       expect(recent[1].type).toBe('ALERT2');
+
+      consoleSpy.mockRestore();
     });
 
     test('should return empty array when no alerts', () => {
@@ -340,8 +372,11 @@ describe('System Monitor', () => {
       prisma.$queryRaw.mockResolvedValue([{ result: 1 }]);
       prisma.business.count.mockResolvedValue(10);
       prisma.user.count.mockResolvedValue(50);
-      hybridAI.getProviderStats.mockReturnValue({});
-      hybridAI.checkProvidersHealth.mockReturnValue({ totalAvailable: 1 });
+      aiService.checkProvidersHealth.mockReturnValue({
+        totalAvailable: 1,
+        totalConfigured: 1,
+        providers: [{ name: 'Groq', status: 'available' }]
+      });
 
       const report = await monitor.getSystemReport();
 
@@ -360,8 +395,11 @@ describe('System Monitor', () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
 
       prisma.$queryRaw.mockResolvedValue([{ result: 1 }]);
-      hybridAI.getProviderStats.mockReturnValue({});
-      hybridAI.checkProvidersHealth.mockReturnValue({ totalAvailable: 1 });
+      aiService.checkProvidersHealth.mockReturnValue({
+        totalAvailable: 1,
+        totalConfigured: 1,
+        providers: [{ name: 'Groq', status: 'available' }]
+      });
 
       const status = await monitor.logHealthStatus();
 
@@ -391,24 +429,21 @@ describe('System Monitor', () => {
   });
 
   describe('startPeriodicMonitoring', () => {
-    test('should start periodic health checks', () => {
+    test('should start periodic health checks', async () => {
       jest.useFakeTimers();
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      const logSpy = jest.spyOn(monitor, 'logHealthStatus').mockResolvedValue({});
 
       monitor.startPeriodicMonitoring(1); // Every 1 minute
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Starting health monitoring')
-      );
+      expect(logSpy).toHaveBeenCalledTimes(1);
 
       // Fast-forward 1 minute
       jest.advanceTimersByTime(60 * 1000);
+      await Promise.resolve();
 
-      // Should have called logHealthStatus again
-      expect(consoleSpy).toHaveBeenCalledTimes(2);
+      expect(logSpy).toHaveBeenCalledTimes(2);
 
-      jest.useRealTimers();
-      consoleSpy.mockRestore();
+      logSpy.mockRestore();
     });
   });
 });

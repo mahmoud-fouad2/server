@@ -11,15 +11,24 @@ const prisma = require('./config/database');
 const logger = require('./utils/logger');
 const redisCache = require('./services/cache.service');
 const { errorHandler, handleUnhandledRejections, handleUncaughtExceptions } = require('./middleware/errorHandler');
+const { validateEnv, getEnvSummary } = require('./config/env.validator');
 
-// Fahimo Insight: Initialize the core "Understanding" engine
+// Initialize environment variables
 dotenv.config();
 
-// Safety guard: never allow DEV_NO_AUTH in production
-if (process.env.NODE_ENV === 'production' && process.env.DEV_NO_AUTH === 'true') {
-  logger.error('FATAL: DEV_NO_AUTH=true is not allowed in production. Remove this variable from your environment.');
-  // Exit early to avoid starting an insecure server
-  process.exit(1);
+const isTestEnvironment = process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID !== undefined;
+
+// Validate environment configuration
+if (!isTestEnvironment) {
+  const validation = validateEnv();
+  if (!validation.success) {
+    logger.error('Environment validation failed - check configuration');
+    // In production, validator will exit(1) automatically
+  }
+  
+  // Log environment summary (no secrets)
+  const envSummary = getEnvSummary();
+  logger.info('Environment configured', envSummary);
 }
 
 // Test database connection after environment is loaded
@@ -37,6 +46,9 @@ const testDatabaseConnection = async () => {
 
   } catch (error) {
     logger.error('Database connection failed', error);
+    if (isTestEnvironment) {
+      throw error;
+    }
     process.exit(1);
   }
 };
@@ -79,13 +91,12 @@ if (allowedOrigins.length === 0) {
       // Check if origin is allowed
       if (allowedOrigins.includes(origin)) return cb(null, true);
       
-      // Log the blocked origin for debugging
-      logger.warn(`CORS blocked origin: ${origin}`);
+      // Log and reject blocked origin
+      logger.error(`CORS blocked unauthorized origin: ${origin}`);
       
-      // TEMPORARY: Allow all origins to fix production issues while debugging
-      // In the future, uncomment the line below and remove the cb(null, true)
-      cb(null, true); 
-      // cb(new Error('CORS origin denied'));
+      const error = new Error('CORS policy: Origin not allowed');
+      error.statusCode = 403;
+      cb(error);
     },
     credentials: true,
   }));
@@ -416,68 +427,74 @@ async function checkServicesStatus() {
   }
 }
 
-// Test database connection before starting server
-// Note: testDatabaseConnection throws on failure; callers should shutdown gracefully
-testDatabaseConnection().then(async () => {
-  try {
-    const { server, port } = await startServerWithRetries(PORT, 20);
-    serverInstance = server;
+module.exports = app;
 
-    logger.info(`Fahimo Server is running on port ${port}`);
-    logger.info('"The one who understands you" is ready to serve.');
-    console.log('Server listening:', server.listening);
-    console.log('Server address:', server.address());
-
+if (!isTestEnvironment) {
+  // Test database connection before starting server
+  // Note: testDatabaseConnection throws on failure; callers should shutdown gracefully
+  testDatabaseConnection().then(async () => {
     try {
-      // Validate environment before starting
-      validateEnvironment();
+      const { server, port } = await startServerWithRetries(PORT, 20);
+      serverInstance = server;
 
-      // Ensure admin only in non-production unless explicitly allowed
-      if (process.env.NODE_ENV !== 'production' || process.env.ALLOW_AUTO_ADMIN === 'true') {
-        await ensureAdminExists();
-      } else {
-        logger.info('Skipping automatic admin creation in production (set ALLOW_AUTO_ADMIN=true to override)');
-      }
+      logger.info(`Fahimo Server is running on port ${port}`);
+      logger.info('"The one who understands you" is ready to serve.');
+      console.log('Server listening:', server.listening);
+      console.log('Server address:', server.address());
 
-      // Try to connect to Redis if configured
       try {
-        const redisCache = require('./services/cache.service');
-        if (redisCache.isEnabled && !redisCache.isConnected) {
-          await redisCache.connect();
+        // Validate environment before starting
+        validateEnvironment();
+
+        // Ensure admin only in non-production unless explicitly allowed
+        if (process.env.NODE_ENV !== 'production' || process.env.ALLOW_AUTO_ADMIN === 'true') {
+          await ensureAdminExists();
+        } else {
+          logger.info('Skipping automatic admin creation in production (set ALLOW_AUTO_ADMIN=true to override)');
         }
-      } catch (e) {
-        logger.warn('Redis connect attempt failed:', e?.message || e);
+
+        // Try to connect to Redis if configured
+        try {
+          const redisCache = require('./services/cache.service');
+          if (redisCache.isEnabled && !redisCache.isConnected) {
+            await redisCache.connect();
+          }
+        } catch (e) {
+          logger.warn('Redis connect attempt failed:', e?.message || e);
+        }
+
+        await checkServicesStatus();
+        console.log('✅ Startup functions completed');
+
+        // Start system monitoring (every 5 minutes)
+        const monitor = require('./utils/monitor');
+        monitor.startPeriodicMonitoring(5);
+        logger.info('🔍 System monitoring ENABLED');
+
+        // Keep event loop alive
+        setInterval(() => {
+          // Keep alive
+        }, 60000);
+
+        // Also resume stdin to keep alive
+        process.stdin.resume();
+
+        console.log('🚀 Server fully operational and stable');
+      } catch (error) {
+        console.error('❌ Startup error:', error);
+        await shutdown(1);
       }
 
-      await checkServicesStatus();
-      console.log('✅ Startup functions completed');
-
-      // Start system monitoring (every 5 minutes)
-      const monitor = require('./utils/monitor');
-      monitor.startPeriodicMonitoring(5);
-      logger.info('🔍 System monitoring ENABLED');
-
-      // Keep event loop alive
-      setInterval(() => {
-        // Keep alive
-      }, 60000);
-
-      // Also resume stdin to keep alive
-      process.stdin.resume();
-
-      console.log('🚀 Server fully operational and stable');
-    } catch (error) {
-      console.error('❌ Startup error:', error);
+      server.on('close', () => logger.info('Server closed'));
+      process.on('exit', (code) => console.log('Process exiting with code', code));
+    } catch (err) {
+      console.error('Failed to start server:', err);
       await shutdown(1);
     }
-
-    server.on('close', () => logger.info('Server closed'));
-    process.on('exit', (code) => console.log('Process exiting with code', code));
-  } catch (err) {
-    console.error('Failed to start server:', err);
+  }).catch(async err => {
+    console.error('Failed to connect to database:', err);
     await shutdown(1);
-  }
-}).catch(async err => {
-  console.error('Failed to connect to database:', err);
-  await shutdown(1);
-});
+  });
+} else {
+  logger.info('Test environment detected - skipping automatic server start');
+}

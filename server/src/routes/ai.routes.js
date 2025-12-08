@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { authenticateToken } = require('../middleware/auth');
-const groqService = require('../services/groq.service');
+const aiService = require('../services/ai.service');
 
 /**
  * Get AI Provider Status and Usage Statistics
@@ -9,7 +9,7 @@ const groqService = require('../services/groq.service');
  */
 router.get('/status', authenticateToken, async (req, res) => {
   try {
-    const status = groqService.getProviderStatus();
+    const status = aiService.getProviderStatus();
     
     res.json({
       timestamp: new Date().toISOString(),
@@ -33,7 +33,7 @@ router.get('/status', authenticateToken, async (req, res) => {
 router.post('/health', authenticateToken, async (req, res) => {
   try {
     console.log('[AI Health] Running health check for all providers...');
-    const healthResults = await groqService.healthCheck();
+    const healthResults = await aiService.healthCheck();
     
     const healthySummary = {
       healthy: Object.values(healthResults).filter(r => r.status === 'healthy').length,
@@ -72,7 +72,7 @@ router.post('/test', authenticateToken, async (req, res) => {
     ];
 
     const startTime = Date.now();
-    const result = await groqService.generateResponse(messages, { maxTokens: 200 });
+    const result = await aiService.generateResponse(messages, { maxTokens: 200 });
     const duration = Date.now() - startTime;
 
     res.json({

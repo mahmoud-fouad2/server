@@ -31,9 +31,17 @@ function validateEnvironment() {
     }
   });
 
-  // Validate JWT secret strength
-  if (process.env.JWT_SECRET && process.env.JWT_SECRET.length < 32) {
-    warnings.push('JWT_SECRET should be at least 32 characters long');
+  // ✅ ENFORCE JWT secret strength
+  if (process.env.JWT_SECRET) {
+    if (process.env.JWT_SECRET.length < 32) {
+      warnings.push('⚠️ JWT_SECRET should be at least 32 characters for better security (current: ' + process.env.JWT_SECRET.length + ')');
+    }
+    
+    // Check for weak patterns
+    const weakPatterns = ['secret', 'password', 'fahimo', '12345'];
+    if (weakPatterns.some(pattern => process.env.JWT_SECRET.toLowerCase().includes(pattern))) {
+      warnings.push('⚠️ JWT_SECRET contains common words. Consider using cryptographically random string.');
+    }
   }
 
   // Validate database URL format
@@ -43,7 +51,7 @@ function validateEnvironment() {
 
   // Check for default/example values
   if (process.env.JWT_SECRET === 'your-secret-key') {
-    warnings.push('JWT_SECRET is using default/example value - change immediately');
+    warnings.push('⚠️ JWT_SECRET is using default/example value - change immediately');
   }
 
   if (missing.length > 0) {

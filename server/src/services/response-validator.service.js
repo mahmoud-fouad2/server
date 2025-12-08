@@ -12,16 +12,16 @@ class ResponseValidator {
 
     // Safety patterns to check
     this.dangerousPatterns = [
-      /hack|exploit|crack|steal/i,
-      /illegal|forbidden|prohibited/i,
-      /harm|damage|destroy/i,
-      /drugs|weapons|nuclear/i
+      /\b(hack|exploit|crack|steal)\b/i,
+      /\b(illegal|forbidden|prohibited|unauthorized)\b/i,
+      /\b(harm|damage|destroy|attack)\b/i,
+      /\b(drug|drugs|weapon|weapons|bomb|explosive|nuclear)\b/i
     ];
 
     // Quality patterns
     this.qualityPatterns = {
       greeting: /^(مرحبا|hello|hi|أهلاً|هاي)/i,
-      complete: /\.$/, // Ends with period
+      complete: /[.!؟?]$/, // Ends with acceptable punctuation
       arabic: /[\u0600-\u06FF]/ // Contains Arabic characters
     };
   }
@@ -87,7 +87,8 @@ class ResponseValidator {
     results.suggestions.push(...contentResult.suggestions);
 
     // Final validation
-    results.isValid = results.score >= 60 && results.issues.filter(i => i.includes('unsafe')).length === 0;
+    const hasUnsafeIssues = results.issues.some(issue => issue.toLowerCase().includes('unsafe'));
+    results.isValid = results.isValid && results.score >= 60 && !hasUnsafeIssues;
 
     return results;
   }
@@ -145,10 +146,14 @@ class ResponseValidator {
     const result = { scoreModifier: 0, issues: [], suggestions: [] };
 
     // Check for excessive repetition
-    const words = response.toLowerCase().split(/\s+/);
+    const words = response
+      .toLowerCase()
+      .split(/\s+/)
+      .map(word => word.replace(/[^a-z0-9\u0600-\u06FF]+/g, ''))
+      .filter(Boolean);
     const wordCount = {};
     words.forEach(word => {
-      if (word.length > 3) { // Only check meaningful words
+      if (word.length >= 3) { // Ignore very short filler words
         wordCount[word] = (wordCount[word] || 0) + 1;
       }
     });

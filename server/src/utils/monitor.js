@@ -5,8 +5,7 @@
  * ═══════════════════════════════════════════════════
  */
 
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../config/database');
 
 class SystemMonitor {
   constructor() {
@@ -18,6 +17,7 @@ class SystemMonitor {
       aiProviders: {},
       errors: []
     };
+    this.monitorInterval = null;
   }
 
   /**
@@ -114,27 +114,22 @@ class SystemMonitor {
    */
   async checkAIProvidersHealth() {
     try {
-      // Check if ai.service exists (fallback for hybrid-ai)
       const aiService = require('../services/ai.service');
-      
-      // Count configured providers based on env vars
-      let available = 0;
-      if (process.env.GROQ_API_KEY) available++;
-      if (process.env.GEMINI_API_KEY) available++;
-      if (process.env.CEREBRAS_API_KEY) available++;
-      if (process.env.DEEPSEEK_API_KEY) available++;
-      if (process.env.OPENAI_API_KEY) available++;
+      const summary = aiService.checkProvidersHealth();
 
       return {
-        healthy: true,
-        message: 'AI service operational',
-        totalAvailable: available
+        healthy: summary.totalAvailable > 0,
+        totalAvailable: summary.totalAvailable,
+        totalConfigured: summary.totalConfigured,
+        providers: summary.providers
       };
     } catch (error) {
       return {
         error: error.message,
         healthy: false,
-        totalAvailable: 0
+        totalAvailable: 0,
+        totalConfigured: 0,
+        providers: []
       };
     }
   }
@@ -167,13 +162,24 @@ class SystemMonitor {
     this.logHealthStatus().catch(error => console.error('Initial health check error:', error));
 
     // Periodic checks
-    setInterval(async () => {
+    if (this.monitorInterval) {
+      clearInterval(this.monitorInterval);
+    }
+
+    this.monitorInterval = setInterval(async () => {
       try {
         await this.logHealthStatus();
       } catch (error) {
         console.error('Periodic health check error:', error);
       }
     }, intervalMinutes * 60 * 1000);
+  }
+
+  stopPeriodicMonitoring() {
+    if (this.monitorInterval) {
+      clearInterval(this.monitorInterval);
+      this.monitorInterval = null;
+    }
   }
 
   /**

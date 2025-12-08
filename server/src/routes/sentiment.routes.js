@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { authenticateToken } = require('../middleware/auth');
 const SentimentAnalysisService = require('../services/sentiment-analysis.service');
+const logger = require('../utils/logger');
 
 /**
  * @route POST /api/sentiment/analyze
@@ -25,7 +26,7 @@ router.post('/analyze', authenticateToken, async (req, res) => {
       data: sentiment
     });
   } catch (error) {
-    console.error('[Sentiment Routes] Analyze error:', error);
+    logger.error('Sentiment analyze endpoint error', { error: error.message });
     res.status(500).json({
       success: false,
       message: 'Failed to analyze sentiment',
@@ -56,7 +57,7 @@ router.post('/analyze-conversation', authenticateToken, async (req, res) => {
       data: analysis
     });
   } catch (error) {
-    console.error('[Sentiment Routes] Analyze conversation error:', error);
+    logger.error('Sentiment conversation endpoint error', { error: error.message });
     res.status(500).json({
       success: false,
       message: 'Failed to analyze conversation sentiment',
@@ -83,7 +84,7 @@ router.get('/trends', authenticateToken, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('[Sentiment Routes] Get trends error:', error);
+    logger.error('Sentiment trends endpoint error', { error: error.message });
     res.status(500).json({
       success: false,
       message: 'Failed to get sentiment trends',
@@ -118,7 +119,7 @@ router.post('/optimize-response', authenticateToken, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('[Sentiment Routes] Optimize response error:', error);
+    logger.error('Sentiment optimize endpoint error', { error: error.message });
     res.status(500).json({
       success: false,
       message: 'Failed to optimize response',
@@ -147,7 +148,7 @@ router.get('/history', authenticateToken, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('[Sentiment Routes] Get history error:', error);
+    logger.error('Sentiment history endpoint error', { error: error.message });
     res.status(500).json({
       success: false,
       message: 'Failed to get sentiment history',
@@ -183,14 +184,14 @@ router.post('/track-feedback', authenticateToken, async (req, res) => {
     };
 
     // In a real implementation, this would be stored in database
-    console.log('[Sentiment Routes] Feedback tracked:', feedback);
+    logger.info('Sentiment feedback tracked', { businessId: feedback.businessId, predictedSentiment: sentiment });
 
     res.json({
       success: true,
       message: 'Feedback tracked successfully'
     });
   } catch (error) {
-    console.error('[Sentiment Routes] Track feedback error:', error);
+    logger.error('Sentiment feedback endpoint error', { error: error.message });
     res.status(500).json({
       success: false,
       message: 'Failed to track feedback',

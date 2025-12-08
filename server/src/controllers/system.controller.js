@@ -110,15 +110,20 @@ exports.testAiProvider = asyncHandler(async (req, res) => {
   }
 
   // Test the provider (implement actual test based on your aiService)
-  const aiService = require('../services/aiService');
+  const aiService = require('../services/ai.service');
   const testMessage = "Hello, this is a test message.";
 
   try {
     const startTime = Date.now();
+    const messages = [
+      { role: 'system', content: 'You are the official Faheemly assistant. Keep replies concise.' },
+      { role: 'user', content: testMessage }
+    ];
+
     const response = await aiService.generateResponseWithProvider(
       provider,
-      testMessage,
-      'test-business-id'
+      messages,
+      { maxTokens: 120 }
     );
     const latency = Date.now() - startTime;
 
@@ -136,7 +141,7 @@ exports.testAiProvider = asyncHandler(async (req, res) => {
       success: true,
       provider,
       latency: `${latency}ms`,
-      response: response.substring(0, 100) + '...'
+      response: response.response.substring(0, 100) + '...'
     });
   } catch (error) {
     // Update error status

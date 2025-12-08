@@ -1,8 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const prisma = require('../config/database');
+const logger = require('../utils/logger');
 const telegramService = require('../services/telegram.service');
 const groqService = require('../services/groq.service');
+const logger = require('../utils/logger');
 const { authenticateToken } = require('../middleware/auth');
 
 // Setup Telegram Bot (Client Action)

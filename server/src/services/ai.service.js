@@ -13,12 +13,12 @@ const logger = require('../utils/logger');
  * Strategy: Round-robin load balancing with smart fallback
  */
 
-// Provider Configurations
-const PROVIDERS = {
+// Provider Definitions (API keys resolved at runtime for better testability)
+const PROVIDER_DEFINITIONS = {
   GROQ: {
     name: 'Groq',
     endpoint: 'https://api.groq.com/openai/v1/chat/completions',
-    apiKey: process.env.GROQ_API_KEY,
+    envVar: 'GROQ_API_KEY',
     model: 'llama-3.3-70b-versatile',
     rateLimit: { requestsPerMinute: 30, tokensPerMinute: 14400 },
     priority: 1, // PRIMARY - Fast and reliable
@@ -27,7 +27,7 @@ const PROVIDERS = {
   CEREBRAS: {
     name: 'Cerebras',
     endpoint: 'https://api.cerebras.ai/v1/chat/completions',
-    apiKey: process.env.CEREBRAS_API_KEY,
+    envVar: 'CEREBRAS_API_KEY',
     model: 'llama3.1-8b',
     rateLimit: { requestsPerMinute: 30, tokensPerMinute: 30000 },
     priority: 3,
@@ -36,7 +36,7 @@ const PROVIDERS = {
   GEMINI: {
     name: 'Gemini',
     endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent',
-    apiKey: process.env.GEMINI_API_KEY,
+    envVar: 'GEMINI_API_KEY',
     model: 'gemini-1.5-flash',
     rateLimit: { requestsPerMinute: 15, tokensPerDay: 1000000 },
     priority: 4,
@@ -46,13 +46,44 @@ const PROVIDERS = {
   DEEPSEEK: {
     name: 'DeepSeek',
     endpoint: 'https://api.deepseek.com/v1/chat/completions',
-    apiKey: process.env.DEEPSEEK_API_KEY,
+    envVar: 'DEEPSEEK_API_KEY',
     model: 'deepseek-chat',
     rateLimit: { requestsPerMinute: 60, tokensPerMinute: 50000 },
     priority: 2, // SECONDARY - Balance restored, fast and reliable
     enabled: true // Re-enabled after balance added
   }
 };
+
+function getProviderConfig(providerKey) {
+  const definition = PROVIDER_DEFINITIONS[providerKey];
+  if (!definition) return null;
+
+  const apiKey = process.env[definition.envVar];
+  const baseEnabled = definition.enabled !== false;
+
+  return {
+    ...definition,
+    apiKey,
+    enabled: baseEnabled && !!apiKey,
+    configured: !!apiKey
+  };
+}
+
+function getProviders() {
+  return Object.keys(PROVIDER_DEFINITIONS).reduce((acc, key) => {
+    acc[key] = getProviderConfig(key);
+    return acc;
+  }, {});
+}
+
+// Utility to reset internal state (primarily used in tests)
+function resetProviderState() {
+  currentProviderIndex = 0;
+  Object.keys(usageTracker).forEach(key => {
+    usageTracker[key].requests = [];
+    usageTracker[key].tokens = [];
+  });
+}
 
 // Usage tracking for rate limit management
 const usageTracker = {
@@ -81,8 +112,8 @@ function cleanupUsageTracker(provider, type = 'requests') {
 /**
  * Check if provider is available (not rate limited)
  */
-function isProviderAvailable(providerKey) {
-  const provider = PROVIDERS[providerKey];
+function isProviderAvailable(providerKey, providerConfig = getProviderConfig(providerKey)) {
+  const provider = providerConfig;
   if (!provider || !provider.enabled || !provider.apiKey) return false;
 
   cleanupUsageTracker(providerKey, 'requests');
@@ -127,8 +158,8 @@ function recordUsage(providerKey, tokensUsed = 0) {
  * Get next available provider using round-robin with smart fallback
  */
 function getNextProvider() {
-  const providerKeys = Object.keys(PROVIDERS).sort((a, b) => 
-    PROVIDERS[a].priority - PROVIDERS[b].priority
+  const providerKeys = Object.keys(PROVIDER_DEFINITIONS).sort((a, b) => 
+    PROVIDER_DEFINITIONS[a].priority - PROVIDER_DEFINITIONS[b].priority
   );
 
   // Try round-robin first
@@ -137,8 +168,9 @@ function getNextProvider() {
     const provider = providerKeys[currentProviderIndex % providerKeys.length];
     currentProviderIndex++;
 
-    if (isProviderAvailable(provider)) {
-      return { key: provider, config: PROVIDERS[provider] };
+    const config = getProviderConfig(provider);
+    if (isProviderAvailable(provider, config)) {
+      return { key: provider, config };
     }
     attempts++;
   }
@@ -198,9 +230,10 @@ function convertGeminiResponse(geminiResponse) {
  */
 async function callProvider(providerKey, providerConfig, messages, options = {}) {
   const startTime = Date.now();
+  const logger = require('../utils/logger');
   
   try {
-    console.log(`[HybridAI] Calling ${providerConfig.name}...`);
+    logger.debug('AI provider call initiated', { provider: providerConfig.name });
 
     // Special handling for Gemini
     if (providerConfig.isGemini) {
@@ -217,7 +250,7 @@ async function callProvider(providerKey, providerConfig, messages, options = {})
       const result = convertGeminiResponse(response.data);
       recordUsage(providerKey, result.tokensUsed);
       
-      console.log(`[HybridAI] ✅ ${providerConfig.name} succeeded in ${Date.now() - startTime}ms`);
+      logger.info('AI provider success', { provider: providerConfig.name, duration: Date.now() - startTime, tokens: result.tokensUsed });
       return result;
     }
 
@@ -255,12 +288,17 @@ async function callProvider(providerKey, providerConfig, messages, options = {})
 
     recordUsage(providerKey, result.tokensUsed);
     
-    console.log(`[HybridAI] ✅ ${providerConfig.name} succeeded in ${Date.now() - startTime}ms (${result.tokensUsed} tokens)`);
+    logger.info('AI provider success', { provider: providerConfig.name, duration: Date.now() - startTime, tokensUsed: result.tokensUsed });
     return result;
 
   } catch (error) {
     const duration = Date.now() - startTime;
-    console.error(`[HybridAI] ❌ ${providerConfig.name} failed after ${duration}ms:`, error.response?.data?.error?.message || error.message);
+    logger.error('AI provider failed', { 
+      provider: providerConfig.name, 
+      duration, 
+      error: error.message,
+      statusCode: error.response?.status
+    });
     
     // Classify error type
     if (error.response?.status === 429) {
@@ -284,7 +322,7 @@ async function callProvider(providerKey, providerConfig, messages, options = {})
 async function generateResponse(messages, options = {}) {
   let lastError = null;
   let attemptCount = 0;
-  const maxAttempts = Object.keys(PROVIDERS).length;
+  const maxAttempts = Object.keys(PROVIDER_DEFINITIONS).length;
 
   while (attemptCount < maxAttempts) {
     attemptCount++;
@@ -303,12 +341,12 @@ async function generateResponse(messages, options = {}) {
       const result = await callProvider(provider.key, provider.config, messages, options);
       
       // Success! Return result
-      console.log(`[HybridAI] 🎉 Success with ${provider.config.name} on attempt ${attemptCount}`);
+      logger.info('AI request completed successfully', { provider: provider.config.name, attempt: attemptCount, model: result.model });
       return result;
 
     } catch (error) {
       lastError = error;
-      console.log(`[HybridAI] Attempt ${attemptCount}/${maxAttempts} failed with ${provider.config.name}`);
+      logger.warn('AI attempt failed, retrying', { attempt: attemptCount, maxAttempts, provider: provider.config.name, error: error.message });
       
       // If rate limit error, mark provider as temporarily unavailable
       if (error.message === 'RATE_LIMIT') {
@@ -334,8 +372,8 @@ async function generateResponse(messages, options = {}) {
 function getProviderStatus() {
   const status = {};
   
-  Object.keys(PROVIDERS).forEach(key => {
-    const provider = PROVIDERS[key];
+  Object.keys(PROVIDER_DEFINITIONS).forEach(key => {
+    const provider = getProviderConfig(key);
     const tracker = usageTracker[key];
     
     cleanupUsageTracker(key, 'requests');
@@ -346,7 +384,7 @@ function getProviderStatus() {
     status[key] = {
       name: provider.name,
       enabled: provider.enabled && !!provider.apiKey,
-      available: isProviderAvailable(key),
+      available: isProviderAvailable(key, provider),
       currentUsage: {
         requests: tracker.requests.length,
         tokens: tokenCount
@@ -375,7 +413,8 @@ async function healthCheck() {
     { role: 'user', content: 'Say "OK" if you can read this.' }
   ];
 
-  for (const [key, provider] of Object.entries(PROVIDERS)) {
+  for (const key of Object.keys(PROVIDER_DEFINITIONS)) {
+    const provider = getProviderConfig(key);
     if (!provider.enabled || !provider.apiKey) {
       results[key] = { status: 'disabled', reason: 'No API key or disabled' };
       continue;
@@ -426,11 +465,34 @@ function checkProvidersHealth() {
   };
 }
 
+/**
+ * Generate a response using a specific provider (no fallback)
+ * Useful for diagnostics and admin testing.
+ */
+async function generateResponseWithProvider(providerKey, messages, options = {}) {
+  const key = providerKey?.toUpperCase();
+  const provider = key ? getProviderConfig(key) : null;
+
+  if (!provider) {
+    throw new Error(`Provider ${providerKey} is not supported`);
+  }
+
+  if (!provider.enabled || !provider.apiKey) {
+    throw new Error(`${provider.name} is not configured or disabled`);
+  }
+
+  return callProvider(key, provider, messages, options);
+}
+
 module.exports = {
   generateResponse,
+  generateResponseWithProvider,
   getProviderStatus,
   getProviderStats,
   checkProvidersHealth,
   healthCheck,
-  PROVIDERS
+  resetProviderState,
+  getProviders,
+  getProviderConfig,
+  PROVIDER_DEFINITIONS
 };

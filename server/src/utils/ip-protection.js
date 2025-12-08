@@ -148,7 +148,7 @@ function checkTamperProtection() {
   // Check if critical files have been modified
   const criticalModules = [
     '../config/database',
-    '../services/aiService',
+    '../services/ai.service',
     '../middleware/auth'
   ];
 

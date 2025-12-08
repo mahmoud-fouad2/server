@@ -32,7 +32,10 @@ router.get('/', async (req, res) => {
         latency: status.database.latency
       },
       aiProviders: {
-        available: status.aiProviders.health?.totalAvailable || 0
+        available: status.aiProviders.totalAvailable || 0,
+        configured: status.aiProviders.totalConfigured || 0,
+        healthy: status.aiProviders.healthy,
+        providers: status.aiProviders.providers || []
       },
       timestamp: status.timestamp
     });
@@ -59,7 +62,7 @@ router.get('/detailed', async (req, res) => {
       uptime: report.system.uptime.formatted,
       services: {
         database: report.system.database.connected ? 'online' : 'offline',
-        ai: report.system.aiProviders.health?.totalAvailable > 0 ? 'online' : 'offline',
+        ai: (report.system.aiProviders.totalAvailable || 0) > 0 ? 'online' : 'offline',
         memory: report.system.memory.healthy ? 'normal' : 'high'
       },
       timestamp: report.generatedAt

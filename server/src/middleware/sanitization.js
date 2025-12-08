@@ -1,4 +1,5 @@
 const validator = require('validator');
+const sanitizeHtml = require('sanitize-html');
 
 /**
  * Input sanitization middleware
@@ -41,9 +42,17 @@ function sanitizeObject(obj) {
     if (typeof obj[key] === 'string') {
       // For specific fields that might contain HTML (like knowledge base content)
       if (key === 'content' || key === 'message' || key === 'feedback') {
-        // Allow basic HTML tags but escape dangerous ones
-        obj[key] = validator.stripLow(obj[key]); // Remove control characters
-        // Could add more sophisticated HTML sanitization here
+        // ✅ PROPER HTML SANITIZATION
+        obj[key] = sanitizeHtml(obj[key], {
+          allowedTags: ['b', 'i', 'em', 'strong', 'p', 'br', 'ul', 'ol', 'li', 'a'],
+          allowedAttributes: {
+            'a': ['href', 'target']
+          },
+          allowedSchemes: ['http', 'https', 'mailto'],
+          disallowedTagsMode: 'discard'
+        });
+        // Remove any remaining control characters
+        obj[key] = validator.stripLow(obj[key]);
       } else {
         // Escape all HTML for other fields
         obj[key] = validator.escape(obj[key]);
