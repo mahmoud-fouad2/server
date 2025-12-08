@@ -59,6 +59,9 @@ const testDatabaseConnection = async () => {
 };
 const app = express();
 
+// Trust Proxy for Render (Required for rate limiting and IP detection)
+app.set('trust proxy', 1);
+
 // CORS: restrict origins via `CORS_ORIGINS` env (comma-separated). If not set, default to allow only same-origin.
 const allowedOrigins = (process.env.CORS_ORIGINS || process.env.CLIENT_URL || '').split(',').map(s => s.trim()).filter(Boolean);
 
@@ -156,6 +159,7 @@ async function startServerWithRetries(startPort, maxAttempts = 10) {
 
 // Middleware
 app.use(express.json());
+app.use(express.static(path.join(__dirname, '../public')));
 
 // Test route - Always enabled to verify server is running
 app.get('/', (req, res) => {

@@ -567,14 +567,12 @@ router.post('/test', chatLimiter, async (req, res) => {
     }
 
     // Simple AI response for testing
-    const aiResponse = await aiService.chat(
-      [{ role: 'user', content: message }],
-      business.id,
-      'groq'
+    const aiResponse = await aiService.generateResponse(
+      [{ role: 'user', content: message }]
     );
 
     res.json({
-      response: aiResponse?.content || 'مرحباً! كيف يمكنني مساعدتك؟',
+      response: aiResponse?.response || 'مرحباً! كيف يمكنني مساعدتك؟',
       businessId: business.id
     });
 
