@@ -46,7 +46,8 @@ router.post('/conversation', authenticateToken, async (req, res) => {
 router.get('/dashboard/:days?', authenticateToken, async (req, res) => {
   try {
     const days = parseInt(req.params.days) || 7;
-    const businessId = req.business?.id || req.params.businessId;
+    // Fix: Use req.user.businessId (populated by authenticateToken) instead of req.business.id
+    const businessId = req.user.businessId || req.params.businessId;
 
     if (!businessId) {
       return res.status(400).json({

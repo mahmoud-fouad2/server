@@ -147,7 +147,13 @@ exports.submitRating = asyncHandler(async (req, res) => {
 exports.sendMessage = asyncHandler(async (req, res) => {
   let { message, businessId, conversationId, sessionId } = req.body;
 
+  // Debug logging for 400 errors
   if (!message || !businessId) {
+    logger.warn('sendMessage: Missing required fields', { 
+      hasMessage: !!message, 
+      hasBusinessId: !!businessId, 
+      body: req.body 
+    });
     return res.status(400).json({ error: 'Message and Business ID are required' });
   }
 

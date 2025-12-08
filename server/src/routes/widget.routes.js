@@ -69,6 +69,12 @@ router.get('/config/:businessId', async (req, res) => {
 
     const config = business.widgetConfig ? JSON.parse(business.widgetConfig) : defaultConfig;
 
+    // Fix: Replace localhost URLs with current API URL to prevent CSP errors
+    if (config.customIconUrl && config.customIconUrl.includes('localhost')) {
+       const baseUrl = process.env.API_URL || 'https://fahimo-api.onrender.com';
+       config.customIconUrl = config.customIconUrl.replace(/http:\/\/localhost:\d+/, baseUrl);
+    }
+
     res.json({
       name: business.name,
       widgetConfig: config

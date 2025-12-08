@@ -186,10 +186,12 @@ exports.uploadKnowledge = async (req, res) => {
 };
 
 exports.addTextKnowledge = async (req, res) => {
-  console.log("POST /text called");
+  console.log("POST /text called", { body: req.body, user: req.user });
   try {
     const { text, title } = req.body;
     const businessId = await resolveBusinessId(req);
+    console.log("Resolved businessId:", businessId);
+    
     if (!businessId) {
       return res.status(400).json({ error: 'Business ID missing or invalid. Please re-login.' });
     }
