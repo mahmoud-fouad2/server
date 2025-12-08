@@ -484,7 +484,50 @@ async function generateResponseWithProvider(providerKey, messages, options = {})
   return callProvider(key, provider, messages, options);
 }
 
+/**
+ * Generate a chat response with full context management (System Prompt, History, Knowledge)
+ * @param {string} message - User message
+ * @param {Object} business - Business context (name, tone, etc.)
+ * @param {Array} history - Conversation history
+ * @param {Array} knowledgeBase - Relevant knowledge chunks
+ */
+async function generateChatResponse(message, business, history = [], knowledgeBase = []) {
+  // 1. Construct System Prompt
+  let systemPrompt = `You are the AI assistant for ${business.name}. `;
+  
+  if (business.activityType) {
+    systemPrompt += `This is a ${business.activityType} business. `;
+  }
+  
+  if (business.botTone) {
+    systemPrompt += `Your tone should be ${business.botTone}. `;
+  }
+  
+  systemPrompt += `\n\nIMPORTANT: You represent ${business.name}. Never identify as an AI model (like DeepSeek, Llama, or Gemini). If asked who you are, say you are the virtual assistant for ${business.name}.`;
+  
+  // Add Knowledge Base Context
+  if (knowledgeBase && knowledgeBase.length > 0) {
+    systemPrompt += `\n\nUse the following knowledge base to answer the user's question. If the answer is not in the knowledge base, use your general knowledge but be polite and helpful.\n\nKnowledge Base:\n`;
+    knowledgeBase.forEach((chunk, index) => {
+      systemPrompt += `${index + 1}. ${chunk.content}\n`;
+    });
+  }
+
+  // 2. Construct Messages Array
+  const messages = [
+    { role: 'system', content: systemPrompt },
+    ...history,
+    { role: 'user', content: message }
+  ];
+
+  // 3. Call Hybrid AI
+  const result = await generateResponse(messages);
+  
+  return result;
+}
+
 module.exports = {
+  generateChatResponse,
   generateResponse,
   generateResponseWithProvider,
   getProviderStatus,

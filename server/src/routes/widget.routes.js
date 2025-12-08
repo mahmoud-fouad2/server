@@ -86,7 +86,8 @@ router.post('/upload-icon', authenticateToken, upload.single('icon'), async (req
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    const iconUrl = `http://localhost:3001/uploads/icons/${req.file.filename}`;
+    const baseUrl = process.env.API_URL || 'http://localhost:3001';
+    const iconUrl = `${baseUrl}/uploads/icons/${req.file.filename}`;
     res.json({ url: iconUrl });
   } catch (error) {
     console.error('Icon Upload Error:', error);

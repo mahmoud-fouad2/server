@@ -24,7 +24,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { getApiUrl } from '@/lib/config';
+import { apiCall } from '@/lib/api';
 import {
   LineChart,
   Line,
@@ -82,16 +82,16 @@ export default function StatsOverview({
     let mounted = true;
     const fetchData = async () => {
       try {
-        // If start/end provided, use range query, otherwise use days
-        const url = startDate && endDate
-          ? getApiUrl(`api/analytics/dashboard?start=${encodeURIComponent(startDate)}&end=${encodeURIComponent(endDate)}`)
-          : getApiUrl(`api/analytics/dashboard-public/${timeRangeDays}`);
-        const res = await fetch(url);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const payload = await res.json();
+        // Use authenticated dashboard endpoint
+        let endpoint = `api/analytics/dashboard/${timeRangeDays}`;
+        if (startDate && endDate) {
+           endpoint = `api/analytics/dashboard?start=${encodeURIComponent(startDate)}&end=${encodeURIComponent(endDate)}`;
+        }
+        
+        const response = await apiCall(endpoint);
         if (!mounted) return;
 
-        const data = payload.data || payload;
+        const data = response.data || response;
 
         // Map to chart-friendly formats with fallbacks
         setConversationDataState(
@@ -105,24 +105,22 @@ export default function StatsOverview({
         );
       } catch (e) {
         console.warn('Failed to fetch analytics:', e.message || e);
-        // keep mock data as fallback
       }
     };
 
     fetchData();
+    
     // fetch vector stats as well
     (async () => {
       try {
-        const res = await fetch(getApiUrl('api/analytics/vector-stats'));
-        if (!res.ok) throw new Error('vector stats fetch failed');
-        const payload = await res.json();
-        const stats = payload.data || payload;
+        const response = await apiCall('api/analytics/vector-stats');
+        const stats = response.data || response;
         if (mounted && stats) setVectorStats(stats);
       } catch (e) {
-        // keep default/empty stats
         console.warn('Vector stats unavailable:', e.message);
       }
     })();
+    
     return () => { mounted = false; };
   }, [timeRangeDays, startDate, endDate]);
 
@@ -135,53 +133,7 @@ export default function StatsOverview({
     ]);
   }, []);
 
-  // Fetch real analytics from server
-  useEffect(() => {
-    let mounted = true;
 
-    async function fetchAnalytics(days) {
-      try {
-        const res = await fetch(getApiUrl(`api/analytics/dashboard/${days}`));
-        if (!res.ok) throw new Error(`Status ${res.status}`);
-        const payload = await res.json();
-
-        if (!mounted) return;
-
-        // server returns structured dashboard - map to chart shapes
-        const dashboard = payload.data || payload;
-
-        // Conversations trend
-        if (dashboard.trends && Array.isArray(dashboard.trends.daily)) {
-          setConversationDataState(
-            dashboard.trends.daily.map(d => ({ name: d.dateLabel || d.date, conversations: d.count }))
-          );
-        }
-
-        // Response times
-        if (dashboard.performance && Array.isArray(dashboard.performance.responseTimeSeries)) {
-          setResponseTimeState(
-            dashboard.performance.responseTimeSeries.map(p => ({ name: p.timeLabel || p.time, time: p.avg }))
-          );
-        }
-
-        // Satisfaction
-        if (dashboard.performance && Array.isArray(dashboard.performance.satisfactionDistribution)) {
-          setSatisfactionState(
-            dashboard.performance.satisfactionDistribution.map(s => ({ name: s.label, value: s.value, color: s.color || '#8884d8' }))
-          );
-        }
-
-      } catch (e) {
-        console.warn('Failed to load analytics:', e);
-      }
-    }
-
-    fetchAnalytics(timeRangeDays);
-
-    return () => {
-      mounted = false;
-    };
-  }, [timeRangeDays]);
 
   const copyWidgetCode = () => {
     const businessId = user?.businessId || 'YOUR_BUSINESS_ID';

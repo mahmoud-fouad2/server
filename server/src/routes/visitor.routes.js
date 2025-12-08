@@ -117,7 +117,7 @@ router.get('/active-sessions', authenticateToken, async (req, res) => {
   try {
     const businessId = req.user.role === 'SUPERADMIN' 
       ? req.query.businessId 
-      : req.user.businesses[0]?.id;
+      : (req.user.businessId || req.user.businesses?.[0]?.id);
 
     if (!businessId) {
       return res.status(400).json({ success: false, message: 'Business not found' });
@@ -140,7 +140,7 @@ router.get('/analytics', authenticateToken, async (req, res) => {
   try {
     const businessId = req.user.role === 'SUPERADMIN' 
       ? req.query.businessId 
-      : req.user.businesses[0]?.id;
+      : (req.user.businessId || req.user.businesses?.[0]?.id);
 
     if (!businessId) {
       return res.status(400).json({ success: false, message: 'Business not found' });
