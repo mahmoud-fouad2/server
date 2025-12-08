@@ -24,6 +24,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { getApiUrl } from '@/lib/config';
 import {
   LineChart,
   Line,
@@ -83,8 +84,8 @@ export default function StatsOverview({
       try {
         // If start/end provided, use range query, otherwise use days
         const url = startDate && endDate
-          ? `/api/analytics/dashboard?start=${encodeURIComponent(startDate)}&end=${encodeURIComponent(endDate)}`
-          : `/api/analytics/dashboard-public/${timeRangeDays}`;
+          ? getApiUrl(`api/analytics/dashboard?start=${encodeURIComponent(startDate)}&end=${encodeURIComponent(endDate)}`)
+          : getApiUrl(`api/analytics/dashboard-public/${timeRangeDays}`);
         const res = await fetch(url);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const payload = await res.json();
@@ -112,7 +113,7 @@ export default function StatsOverview({
     // fetch vector stats as well
     (async () => {
       try {
-        const res = await fetch(`/api/analytics/vector-stats`);
+        const res = await fetch(getApiUrl('api/analytics/vector-stats'));
         if (!res.ok) throw new Error('vector stats fetch failed');
         const payload = await res.json();
         const stats = payload.data || payload;
@@ -140,7 +141,7 @@ export default function StatsOverview({
 
     async function fetchAnalytics(days) {
       try {
-        const res = await fetch(`/api/analytics/dashboard/${days}`);
+        const res = await fetch(getApiUrl(`api/analytics/dashboard/${days}`));
         if (!res.ok) throw new Error(`Status ${res.status}`);
         const payload = await res.json();
 
@@ -150,21 +151,21 @@ export default function StatsOverview({
         const dashboard = payload.data || payload;
 
         // Conversations trend
-        if (dashboard.trends && dashboard.trends.daily) {
+        if (dashboard.trends && Array.isArray(dashboard.trends.daily)) {
           setConversationDataState(
             dashboard.trends.daily.map(d => ({ name: d.dateLabel || d.date, conversations: d.count }))
           );
         }
 
         // Response times
-        if (dashboard.performance && dashboard.performance.responseTimeSeries) {
+        if (dashboard.performance && Array.isArray(dashboard.performance.responseTimeSeries)) {
           setResponseTimeState(
             dashboard.performance.responseTimeSeries.map(p => ({ name: p.timeLabel || p.time, time: p.avg }))
           );
         }
 
         // Satisfaction
-        if (dashboard.performance && dashboard.performance.satisfactionDistribution) {
+        if (dashboard.performance && Array.isArray(dashboard.performance.satisfactionDistribution)) {
           setSatisfactionState(
             dashboard.performance.satisfactionDistribution.map(s => ({ name: s.label, value: s.value, color: s.color || '#8884d8' }))
           );
@@ -379,7 +380,7 @@ export default function StatsOverview({
           </div>
         </div>
 
-        <Button size="sm" onClick={() => window.open(`/api/analytics/export?format=csv&days=${timeRangeDays}`)}>
+        <Button size="sm" onClick={() => window.open(getApiUrl(`api/analytics/export?format=csv&days=${timeRangeDays}`))}>
           تصدير CSV
         </Button>
       </div>
