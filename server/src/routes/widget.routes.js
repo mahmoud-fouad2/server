@@ -70,9 +70,15 @@ router.get('/config/:businessId', async (req, res) => {
     const config = business.widgetConfig ? JSON.parse(business.widgetConfig) : defaultConfig;
 
     // Fix: Replace localhost URLs with current API URL to prevent CSP errors
-    if (config.customIconUrl && config.customIconUrl.includes('localhost')) {
-       const baseUrl = process.env.API_URL || 'https://fahimo-api.onrender.com';
-       config.customIconUrl = config.customIconUrl.replace(/http:\/\/localhost:\d+/, baseUrl);
+    if (config.customIconUrl) {
+      const baseUrl = process.env.API_URL || 'https://fahimo-api.onrender.com';
+      if (config.customIconUrl.includes('localhost')) {
+        config.customIconUrl = config.customIconUrl.replace(/http:\/\/localhost:\d+/, baseUrl);
+      }
+      // Force HTTPS to satisfy CSP if an http link slipped through
+      if (config.customIconUrl.startsWith('http://')) {
+        config.customIconUrl = config.customIconUrl.replace('http://', 'https://');
+      }
     }
 
     res.json({
