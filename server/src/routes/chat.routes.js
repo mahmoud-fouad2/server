@@ -29,7 +29,18 @@ router.get('/conversations', authenticateToken, async (req, res) => {
     const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
 
-    if (!businessId) return res.status(400).json({ error: 'Business ID required' });
+    if (!businessId) {
+      // Return empty list instead of 400 to prevent frontend errors
+      return res.json({
+        data: [],
+        pagination: {
+          page,
+          limit,
+          total: 0,
+          pages: 0
+        }
+      });
+    }
 
     const [conversations, total] = await Promise.all([
       prisma.conversation.findMany({

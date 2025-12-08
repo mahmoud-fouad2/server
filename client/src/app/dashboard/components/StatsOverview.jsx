@@ -64,15 +64,24 @@ export default function StatsOverview({
   const [alerts, setAlerts] = useState([]);
   const syncId = 'dashboardSync';
 
-  // Simulate real-time updates
+  // Real-time updates from API
   useEffect(() => {
-    const interval = setInterval(() => {
-      setRealTimeStats({
-        activeUsers: Math.floor(Math.random() * 50) + 10,
-        responseTime: Math.floor(Math.random() * 2000) + 500,
-        satisfaction: Math.floor(Math.random() * 20) + 80,
-      });
-    }, 5000);
+    const fetchRealTimeStats = async () => {
+      try {
+        const response = await apiCall('api/analytics/realtime');
+        const data = response.data || response;
+        setRealTimeStats({
+          activeUsers: data.activeUsers || 0,
+          responseTime: data.avgResponseTime || 0,
+          satisfaction: data.satisfactionScore || 0,
+        });
+      } catch (e) {
+        // Silent fail for realtime updates
+      }
+    };
+
+    fetchRealTimeStats();
+    const interval = setInterval(fetchRealTimeStats, 30000); // Update every 30s
 
     return () => clearInterval(interval);
   }, []);
@@ -125,12 +134,21 @@ export default function StatsOverview({
   }, [timeRangeDays, startDate, endDate]);
 
 
-  // Mock alerts
+  // Fetch alerts from API
   useEffect(() => {
-    setAlerts([
-      { id: 1, type: 'warning', message: 'High response time detected', time: '2 min ago' },
-      { id: 2, type: 'info', message: 'New user registered', time: '5 min ago' },
-    ]);
+    const fetchAlerts = async () => {
+      try {
+        const response = await apiCall('api/analytics/alerts');
+        const data = response.data || response;
+        if (Array.isArray(data)) {
+          setAlerts(data);
+        }
+      } catch (e) {
+        // Silent fail
+      }
+    };
+    
+    fetchAlerts();
   }, []);
 
 
@@ -201,32 +219,10 @@ export default function StatsOverview({
     }
   };
 
-  // Mock chart data
-  const conversationData = [
-    { name: 'Mon', conversations: 120 },
-    { name: 'Tue', conversations: 150 },
-    { name: 'Wed', conversations: 180 },
-    { name: 'Thu', conversations: 200 },
-    { name: 'Fri', conversations: 220 },
-    { name: 'Sat', conversations: 190 },
-    { name: 'Sun', conversations: 160 },
-  ];
-
-  const responseTimeData = [
-    { name: '00:00', time: 1200 },
-    { name: '04:00', time: 1100 },
-    { name: '08:00', time: 1300 },
-    { name: '12:00', time: 1400 },
-    { name: '16:00', time: 1250 },
-    { name: '20:00', time: 1150 },
-  ];
-
-  const satisfactionData = [
-    { name: 'Very Satisfied', value: 45, color: '#10B981' },
-    { name: 'Satisfied', value: 35, color: '#3B82F6' },
-    { name: 'Neutral', value: 15, color: '#F59E0B' },
-    { name: 'Dissatisfied', value: 5, color: '#EF4444' },
-  ];
+  // Default empty state for charts
+  const conversationData = [];
+  const responseTimeData = [];
+  const satisfactionData = [];
 
   return (
     <motion.div
