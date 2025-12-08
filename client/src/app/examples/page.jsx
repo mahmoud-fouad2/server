@@ -17,7 +17,6 @@ import {
   FaArrowLeft,
 } from 'react-icons/fa';
 import Navigation from '@/components/landing/Navigation';
-import Footer from '@/components/layout/Footer';
 import useTheme from '@/lib/theme';
 import { TRANSLATIONS } from '@/constants';
 import { useRouter } from 'next/navigation';
@@ -429,8 +428,6 @@ export default function ExamplesPage() {
           </div>
         </div>
       </section>
-
-      <Footer />
     </div>
   );
 }
