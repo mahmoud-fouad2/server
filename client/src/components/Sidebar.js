@@ -40,7 +40,7 @@ const SidebarItem = ({
     data-tour={dataTour}
     className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 mb-1 group relative overflow-hidden ${
       activeTab === id
-        ? 'bg-brand-600/10 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400 shadow-sm'
+        ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300 shadow-sm font-semibold'
         : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white'
     }`}
   >
