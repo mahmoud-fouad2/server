@@ -234,7 +234,9 @@ try {
 // Analytics routes
 try {
   const analyticsRoutes = require('./routes/conversation-analytics.routes');
+  const realtimeAnalyticsRoutes = require('./routes/realtime-analytics.routes');
   app.use('/api/analytics', analyticsRoutes);
+  app.use('/api/analytics', realtimeAnalyticsRoutes);
 } catch (e) {
   console.warn('Analytics routes not available:', e?.message || e);
 }
