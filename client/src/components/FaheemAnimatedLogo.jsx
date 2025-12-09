@@ -38,7 +38,7 @@ const FaheemAnimatedLogo = ({
       width: 500,
       height: 220,
       fontSize: 100,
-      container: 'w-[500px] h-[220px]',
+      container: 'w-full max-w-[500px] h-[220px]',
       textMargin: 'mt-2',
       textScale: 0.5,
     },
@@ -46,7 +46,7 @@ const FaheemAnimatedLogo = ({
       width: 640,
       height: 280,
       fontSize: 130,
-      container: 'w-[640px] h-[280px]',
+      container: 'w-full max-w-[640px] h-[280px]',
       textMargin: 'mt-2',
       textScale: 0.48,
     },
@@ -92,6 +92,11 @@ const FaheemAnimatedLogo = ({
               alt="Faheemly"
               className="w-full h-full object-contain relative z-10 animate-pulse"
             />
+          </div>
+          <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 flex gap-2">
+            <div className="w-3 h-3 bg-brand-500 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
+            <div className="w-3 h-3 bg-brand-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+            <div className="w-3 h-3 bg-brand-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
           </div>
         </div>
       </div>

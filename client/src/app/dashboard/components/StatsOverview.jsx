@@ -190,6 +190,17 @@ export default function StatsOverview({
     return 'منذ لحظات';
   };
 
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const copyWidgetCode = () => {
+    const code = `<script src="https://fahimo-api.onrender.com/widget/fahimo-widget.js" data-business-id="${user?.businessId}"></script>`;
+    copyToClipboard(code);
+  };
+
   // Client-side CSV export of visible chart data
   const exportVisibleDataCSV = () => {
     try {
@@ -235,7 +246,12 @@ export default function StatsOverview({
   // Default empty state for charts
   const conversationData = [];
   const responseTimeData = [];
-  const satisfactionData = [];
+  const satisfactionData = [
+    { name: 'راضي جداً', value: 0, color: '#10B981' },
+    { name: 'راضي', value: 0, color: '#3B82F6' },
+    { name: 'محايد', value: 0, color: '#F59E0B' },
+    { name: 'غير راضي', value: 0, color: '#EF4444' },
+  ];
 
   return (
     <motion.div
@@ -716,29 +732,65 @@ export default function StatsOverview({
           <CardHeader>
             <CardTitle>كود التضمين</CardTitle>
             <CardDescription>
-              انسخ هذا الكود وضعه في وسم body في موقعك
+              اختر المنصة التي تستخدمها للحصول على كود التضمين المناسب
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="relative group" dir="ltr">
-              <div className="bg-muted p-4 rounded-lg font-mono text-xs break-all border border-border">
-                &lt;script
-                src=&quot;https://fahimo-api.onrender.com/widget/fahimo-widget.js&quot;
-                data-business-id=&quot;{user?.businessId}&quot;&gt;&lt;/script&gt;
+            <div className="space-y-6" dir="ltr">
+              
+              {/* HTML / General */}
+              <div>
+                <h4 className="text-sm font-semibold mb-2 text-right" dir="rtl">HTML / عام</h4>
+                <div className="relative group">
+                  <div className="bg-muted p-4 rounded-lg font-mono text-xs break-all border border-border">
+                    &lt;script
+                    src=&quot;https://fahimo-api.onrender.com/widget/fahimo-widget.js&quot;
+                    data-business-id=&quot;{user?.businessId}&quot;&gt;&lt;/script&gt;
+                  </div>
+                  <div className="absolute top-2 right-2">
+                    <Button size="sm" variant="ghost" onClick={() => copyToClipboard(`<script src="https://fahimo-api.onrender.com/widget/fahimo-widget.js" data-business-id="${user?.businessId}"></script>`)}>
+                      <Copy className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
               </div>
-              <div className="absolute top-2 right-2 flex gap-2">
-                <Button size="sm" onClick={copyWidgetCode}>
-                  {copied ? (
-                    <Check className="w-4 h-4 mr-1" />
-                  ) : (
-                    <Copy className="w-4 h-4 mr-1" />
-                  )}
-                  {copied ? 'تم النسخ' : 'نسخ'}
-                </Button>
-                <Button size="sm" variant="outline" onClick={() => exportVisibleDataCSV()}>
-                  تصدير بيانات
-                </Button>
+
+              {/* WordPress */}
+              <div>
+                <h4 className="text-sm font-semibold mb-2 text-right" dir="rtl">WordPress</h4>
+                <div className="relative group">
+                  <div className="bg-muted p-4 rounded-lg font-mono text-xs break-all border border-border">
+                    {`function add_fahimo_widget() {
+    echo '<script src="https://fahimo-api.onrender.com/widget/fahimo-widget.js" data-business-id="${user?.businessId}"></script>';
+}
+add_action('wp_footer', 'add_fahimo_widget');`}
+                  </div>
+                  <div className="absolute top-2 right-2">
+                    <Button size="sm" variant="ghost" onClick={() => copyToClipboard(`function add_fahimo_widget() { echo '<script src="https://fahimo-api.onrender.com/widget/fahimo-widget.js" data-business-id="${user?.businessId}"></script>'; } add_action('wp_footer', 'add_fahimo_widget');`)}>
+                      <Copy className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1 text-right" dir="rtl">أضف هذا الكود في ملف functions.php الخاص بالقالب.</p>
               </div>
+
+              {/* API Key */}
+              <div>
+                <h4 className="text-sm font-semibold mb-2 text-right" dir="rtl">API Key (للمطورين)</h4>
+                <div className="relative group">
+                  <div className="bg-muted p-4 rounded-lg font-mono text-xs break-all border border-border flex items-center justify-between">
+                    <span>{user?.businessId ? `sk_live_${user.businessId.substring(0, 8)}...` : 'Generating...'}</span>
+                    <span className="text-xs text-yellow-600 bg-yellow-100 px-2 py-1 rounded">سري للغاية</span>
+                  </div>
+                  <div className="absolute top-2 right-2">
+                     <Button size="sm" variant="ghost" disabled>
+                      <Copy className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1 text-right" dir="rtl">يستخدم للربط مع منصات خارجية. يرجى التواصل مع الدعم للحصول على مفتاح API كامل.</p>
+              </div>
+
             </div>
           </CardContent>
         </Card>
