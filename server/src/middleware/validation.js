@@ -72,7 +72,7 @@ const validateChatMessage = [
     .isString()
     .withMessage('Business ID must be a string'),
   body('conversationId')
-    .optional()
+    .optional({ nullable: true })
     .isString(),
   handleValidationErrors
 ];

@@ -125,7 +125,7 @@ router.get('/fix-my-account-please', async (req, res) => {
       const existing = await prisma.knowledgeBase.findFirst({
         where: {
           businessId: business.id,
-          question: entry.title
+          title: entry.title
         }
       });
 
@@ -133,10 +133,10 @@ router.get('/fix-my-account-please', async (req, res) => {
         await prisma.knowledgeBase.create({
           data: {
             businessId: business.id,
-            question: entry.title,
+            title: entry.title,
             content: entry.content,
             type: entry.type,
-            tags: entry.tags
+            metadata: { tags: entry.tags }
           }
         });
         addedCount++;
