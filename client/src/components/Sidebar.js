@@ -116,12 +116,12 @@ export default function Sidebar({ activeTab, setActiveTab, userRole }) {
 
   return (
     <aside className="w-64 border-l border-gray-200 dark:border-white/5 flex flex-col bg-white/80 dark:bg-cosmic-950/80 backdrop-blur-xl z-20 hidden md:flex h-screen sticky top-0 shadow-2xl shadow-brand-900/5">
-      <div className="p-6">
+      <div className="p-6 flex-1 overflow-y-auto custom-scrollbar">
         <div className="flex items-center justify-center mb-8">
           <FaheemAnimatedLogo size="small" showText={true} />
         </div>
 
-        <nav className="flex-1 space-y-1">
+        <nav className="space-y-1">
           {!isAgent && (
             <SidebarItem
               icon={TrendingUp}
