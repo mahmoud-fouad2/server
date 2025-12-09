@@ -3,6 +3,9 @@ const router = express.Router();
 const prisma = require('../config/database');
 const { authenticateToken } = require('../middleware/auth');
 
+// Fix for BigInt serialization in JSON (Prisma COUNT returns BigInt)
+BigInt.prototype.toJSON = function() { return Number(this) }
+
 /**
  * Analytics Dashboard API
  * Comprehensive statistics for business owners

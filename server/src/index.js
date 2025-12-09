@@ -195,7 +195,13 @@ async function startServerWithRetries(startPort, maxAttempts = 10) {
 
 // Middleware
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '../public')));
+app.use(express.static(path.join(__dirname, '../public'), {
+  setHeaders: (res, path, stat) => {
+    // Allow cross-origin loading of static assets (scripts, images)
+    res.set('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.set('Access-Control-Allow-Origin', '*');
+  }
+}));
 
 // Test route - Always enabled to verify server is running
 app.get('/', (req, res) => {
