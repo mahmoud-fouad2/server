@@ -196,8 +196,8 @@ router.post('/message', chatLimiter, validateChatMessage, async (req, res) => {
   try {
     let { message, businessId, conversationId, sessionId } = req.body;
 
-    if (!message || !businessId) {
-      return res.status(400).json({ error: 'Message and Business ID are required' });
+    if (!message) {
+      return res.status(400).json({ error: 'Message is required' });
     }
 
     // Sanitize user message to prevent XSS attacks

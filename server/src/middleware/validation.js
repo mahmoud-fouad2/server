@@ -68,9 +68,9 @@ const validateChatMessage = [
     .isLength({ min: 1, max: 2000 })
     .withMessage('Message must be 1-2000 characters'),
   body('businessId')
-    .notEmpty()
+    .optional({ nullable: true })
     .isString()
-    .withMessage('Business ID is required'),
+    .withMessage('Business ID must be a string'),
   body('conversationId')
     .optional()
     .isString(),
