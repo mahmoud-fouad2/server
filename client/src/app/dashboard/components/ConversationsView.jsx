@@ -10,8 +10,10 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { User, Bot, MessageSquare, Loader2 } from 'lucide-react';
-import { chatApi } from '@/lib/api';
+import { User, Bot, MessageSquare, Loader2, Bell } from 'lucide-react';
+import { chatApi, authApi } from '@/lib/api';
+import { io } from 'socket.io-client';
+import { API_CONFIG } from '@/lib/config';
 
 export default function ConversationsView() {
   const [conversations, setConversations] = useState([]);
@@ -20,10 +22,70 @@ export default function ConversationsView() {
   const [replyInput, setReplyInput] = useState('');
   const [sendingReply, setSendingReply] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [socket, setSocket] = useState(null);
 
   useEffect(() => {
     fetchConversations();
+    setupSocket();
+
+    return () => {
+      if (socket) socket.disconnect();
+    };
   }, []);
+
+  const setupSocket = async () => {
+    try {
+      const profile = await authApi.getProfile();
+      if (profile && profile.businessId) {
+        const newSocket = io(API_CONFIG.BASE_URL.replace('/api', ''), {
+          transports: ['websocket'],
+        });
+
+        newSocket.on('connect', () => {
+          console.log('Socket connected');
+          newSocket.emit('join_room', `business_${profile.businessId}`);
+        });
+
+        newSocket.on('handover_request', (data) => {
+          playNotificationSound();
+          // Show visual alert (simple browser alert for now or toast if available)
+          // Ideally use a toast library here
+          if (Notification.permission === 'granted') {
+            new Notification('طلب مساعدة جديد', { body: data.message });
+          }
+          fetchConversations(); // Refresh list
+        });
+
+        setSocket(newSocket);
+        
+        // Request notification permission
+        if (Notification.permission !== 'granted') {
+          Notification.requestPermission();
+        }
+      }
+    } catch (e) {
+      console.error('Socket setup failed', e);
+    }
+  };
+
+  const playNotificationSound = () => {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(440, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.1);
+      gain.gain.setValueAtTime(0.1, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.5);
+    } catch (e) {
+      console.error('Audio play failed', e);
+    }
+  };
 
   const fetchConversations = async () => {
     try {
@@ -73,7 +135,7 @@ export default function ConversationsView() {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
-      className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-[calc(100vh-140px)]"
+      className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-[calc(100vh-250px)]"
     >
       {/* Conversations List */}
       <Card className="lg:col-span-1 flex flex-col h-full">

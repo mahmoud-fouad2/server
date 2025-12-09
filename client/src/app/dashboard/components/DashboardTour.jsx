@@ -1,201 +1,222 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-// import Joyride, { ACTIONS, EVENTS, STATUS } from 'react-joyride'; // Temporarily disabled due to React 19 incompatibility
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 /**
- * Dashboard Onboarding Tour
+ * Dashboard Onboarding Tour (Custom Implementation for React 19)
  * Guides new users through key features
  */
 
 const TOUR_STEPS = [
   {
     target: '#dashboard-overview',
-    content:
-      '👋 مرحباً بك في لوحة التحكم! دعنا نأخذك في جولة سريعة للتعرف على المميزات الأساسية.',
-    placement: 'center',
-    disableBeacon: true,
-    locale: { skip: 'تخطي', next: 'التالي', back: 'السابق', last: 'إنهاء' },
+    title: 'مرحباً بك في فهملي! 👋',
+    content: 'دعنا نأخذك في جولة سريعة للتعرف على لوحة التحكم وكيفية الاستفادة القصوى من المساعد الذكي.',
+    position: 'center'
   },
   {
     target: '[data-tour="stats-overview"]',
-    content:
-      '📊 هنا تجد ملخص إحصائياتك: عدد المحادثات، معدل الرضا، وأداء البوت.',
-    placement: 'bottom',
+    title: 'نظرة عامة 📊',
+    content: 'هنا تجد ملخص إحصائياتك: عدد المحادثات، معدل الرضا، وأداء البوت في الوقت الفعلي.',
+    position: 'bottom'
   },
   {
     target: '[data-tour="sidebar-conversations"]',
-    content: '💬 قسم المحادثات: اطلع على جميع محادثات العملاء مع البوت.',
-    placement: 'left',
+    title: 'المحادثات 💬',
+    content: 'تابع جميع محادثات العملاء مع البوت، وتدخل في أي وقت للرد بنفسك.',
+    position: 'right'
   },
   {
     target: '[data-tour="sidebar-knowledge"]',
-    content: '📚 قاعدة المعرفة: أضف ملفات، نصوص، أو روابط لتدريب البوت.',
-    placement: 'left',
+    title: 'قاعدة المعرفة 📚',
+    content: 'هنا العقل المدبر! أضف ملفات PDF، نصوص، أو روابط لتدريب البوت على معلومات عملك.',
+    position: 'right'
   },
   {
     target: '[data-tour="sidebar-widget"]',
-    content: '🎨 إعدادات الويدجت: خصص الألوان، الرسائل، وشكل البوت.',
-    placement: 'left',
+    title: 'تخصيص الويدجت 🎨',
+    content: 'تحكم في شكل وألوان نافذة الدردشة لتناسب هوية علامتك التجارية.',
+    position: 'right'
   },
   {
     target: '[data-tour="sidebar-settings"]',
-    content: '⚙️ الإعدادات: أدر اشتراكك، الفريق، والتكاملات.',
-    placement: 'left',
+    title: 'الإعدادات ⚙️',
+    content: 'أدر اشتراكك، فريق العمل، وربط القنوات المختلفة (واتساب، تيليجرام، وغيرها).',
+    position: 'right'
   },
   {
     target: '[data-tour="theme-toggle"]',
-    content: '🌙 يمكنك التبديل بين الوضع الليلي والنهاري من هنا.',
-    placement: 'bottom',
+    title: 'الوضع الليلي 🌙',
+    content: 'يمكنك التبديل بين الوضع الليلي والنهاري من هنا لراحة عينيك.',
+    position: 'top'
   },
   {
     target: 'body',
-    content:
-      '🎉 رائع! أنت الآن جاهز للبدء. يمكنك دائماً إعادة الجولة من قائمة المساعدة.',
-    placement: 'center',
+    title: 'أنت جاهز للانطلاق! 🚀',
+    content: 'ابدأ الآن في تحسين خدمة عملائك. يمكنك دائماً إعادة هذه الجولة من زر المساعدة.',
+    position: 'center'
   },
 ];
 
 export default function DashboardTour({ run, onComplete }) {
-  // Temporarily disabled due to React 19 incompatibility
+  const [currentStep, setCurrentStep] = useState(0);
+  const [isVisible, setIsVisible] = useState(false);
+  const [targetRect, setTargetRect] = useState(null);
+
   useEffect(() => {
-    if (run && onComplete) {
-      console.log('Dashboard tour disabled for React 19 compatibility');
-      onComplete(true);
+    if (run) {
+      setIsVisible(true);
+      setCurrentStep(0);
+    } else {
+      setIsVisible(false);
     }
-  }, [run, onComplete]);
+  }, [run]);
 
-  return null;
-  
-  /* React 18 version - will be restored when react-joyride supports React 19
-  const [stepIndex, setStepIndex] = useState(0);
+  useEffect(() => {
+    if (!isVisible) return;
 
-  const handleJoyrideCallback = data => {
-    const { action, index, status, type } = data;
+    const step = TOUR_STEPS[currentStep];
+    if (step.target === 'body' || step.target === '#dashboard-overview') {
+      setTargetRect(null); // Center modal
+      return;
+    }
 
-    if ([EVENTS.STEP_AFTER, EVENTS.TARGET_NOT_FOUND].includes(type)) {
-      setStepIndex(index + (action === ACTIONS.PREV ? -1 : 1));
-    } else if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status)) {
-      setStepIndex(0);
+    const element = document.querySelector(step.target);
+    if (element) {
+      const rect = element.getBoundingClientRect();
+      setTargetRect(rect);
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else {
+      // Skip step if target not found
+      handleNext();
+    }
+  }, [currentStep, isVisible]);
 
-      if (status === STATUS.FINISHED) {
-        localStorage.setItem('dashboardTourCompleted', 'true');
-        localStorage.setItem(
-          'dashboardTourCompletedAt',
-          new Date().toISOString()
-        );
-      }
-
-      if (onComplete) onComplete(status === STATUS.FINISHED);
+  const handleNext = () => {
+    if (currentStep < TOUR_STEPS.length - 1) {
+      setCurrentStep(prev => prev + 1);
+    } else {
+      handleFinish();
     }
   };
+
+  const handlePrev = () => {
+    if (currentStep > 0) {
+      setCurrentStep(prev => prev - 1);
+    }
+  };
+
+  const handleFinish = () => {
+    setIsVisible(false);
+    localStorage.setItem('dashboardTourCompleted', 'true');
+    if (onComplete) onComplete(true);
+  };
+
+  if (!isVisible) return null;
+
+  const step = TOUR_STEPS[currentStep];
+  const isCenter = !targetRect;
+
+  // Calculate tooltip position
+  let tooltipStyle = {};
+  if (targetRect) {
+    const gap = 15;
+    if (step.position === 'right') {
+      tooltipStyle = {
+        top: targetRect.top + (targetRect.height / 2) - 100,
+        left: targetRect.right + gap,
+      };
+    } else if (step.position === 'bottom') {
+      tooltipStyle = {
+        top: targetRect.bottom + gap,
+        left: targetRect.left + (targetRect.width / 2) - 150,
+      };
+    } else if (step.position === 'top') {
+      tooltipStyle = {
+        bottom: window.innerHeight - targetRect.top + gap,
+        left: targetRect.left + (targetRect.width / 2) - 150,
+      };
+    }
+    
+    // Ensure tooltip stays within viewport
+    // (Simplified logic for this demo)
+  }
 
   return (
-    <Joyride
-      steps={TOUR_STEPS}
-      run={run}
-      continuous
-      showProgress
-      showSkipButton
-      stepIndex={stepIndex}
-      callback={handleJoyrideCallback}
-      styles={{
-        options: {
-          arrowColor: '#fff',
-          backgroundColor: '#fff',
-          primaryColor: '#4F46E5', // brand-600
-          textColor: '#1F2937',
-          overlayColor: 'rgba(0, 0, 0, 0.5)',
-          zIndex: 10000,
-        },
-        tooltip: {
-          fontSize: '15px',
-          padding: '20px',
-          borderRadius: '12px',
-        },
-        tooltipContainer: {
-          textAlign: 'right', // RTL support
-        },
-        buttonNext: {
-          backgroundColor: '#4F46E5',
-          fontSize: '14px',
-          padding: '10px 20px',
-          borderRadius: '8px',
-          fontWeight: '600',
-        },
-        buttonBack: {
-          color: '#6B7280',
-          fontSize: '14px',
-          marginLeft: '10px',
-        },
-        buttonSkip: {
-          color: '#9CA3AF',
-          fontSize: '13px',
-        },
-        beacon: {
-          inner: '#4F46E5',
-          outer: '#4F46E5',
-        },
-      }}
-      locale={{
-        back: 'السابق',
-        close: 'إغلاق',
-        last: 'إنهاء',
-        next: 'التالي',
-        open: 'فتح',
-        skip: 'تخطي',
-      }}
-      floaterProps={{
-        disableAnimation: false,
-        styles: {
-          arrow: {
-            length: 8,
-            spread: 16,
-          },
-        },
-      }}
-    />
-  */
+    <div className="fixed inset-0 z-[9999] pointer-events-none">
+      {/* Backdrop with hole effect (simulated with 4 divs or just dark overlay for now) */}
+      <div className="absolute inset-0 bg-black/50 pointer-events-auto transition-opacity duration-300" />
+
+      {/* Highlight Target */}
+      {targetRect && (
+        <div 
+          className="absolute border-2 border-brand-500 rounded-lg shadow-[0_0_0_9999px_rgba(0,0,0,0.5)] transition-all duration-300 ease-in-out pointer-events-none"
+          style={{
+            top: targetRect.top - 5,
+            left: targetRect.left - 5,
+            width: targetRect.width + 10,
+            height: targetRect.height + 10,
+          }}
+        />
+      )}
+
+      {/* Tooltip Card */}
+      <div 
+        className={`absolute pointer-events-auto transition-all duration-300 ease-out ${isCenter ? 'top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2' : ''}`}
+        style={!isCenter ? tooltipStyle : {}}
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          key={currentStep}
+          className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-2xl w-[350px] border border-gray-200 dark:border-gray-700 relative"
+        >
+          <button 
+            onClick={handleFinish}
+            className="absolute top-3 left-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+          >
+            <X size={18} />
+          </button>
+
+          <div className="mb-4">
+            <span className="text-xs font-bold text-brand-600 bg-brand-50 dark:bg-brand-900/20 px-2 py-1 rounded-full">
+              خطوة {currentStep + 1} من {TOUR_STEPS.length}
+            </span>
+          </div>
+
+          <h3 className="text-lg font-bold mb-2 text-gray-900 dark:text-white">
+            {step.title}
+          </h3>
+          <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed mb-6">
+            {step.content}
+          </p>
+
+          <div className="flex justify-between items-center">
+            <div className="flex gap-2">
+              {currentStep > 0 && (
+                <button
+                  onClick={handlePrev}
+                  className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                >
+                  السابق
+                </button>
+              )}
+            </div>
+            <button
+              onClick={handleNext}
+              className="px-4 py-2 text-sm font-bold text-white bg-brand-600 hover:bg-brand-700 rounded-lg shadow-lg shadow-brand-500/20 transition-all flex items-center gap-2"
+            >
+              {currentStep === TOUR_STEPS.length - 1 ? 'إنهاء الجولة' : 'التالي'}
+              {currentStep < TOUR_STEPS.length - 1 && <ChevronLeft size={16} />}
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    </div>
+  );
 }
-
-/**
- * Hook to manage tour state
- */
-export function useDashboardTour() {
-  const [runTour, setRunTour] = useState(false);
-  const [tourCompleted, setTourCompleted] = useState(false);
-
-  useEffect(() => {
-    // Check if user has completed the tour
-    const completed = localStorage.getItem('dashboardTourCompleted');
-    const isFirstVisit = !localStorage.getItem('hasVisitedDashboard');
-
-    if (!completed && isFirstVisit) {
-      // Wait a bit before starting tour (let dashboard load)
-      setTimeout(() => {
-        setRunTour(true);
-      }, 1000);
-    }
-
-    // Mark that user has visited dashboard
-    localStorage.setItem('hasVisitedDashboard', 'true');
-    setTourCompleted(!!completed);
-  }, []);
-
-  const startTour = () => setRunTour(true);
-  const stopTour = () => setRunTour(false);
-  const resetTour = () => {
-    localStorage.removeItem('dashboardTourCompleted');
-    localStorage.removeItem('dashboardTourCompletedAt');
-    setTourCompleted(false);
-    setRunTour(true);
-  };
-
-  const handleComplete = finished => {
-    setRunTour(false);
-    setTourCompleted(finished);
-  };
-
   return {
     runTour,
     tourCompleted,

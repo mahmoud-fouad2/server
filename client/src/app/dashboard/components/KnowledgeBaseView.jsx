@@ -213,7 +213,7 @@ export default function KnowledgeBaseView({ addNotification }) {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -10 }}
-        className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-[calc(100vh-140px)]"
+        className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-[calc(100vh-250px)]"
       >
         {/* Left Column: Active Sources */}
         <Card className="lg:col-span-1 flex flex-col h-full">

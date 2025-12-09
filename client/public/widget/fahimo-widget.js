@@ -44,7 +44,9 @@
 
     async fetchHistory(conversationId) {
       try {
-        const res = await fetch(`${this.config.apiEndpoint.replace('/message', '')}/${conversationId}/messages`);
+        // Use the public endpoint for widget history
+        const baseUrl = this.config.apiEndpoint.replace('/message', '');
+        const res = await fetch(`${baseUrl}/public/${conversationId}/messages`);
         if (res.ok) {
           const data = await res.json();
           const messages = data.data || [];
@@ -63,11 +65,17 @@
         document.querySelector('script[data-business-id]');
       if (script) {
         this.config.businessId = script.getAttribute('data-business-id');
-        // Allow override via data attributes, but server config takes precedence usually
+        // Allow override via data attributes
         if (script.getAttribute('data-color'))
           this.config.color = script.getAttribute('data-color');
         this.config.position =
           script.getAttribute('data-position') || this.config.position;
+        
+        // Dynamic API Endpoint
+        if (script.getAttribute('data-api-url')) {
+           this.config.apiEndpoint = script.getAttribute('data-api-url') + '/api/chat/message';
+           this.config.configEndpoint = script.getAttribute('data-api-url') + '/api/widget/config';
+        }
       }
     },
 
@@ -95,7 +103,7 @@
       style.textContent = `
         #fahimo-widget-container {
           position: fixed;
-          z-index: 9999;
+          z-index: 999999;
           font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
           direction: rtl;
         }
@@ -111,6 +119,9 @@
             left: 0 !important;
             border-radius: 0 !important;
             transform: translateY(100%);
+            max-height: 100vh;
+            position: fixed !important;
+            top: 0;
           }
           #fahimo-chat-window.open {
             transform: translateY(0);
@@ -118,6 +129,10 @@
           .fahimo-pos-bottom-right, .fahimo-pos-bottom-left {
             bottom: 10px;
             right: 10px;
+          }
+          #fahimo-launcher {
+            bottom: 20px !important;
+            right: 20px !important;
           }
         }
 
@@ -132,6 +147,9 @@
           align-items: center;
           justify-content: center;
           transition: transform 0.3s ease;
+          position: absolute;
+          bottom: 0;
+          right: 0;
         }
         #fahimo-launcher:hover { transform: scale(1.05); }
         #fahimo-launcher svg { width: 30px; height: 30px; fill: white; }
@@ -185,7 +203,8 @@
           padding: 10px 14px;
           border-radius: 12px;
           font-size: 14px;
-          line-height: 1.4;
+          line-height: 1.5;
+          word-wrap: break-word;
         }
         .fahimo-msg.user {
           background: ${this.config.color};
@@ -201,6 +220,41 @@
           box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
         
+        /* Markdown Styles */
+        .fahimo-msg ul, .fahimo-msg ol { margin: 5px 0; padding-right: 20px; }
+        .fahimo-msg li { margin-bottom: 4px; }
+        .fahimo-msg p { margin: 0 0 8px 0; }
+        .fahimo-msg p:last-child { margin: 0; }
+        .fahimo-msg a { color: inherit; text-decoration: underline; }
+        .fahimo-msg strong { font-weight: 700; }
+
+        /* Typing Indicator */
+        .fahimo-typing {
+          display: flex;
+          gap: 4px;
+          padding: 12px 16px;
+          background: white;
+          border-radius: 12px;
+          border-bottom-right-radius: 2px;
+          width: fit-content;
+          box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+          margin-bottom: 10px;
+        }
+        .fahimo-typing span {
+          width: 6px;
+          height: 6px;
+          background: #ccc;
+          border-radius: 50%;
+          animation: fahimo-bounce 1.4s infinite ease-in-out both;
+        }
+        .fahimo-typing span:nth-child(1) { animation-delay: -0.32s; }
+        .fahimo-typing span:nth-child(2) { animation-delay: -0.16s; }
+        
+        @keyframes fahimo-bounce {
+          0%, 80%, 100% { transform: scale(0); }
+          40% { transform: scale(1); }
+        }
+
         .fahimo-input-area {
           padding: 12px;
           border-top: 1px solid #eee;
@@ -318,7 +372,8 @@
         this.addMessage(text, 'user');
         input.value = '';
 
-        // Show typing indicator (optional)
+        // Show typing indicator
+        this.showTyping();
 
         try {
           const response = await fetch(this.config.apiEndpoint, {
@@ -342,9 +397,11 @@
             localStorage.setItem('fahimo_conv_id', data.conversationId);
           }
 
+          this.hideTyping();
           this.addMessage(data.response || '...', 'bot');
         } catch (error) {
           console.error(error);
+          this.hideTyping();
           this.addMessage('عذراً، حدث خطأ في الاتصال: ' + error.message, 'bot');
         }
       };
@@ -355,17 +412,110 @@
       });
     },
 
+    showTyping() {
+      const container = document.getElementById('fahimo-messages');
+      if (document.getElementById('fahimo-typing-indicator')) return;
+      
+      const div = document.createElement('div');
+      div.id = 'fahimo-typing-indicator';
+      div.className = 'fahimo-typing';
+      div.innerHTML = '<span></span><span></span><span></span>';
+      container.appendChild(div);
+      container.scrollTop = container.scrollHeight;
+    },
+
+    hideTyping() {
+      const indicator = document.getElementById('fahimo-typing-indicator');
+      if (indicator) indicator.remove();
+    },
+
+    parseMarkdown(text) {
+      if (!text) return '';
+      let html = text
+        // Bold
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        // Italic
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        // Links
+        .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>')
+        // Unordered Lists
+        .replace(/^\s*-\s+(.*)$/gm, '<li>$1</li>')
+        // Ordered Lists
+        .replace(/^\s*\d+\.\s+(.*)$/gm, '<li>$1</li>')
+        // Newlines to <br> (but not inside lists)
+        .replace(/\n/g, '<br>');
+      
+      // Wrap lists in <ul> (simple heuristic)
+      if (html.includes('<li>')) {
+        html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+        // Fix multiple <ul> blocks if they are adjacent (optional, simple regex might miss this but it's better than nothing)
+        html = html.replace(/<\/ul><br><ul>/g, ''); 
+      }
+      
+      return html;
+    },
+
     addMessage(text, sender) {
       const container = document.getElementById('fahimo-messages');
+      
+      // Check for Rating Request
+      if (text.includes('|RATING_REQUEST|')) {
+        text = text.replace('|RATING_REQUEST|', '');
+        setTimeout(() => this.showRatingUI(), 1000);
+      }
+
       const div = document.createElement('div');
       div.className = `fahimo-msg ${sender}`;
       
-      // Simple Markdown Parser (Bold only for now)
-      const formattedText = text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
-      div.innerHTML = formattedText;
+      div.innerHTML = this.parseMarkdown(text);
       
       container.appendChild(div);
       container.scrollTop = container.scrollHeight;
+    },
+
+    showRatingUI() {
+      const container = document.getElementById('fahimo-messages');
+      if (document.getElementById('fahimo-rating')) return;
+
+      const div = document.createElement('div');
+      div.id = 'fahimo-rating';
+      div.style.cssText = 'background:white; padding:15px; border-radius:12px; text-align:center; margin:10px 0; box-shadow:0 2px 8px rgba(0,0,0,0.1);';
+      div.innerHTML = `
+        <p style="margin-bottom:10px; font-size:14px;">كيف كانت تجربتك معنا؟</p>
+        <div style="display:flex; justify-content:center; gap:5px; font-size:24px; cursor:pointer;">
+          <span data-val="1">⭐</span>
+          <span data-val="2">⭐</span>
+          <span data-val="3">⭐</span>
+          <span data-val="4">⭐</span>
+          <span data-val="5">⭐</span>
+        </div>
+      `;
+
+      const stars = div.querySelectorAll('span');
+      stars.forEach((star, idx) => {
+        star.onclick = () => {
+          this.submitRating(idx + 1);
+          div.innerHTML = '<p>شكراً لتقييمك! ❤️</p>';
+        };
+      });
+
+      container.appendChild(div);
+      container.scrollTop = container.scrollHeight;
+    },
+
+    async submitRating(rating) {
+      try {
+        await fetch(this.config.apiEndpoint.replace('/message', '/rating'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            conversationId: this.state.conversationId,
+            rating: rating
+          })
+        });
+      } catch (e) {
+        console.error('Rating failed', e);
+      }
     },
   };
 

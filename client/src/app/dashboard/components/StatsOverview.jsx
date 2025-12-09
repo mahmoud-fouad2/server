@@ -779,16 +779,16 @@ add_action('wp_footer', 'add_fahimo_widget');`}
                 <h4 className="text-sm font-semibold mb-2 text-right" dir="rtl">API Key (للمطورين)</h4>
                 <div className="relative group">
                   <div className="bg-muted p-4 rounded-lg font-mono text-xs break-all border border-border flex items-center justify-between">
-                    <span>{user?.businessId ? `sk_live_${user.businessId.substring(0, 8)}...` : 'Generating...'}</span>
-                    <span className="text-xs text-yellow-600 bg-yellow-100 px-2 py-1 rounded">سري للغاية</span>
+                    <span>{user?.businessId ? `sk_live_${user.businessId}` : 'Generating...'}</span>
+                    <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">نشط</span>
                   </div>
                   <div className="absolute top-2 right-2">
-                     <Button size="sm" variant="ghost" disabled>
+                     <Button size="sm" variant="ghost" onClick={() => copyToClipboard(`sk_live_${user?.businessId}`)}>
                       <Copy className="w-4 h-4" />
                     </Button>
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1 text-right" dir="rtl">يستخدم للربط مع منصات خارجية. يرجى التواصل مع الدعم للحصول على مفتاح API كامل.</p>
+                <p className="text-xs text-muted-foreground mt-1 text-right" dir="rtl">استخدم هذا المفتاح للربط مع تطبيقاتك الخارجية.</p>
               </div>
 
             </div>

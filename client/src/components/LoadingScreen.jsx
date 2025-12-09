@@ -67,19 +67,7 @@ export default function LoadingScreen({ onComplete }) {
         </div>
       </div>
 
-      {/* Loading Dots */}
-      <div className="flex gap-2 mt-6">
-        {[0, 1, 2].map(i => (
-          <div
-            key={i}
-            className="w-2 h-2 bg-brand-500 rounded-full animate-bounce"
-            style={{
-              animationDelay: `${i * 0.15}s`,
-              animationDuration: '0.6s',
-            }}
-          />
-        ))}
-      </div>
+      {/* Loading Dots - Removed to avoid duplication with Logo */}
     </div>
   );
 }
