@@ -60,6 +60,41 @@ const TOUR_STEPS = [
   },
 ];
 
+export function useDashboardTour() {
+  const [runTour, setRunTour] = useState(false);
+  const [tourCompleted, setTourCompleted] = useState(
+    typeof window !== 'undefined' && localStorage.getItem('dashboardTourCompleted') === 'true'
+  );
+
+  useEffect(() => {
+    if (!tourCompleted) {
+      // Delay starting the tour slightly so the page UI stabilizes
+      const t = setTimeout(() => setRunTour(true), 600);
+      return () => clearTimeout(t);
+    }
+  }, [tourCompleted]);
+
+  const startTour = () => setRunTour(true);
+  const stopTour = () => setRunTour(false);
+  const resetTour = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('dashboardTourCompleted');
+    }
+    setTourCompleted(false);
+    setRunTour(true);
+  };
+
+  const handleComplete = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('dashboardTourCompleted', 'true');
+    }
+    setTourCompleted(true);
+    setRunTour(false);
+  };
+
+  return { runTour, tourCompleted, startTour, stopTour, resetTour, handleComplete };
+}
+
 export default function DashboardTour({ run, onComplete }) {
   const [currentStep, setCurrentStep] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
@@ -217,12 +252,4 @@ export default function DashboardTour({ run, onComplete }) {
     </div>
   );
 }
-  return {
-    runTour,
-    tourCompleted,
-    startTour,
-    stopTour,
-    resetTour,
-    handleComplete,
-  };
-}
+

@@ -124,7 +124,7 @@ const sections = [
             <FaCopy />
           </button>
           <code className="font-mono text-sm">
-            &lt;script src="https://faheemly.com/widget/fahimo-widget.js" data-business-id="YOUR_BUSINESS_ID"&gt;&lt;/script&gt;
+            &lt;script src=&quot;https://faheemly.com/widget/fahimo-widget.js&quot; data-business-id=&quot;YOUR_BUSINESS_ID&quot;&gt;&lt;/script&gt;
           </code>
         </div>
 
@@ -141,9 +141,9 @@ const sections = [
           <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
             <h5 className="font-bold mb-2">WordPress</h5>
             <ol className="list-decimal list-inside space-y-2 text-sm">
-              <li>قم بتثبيت إضافة "Insert Headers and Footers"</li>
+              <li>قم بتثبيت إضافة &quot;Insert Headers and Footers&quot;</li>
               <li>اذهب إلى الإعدادات {'>'} Insert Headers and Footers</li>
-              <li>الصق الكود في قسم "Scripts in Footer"</li>
+              <li>الصق الكود في قسم &quot;Scripts in Footer&quot;</li>
               <li>اضغط حفظ</li>
             </ol>
           </div>
@@ -152,8 +152,8 @@ const sections = [
             <h5 className="font-bold mb-2">Salla / Zid</h5>
             <ol className="list-decimal list-inside space-y-2 text-sm">
               <li>اذهب إلى إعدادات المتجر</li>
-              <li>اختر "كود مخصص" أو "Custom Code"</li>
-              <li>أضف الكود في قسم "Body End" أو "Footer"</li>
+              <li>اختر &quot;كود مخصص&quot; أو &quot;Custom Code&quot;</li>
+              <li>أضف الكود في قسم &quot;Body End&quot; أو &quot;Footer&quot;</li>
               <li>احفظ التغييرات</li>
             </ol>
           </div>
