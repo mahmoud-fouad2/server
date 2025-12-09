@@ -92,4 +92,7 @@ coverage/** linguist-generated
 *.min.js linguist-generated
 
 # Copyright notice in all text files
-* text copyright-notice="© 2024-2025 Faheemly.com - All Rights Reserved"
+## Note: a custom copyright attribute was removed because it triggered
+## 'invalid attribute name' warnings on some Git clients. If you need
+## to track copyright text via attributes, consider using a CI check
+## or a pre-commit hook instead.
