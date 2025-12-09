@@ -21,6 +21,38 @@ const chatLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// Public: Get messages for a conversation (for widget history)
+router.get('/public/:conversationId/messages', async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+    const limit = parseInt(req.query.limit) || 50;
+
+    // Validate conversationId format (basic check)
+    if (!conversationId || conversationId.length < 5) {
+      return res.status(400).json({ error: 'Invalid conversation ID' });
+    }
+
+    const messages = await prisma.message.findMany({
+      where: { conversationId },
+      orderBy: { createdAt: 'asc' },
+      take: limit,
+      select: {
+        id: true,
+        content: true,
+        role: true,
+        createdAt: true
+      }
+    });
+
+    res.json({
+      data: messages
+    });
+  } catch (error) {
+    logger.error('Get Public Messages Error:', error);
+    res.status(500).json({ error: 'Failed to fetch messages' });
+  }
+});
+
 // Protected: Get all conversations for the business
 router.get('/conversations', authenticateToken, async (req, res) => {
   try {

@@ -7,6 +7,7 @@ const aiService = require('../services/ai.service');
 const vectorSearch = require('../services/vector-search.service');
 const responseValidator = require('../services/response-validator.service');
 const logger = require('../utils/logger');
+const { getIO } = require('../socket');
 
 // Get all conversations for the business
 exports.getConversations = asyncHandler(async (req, res) => {
@@ -252,7 +253,7 @@ exports.sendMessage = asyncHandler(async (req, res) => {
     orderBy: { createdAt: 'desc' }
   });
 
-  const isWaitingForDetails = lastAssistantMessage && lastAssistantMessage.content.includes('الاسم وملخص المشكلة');
+  const isWaitingForDetails = lastAssistantMessage && lastAssistantMessage.content.includes('الاسم، رقم الهاتف، وملخص المشكلة');
 
   if (isWaitingForDetails) {
      const handoverMsg = "شكراً لك. تم استلام طلبك وسيتم تحويلك لأحد موظفينا حالاً.";
@@ -282,6 +283,18 @@ exports.sendMessage = asyncHandler(async (req, res) => {
 
      logger.info(`Handover request from ${message} for business ${businessId}`);
 
+     // Notify Dashboard via Socket
+     try {
+       const io = getIO();
+       io.to(`business_${businessId}`).emit('handover_request', {
+         conversationId: conversation.id,
+         message: message,
+         visitorId: visitorSessionData?.id
+       });
+     } catch (socketError) {
+       logger.warn('Failed to emit socket event:', socketError);
+     }
+
      return res.json({
        response: handoverMsg,
        conversationId: conversation.id,
@@ -293,7 +306,7 @@ exports.sendMessage = asyncHandler(async (req, res) => {
   const isHandover = handoverKeywords.some(kw => lowerMsg.includes(kw));
 
   if (isHandover) {
-    const askDetailsMsg = "لتحويلك للموظف المختص، يرجى تزويدي بـ: الاسم وملخص المشكلة.";
+    const askDetailsMsg = "لتحويلك للموظف المختص، يرجى تزويدي بـ: الاسم، رقم الهاتف، وملخص المشكلة.";
     
     await prisma.message.create({
       data: {
@@ -361,6 +374,7 @@ exports.sendMessage = asyncHandler(async (req, res) => {
   }
 
   business.widgetConfig = widgetConfig;
+  business.currentDate = new Date().toLocaleString('ar-EG', { timeZone: 'Africa/Cairo' });
 
   // Vector Search
   let knowledgeContext = [];

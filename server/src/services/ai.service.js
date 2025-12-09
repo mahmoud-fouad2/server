@@ -502,15 +502,28 @@ async function generateChatResponse(message, business, history = [], knowledgeBa
   if (business.botTone) {
     systemPrompt += `Your tone should be ${business.botTone}. `;
   }
+
+  // Add Time Context
+  if (business.currentDate) {
+    systemPrompt += `\nCurrent Date and Time: ${business.currentDate}. Use this for any time-relative questions (e.g., "is the store open now?"). `;
+  }
   
-  systemPrompt += `\n\nIMPORTANT: You represent ${business.name}. Never identify as an AI model (like DeepSeek, Llama, or Gemini). If asked who you are, say you are the virtual assistant for ${business.name}.`;
+  systemPrompt += `\n\nIMPORTANT INSTRUCTIONS:
+  1. You represent ${business.name}. Never identify as an AI model.
+  2. STRICTLY answer in the SAME language as the user's message. If they speak Arabic, answer in Arabic.
+  3. Use Markdown formatting (lists, bold, links) to make your response readable and professional.
+  4. If the answer is NOT in the provided Knowledge Base, say you don't know or offer to connect them with a human agent. DO NOT fabricate information.
+  5. When the user says "thank you", "bye", or indicates the problem is solved, append "|RATING_REQUEST|" to the end of your response to trigger the feedback form.
+  `;
   
   // Add Knowledge Base Context
   if (knowledgeBase && knowledgeBase.length > 0) {
-    systemPrompt += `\n\nUse the following knowledge base to answer the user's question. If the answer is not in the knowledge base, use your general knowledge but be polite and helpful.\n\nKnowledge Base:\n`;
+    systemPrompt += `\n\nUse the following knowledge base to answer the user's question:\n\nKnowledge Base:\n`;
     knowledgeBase.forEach((chunk, index) => {
       systemPrompt += `${index + 1}. ${chunk.content}\n`;
     });
+  } else {
+    systemPrompt += `\n\nNo specific knowledge base found for this query. Rely on general knowledge but be cautious.`;
   }
 
   // 2. Construct Messages Array

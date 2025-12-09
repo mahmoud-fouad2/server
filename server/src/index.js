@@ -289,6 +289,14 @@ try {
   console.warn('Visitor routes not available:', e?.message || e);
 }
 
+// Rating routes
+try {
+  const ratingRoutes = require('./routes/rating.routes');
+  app.use('/api/rating', ratingRoutes);
+} catch (e) {
+  console.warn('Rating routes not available:', e?.message || e);
+}
+
 // Fallback widget endpoints if widget routes failed to load
 try {
   // noop - placeholder to preserve similarity; the real require happened above
