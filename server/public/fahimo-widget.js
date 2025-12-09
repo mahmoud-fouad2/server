@@ -234,6 +234,35 @@
             const botName = data.name || config.name || "مساعد فهملي";
             document.getElementById('fahimo-bot-name').innerText = botName;
             
+            // Apply Custom Colors
+            if (config.primaryColor) {
+                const color = config.primaryColor;
+                const launcher = document.getElementById('fahimo-launcher');
+                const header = document.getElementById('fahimo-header');
+                const sendBtn = document.getElementById('fahimo-send');
+                
+                if(launcher) launcher.style.background = color;
+                if(header) header.style.background = color;
+                if(sendBtn) sendBtn.style.background = color;
+                
+                // Inject dynamic style for user messages
+                const dynamicStyle = document.createElement('style');
+                dynamicStyle.innerHTML = `
+                    .fahimo-msg.user { background: ${color} !important; }
+                    #fahimo-launcher { background: ${color} !important; }
+                `;
+                document.head.appendChild(dynamicStyle);
+            }
+
+            // Apply Custom Avatar
+            if (config.customIconUrl) {
+                const avatarEl = document.getElementById('fahimo-bot-avatar');
+                if(avatarEl) {
+                    avatarEl.innerHTML = `<img src="${config.customIconUrl}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;" alt="Bot">`;
+                    avatarEl.style.background = 'transparent';
+                }
+            }
+            
             // Add welcome message if no history
             if (!conversationId) {
                 addMessage(config.welcomeMessage || "Hello! How can I help?", 'bot');
