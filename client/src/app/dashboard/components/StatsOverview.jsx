@@ -103,15 +103,28 @@ export default function StatsOverview({
         const data = response.data || response;
 
         // Map to chart-friendly formats with fallbacks
-        setConversationDataState(
-          Array.isArray(data.trends?.daily) ? data.trends.daily : conversationData
-        );
-        setResponseTimeState(
-          Array.isArray(data.performance?.responseTimes) ? data.performance.responseTimes : responseTimeData
-        );
-        setSatisfactionState(
-          Array.isArray(data.performance?.satisfactionDistribution) ? data.performance.satisfactionDistribution : satisfactionData
-        );
+        if (data.trends?.daily) {
+          setConversationDataState(data.trends.daily.map(d => ({
+            name: d.date,
+            conversations: d.count
+          })));
+        }
+
+        if (data.performance?.responseTimes) {
+          setResponseTimeState(data.performance.responseTimes.map(d => ({
+            name: d.range,
+            time: d.count // Using 'time' as the value key based on chart config
+          })));
+        }
+
+        if (data.performance?.satisfactionDistribution) {
+          const colors = ['#EF4444', '#F59E0B', '#EAB308', '#84CC16', '#22C55E'];
+          setSatisfactionState(data.performance.satisfactionDistribution.map(d => ({
+            name: `${d.rating} Stars`,
+            value: d.count,
+            color: colors[d.rating - 1] || '#8884d8'
+          })));
+        }
       } catch (e) {
         console.warn('Failed to fetch analytics:', e.message || e);
       }
