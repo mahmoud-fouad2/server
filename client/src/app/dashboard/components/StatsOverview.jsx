@@ -241,10 +241,10 @@ export default function StatsOverview({
   const conversationData = [];
   const responseTimeData = [];
   const satisfactionData = [
-    { name: 'راضي جداً', value: 0, color: '#10B981' },
-    { name: 'راضي', value: 0, color: '#3B82F6' },
-    { name: 'محايد', value: 0, color: '#F59E0B' },
-    { name: 'غير راضي', value: 0, color: '#EF4444' },
+    { name: 'راضي جداً', value: 1, color: '#10B981' },
+    { name: 'راضي', value: 1, color: '#3B82F6' },
+    { name: 'محايد', value: 1, color: '#F59E0B' },
+    { name: 'غير راضي', value: 1, color: '#EF4444' },
   ];
 
   return (
@@ -741,9 +741,15 @@ export default function StatsOverview({
                     src=&quot;https://fahimo-api.onrender.com/widget/fahimo-widget.js&quot;
                     data-business-id=&quot;{user?.businessId}&quot;&gt;&lt;/script&gt;
                   </div>
-                  <div className="absolute top-2 right-2">
+                  <div className="absolute top-2 right-2 flex gap-2">
                     <Button size="sm" variant="ghost" onClick={() => copyToClipboard(`<script src="https://fahimo-api.onrender.com/widget/fahimo-widget.js" data-business-id="${user?.businessId}"></script>`)}>
                       <Copy className="w-4 h-4" />
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => exportVisibleDataCSV()}>
+                      تصدير Excel
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => window.print()}>
+                      طباعة PDF
                     </Button>
                   </div>
                 </div>

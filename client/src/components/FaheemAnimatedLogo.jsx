@@ -83,7 +83,7 @@ const FaheemAnimatedLogo = ({
 
   if (isLoading) {
     return (
-      <div className={`flex flex-col items-center justify-center ${className}`}>
+      <div className={`flex flex-col items-center justify-center ${className} hidden md:flex`}>
         <div className="relative">
           <div className="absolute inset-0 bg-brand-500/20 blur-3xl rounded-full animate-pulse"></div>
           <div className="relative w-80 h-80 flex items-center justify-center p-12 bg-[#f8f8fa] rounded-full overflow-hidden shadow-2xl border-4 border-white/50">
@@ -105,7 +105,7 @@ const FaheemAnimatedLogo = ({
 
   return (
     <div
-      className={`inline-flex flex-col items-center justify-center ${className}`}
+      className={`inline-flex flex-col items-center justify-center ${className} hidden md:inline-flex`}
     >
       <div
         ref={logoRef}

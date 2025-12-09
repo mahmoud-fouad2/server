@@ -36,7 +36,25 @@
 
       // Check for saved conversation
       const savedId = localStorage.getItem('fahimo_conv_id');
-      if (savedId) this.state.conversationId = savedId;
+      if (savedId) {
+        this.state.conversationId = savedId;
+        this.fetchHistory(savedId);
+      }
+    },
+
+    async fetchHistory(conversationId) {
+      try {
+        const res = await fetch(`${this.config.apiEndpoint.replace('/message', '')}/${conversationId}/messages`);
+        if (res.ok) {
+          const data = await res.json();
+          const messages = data.data || [];
+          messages.forEach(msg => {
+            this.addMessage(msg.content, msg.role === 'USER' ? 'user' : 'bot');
+          });
+        }
+      } catch (e) {
+        console.warn('Failed to load history', e);
+      }
     },
 
     loadConfig() {
@@ -84,6 +102,25 @@
         .fahimo-pos-bottom-right { bottom: 20px; right: 20px; }
         .fahimo-pos-bottom-left { bottom: 20px; left: 20px; }
         
+        @media (max-width: 480px) {
+          #fahimo-chat-window {
+            width: 100% !important;
+            height: 100% !important;
+            bottom: 0 !important;
+            right: 0 !important;
+            left: 0 !important;
+            border-radius: 0 !important;
+            transform: translateY(100%);
+          }
+          #fahimo-chat-window.open {
+            transform: translateY(0);
+          }
+          .fahimo-pos-bottom-right, .fahimo-pos-bottom-left {
+            bottom: 10px;
+            right: 10px;
+          }
+        }
+
         #fahimo-launcher {
           width: 60px;
           height: 60px;
@@ -322,7 +359,11 @@
       const container = document.getElementById('fahimo-messages');
       const div = document.createElement('div');
       div.className = `fahimo-msg ${sender}`;
-      div.textContent = text;
+      
+      // Simple Markdown Parser (Bold only for now)
+      const formattedText = text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+      div.innerHTML = formattedText;
+      
       container.appendChild(div);
       container.scrollTop = container.scrollHeight;
     },
