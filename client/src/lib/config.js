@@ -3,8 +3,8 @@
  * Production-ready with proper environment variable handling
  */
 
-// Get API URL from environment with production default
-const getApiUrl = () => {
+// Get base API URL from environment with production default
+const getBaseApiUrl = () => {
   // Check all possible env variable names
   const envUrl = 
     process.env.NEXT_PUBLIC_API_URL || 
@@ -18,9 +18,9 @@ const getApiUrl = () => {
 };
 
 export const API_CONFIG = {
-  BASE_URL: getApiUrl(),
+  BASE_URL: getBaseApiUrl(),
   TIMEOUT: 30000, // 30 seconds
-  WIDGET_SCRIPT: `${getApiUrl()}/fahimo-widget.js`,
+  WIDGET_SCRIPT: `${getBaseApiUrl()}/fahimo-widget.js`,
 };
 
 export const getApiUrl = endpoint => {

@@ -2,8 +2,9 @@
 -- Created: 2024-12-09
 -- Description: Clean up deprecated fields and optimize database queries
 
--- Step 1: Drop deprecated column (safe - no data loss since it's not used)
-ALTER TABLE "User" DROP COLUMN IF EXISTS "loginAttempts";
+-- Step 1: Drop deprecated column (with CASCADE to handle any constraints)
+-- Note: This column is deprecated and no longer used in the application
+ALTER TABLE "User" DROP COLUMN IF EXISTS "loginAttempts" CASCADE;
 
 -- Step 2: Add performance indexes for frequently queried fields
 
