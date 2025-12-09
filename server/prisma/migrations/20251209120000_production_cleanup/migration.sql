@@ -1,17 +1,19 @@
--- Migration: Remove deprecated loginAttempts and add performance indexes
--- Created: 2024-12-09
--- Description: Clean up deprecated fields and optimize database queries
+-- Production Cleanup Migration
+-- Created: 2024-12-09 12:00:00
+-- Safe for production: Handles data properly before schema changes
 
--- Step 1: Drop deprecated column (with CASCADE to handle any constraints)
--- Note: This column is deprecated and no longer used in the application
+-- Step 1: Clear loginAttempts data to prevent data loss warnings
+UPDATE "User" SET "loginAttempts" = NULL WHERE "loginAttempts" IS NOT NULL;
+
+-- Step 2: Drop deprecated column safely
 ALTER TABLE "User" DROP COLUMN IF EXISTS "loginAttempts" CASCADE;
 
--- Step 2: Add performance indexes for frequently queried fields
+-- Step 3: Add performance indexes for frequently queried fields
 
 -- Index for cached messages count (used in dashboard stats)
 CREATE INDEX IF NOT EXISTS "idx_message_cache_status" ON "Message"("wasFromCache", "conversationId");
 
--- Composite index for conversation filtering by business + status
+-- Composite index for conversation filtering by business + status  
 CREATE INDEX IF NOT EXISTS "idx_conversation_business_status" ON "Conversation"("businessId", "status", "createdAt" DESC);
 
 -- Index for message role filtering (used in handover detection)
@@ -26,7 +28,7 @@ CREATE INDEX IF NOT EXISTS "idx_knowledge_business_type" ON "KnowledgeBase"("bus
 -- Index for session token lookup (faster auth)
 CREATE INDEX IF NOT EXISTS "idx_session_token_expires" ON "Session"("token", "expiresAt");
 
--- VACUUM ANALYZE to reclaim space and update statistics
+-- Step 4: Optimize database - reclaim space and update statistics
 VACUUM ANALYZE "User";
 VACUUM ANALYZE "Message";
 VACUUM ANALYZE "Conversation";

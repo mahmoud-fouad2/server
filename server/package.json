@@ -4,7 +4,8 @@
   "description": "Backend for Fahimo SaaS",
   "main": "src/index.js",
   "scripts": {
-    "start": "node src/index.js",
+    "start": "npm run install:pgvector && npx prisma migrate deploy && node src/index.js",
+    "start:dev": "node src/index.js",
     "dev": "nodemon src/index.js",
     "worker": "node src/queue/worker.js",
     "prisma:generate": "npx prisma generate",
