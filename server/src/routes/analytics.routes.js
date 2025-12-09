@@ -79,13 +79,12 @@ router.get('/dashboard', authenticateToken, async (req, res) => {
 router.get('/dashboard/:days', authenticateToken, async (req, res) => {
   try {
     const { days } = req.params;
-    const businessId = req.user.businessId; // Assumes middleware adds businessId to user
+    let businessId = req.user.businessId; 
     
     if (!businessId) {
-       // Fallback if businessId is not directly on user (depends on auth implementation)
        const business = await prisma.business.findFirst({ where: { userId: req.user.userId } });
        if (!business) return res.status(404).json({ error: 'Business not found' });
-       // Use this business id
+       businessId = business.id;
     }
 
     const periodDate = new Date();
@@ -98,14 +97,13 @@ router.get('/dashboard/:days', authenticateToken, async (req, res) => {
         COUNT(*) as count
       FROM "Message" m
       JOIN "Conversation" c ON m."conversationId" = c.id
-      WHERE c."businessId" = ${req.user.businessId || (await prisma.business.findFirst({ where: { userId: req.user.userId } })).id}
+      WHERE c."businessId" = ${businessId}
         AND m."createdAt" >= ${periodDate}
       GROUP BY TO_CHAR("createdAt", 'YYYY-MM-DD')
       ORDER BY date ASC
     `;
 
     // 2. Response Times (Mock or Real)
-    // For now, returning mock structure if real data is complex to aggregate quickly
     const responseTimes = [
       { range: '0-1m', count: 45 },
       { range: '1-5m', count: 20 },
@@ -116,7 +114,7 @@ router.get('/dashboard/:days', authenticateToken, async (req, res) => {
     const ratings = await prisma.conversation.groupBy({
       by: ['rating'],
       where: {
-        businessId: req.user.businessId || (await prisma.business.findFirst({ where: { userId: req.user.userId } })).id,
+        businessId: businessId,
         rating: { not: null },
         createdAt: { gte: periodDate }
       },

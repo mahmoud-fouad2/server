@@ -65,6 +65,7 @@ app.set('trust proxy', 1);
 // Security Headers
 app.use(
   helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" }, // ✅ Allow widget/images to be loaded cross-origin
     contentSecurityPolicy: {
       directives: {
         ...helmet.contentSecurityPolicy.getDefaultDirectives(),
