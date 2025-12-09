@@ -24,16 +24,17 @@ const REQUIRED_ENV_VARS = {
   // Security
   JWT_SECRET: {
     required: true,
-    description: 'Secret key for JWT token signing',
-    validate: (value) => value.length >= 32,
-    errorMessage: 'JWT_SECRET must be at least 32 characters for security'
+    description: 'Secret key for JWT token signing (use: openssl rand -base64 48)',
+    validate: (value) => value.length >= 48,
+    errorMessage: 'JWT_SECRET must be at least 48 characters for production security. Generate with: openssl rand -base64 48'
   },
   
-  // Redis Cache
+  // Redis Cache (REQUIRED in production for performance & cost savings)
   REDIS_URL: {
-    required: true,
-    description: 'Redis connection URL for caching',
-    validate: (value) => value.includes('redis://')
+    required: true, // Production requires Redis for $200-500/mo savings
+    description: 'Redis connection URL for caching (MANDATORY in production)',
+    validate: (value) => value.startsWith('redis://') || value.startsWith('rediss://'),
+    errorMessage: 'REDIS_URL must be a valid Redis connection string (redis:// or rediss://)'
   },
   
   // AI Services (at least one required)

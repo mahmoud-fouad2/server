@@ -19,12 +19,17 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
     where: { businessId }
   });
 
-  // 2. Messages Saved (served from cache)
+  // 2. Messages Saved (served from cache) - Optimized query
+  // Get conversation IDs first to avoid N+1 join
+  const conversations = await prisma.conversation.findMany({
+    where: { businessId },
+    select: { id: true }
+  });
+  const conversationIds = conversations.map(c => c.id);
+  
   const savedMessagesCount = await prisma.message.count({
     where: {
-      conversation: {
-        businessId: businessId
-      },
+      conversationId: { in: conversationIds },
       wasFromCache: true
     }
   });

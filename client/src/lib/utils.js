@@ -5,6 +5,6 @@ export function cn(...inputs) {
   return twMerge(clsx(inputs));
 }
 
-// API Configuration
-// Prefer runtime env `NEXT_PUBLIC_API_URL`; default to the deployed faheemly domain
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://faheemly.com';
+// API Configuration - use centralized config
+import { API_CONFIG } from './config';
+export const API_URL = API_CONFIG.BASE_URL;

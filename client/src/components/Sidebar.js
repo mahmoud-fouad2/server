@@ -88,7 +88,7 @@ export default function Sidebar({ activeTab, setActiveTab, userRole }) {
         ).length;
         setTicketCount(count);
       } catch (err) {
-        console.error(err);
+        // Error handled silently in production
       }
     };
     fetchTicketCount();

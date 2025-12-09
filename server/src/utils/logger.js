@@ -38,10 +38,19 @@ class Logger {
 
     console.error(this._formatMessage('ERROR', message, errorDetails));
 
-    // TODO: Send to external logging service (Sentry, LogRocket, etc.)
-    // if (process.env.SENTRY_DSN) {
-    //   Sentry.captureException(error, { extra: context });
-    // }
+    // Send to Sentry in production (if configured)
+    if (process.env.SENTRY_DSN && error) {
+      try {
+        // Lazy load Sentry only if DSN is set
+        const Sentry = require('@sentry/node');
+        if (!Sentry.getCurrentHub().getClient()) {
+          Sentry.init({ dsn: process.env.SENTRY_DSN });
+        }
+        Sentry.captureException(error, { extra: context });
+      } catch (sentryError) {
+        console.error('Failed to send error to Sentry:', sentryError.message);
+      }
+    }
   }
 
   warn(message, context = {}) {

@@ -16,7 +16,7 @@ export default function ConversationsPage() {
         const data = await businessApi.getConversations();
         setConversations(data);
       } catch (error) {
-        console.error(error);
+        // Error loading conversations
       } finally {
         setLoading(false);
       }

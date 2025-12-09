@@ -2,6 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
+import { API_CONFIG, WIDGET_CONFIG } from '@/lib/config';
 
 const SalesBot = () => {
   const pathname = usePathname();
@@ -21,19 +22,20 @@ const SalesBot = () => {
 
   useEffect(() => {
     if (shouldHide) return;
-
-    // Faheemly Business ID
-    const FAHEEMLY_BUSINESS_ID = 'cmivd3c0z0003ulrrn7m1jtjf';
     
     // Check if script is already loaded
     if (document.getElementById('fahimo-widget-script')) return;
 
     const script = document.createElement('script');
     script.id = 'fahimo-widget-script';
-    // Use the production API URL for the widget script
-    script.src = 'https://fahimo-api.onrender.com/fahimo-widget.js';
-    script.setAttribute('data-business-id', FAHEEMLY_BUSINESS_ID);
+    // Use centralized configuration
+    script.src = API_CONFIG.WIDGET_SCRIPT;
+    script.setAttribute('data-business-id', WIDGET_CONFIG.BUSINESS_ID);
     script.async = true;
+    
+    script.onerror = () => {
+      console.error('Failed to load Fahimo widget from:', script.src);
+    };
     
     document.body.appendChild(script);
 

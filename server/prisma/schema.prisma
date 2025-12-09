@@ -16,7 +16,6 @@ model User {
   name             String
   role             Role      @default(CLIENT)
   isActive         Boolean   @default(true)
-  loginAttempts    Int       @default(0) // Deprecated: Kept to prevent data loss error during deployment
   twoFactorSecret  String? // للـ 2FA
   resetToken       String? // Password reset token (hashed)
   resetTokenExpiry DateTime? // Token expiration time
@@ -209,6 +208,9 @@ enum TicketPriority {
 model KnowledgeBase {
   id         String        @id @default(cuid())
   businessId String
+  title      String?
+  category   String?
+  status     String        @default("ACTIVE")
   type       KnowledgeType // pdf, text, url
   content    String        @db.Text
   embedding  Json? // Vector embeddings

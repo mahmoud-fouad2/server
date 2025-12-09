@@ -70,15 +70,9 @@ router.get('/config/:businessId', async (req, res) => {
     const config = business.widgetConfig ? JSON.parse(business.widgetConfig) : defaultConfig;
 
     // Fix: Replace localhost URLs with current API URL to prevent CSP errors
-    if (config.customIconUrl) {
-      const baseUrl = process.env.API_URL || 'https://fahimo-api.onrender.com';
-      if (config.customIconUrl.includes('localhost')) {
-        config.customIconUrl = config.customIconUrl.replace(/http:\/\/localhost:\d+/, baseUrl);
-      }
-      // Force HTTPS to satisfy CSP if an http link slipped through
-      if (config.customIconUrl.startsWith('http://')) {
-        config.customIconUrl = config.customIconUrl.replace('http://', 'https://');
-      }
+    if (config.customIconUrl && config.customIconUrl.includes('localhost')) {
+       const baseUrl = process.env.API_URL || 'https://fahimo-api.onrender.com';
+       config.customIconUrl = config.customIconUrl.replace(/http:\/\/localhost:\d+/, baseUrl);
     }
 
     res.json({
@@ -98,8 +92,13 @@ router.post('/upload-icon', authenticateToken, upload.single('icon'), async (req
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    const baseUrl = process.env.API_URL || 'http://localhost:3001';
-    const iconUrl = `${baseUrl}/uploads/icons/${req.file.filename}`;
+    const baseUrl = (process.env.API_URL || 'http://localhost:3001').replace(/\/$/, '');
+    // Force HTTPS in production
+    const finalBaseUrl = (process.env.NODE_ENV === 'production' && !baseUrl.startsWith('https')) 
+      ? baseUrl.replace('http:', 'https:') 
+      : baseUrl;
+      
+    const iconUrl = `${finalBaseUrl}/uploads/icons/${req.file.filename}`;
     res.json({ url: iconUrl });
   } catch (error) {
     console.error('Icon Upload Error:', error);

@@ -494,7 +494,10 @@
         let authToken = null;
         let businessId = null;
         let conversationId = null;
-        const API_BASE = 'http://localhost:3001/api';
+        // Dynamically determine API base URL
+        const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://localhost:3001/api'
+            : '/api';
 
         // Switch between endpoints
         document.querySelectorAll('.endpoint-btn').forEach(btn => {

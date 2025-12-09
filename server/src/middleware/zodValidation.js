@@ -33,8 +33,7 @@ const updateProfileSchema = z.object({
 const chatMessageSchema = z.object({
   message: z.string().min(1, 'Message cannot be empty').max(5000, 'Message too long'),
   conversationId: z.string().cuid().optional(),
-  // Allow missing businessId so the backend can fall back to a default/demo business (used by public widget)
-  businessId: z.string().cuid().optional()
+  businessId: z.string().cuid()
 });
 
 const ratingSchema = z.object({

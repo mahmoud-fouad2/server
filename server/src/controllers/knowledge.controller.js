@@ -50,7 +50,7 @@ async function resolveBusinessId(req) {
 
     return businessId;
   } catch (err) {
-    console.warn('resolveBusinessId error:', err?.message || err);
+    logger.warn('resolveBusinessId error:', { error: err?.message || err });
     return null;
   }
 }
@@ -81,7 +81,7 @@ async function createChunksForKB(kb) {
     }));
 
     await prisma.knowledgeChunk.createMany({ data });
-    console.log(`Created ${data.length} chunks for KB ${kb.id}`);
+    logger.info(`Created ${data.length} chunks for KB ${kb.id}`);
 
     try {
       const pending = await prisma.knowledgeChunk.findMany({ where: { knowledgeBaseId: kb.id, businessId: kb.businessId }, orderBy: { createdAt: 'asc' } });
@@ -102,7 +102,7 @@ async function createChunksForKB(kb) {
             const summary = await summarizeText(chunk.content, 160);
             const type = classifyChunk(chunk.content);
             let embedding = null;
-            try { embedding = await generateEmbedding(chunk.content); } catch (err) { console.warn('Embedding failed (sync fallback)', err.message || err); }
+            try { embedding = await generateEmbedding(chunk.content); } catch (err) { logger.warn('Embedding failed (sync fallback)', { error: err.message || err }); }
             await prisma.knowledgeChunk.update({ where: { id: chunk.id }, data: { embedding, metadata: { ...(chunk.metadata || {}), summary, type } } });
             await new Promise(r => setTimeout(r, 150));
           } catch (err) {
@@ -121,7 +121,7 @@ async function createChunksForKB(kb) {
 // --- Controller Methods ---
 
 exports.uploadKnowledge = async (req, res) => {
-  console.log("POST /upload called");
+  logger.info('POST /upload called');
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
@@ -186,11 +186,11 @@ exports.uploadKnowledge = async (req, res) => {
 };
 
 exports.addTextKnowledge = async (req, res) => {
-  console.log("POST /text called", { body: req.body, user: req.user });
+  logger.info('POST /text called', { body: req.body, user: req.user });
   try {
     const { text, title } = req.body;
     const businessId = await resolveBusinessId(req);
-    console.log("Resolved businessId:", businessId);
+    logger.info('Resolved businessId:', { businessId });
     
     if (!businessId) {
       return res.status(400).json({ error: 'Business ID missing or invalid. Please re-login.' });
@@ -225,7 +225,7 @@ exports.addTextKnowledge = async (req, res) => {
 };
 
 exports.addUrlKnowledge = async (req, res) => {
-  console.log("POST /url called");
+  logger.info('POST /url called');
   try {
     let { url, deepCrawl = false } = req.body;
     const businessId = await resolveBusinessId(req);

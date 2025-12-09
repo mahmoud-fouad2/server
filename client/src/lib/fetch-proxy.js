@@ -1,6 +1,7 @@
 // Runtime fetch proxy
 // Rewrites browser requests to relative `/api/*` to the configured API host
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://fahimo-api.onrender.com';
+import { API_CONFIG } from './config';
+const API_BASE = API_CONFIG.BASE_URL;
 
 if (typeof window !== 'undefined' && window.fetch) {
   const originalFetch = window.fetch.bind(window);

@@ -62,53 +62,88 @@ const app = express();
 // Trust Proxy for Render (Required for rate limiting and IP detection)
 app.set('trust proxy', 1);
 
-// CORS: restrict origins via `CORS_ORIGINS` env (comma-separated). If not set, default to allow only same-origin.
-const allowedOrigins = (process.env.CORS_ORIGINS || process.env.CLIENT_URL || '').split(',').map(s => s.trim()).filter(Boolean);
+// Security Headers
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+        "img-src": [
+          "'self'",
+          "data:",
+          "https:",
+          // ✅ Allow localhost in development
+          ...(process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test'
+            ? ["http://localhost:*", "http://127.0.0.1:*"] 
+            : []
+          )
+        ],
+        "connect-src": [
+          "'self'", 
+          "https://fahimo-api.onrender.com", 
+          process.env.CLIENT_URL,
+          ...(process.env.NODE_ENV === 'development' ? ["http://localhost:*"] : [])
+        ]
+      }
+    }
+  })
+);
 
-// Explicitly add known domains to allowedOrigins to prevent configuration errors
-const knownDomains = [
-  'https://faheemly.com',
-  'https://www.faheemly.com',
-  'http://localhost:3000',
-  'http://localhost:3001'
-];
-knownDomains.forEach(domain => {
-  if (!allowedOrigins.includes(domain)) {
-    allowedOrigins.push(domain);
-  }
-});
+// Production-safe CORS: Use FRONTEND_URL and CORS_ORIGINS from environment
+const allowedOrigins = [
+  process.env.FRONTEND_URL || 'https://faheemly.com',
+  ...(process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',').map(s => s.trim()) : [])
+].filter(Boolean);
+
+// Add localhost ONLY in development
+if (process.env.NODE_ENV === 'development') {
+  allowedOrigins.push('http://localhost:3000', 'http://localhost:3001');
+  logger.info('Development mode: localhost origins enabled for CORS');
+}
 
 // Enable Pre-Flight for all routes
 app.options('*', cors());
 
-// If no origins configured, default to permissive in development, or strict in production
-// BUT for this user's specific issue, we'll default to allowing all with a warning if nothing is set
-// to ensure they can connect.
+// SECURITY: Fail-safe CORS configuration
+// In production, we MUST have explicit origins configured
 if (allowedOrigins.length === 0) {
-  logger.warn('CORS_ORIGINS not set. Defaulting to permissive CORS (allowing all origins).');
-  app.use(cors({ origin: true, credentials: true }));
-} else {
-  app.use(cors({
-    origin: function(origin, cb) {
-      // allow non-browser requests (e.g., curl, server-to-server) with no origin
-      if (!origin) return cb(null, true);
-      
-      // Handle wildcard *
-      if (allowedOrigins.includes('*')) return cb(null, true);
-      
-      // Check if origin is allowed
-      if (allowedOrigins.includes(origin)) return cb(null, true);
-      
-      // Log and reject blocked origin
-      logger.error(`CORS blocked unauthorized origin: ${origin}`);
-      
-      const error = new Error('CORS policy: Origin not allowed');
-      error.statusCode = 403;
-      cb(error);
-    },
-    credentials: true,
-  }));
+  if (process.env.NODE_ENV === 'production') {
+    logger.error('🚨 SECURITY: CORS_ORIGINS not configured in production!');
+    logger.error('Set FRONTEND_URL and/or CORS_ORIGINS environment variables');
+    logger.error('Server cannot start without CORS configuration in production');
+    process.exit(1);
+  } else {
+    // Development only: Allow localhost
+    logger.warn('⚠️  CORS_ORIGINS not set. Development mode: allowing localhost only');
+    allowedOrigins.push('http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002');
+  }
 }
+
+// Configure CORS with whitelist
+app.use(cors({
+  origin: function(origin, cb) {
+    // Allow non-browser requests (curl, server-to-server, mobile apps)
+    if (!origin) return cb(null, true);
+    
+    // Handle wildcard * (NOT recommended for production)
+    if (allowedOrigins.includes('*')) {
+      logger.warn('⚠️  CORS wildcard (*) is enabled - not recommended for production');
+      return cb(null, true);
+    }
+    
+    // Check if origin is whitelisted
+    if (allowedOrigins.includes(origin)) {
+      return cb(null, true);
+    }
+    
+    // Reject and log blocked origin
+    logger.error(`🚫 CORS blocked unauthorized origin: ${origin}`);
+    const error = new Error('CORS policy: Origin not allowed');
+    error.statusCode = 403;
+    cb(error);
+  },
+  credentials: true,
+}));
 
 // We'll create the server inside a helper so we can retry on EADDRINUSE
 
@@ -233,10 +268,8 @@ try {
 
 // Analytics routes
 try {
-  const analyticsRoutes = require('./routes/conversation-analytics.routes');
-  const realtimeAnalyticsRoutes = require('./routes/realtime-analytics.routes');
+  const analyticsRoutes = require('./routes/analytics.routes');
   app.use('/api/analytics', analyticsRoutes);
-  app.use('/api/analytics', realtimeAnalyticsRoutes);
 } catch (e) {
   console.warn('Analytics routes not available:', e?.message || e);
 }

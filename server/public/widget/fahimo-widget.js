@@ -20,8 +20,12 @@
     }
 
     const loader = document.createElement('script');
-    // Use absolute URL to ensure it loads from the server
-    loader.src = 'http://localhost:3001/fahimo-widget.js';
+    // Use relative URL if on same domain, or fallback to configured domain
+    // In production, this should be the actual domain
+    const scriptSrc = myScript.src;
+    const baseUrl = scriptSrc ? new URL(scriptSrc).origin : 'https://fahimo-api.onrender.com';
+    
+    loader.src = `${baseUrl}/fahimo-widget.js`;
     loader.async = true;
     
     // Pass the business ID to the new script tag so the main widget can find it

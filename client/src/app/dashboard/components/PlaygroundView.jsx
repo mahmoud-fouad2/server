@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Bot, User, Loader2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { getApiEndpoint } from '@/lib/config';
 
 export default function PlaygroundView() {
   const [messages, setMessages] = useState([
@@ -35,7 +36,7 @@ export default function PlaygroundView() {
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'https://fahimo-api.onrender.com'}/api/chat/test`,
+        getApiEndpoint('api/chat/test'),
         {
           method: 'POST',
           headers: {

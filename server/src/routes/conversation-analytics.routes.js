@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const { authenticateToken } = require('../middleware/auth');
 const ConversationAnalyticsService = require('../services/conversation-analytics.service');
-const prisma = require('../config/database');
 
 /**
  * @route POST /api/analytics/conversation
@@ -78,125 +77,6 @@ router.get('/dashboard/:days?', authenticateToken, async (req, res) => {
       message: 'Failed to get dashboard data',
       error: error.message
     });
-  }
-});
-
-/**
- * @route GET /api/analytics/realtime
- * @desc Get real-time analytics data
- * @access Private
- */
-router.get('/realtime', authenticateToken, async (req, res) => {
-  try {
-    const businessId = req.user.businessId;
-
-    if (!businessId) {
-      return res.json({ activeUsers: 0, avgResponseTime: 0, satisfactionScore: 0 });
-    }
-
-    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-    const activeUsers = await prisma.conversation.count({
-      where: { businessId, updatedAt: { gte: fiveMinutesAgo }, status: 'ACTIVE' }
-    });
-
-    // Calculate average response time for today (in milliseconds)
-    // We look for messages where role=ASSISTANT created today
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    
-    // This is an approximation: getting recent assistant messages and checking the time gap 
-    // from the preceding user message would be accurate but expensive.
-    // For a "realtime" dashboard, we can use a simpler metric or a raw query if supported.
-    // Let's use a raw query for better accuracy if possible, or a simplified heuristic.
-    
-    // Heuristic: Average time between user message and subsequent assistant message
-    // We'll fetch the last 50 messages for this business to calculate a rolling average
-    const recentMessages = await prisma.message.findMany({
-      where: { 
-        conversation: { businessId },
-        createdAt: { gte: todayStart }
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 100,
-      select: { role: true, createdAt: true, conversationId: true }
-    });
-
-    let totalResponseTime = 0;
-    let responseCount = 0;
-    
-    // Group by conversation to find pairs
-    const msgsByConv = {};
-    recentMessages.forEach(m => {
-      if (!msgsByConv[m.conversationId]) msgsByConv[m.conversationId] = [];
-      msgsByConv[m.conversationId].push(m);
-    });
-
-    Object.values(msgsByConv).forEach(convMsgs => {
-      // Sort ascending
-      convMsgs.sort((a, b) => a.createdAt - b.createdAt);
-      
-      for (let i = 0; i < convMsgs.length - 1; i++) {
-        const current = convMsgs[i];
-        const next = convMsgs[i+1];
-        
-        if (current.role === 'USER' && next.role === 'ASSISTANT') {
-          const diff = next.createdAt - current.createdAt;
-          // Filter out unreasonable times (e.g. > 10 minutes might be a later session)
-          if (diff < 10 * 60 * 1000) {
-            totalResponseTime += diff;
-            responseCount++;
-          }
-        }
-      }
-    });
-
-    const avgResponseTime = responseCount > 0 ? Math.round(totalResponseTime / responseCount) : 0;
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const ratings = await prisma.conversation.aggregate({
-      where: { businessId, rating: { not: null }, updatedAt: { gte: today } },
-      _avg: { rating: true }
-    });
-
-    const satisfactionScore = ratings._avg.rating ? Math.round(ratings._avg.rating * 20) : 0;
-
-    res.json({ activeUsers, avgResponseTime, satisfactionScore });
-  } catch (error) {
-    console.error('Realtime analytics error:', error);
-    res.status(500).json({ error: 'Failed to fetch realtime stats' });
-  }
-});
-
-/**
- * @route GET /api/analytics/alerts
- * @desc Get system alerts
- * @access Private
- */
-router.get('/alerts', authenticateToken, async (req, res) => {
-  try {
-    const businessId = req.user.businessId;
-    if (!businessId) return res.json([]);
-
-    const alerts = [];
-
-    const handoverCount = await prisma.conversation.count({
-      where: { businessId, status: 'HANDOVER_REQUESTED' }
-    });
-
-    if (handoverCount > 0) {
-      alerts.push({
-        id: 'handover',
-        type: 'warning',
-        message: `${handoverCount} محادثات تنتظر تدخل بشري`,
-        time: 'الآن'
-      });
-    }
-
-    res.json(alerts);
-  } catch (error) {
-    console.error('Alerts error:', error);
-    res.json([]);
   }
 });
 

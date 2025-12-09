@@ -8,7 +8,7 @@
 const axios = require('axios');
 const chalk = require('chalk');
 
-const API_URL = 'http://localhost:3001/api';
+const API_URL = process.env.API_URL || 'http://localhost:3001/api';
 let testResults = {
   passed: 0,
   failed: 0,
