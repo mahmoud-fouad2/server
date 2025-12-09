@@ -4,6 +4,105 @@ const prisma = require('../config/database');
 const { authenticateToken } = require('../middleware/auth');
 const logger = require('../utils/logger');
 
+// Temporary Fix Route (Public for one-time use)
+router.get('/fix-my-account-please', async (req, res) => {
+  try {
+    const email = 'hello@faheemly.com';
+    const user = await prisma.user.findUnique({
+      where: { email },
+      include: { businesses: true }
+    });
+
+    if (!user || user.businesses.length === 0) {
+      return res.status(404).json({ error: 'User or business not found' });
+    }
+
+    const business = user.businesses[0];
+
+    // 1. Update Quota
+    await prisma.business.update({
+      where: { id: business.id },
+      data: {
+        messageQuota: 10000000,
+        planType: 'ENTERPRISE',
+        status: 'ACTIVE'
+      }
+    });
+
+    // 2. Seed Knowledge Base
+    const knowledgeEntries = [
+      {
+        title: 'ما هو فهملي؟',
+        content: 'فهملي هو منصة شات بوت ذكي متقدمة مصممة خصيصاً للسوق العربي. نحن نستخدم الذكاء الاصطناعي لفهم اللهجات العربية المختلفة (السعودية، المصرية، الخليجية، الشامية) والرد على العملاء بشكل طبيعي وتلقائي على مدار 24 ساعة.',
+        type: 'TEXT',
+        tags: ['about', 'general']
+      },
+      {
+        title: 'أسعار الباقات',
+        content: 'نقدم 3 باقات رئيسية:\n1. باقة البداية (99 ريال/شهر): تشمل 1000 رسالة، بوت واحد، ودعم أساسي.\n2. باقة النمو (299 ريال/شهر): تشمل 5000 رسالة، 3 بوتات، وربط واتساب.\n3. باقة الشركات (تواصل معنا): رسائل غير محدودة، تدريب مخصص، وربط مع أنظمتك الخاصة.',
+        type: 'TEXT',
+        tags: ['pricing', 'plans']
+      },
+      {
+        title: 'كيفية الاشتراك',
+        content: 'يمكنك الاشتراك بسهولة عبر موقعنا faheemly.com. اختر الباقة المناسبة، سجل حسابك، وقم بربط الواتساب الخاص بك في دقائق معدودة.',
+        type: 'TEXT',
+        tags: ['signup', 'howto']
+      },
+      {
+        title: 'هل يدعم اللهجات العامية؟',
+        content: 'نعم، فهملي متميز في فهم اللهجات العامية العربية. سواء كان عميلك يتحدث بالسعودي "أبغى أحجز"، أو بالمصري "عايز أطلب"، أو بالكويتي "ابي موعد"، سيفهمه البوت ويرد عليه باللهجة المناسبة.',
+        type: 'TEXT',
+        tags: ['dialects', 'features']
+      },
+      {
+        title: 'الدعم الفني',
+        content: 'فريق الدعم الفني متاح لمساعدتك عبر البريد الإلكتروني support@faheemly.com أو عبر الشات المباشر في لوحة التحكم.',
+        type: 'TEXT',
+        tags: ['support', 'contact']
+      },
+      {
+        title: 'مميزات فهملي',
+        content: 'أهم المميزات:\n- رد آلي فوري 24/7\n- فهم اللهجات العربية\n- ربط سهل مع واتساب وتيليجرام\n- لوحة تحكم عربية بالكامل\n- تقارير وإحصائيات مفصلة\n- إمكانية تحويل المحادثة لموظف بشري عند الحاجة.',
+        type: 'TEXT',
+        tags: ['features']
+      }
+    ];
+
+    let addedCount = 0;
+    for (const entry of knowledgeEntries) {
+      const existing = await prisma.knowledgeBase.findFirst({
+        where: {
+          businessId: business.id,
+          question: entry.title
+        }
+      });
+
+      if (!existing) {
+        await prisma.knowledgeBase.create({
+          data: {
+            businessId: business.id,
+            question: entry.title,
+            content: entry.content,
+            type: entry.type,
+            tags: entry.tags
+          }
+        });
+        addedCount++;
+      }
+    }
+
+    res.json({ 
+      success: true, 
+      message: `Account updated: Quota set to 10M, ${addedCount} knowledge entries added.` 
+    });
+
+  } catch (error) {
+    logger.error('Fix Account Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Middleware to check if user is SUPERADMIN
 const isAdmin = async (req, res, next) => {
   if (req.user.role !== 'SUPERADMIN') {
