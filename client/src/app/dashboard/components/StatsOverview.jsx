@@ -180,27 +180,30 @@ export default function StatsOverview({
 
   // Fetch alerts from API
   useEffect(() => {
-    // Fetch a small conversations summary for compact overview
+    // Fetch a small conversations summary for compact overview (use apiCall so Authorization header is included)
     (async () => {
       try {
-        const res = await fetch('/api/chat/conversations');
-        const data = await res.json();
-        const list = Array.isArray(data) ? data : (data.data || []);
+        const response = await apiCall('api/chat/conversations');
+        const list = Array.isArray(response) ? response : (response.data || response || []);
         setTopConversations(list.slice(0, 3));
       } catch (e) {
-        // ignore summary failures
+        // If unauthorized, clear token and optionally redirect to login
+        if (e.message && e.message.toLowerCase().includes('unauthorized')) {
+          try { localStorage.removeItem('token'); localStorage.removeItem('user'); } catch (err) {}
+        }
       }
     })();
 
-    // Fetch handover request count for Live Support summary
+    // Fetch handover request count for Live Support summary (use apiCall to include auth)
     (async () => {
       try {
-        const res = await fetch('/api/chat/handover-requests');
-        const data = await res.json();
-        const list = Array.isArray(data) ? data : (data.data || []);
+        const response = await apiCall('api/chat/handover-requests');
+        const list = Array.isArray(response) ? response : (response.data || response || []);
         setHandoverCount(list.length || 0);
       } catch (e) {
-        // ignore
+        if (e.message && e.message.toLowerCase().includes('unauthorized')) {
+          try { localStorage.removeItem('token'); localStorage.removeItem('user'); } catch (err) {}
+        }
       }
     })();
 
