@@ -4,7 +4,7 @@
   "description": "Backend for Fahimo SaaS",
   "main": "src/index.js",
   "scripts": {
-    "start": "npm run install:pgvector && npx prisma migrate deploy && node src/index.js",
+    "start": "node src/index.js",
     "start:dev": "node src/index.js",
     "dev": "nodemon src/index.js",
     "worker": "node src/queue/worker.js",
@@ -15,7 +15,7 @@
     "prisma:deploy": "prisma migrate deploy",
     "start:prod": "npm run install:pgvector && npx prisma migrate deploy && node src/index.js",
     "prisma:studio": "prisma studio",
-    "install:pgvector": "node scripts/install-pgvector.js",
+    "install:pgvector": "node scripts/install-pgvector.js && npm run prisma:push",
     "db:seed": "node scripts/seed-faheemly-knowledge.js",
     "db:demo": "node scripts/create-demo-data.js",
     "check": "node scripts/check-infrastructure.js",
