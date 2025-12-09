@@ -16,30 +16,35 @@ router.get('/dashboard', authenticateToken, async (req, res) => {
   try {
     const { start, end } = req.query;
     
-    // If no query params, this might be a mistake or default request
-    // But since /dashboard/:days handles the default, we assume this is for custom range
-    
     const businessId = req.user.businessId || (await prisma.business.findFirst({ where: { userId: req.user.userId } }))?.id;
     if (!businessId) return res.status(404).json({ error: 'Business not found' });
 
     const startDate = start ? new Date(start) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const endDate = end ? new Date(end) : new Date();
 
-    // 1. Daily Trends
-    const dailyMessages = await prisma.$queryRaw`
-      SELECT 
-        TO_CHAR("createdAt", 'YYYY-MM-DD') as date,
-        COUNT(*) as count
-      FROM "Message" m
-      JOIN "Conversation" c ON m."conversationId" = c.id
-      WHERE c."businessId" = ${businessId}
-        AND m."createdAt" >= ${startDate}
-        AND m."createdAt" <= ${endDate}
-      GROUP BY TO_CHAR("createdAt", 'YYYY-MM-DD')
-      ORDER BY date ASC
-    `;
+    // 1. Daily Trends (Using Prisma GroupBy instead of Raw SQL for safety)
+    const dailyMessages = await prisma.message.groupBy({
+      by: ['createdAt'],
+      where: {
+        conversation: { businessId },
+        createdAt: { gte: startDate, lte: endDate }
+      },
+      _count: { id: true }
+    });
 
-    // 2. Response Times (Mock)
+    // Aggregate by day manually to avoid complex SQL
+    const trendsMap = {};
+    dailyMessages.forEach(item => {
+      const date = item.createdAt.toISOString().split('T')[0];
+      trendsMap[date] = (trendsMap[date] || 0) + Number(item._count.id);
+    });
+
+    const trends = Object.keys(trendsMap).map(date => ({
+      date,
+      count: trendsMap[date]
+    })).sort((a, b) => a.date.localeCompare(b.date));
+
+    // 2. Response Times (Mock for now to prevent errors)
     const responseTimes = [
       { range: '0-1m', count: 45 },
       { range: '1-5m', count: 20 },
@@ -59,13 +64,11 @@ router.get('/dashboard', authenticateToken, async (req, res) => {
 
     const satisfactionDistribution = ratings.map(r => ({
       rating: r.rating,
-      count: r._count.rating
+      count: Number(r._count.rating)
     }));
 
     res.json({
-      trends: {
-        daily: dailyMessages.map(d => ({ date: d.date, count: Number(d.count) }))
-      },
+      trends: { daily: trends },
       performance: {
         responseTimes,
         satisfactionDistribution
@@ -93,20 +96,28 @@ router.get('/dashboard/:days', authenticateToken, async (req, res) => {
     const periodDate = new Date();
     periodDate.setDate(periodDate.getDate() - parseInt(days || 30));
 
-    // 1. Daily Trends
-    const dailyMessages = await prisma.$queryRaw`
-      SELECT 
-        TO_CHAR("createdAt", 'YYYY-MM-DD') as date,
-        COUNT(*) as count
-      FROM "Message" m
-      JOIN "Conversation" c ON m."conversationId" = c.id
-      WHERE c."businessId" = ${businessId}
-        AND m."createdAt" >= ${periodDate}
-      GROUP BY TO_CHAR("createdAt", 'YYYY-MM-DD')
-      ORDER BY date ASC
-    `;
+    // 1. Daily Trends (Using Prisma GroupBy)
+    const dailyMessages = await prisma.message.groupBy({
+      by: ['createdAt'],
+      where: {
+        conversation: { businessId },
+        createdAt: { gte: periodDate }
+      },
+      _count: { id: true }
+    });
 
-    // 2. Response Times (Mock or Real)
+    const trendsMap = {};
+    dailyMessages.forEach(item => {
+      const date = item.createdAt.toISOString().split('T')[0];
+      trendsMap[date] = (trendsMap[date] || 0) + Number(item._count.id);
+    });
+
+    const trends = Object.keys(trendsMap).map(date => ({
+      date,
+      count: trendsMap[date]
+    })).sort((a, b) => a.date.localeCompare(b.date));
+
+    // 2. Response Times (Mock)
     const responseTimes = [
       { range: '0-1m', count: 45 },
       { range: '1-5m', count: 20 },
@@ -126,13 +137,11 @@ router.get('/dashboard/:days', authenticateToken, async (req, res) => {
 
     const satisfactionDistribution = ratings.map(r => ({
       rating: r.rating,
-      count: r._count.rating
+      count: Number(r._count.rating)
     }));
 
     res.json({
-      trends: {
-        daily: dailyMessages.map(d => ({ date: d.date, count: Number(d.count) }))
-      },
+      trends: { daily: trends },
       performance: {
         responseTimes,
         satisfactionDistribution
