@@ -71,8 +71,16 @@ router.get('/config/:businessId', async (req, res) => {
 
     // Fix: Replace localhost URLs with current API URL to prevent CSP errors
     if (config.customIconUrl && config.customIconUrl.includes('localhost')) {
-       const baseUrl = process.env.API_URL || 'https://fahimo-api.onrender.com';
-       config.customIconUrl = config.customIconUrl.replace(/http:\/\/localhost:\d+/, baseUrl);
+       let baseUrl = process.env.API_URL;
+       if (!baseUrl) {
+         baseUrl = process.env.NODE_ENV === 'production' 
+           ? 'https://fahimo-api.onrender.com' 
+           : 'http://localhost:3001';
+       }
+       baseUrl = baseUrl.replace(/\/$/, '');
+       
+       // Replace both http and https localhost references
+       config.customIconUrl = config.customIconUrl.replace(/https?:\/\/localhost:\d+/, baseUrl);
     }
 
     res.json({
@@ -92,7 +100,22 @@ router.post('/upload-icon', authenticateToken, upload.single('icon'), async (req
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    const baseUrl = (process.env.API_URL || 'http://localhost:3001').replace(/\/$/, '');
+    // Determine Base URL with priority:
+    // 1. Environment Variable (API_URL)
+    // 2. Hardcoded Production URL (if NODE_ENV is production)
+    // 3. Localhost (fallback)
+    let baseUrl = process.env.API_URL;
+    
+    if (!baseUrl) {
+      if (process.env.NODE_ENV === 'production') {
+        baseUrl = 'https://fahimo-api.onrender.com';
+      } else {
+        baseUrl = 'http://localhost:3001';
+      }
+    }
+    
+    baseUrl = baseUrl.replace(/\/$/, '');
+
     // Force HTTPS in production
     const finalBaseUrl = (process.env.NODE_ENV === 'production' && !baseUrl.startsWith('https')) 
       ? baseUrl.replace('http:', 'https:') 
