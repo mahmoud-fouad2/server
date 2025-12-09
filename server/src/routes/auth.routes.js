@@ -35,4 +35,7 @@ router.post('/demo-login', authController.demoLogin);
 // Update Profile
 router.put('/profile', authenticateToken, authController.updateProfile);
 
+// Get current profile
+router.get('/profile', authenticateToken, authController.getProfile);
+
 module.exports = router;

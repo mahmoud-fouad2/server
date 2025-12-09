@@ -155,12 +155,19 @@ Options -Indexes
 # ========================================
 # Preload Critical Resources (Optional)
 # ========================================
-<IfModule mod_headers.c>
-  # Preload fonts
-  <FilesMatch "\.(woff2)$">
-    Header set Link "</fonts/Beiruti.woff2>; rel=preload; as=font; crossorigin"
-  </FilesMatch>
-</IfModule>
+# NOTE: Font preloading is disabled here because the project uses Next's
+# `next/font` (Beiruti) which bundles/serves fonts differently. A stale
+# manual preload referencing `/fonts/Beiruti.woff2` caused 404s in the
+# browser when the file was not present in `client/public/fonts/`.
+#
+# If you prefer manual preloading, add the actual `Beiruti.woff2` file to
+# `client/public/fonts/` and uncomment/update the block below.
+#
+# <IfModule mod_headers.c>
+#   <FilesMatch "\.(woff2)$">
+#     Header set Link "</fonts/Beiruti.woff2>; rel=preload; as=font; crossorigin"
+#   </FilesMatch>
+# </IfModule>
 
 # ========================================
 # Error Pages (Optional)

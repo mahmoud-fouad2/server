@@ -366,15 +366,34 @@ exports.addUrlKnowledge = async (req, res) => {
 
 exports.getKnowledge = async (req, res) => {
   try {
-    const businessId = req.user.businessId;
-    const kbList = await prisma.knowledgeBase.findMany({
+    const businessId = req.user && req.user.businessId;
+    if (!businessId) {
+      logger.warn('getKnowledge: missing businessId on request', { user: req.user });
+      return res.status(400).json({ error: 'Business ID missing from token.' });
+    }
+
+    const rawKbList = await prisma.knowledgeBase.findMany({
       where: { businessId },
       orderBy: { createdAt: 'desc' }
     });
-    const parsedList = kbList.map(kb => ({
-      ...kb,
-      metadata: typeof kb.metadata === 'string' ? JSON.parse(kb.metadata) : kb.metadata
-    }));
+
+    const kbList = Array.isArray(rawKbList) ? rawKbList : [];
+    const parsedList = kbList.map(kb => {
+      let metadata = kb.metadata;
+      if (typeof metadata === 'string') {
+        try {
+          metadata = JSON.parse(metadata);
+        } catch (e) {
+          logger.warn('getKnowledge: failed to parse metadata JSON', { id: kb.id, error: e.message });
+          metadata = {};
+        }
+      }
+      return {
+        ...kb,
+        metadata
+      };
+    });
+
     res.json(parsedList);
   } catch (error) {
     logger.error("Fetch Knowledge Error:", error);

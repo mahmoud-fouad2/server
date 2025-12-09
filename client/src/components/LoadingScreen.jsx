@@ -44,6 +44,8 @@ export default function LoadingScreen({ onComplete }) {
       <div className="relative z-10 mb-8">
         <FaheemAnimatedLogo size="medium" isLoading={true} showText={false} />
       </div>
+      {/* Spacer to separate logo/dots from the progress bar */}
+      <div className="h-20" aria-hidden="true" />
 
       {/* Progress Bar Container */}
       <div className="relative z-50 w-64 sm:w-80">

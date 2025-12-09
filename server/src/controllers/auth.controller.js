@@ -220,3 +220,21 @@ exports.updateProfile = async (req, res) => {
     res.status(500).json({ error: 'Failed to update profile' });
   }
 };
+
+exports.getProfile = async (req, res) => {
+  try {
+    const payload = req.user || {};
+    if (!payload.userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    // Fetch fresh user info from DB to include businesses and latest data
+    const user = await prisma.user.findUnique({ where: { id: payload.userId }, include: { businesses: true } });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const businessId = payload.businessId || user.businesses?.[0]?.id;
+
+    res.json({ user: { id: user.id, name: user.name, email: user.email, role: user.role, businessId }, businesses: user.businesses || [] });
+  } catch (error) {
+    logger.error('Get profile failed', error);
+    res.status(500).json({ error: 'Failed to fetch profile' });
+  }
+};
