@@ -166,13 +166,7 @@ export default function StatsOverview({
 
 
 
-  const copyWidgetCode = () => {
-    const businessId = user?.businessId || 'YOUR_BUSINESS_ID';
-    const code = `<script src="https://fahimo-api.onrender.com/widget/fahimo-widget.js" data-business-id="${businessId}"></script>`;
-    navigator.clipboard.writeText(code);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+
 
   const timeAgo = date => {
     if (!date) return 'غير معروف';
