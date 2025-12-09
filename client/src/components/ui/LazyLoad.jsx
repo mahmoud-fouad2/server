@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 
 /**
  * LazyLoad Component - Loads children only when visible in viewport
@@ -109,37 +110,41 @@ export function LazyImage({
     <div
       ref={imgRef}
       className={`relative overflow-hidden ${className}`}
-      style={{ width, height }}
+      style={{ width, height, position: 'relative' }}
     >
-      {/* Blur placeholder */}
-      {blurDataURL && !isLoaded && (
-        <img
+      {/* Blur placeholder and actual image via Next/Image */}
+      {isInView && (
+        <>
+          <Image
+            src={src}
+            alt={alt}
+            fill
+            sizes="(max-width: 768px) 100vw, 50vw"
+            className={`object-cover transition-opacity duration-300 ${
+              isLoaded ? 'opacity-100' : 'opacity-0'
+            }`}
+            onLoadingComplete={() => setIsLoaded(true)}
+            placeholder={blurDataURL ? 'blur' : undefined}
+            blurDataURL={blurDataURL}
+            {...props}
+          />
+
+          {/* Loading skeleton while image loads */}
+          {!isLoaded && (
+            <div className="absolute inset-0 bg-gray-200 dark:bg-cosmic-700 animate-pulse" />
+          )}
+        </>
+      )}
+
+      {/* If not yet in view, show small placeholder if provided */}
+      {!isInView && blurDataURL && (
+        <Image
           src={blurDataURL}
           alt=""
-          className="absolute inset-0 w-full h-full object-cover blur-xl scale-110"
+          fill
+          className="object-cover blur-xl scale-110"
           aria-hidden="true"
         />
-      )}
-
-      {/* Actual image */}
-      {isInView && (
-        <img
-          src={src}
-          alt={alt}
-          width={width}
-          height={height}
-          className={`w-full h-full object-cover transition-opacity duration-300 ${
-            isLoaded ? 'opacity-100' : 'opacity-0'
-          }`}
-          onLoad={() => setIsLoaded(true)}
-          loading="lazy"
-          {...props}
-        />
-      )}
-
-      {/* Loading skeleton */}
-      {!isLoaded && (
-        <div className="absolute inset-0 bg-gray-200 dark:bg-cosmic-700 animate-pulse" />
       )}
     </div>
   );
@@ -178,6 +183,8 @@ export function useLazyLoad(callback, dependencies = []) {
   const [hasLoaded, setHasLoaded] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const ref = useRef(null);
+  // Create a stable key for the dependencies to avoid spread in effect deps
+  const depsKey = JSON.stringify(dependencies || []);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -206,7 +213,7 @@ export function useLazyLoad(callback, dependencies = []) {
         observer.unobserve(currentRef);
       }
     };
-  }, [callback, hasLoaded, ...dependencies]);
+  }, [callback, hasLoaded, depsKey]);
 
   return { ref, isVisible, hasLoaded };
 }

@@ -46,7 +46,7 @@ export default function LoadingScreen({ onComplete }) {
       </div>
 
       {/* Progress Bar Container */}
-      <div className="relative z-10 w-64 sm:w-80">
+      <div className="relative z-50 w-64 sm:w-80">
         {/* Progress Bar Background */}
         <div className="h-2 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden shadow-inner">
           {/* Progress Bar Fill */}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
@@ -1375,10 +1376,13 @@ export default function AdminDashboard() {
               rel="noopener noreferrer"
               className="text-brand-500 hover:text-brand-600 transition-colors flex items-center gap-1"
             >
-              <img
+              <Image
                 src="https://ma-fo.info/logo2.png"
                 alt="Ma-Fo Logo"
+                width={16}
+                height={16}
                 className="w-4 h-4"
+                unoptimized
               />
               Ma-Fo
             </a>

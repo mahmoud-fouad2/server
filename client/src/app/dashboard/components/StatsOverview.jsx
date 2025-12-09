@@ -43,6 +43,34 @@ import {
   Brush,
 } from 'recharts';
 
+// Small helper component for safely revealing API Key
+function APIKeyBox({ user, copyToClipboard }) {
+  const [revealed, setRevealed] = useState(false);
+
+  const key = user?.businessId ? `sk_live_${user.businessId}` : 'Generating...';
+
+  const handleReveal = () => {
+    const ok = window.confirm('هل أنت متأكد من أنك تريد إظهار API Key؟ هذه المسؤولية على عاتقك.');
+    if (ok) setRevealed(true);
+  };
+
+  return (
+    <div className="bg-muted p-4 rounded-lg font-mono text-xs break-all border border-border flex items-center justify-between">
+      <span>{revealed ? key : '••••••••••••••••••'}</span>
+      <div className="flex items-center gap-2">
+        {!revealed ? (
+          <button className="px-3 py-1 rounded-lg border" onClick={handleReveal}>عرض</button>
+        ) : (
+          <>
+            <button className="px-2 py-1 rounded-md" onClick={() => copyToClipboard(key)} title="نسخ المفتاح">نسخ</button>
+            <button className="px-2 py-1 rounded-md bg-red-50 text-red-600" onClick={() => setRevealed(false)}>إخفاء</button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function StatsOverview({
   stats,
   subscription,
@@ -63,6 +91,9 @@ export default function StatsOverview({
   const [vectorStats, setVectorStats] = useState(null);
   const [alerts, setAlerts] = useState([]);
   const syncId = 'dashboardSync';
+  const [kbExpanded, setKbExpanded] = useState(false);
+  const [topConversations, setTopConversations] = useState([]);
+  const [handoverCount, setHandoverCount] = useState(0);
 
   // Real-time updates from API
   useEffect(() => {
@@ -149,6 +180,30 @@ export default function StatsOverview({
 
   // Fetch alerts from API
   useEffect(() => {
+    // Fetch a small conversations summary for compact overview
+    (async () => {
+      try {
+        const res = await fetch('/api/chat/conversations');
+        const data = await res.json();
+        const list = Array.isArray(data) ? data : (data.data || []);
+        setTopConversations(list.slice(0, 3));
+      } catch (e) {
+        // ignore summary failures
+      }
+    })();
+
+    // Fetch handover request count for Live Support summary
+    (async () => {
+      try {
+        const res = await fetch('/api/chat/handover-requests');
+        const data = await res.json();
+        const list = Array.isArray(data) ? data : (data.data || []);
+        setHandoverCount(list.length || 0);
+      } catch (e) {
+        // ignore
+      }
+    })();
+
     const fetchAlerts = async () => {
       try {
         const response = await apiCall('api/analytics/alerts');
@@ -632,7 +687,7 @@ export default function StatsOverview({
           <CardContent>
             <div className="space-y-4">
               {kbList &&
-                kbList.slice(0, 3).map(kb => (
+                (kbExpanded ? kbList : kbList.slice(0, 1)).map(kb => (
                   <div
                     key={kb.id}
                     className="flex items-center justify-between p-3 bg-muted/30 border border-border rounded-lg"
@@ -641,8 +696,8 @@ export default function StatsOverview({
                       <div className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0"></div>
                       <div className="truncate">
                         <p className="font-medium text-sm truncate">
-                          {kb.metadata?.filename ||
-                            kb.metadata?.title ||
+                          {kb.metadata?.filename || kb.metadata?.title ||
+                            (kb.content ? (kb.content.replace(/\s+/g, ' ').slice(0, 60) + (kb.content.length > 60 ? '...' : '')) : null) ||
                             kb.metadata?.url ||
                             'بدون عنوان'}
                         </p>
@@ -658,6 +713,16 @@ export default function StatsOverview({
                     </span>
                   </div>
                 ))}
+              {kbList && kbList.length > 1 && (
+                <div className="pt-2">
+                  <button
+                    className="text-sm text-brand-500 hover:underline"
+                    onClick={() => setKbExpanded(!kbExpanded)}
+                  >
+                    {kbExpanded ? 'إخفاء' : `عرض الكل (${kbList.length})`}
+                  </button>
+                </div>
+              )}
               {(!kbList || kbList.length === 0) && (
                 <div className="text-center py-8 text-muted-foreground border border-dashed border-border rounded-lg">
                   لا يوجد مصادر نشطة
@@ -679,6 +744,34 @@ export default function StatsOverview({
             </div>
           </CardContent>
         </Card>
+
+          {/* Compact Conversations Summary */}
+          <Card className="lg:col-span-1 h-full glass-panel smooth-transition">
+            <CardHeader>
+              <CardTitle>محادثات حديثة</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {topConversations && topConversations.length > 0 ? (
+                  topConversations.map(conv => (
+                    <div key={conv.id} className="p-3 bg-muted/20 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div className="font-medium text-sm">زائر #{conv.id.slice(-4)}</div>
+                        <div className="text-xs text-muted-foreground">{new Date(conv.updatedAt).toLocaleTimeString()}</div>
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1 truncate">{conv.messages?.[0]?.content || 'لا توجد رسائل'}</div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center text-muted-foreground py-6">لا توجد محادثات حديثة</div>
+                )}
+                <div className="pt-2 flex gap-2">
+                  <Button variant="outline" size="sm" className="flex-1" onClick={() => setActiveTab('conversations')}>عرض المحادثات</Button>
+                  <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">{(topConversations || []).length} أحدث</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
         {/* Traffic Analysis Chart */}
         <Card className="lg:col-span-2 glass-panel smooth-transition">
@@ -778,17 +871,10 @@ add_action('wp_footer', 'add_fahimo_widget');`}
               <div>
                 <h4 className="text-sm font-semibold mb-2 text-right" dir="rtl">API Key (للمطورين)</h4>
                 <div className="relative group">
-                  <div className="bg-muted p-4 rounded-lg font-mono text-xs break-all border border-border flex items-center justify-between">
-                    <span>{user?.businessId ? `sk_live_${user.businessId}` : 'Generating...'}</span>
-                    <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">نشط</span>
-                  </div>
-                  <div className="absolute top-2 right-2">
-                     <Button size="sm" variant="ghost" onClick={() => copyToClipboard(`sk_live_${user?.businessId}`)}>
-                      <Copy className="w-4 h-4" />
-                    </Button>
-                  </div>
+                  {/* Hidden by default, reveal on explicit action with confirmation */}
+                  <APIKeyBox user={user} copyToClipboard={copyToClipboard} />
                 </div>
-                <p className="text-xs text-muted-foreground mt-1 text-right" dir="rtl">استخدم هذا المفتاح للربط مع تطبيقاتك الخارجية.</p>
+                <p className="text-xs text-muted-foreground mt-1 text-right" dir="rtl">اضغط &quot;عرض&quot; لإظهار المفتاح تحت مسؤوليتك. لا تشارك المفتاح مع أي شخص.</p>
               </div>
 
             </div>

@@ -238,13 +238,34 @@ export default function DocsPage() {
   const { theme, toggleTheme } = useTheme();
   const router = useRouter();
 
+  // Local state to keep Navigation consistent with the rest of the site
+  const [lang, setLang] = useState('ar');
+  const [activeCountry, setActiveCountry] = useState('sa');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    setIsDark(document.documentElement.classList.contains('dark'));
+  }, []);
+
   const filteredSections = sections.filter(section =>
     section.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-cosmic-900 text-gray-900 dark:text-gray-100 font-sans" dir="rtl">
-      <Navigation theme={theme} toggleTheme={toggleTheme} t={TRANSLATIONS.ar} />
+      <Navigation
+        lang={lang}
+        setLang={setLang}
+        activeCountry={activeCountry}
+        changeCountry={setActiveCountry}
+        isDark={isDark}
+        toggleTheme={() => { toggleTheme(); setIsDark(!isDark); }}
+        scrolled={false}
+        mobileMenuOpen={mobileMenuOpen}
+        setMobileMenuOpen={setMobileMenuOpen}
+        t={TRANSLATIONS.ar}
+      />
 
       <div className="flex flex-col md:flex-row max-w-7xl mx-auto px-4 py-8 gap-8">
         {/* Sidebar */}

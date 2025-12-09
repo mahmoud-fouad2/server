@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import { Sparkles, ArrowLeft, Send, Paperclip, Mic } from 'lucide-react';
 
 export const DemoChatWindow = () => {
@@ -36,9 +37,11 @@ export const DemoChatWindow = () => {
           <div className="flex gap-4 items-start relative z-10 animate-fade-in-up">
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-600 to-indigo-700 p-[1px] flex items-center justify-center flex-shrink-0 shadow-lg shadow-brand-500/20 relative group">
               <div className="w-full h-full bg-white dark:bg-cosmic-800 rounded-[14px] flex items-center justify-center overflow-hidden relative">
-                <img
+                <Image
                   src="/logo2.png"
                   alt="Faheemly AI"
+                  width={48}
+                  height={48}
                   className="w-full h-full object-contain animate-pulse-slow"
                 />
               </div>
@@ -75,9 +78,11 @@ export const DemoChatWindow = () => {
           >
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-600 to-indigo-700 p-[1px] flex items-center justify-center flex-shrink-0 shadow-lg shadow-brand-500/20">
               <div className="w-full h-full bg-white dark:bg-cosmic-800 rounded-[14px] flex items-center justify-center overflow-hidden">
-                <img
+                <Image
                   src="/logo2.png"
                   alt="Faheemly AI"
+                  width={48}
+                  height={48}
                   className="w-full h-full object-contain"
                 />
               </div>
@@ -118,9 +123,11 @@ export const DemoChatWindow = () => {
             style={{ animationDelay: '4s' }}
           >
             <div className="w-8 h-8 rounded-xl bg-white dark:bg-cosmic-800 flex items-center justify-center flex-shrink-0 opacity-50 overflow-hidden">
-              <img
+              <Image
                 src="/logo2.png"
                 alt="AI"
+                width={32}
+                height={32}
                 className="w-full h-full object-contain grayscale"
               />
             </div>

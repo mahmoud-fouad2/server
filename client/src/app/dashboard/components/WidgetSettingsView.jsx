@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -165,9 +166,11 @@ export default function WidgetSettingsView({
                 />
                 {widgetConfig.avatar === 'custom' &&
                 widgetConfig.customIconUrl ? (
-                  <img
+                  <Image
                     src={widgetConfig.customIconUrl}
                     alt="Custom"
+                    width={64}
+                    height={64}
                     className="w-full h-full object-cover"
                   />
                 ) : (
@@ -268,9 +271,11 @@ export default function WidgetSettingsView({
               <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center overflow-hidden text-lg">
                 {widgetConfig.avatar === 'custom' &&
                 widgetConfig.customIconUrl ? (
-                  <img
+                  <Image
                     src={widgetConfig.customIconUrl}
                     alt="Bot"
+                    width={32}
+                    height={32}
                     className="w-full h-full object-cover"
                   />
                 ) : (

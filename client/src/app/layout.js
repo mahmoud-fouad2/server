@@ -1,4 +1,11 @@
 import './globals.css';
+import { Beiruti } from 'next/font/google';
+
+const beiruti = Beiruti({
+  subsets: ['arabic'],
+  weight: ['200', '300', '400', '500', '600', '700', '800', '900'],
+  display: 'swap',
+});
 import ErrorBoundary from '@/components/ErrorBoundary';
 import '@/lib/fetch-proxy';
 import ClientLayout from './ClientLayout';
@@ -133,16 +140,10 @@ export default function RootLayout({ children }) {
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Beiruti:wght@200..900&display=swap"
-          rel="stylesheet"
-        />
+        {/* Fonts handled by next/font (Beiruti) for automatic optimization */}
+        {/* Explicit favicons to ensure browsers pick them up and avoid caching issues */}
+        <link rel="icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link
           rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/flag-icons@7.2.3/css/flag-icons.min.css"
@@ -341,16 +342,14 @@ export default function RootLayout({ children }) {
 
         {/* Preload critical resources - Removed unused font preloads */}
 
-        {/* DNS Prefetch for external resources */}
-        <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
-        <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+        {/* DNS Prefetch for other external resources kept if needed */}
 
         {/* Performance hints */}
         <meta name="format-detection" content="telephone=no" />
         <meta httpEquiv="x-ua-compatible" content="IE=edge" />
       </head>
       <body
-        className={`font-sans overflow-x-hidden bg-gray-50 dark:bg-cosmic-950 text-gray-900 dark:text-gray-100 transition-colors duration-300 selection:bg-brand-500/30`}
+        className={`${beiruti.className} overflow-x-hidden bg-gray-50 dark:bg-cosmic-950 text-gray-900 dark:text-gray-100 transition-colors duration-300 selection:bg-brand-500/30`}
       >
         <ErrorBoundary>
           <ClientLayout>{children}</ClientLayout>

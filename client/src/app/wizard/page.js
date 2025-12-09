@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import useTheme from '@/lib/theme';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -182,7 +182,7 @@ export default function Wizard() {
       }
     }, 30000);
     return () => clearInterval(interval);
-  }, [formData, step]);
+  }, [saveDraft, step]);
 
   // Load draft on mount
   useEffect(() => {
@@ -197,10 +197,10 @@ export default function Wizard() {
     }
   }, []);
 
-  const saveDraft = () => {
+  const saveDraft = useCallback(() => {
     localStorage.setItem('wizard_draft', JSON.stringify(formData));
     setLastSaved(new Date());
-  };
+  }, [formData]);
 
   const handleInputChange = e => {
     const { name, value } = e.target;

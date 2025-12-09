@@ -410,6 +410,30 @@
       input.addEventListener('keypress', e => {
         if (e.key === 'Enter') sendMessage();
       });
+
+      // Heartbeat / inactivity tracking
+      this._lastActivity = Date.now();
+      const markActivity = () => { this._lastActivity = Date.now(); };
+
+      // Track interactions inside the widget
+      ['mousemove', 'mousedown', 'keydown', 'touchstart', 'click'].forEach(ev => {
+        document.getElementById('fahimo-chat-window').addEventListener(ev, markActivity);
+      });
+
+      // Inactivity parameters (can be tuned)
+      this._inactivityTimeout = 5 * 60 * 1000; // 5 minutes
+      this._inactivityPromptTimeout = 60 * 1000; // 1 minute to respond to prompt
+      this._inactivityInterval = setInterval(() => {
+        try {
+          const idle = Date.now() - (this._lastActivity || Date.now());
+          if (idle > this._inactivityTimeout && !this._inactivityPromptShown) {
+            this._inactivityPromptShown = true;
+            this._showInactivityPrompt();
+          }
+        } catch (e) {
+          // ignore
+        }
+      }, 30 * 1000); // check every 30s
     },
 
     showTyping() {
@@ -501,6 +525,77 @@
 
       container.appendChild(div);
       container.scrollTop = container.scrollHeight;
+    },
+
+    _showInactivityPrompt() {
+      const container = document.getElementById('fahimo-messages');
+      if (!container) return;
+      if (document.getElementById('fahimo-inactivity')) return;
+
+      const div = document.createElement('div');
+      div.id = 'fahimo-inactivity';
+      div.style.cssText = 'background:#fff; padding:12px; border-radius:12px; text-align:center; margin:10px 0; box-shadow:0 2px 8px rgba(0,0,0,0.08);';
+      div.innerHTML = `
+        <p style="margin-bottom:8px; font-size:13px;">هل لازلت موجوداً؟</p>
+        <div style="display:flex; justify-content:center; gap:8px;"> 
+          <button id="fahimo-inactive-yes" style="padding:8px 12px; border-radius:8px; background:${this.config.color}; color:#fff; border:none;">نعم</button>
+          <button id="fahimo-inactive-no" style="padding:8px 12px; border-radius:8px; background:#f3f4f6; border:none;">لا</button>
+        </div>
+      `;
+
+      container.appendChild(div);
+      container.scrollTop = container.scrollHeight;
+
+      const yes = document.getElementById('fahimo-inactive-yes');
+      const no = document.getElementById('fahimo-inactive-no');
+
+      const clearPrompt = () => {
+        const el = document.getElementById('fahimo-inactivity');
+        if (el) el.remove();
+        this._inactivityPromptShown = false;
+        this._lastActivity = Date.now();
+      };
+
+      yes.onclick = () => {
+        clearPrompt();
+      };
+
+      no.onclick = () => {
+        // Close the widget and keep conversation id saved but hide UI
+        clearPrompt();
+        const win = document.getElementById('fahimo-chat-window');
+        if (win) win.classList.remove('open');
+        this.state.isOpen = false;
+      };
+
+      // Auto-close after prompt timeout if no response
+      setTimeout(() => {
+        if (this._inactivityPromptShown) {
+          // treat as No (auto-close)
+          const win = document.getElementById('fahimo-chat-window');
+          if (win) win.classList.remove('open');
+          this.state.isOpen = false;
+          const el = document.getElementById('fahimo-inactivity');
+          if (el) el.remove();
+          this._inactivityPromptShown = false;
+          // Notify analytics endpoint about auto-close
+          try {
+            const analyticsUrl = this.config.apiEndpoint.replace('/api/chat/message', '/api/analytics/public/track-event');
+            fetch(analyticsUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                event: 'widget_inactive_auto_close',
+                businessId: this.config.businessId,
+                conversationId: this.state.conversationId || null,
+                timestamp: new Date().toISOString(),
+              }),
+            }).catch(() => {});
+          } catch (e) {
+            // ignore analytics failures
+          }
+        }
+      }, this._inactivityPromptTimeout);
     },
 
     async submitRating(rating) {

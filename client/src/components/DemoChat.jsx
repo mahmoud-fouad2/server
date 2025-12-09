@@ -5,6 +5,19 @@ import ChatHeader from './chat/ChatHeader';
 import MessageList from './chat/MessageList';
 import ChatInput from './chat/ChatInput';
 
+const DEMO_CONVERSATION = [
+  {
+    user: 'أهلاً بك! 👋 أنا فهملي، مساعدك الذكي. قرأت المنيو بالكامل وأنا جاهز لاستقبال طلبات زبائنك. كيف أقدر أساعدك اليوم؟',
+    bot: '',
+    actions: [],
+  },
+  {
+    user: 'عندكم خيارات نباتية للغداء؟ 🥗',
+    bot: 'أكيد! عندنا خيارات مميزة:\n✓ سلطة الكينوا مع الأفوكادو\n✓ برجر نباتي (Beyond Meat)\n✓ باستا الخضروات المشوية',
+    actions: ['اطلب الآن', 'عرض الصور'],
+  },
+];
+
 export default function DemoChat() {
   const [messages, setMessages] = useState([
     {
@@ -18,28 +31,17 @@ export default function DemoChat() {
   const [isTyping, setIsTyping] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
 
-  const conversation = [
-    {
-      user: 'أهلاً بك! 👋 أنا فهملي، مساعدك الذكي. قرأت المنيو بالكامل وأنا جاهز لاستقبال طلبات زبائنك. كيف أقدر أساعدك اليوم؟',
-      bot: '',
-      actions: [],
-    },
-    {
-      user: 'عندكم خيارات نباتية للغداء؟ 🥗',
-      bot: 'أكيد! عندنا خيارات مميزة:\n✓ سلطة الكينوا مع الأفوكادو\n✓ برجر نباتي (Beyond Meat)\n✓ باستا الخضروات المشوية',
-      actions: ['اطلب الآن', 'عرض الصور'],
-    },
-  ];
+  // use the module-level DEMO_CONVERSATION
 
   useEffect(() => {
-    if (currentStep < conversation.length) {
+    if (currentStep < DEMO_CONVERSATION.length) {
       const timer = setTimeout(() => {
         // Add user message
         setMessages(prev => [
           ...prev,
           {
             role: 'user',
-            content: conversation[currentStep].user,
+            content: DEMO_CONVERSATION[currentStep].user,
             timestamp: new Date(),
           },
         ]);
@@ -54,8 +56,8 @@ export default function DemoChat() {
             ...prev,
             {
               role: 'bot',
-              content: conversation[currentStep].bot,
-              actions: conversation[currentStep].actions,
+              content: DEMO_CONVERSATION[currentStep].bot,
+              actions: DEMO_CONVERSATION[currentStep].actions,
               timestamp: new Date(),
             },
           ]);

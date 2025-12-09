@@ -13,6 +13,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 
 export default function BusinessSolution() {
   return (
@@ -47,13 +48,15 @@ export default function BusinessSolution() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
-              className="rounded-3xl overflow-hidden shadow-2xl border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-cosmic-800"
+              className="rounded-3xl overflow-hidden shadow-2xl border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-cosmic-800 relative"
+              style={{ minHeight: '500px' }}
             >
-              <img
+              <Image
                 src="/assets/images/business-hero.jpg"
                 alt="حلول الشركات"
-                className="w-full h-[500px] object-cover"
-                loading="lazy"
+                fill
+                className="object-cover"
+                sizes="100vw"
               />
             </motion.div>
           </div>

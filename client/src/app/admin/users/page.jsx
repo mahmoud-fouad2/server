@@ -18,37 +18,44 @@ export default function AdminUsersPage() {
   const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
-    fetchUsers();
-  }, [page, search, roleFilter]);
+    let mounted = true;
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem('token');
 
-  const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem('token');
-      
-      const queryParams = new URLSearchParams({
-        page: page.toString(),
-        limit: '20',
-        ...(search && { search }),
-        ...(roleFilter !== 'all' && { role: roleFilter })
-      });
+        const queryParams = new URLSearchParams({
+          page: page.toString(),
+          limit: '20',
+          ...(search && { search }),
+          ...(roleFilter !== 'all' && { role: roleFilter }),
+        });
 
-      const res = await fetch(`/api/admin/users?${queryParams}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+        const res = await fetch(`/api/admin/users?${queryParams}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-      const data = await res.json();
-      
-      if (data.success) {
-        setUsers(data.data);
-        setTotalPages(data.pagination?.totalPages || 1);
+        const data = await res.json();
+
+        if (!mounted) return;
+
+        if (data.success) {
+          setUsers(data.data);
+          setTotalPages(data.pagination?.totalPages || 1);
+        }
+      } catch (error) {
+        if (mounted) console.error('Failed to fetch users:', error);
+      } finally {
+        if (mounted) setLoading(false);
       }
-    } catch (error) {
-      console.error('Failed to fetch users:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    fetchUsers();
+
+    return () => {
+      mounted = false;
+    };
+  }, [page, search, roleFilter]);
 
   const toggleUserStatus = async (userId, currentStatus) => {
     if (!confirm(`هل تريد ${currentStatus ? 'تعطيل' : 'تفعيل'} هذا المستخدم؟`)) return;

@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 
 const FaheemAnimatedLogo = ({
   size = 'large',
@@ -81,22 +82,25 @@ const FaheemAnimatedLogo = ({
     return <div className={currentSize.container} />;
   }
 
-  if (isLoading) {
+    if (isLoading) {
     return (
       <div className={`flex flex-col items-center justify-center ${className} hidden md:flex`}>
         <div className="relative">
-          <div className="absolute inset-0 bg-brand-500/20 blur-3xl rounded-full animate-pulse"></div>
-          <div className="relative w-80 h-80 flex items-center justify-center p-12 bg-[#f8f8fa] rounded-full overflow-hidden shadow-2xl border-4 border-white/50">
-            <img
-              src="/logo.webp"
-              alt="Faheemly"
-              className="w-full h-full object-contain relative z-10 animate-pulse"
+          <div className="absolute inset-0 bg-brand-500/16 rounded-full blur-3xl animate-pulse"></div>
+          <div className="relative w-64 h-64 flex items-center justify-center p-6 bg-white/70 rounded-full overflow-hidden shadow-2xl border border-white/30">
+            <Image
+              src="/logo2.png"
+              alt="فهملي"
+              width={220}
+              height={220}
+              className="object-contain relative z-10"
+              priority
             />
           </div>
-          <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 flex gap-2">
-            <div className="w-3 h-3 bg-brand-500 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
-            <div className="w-3 h-3 bg-brand-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-            <div className="w-3 h-3 bg-brand-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+          <div className="absolute -bottom-20 left-1/2 transform -translate-x-1/2 flex gap-2 z-0" aria-hidden="true">
+            <div className="w-3 h-3 bg-brand-500 rounded-full animate-bounce" style={{ animationDelay: '0s', zIndex: 0 }}></div>
+            <div className="w-3 h-3 bg-brand-500 rounded-full animate-bounce" style={{ animationDelay: '0.15s', zIndex: 0 }}></div>
+            <div className="w-3 h-3 bg-brand-500 rounded-full animate-bounce" style={{ animationDelay: '0.3s', zIndex: 0 }}></div>
           </div>
         </div>
       </div>
@@ -116,10 +120,13 @@ const FaheemAnimatedLogo = ({
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <img
-          src="/logo.webp"
-          alt="Faheemly Logo"
+        <Image
+          src="/logo2.png"
+          alt="فاهملي"
+          width={currentSize.width}
+          height={currentSize.height}
           className="w-full h-full object-contain"
+          priority={false}
         />
       </div>
 

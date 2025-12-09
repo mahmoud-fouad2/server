@@ -22,51 +22,74 @@ export default function ConversationsView() {
   const [replyInput, setReplyInput] = useState('');
   const [sendingReply, setSendingReply] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showAll, setShowAll] = useState(false);
   const [socket, setSocket] = useState(null);
 
   useEffect(() => {
-    fetchConversations();
-    setupSocket();
+    let mounted = true;
+    let localSocket = null;
+
+    const init = async () => {
+      try {
+        // fetch conversations (local helper)
+        try {
+          const response = await chatApi.getConversations();
+          const conversationsList = Array.isArray(response) ? response : (response.data || []);
+          if (mounted) setConversations(conversationsList);
+        } catch (err) {
+          console.error('Failed to fetch conversations (init):', err);
+          if (mounted) setConversations([]);
+        }
+
+        // setup socket
+        try {
+          const profile = await authApi.getProfile();
+          if (profile && profile.businessId) {
+            localSocket = io(API_CONFIG.BASE_URL.replace('/api', ''), { transports: ['websocket'] });
+
+            localSocket.on('connect', () => {
+              console.log('Socket connected');
+              localSocket.emit('join_room', `business_${profile.businessId}`);
+            });
+
+            localSocket.on('handover_request', (data) => {
+              playNotificationSound();
+              if (Notification.permission === 'granted') {
+                new Notification('طلب مساعدة جديد', { body: data.message });
+              }
+              // refresh list
+              (async () => {
+                try {
+                  const r2 = await chatApi.getConversations();
+                  const list = Array.isArray(r2) ? r2 : (r2.data || []);
+                  if (mounted) setConversations(list);
+                } catch (e) {
+                  console.error('Failed to refresh conversations after handover:', e);
+                }
+              })();
+            });
+
+            if (mounted) setSocket(localSocket);
+
+            if (Notification.permission !== 'granted') {
+              Notification.requestPermission();
+            }
+          }
+        } catch (e) {
+          console.error('Socket setup failed', e);
+        }
+      } catch (e) {
+        console.error('Initialization failed', e);
+      }
+    };
+
+    init();
 
     return () => {
-      if (socket) socket.disconnect();
+      mounted = false;
+      if (localSocket) localSocket.disconnect();
     };
   }, []);
-
-  const setupSocket = async () => {
-    try {
-      const profile = await authApi.getProfile();
-      if (profile && profile.businessId) {
-        const newSocket = io(API_CONFIG.BASE_URL.replace('/api', ''), {
-          transports: ['websocket'],
-        });
-
-        newSocket.on('connect', () => {
-          console.log('Socket connected');
-          newSocket.emit('join_room', `business_${profile.businessId}`);
-        });
-
-        newSocket.on('handover_request', (data) => {
-          playNotificationSound();
-          // Show visual alert (simple browser alert for now or toast if available)
-          // Ideally use a toast library here
-          if (Notification.permission === 'granted') {
-            new Notification('طلب مساعدة جديد', { body: data.message });
-          }
-          fetchConversations(); // Refresh list
-        });
-
-        setSocket(newSocket);
-        
-        // Request notification permission
-        if (Notification.permission !== 'granted') {
-          Notification.requestPermission();
-        }
-      }
-    } catch (e) {
-      console.error('Socket setup failed', e);
-    }
-  };
 
   const playNotificationSound = () => {
     try {
@@ -151,8 +174,9 @@ export default function ConversationsView() {
             <div className="text-center py-8 text-muted-foreground">
               لا توجد محادثات
             </div>
-          ) : (
-            conversations.map(conv => (
+            ) : (
+            <>
+              {conversations.slice(0, showAll ? conversations.length : 10).map(conv => (
               <div
                 key={conv.id}
                 onClick={() => selectConversation(conv)}
@@ -173,7 +197,15 @@ export default function ConversationsView() {
                   {conv.messages[0]?.content || 'لا توجد رسائل'}
                 </div>
               </div>
-            ))
+              ))}
+              {conversations.length > 10 && (
+                <div className="text-center mt-4">
+                  <button className="text-sm text-brand-600 underline" onClick={() => setShowAll(s => !s)}>
+                    {showAll ? 'عرض أقل' : `عرض الكل (${conversations.length})`}
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>

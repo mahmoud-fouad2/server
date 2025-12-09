@@ -242,32 +242,42 @@ router.get('/vector-stats', authenticateToken, async (req, res) => {
  */
 router.post('/track-event', authenticateToken, async (req, res) => {
   try {
-    const { eventType, eventData, conversationId } = req.body;
+    const { eventType: et, eventData, conversationId, event } = req.body;
+    const eventType = et || event;
 
     if (!eventType) {
-      return res.status(400).json({
-        success: false,
-        message: 'Event type is required'
-      });
+      return res.status(400).json({ success: false, message: 'Event type is required' });
     }
 
-    // Store event for analytics
+    // Store event for analytics (persist to userAnalytics table when available)
     const event = {
       type: eventType,
       data: eventData,
       conversationId,
       timestamp: new Date(),
-      businessId: req.business?.id,
+      businessId: req.user?.businessId || req.business?.id,
       userId: req.user?.id
     };
 
-    // In a real implementation, this would be stored in database
     console.log('[Conversation Analytics Routes] Event tracked:', event);
 
-    res.json({
-      success: true,
-      message: 'Event tracked successfully'
-    });
+    try {
+      // Attempt to persist to userAnalytics table (visitor.service tracks similar actions)
+      await require('../config/database').userAnalytics.create({
+        data: {
+          businessId: req.user?.businessId || req.business?.id || null,
+          userId: req.user?.id || null,
+          action: eventType,
+          metadata: eventData || {},
+          createdAt: new Date()
+        }
+      });
+      console.log('[Conversation Analytics Routes] Event persisted to DB');
+    } catch (dbErr) {
+      console.warn('[Conversation Analytics Routes] Failed to persist analytics event:', dbErr?.message || dbErr);
+    }
+
+    res.json({ success: true, message: 'Event tracked successfully' });
   } catch (error) {
     console.error('[Conversation Analytics Routes] Track event error:', error);
     res.status(500).json({
@@ -279,3 +289,45 @@ router.post('/track-event', authenticateToken, async (req, res) => {
 });
 
 module.exports = router;
+
+// Public analytics endpoint for lightweight widget events (no auth)
+router.post('/public/track-event', async (req, res) => {
+  try {
+    const { eventType: et, eventData, conversationId, event, businessId } = req.body;
+    const eventType = et || event;
+
+    if (!eventType) {
+      return res.status(400).json({ success: false, message: 'Event type is required' });
+    }
+
+    const eventRecord = {
+      type: eventType,
+      data: eventData || {},
+      conversationId: conversationId || null,
+      timestamp: new Date(),
+      businessId: businessId || null
+    };
+
+    console.log('[Conversation Analytics Routes - Public] Event tracked:', eventRecord);
+
+    try {
+      await require('../config/database').userAnalytics.create({
+        data: {
+          businessId: eventRecord.businessId,
+          userId: null,
+          action: eventRecord.type,
+          metadata: eventRecord.data,
+          createdAt: eventRecord.timestamp
+        }
+      });
+      console.log('[Conversation Analytics Routes - Public] Event persisted to DB');
+    } catch (e) {
+      console.warn('[Conversation Analytics Routes - Public] DB persist failed:', e?.message || e);
+    }
+
+    res.json({ success: true, message: 'Event tracked (public)' });
+  } catch (error) {
+    console.error('[Conversation Analytics Routes - Public] Track event error:', error);
+    res.status(500).json({ success: false, message: 'Failed to track event', error: error.message });
+  }
+});

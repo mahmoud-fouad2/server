@@ -278,13 +278,23 @@ exports.addUrlKnowledge = async (req, res) => {
       });
     }
 
-    const response = await axios.get(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36' },
-      timeout: 15000
-    });
-    
+    let response;
+    try {
+      response = await axios.get(url, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36' },
+        timeout: 15000
+      });
+    } catch (err) {
+      logger.error('Axios GET failed for URL:', { url, message: err.message, status: err.response?.status, data: err.response?.data });
+      const statusCode = err.response?.status || 502;
+      return res.status(statusCode).json({ error: 'Failed to fetch URL', detail: err.message, status: err.response?.status });
+    }
+
     const html = response.data;
-    if (typeof html !== 'string') return res.status(400).json({ error: 'Invalid content type received from URL' });
+    if (typeof html !== 'string') {
+      logger.warn('Non-string response received from URL', { url, type: typeof html });
+      return res.status(400).json({ error: 'Invalid content type received from URL' });
+    }
 
     const $ = cheerio.load(html);
     $('script, style, nav, footer, iframe, noscript, svg').remove();
@@ -340,7 +350,7 @@ exports.addUrlKnowledge = async (req, res) => {
         businessId,
         type: 'URL',
         content: fullContent,
-        metadata: JSON.stringify({ url, title, domain, pageType, description: description.substring(0, 200) })
+        metadata: { url, title, domain, pageType, description: description.substring(0, 200) }
       }
     });
 
@@ -349,8 +359,8 @@ exports.addUrlKnowledge = async (req, res) => {
 
     res.json({ message: 'URL scraped successfully', id: kb.id });
   } catch (error) {
-    logger.error('URL Scrape Error:', error.message);
-    res.status(500).json({ error: `Failed to scrape URL: ${error.message}` });
+    logger.error('URL Scrape Error:', error?.stack || error);
+    res.status(500).json({ error: `Failed to scrape URL: ${error.message || 'unknown error'}` });
   }
 };
 

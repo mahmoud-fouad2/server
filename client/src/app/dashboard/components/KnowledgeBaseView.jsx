@@ -29,6 +29,7 @@ export default function KnowledgeBaseView({ addNotification }) {
   const [editingKb, setEditingKb] = useState(null);
   const [editContent, setEditContent] = useState('');
   const [editTitle, setEditTitle] = useState('');
+  const [kbShowAll, setKbShowAll] = useState(false);
 
   useEffect(() => {
     fetchKbList();
@@ -131,6 +132,23 @@ export default function KnowledgeBaseView({ addNotification }) {
     } finally {
       setUploading(false);
     }
+  };
+
+  const extractTitleFromContent = (kb) => {
+    // Prefer metadata title/filename/url; otherwise take first meaningful piece of content
+    if (!kb) return '';
+    const metaTitle = kb.metadata?.title || kb.metadata?.filename || kb.metadata?.url;
+    if (metaTitle) return metaTitle;
+    if (kb.content) {
+      // Strip newlines and reduce whitespace
+      const text = kb.content.replace(/\s+/g, ' ').trim();
+      if (!text) return '';
+      // Return first 60 characters or until sentence end
+      const end = text.indexOf('. ');
+      if (end > 10 && end < 120) return text.slice(0, end + 1);
+      return text.slice(0, 60) + (text.length > 60 ? '...' : '');
+    }
+    return '';
   };
 
   return (
@@ -243,7 +261,8 @@ export default function KnowledgeBaseView({ addNotification }) {
                     </p>
                   </div>
                 ) : (
-                  kbList.map(kb => (
+                  <>
+                    {kbList.slice(0, kbShowAll ? kbList.length : 5).map(kb => (
                     <div
                       key={kb.id}
                       className="group flex items-center justify-between p-3 bg-card border border-border hover:border-brand-500/50 transition-all rounded-xl shadow-sm"
@@ -270,6 +289,7 @@ export default function KnowledgeBaseView({ addNotification }) {
                           <p className="font-medium text-sm truncate max-w-[150px]">
                             {kb.metadata?.filename ||
                               kb.metadata?.title ||
+                              extractTitleFromContent(kb) ||
                               kb.metadata?.url ||
                               'بدون عنوان'}
                           </p>
@@ -299,7 +319,15 @@ export default function KnowledgeBaseView({ addNotification }) {
                         </Button>
                       </div>
                     </div>
-                  ))
+                    ))}
+                    {kbList.length > 5 && (
+                      <div className="text-center mt-4">
+                        <button className="text-sm text-brand-600 underline" onClick={() => setKbShowAll(s => !s)}>
+                          {kbShowAll ? 'عرض أقل' : `عرض الكل (${kbList.length})`}
+                        </button>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             )}

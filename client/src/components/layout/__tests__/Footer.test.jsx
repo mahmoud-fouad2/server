@@ -12,7 +12,7 @@ jest.mock('next/link', () => ({
 // Mock next/image
 jest.mock('next/image', () => ({
   __esModule: true,
-  default: ({ src, alt, ...props }) => <img src={src} alt={alt} {...props} />,
+  default: ({ src, alt, ...props }) => <div data-testid="next-image-mock" {...props} role="img" aria-label={alt} />,
 }));
 
 describe('Footer', () => {

@@ -23,65 +23,70 @@ export default function VisitorAnalytics() {
   const [dateRange, setDateRange] = useState('7d'); // 7d, 30d, 90d
 
   useEffect(() => {
-    fetchData();
-    const interval = setInterval(fetchActiveSessions, 30000); // تحديث كل 30 ثانية
-    return () => clearInterval(interval);
-  }, [dateRange]);
+    let mounted = true;
 
-  const fetchData = async () => {
-    await Promise.all([
-      fetchActiveSessions(),
-      fetchAnalytics(),
-      fetchRatingStats(),
-    ]);
-    setLoading(false);
-  };
-
-  const fetchActiveSessions = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/visitor/active-sessions', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await response.json();
-      if (data.success) setActiveSessions(data.sessions);
-    } catch (error) {
-      console.error('Error fetching active sessions:', error);
-    }
-  };
-
-  const fetchAnalytics = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const dateFrom = getDateFrom(dateRange);
-      const response = await fetch(
-        `/api/visitor/analytics?from=${dateFrom.toISOString()}`,
-        {
+    const fetchActiveSessions = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/visitor/active-sessions', {
           headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      const data = await response.json();
-      if (data.success) setAnalytics(data.analytics);
-    } catch (error) {
-      console.error('Error fetching analytics:', error);
-    }
-  };
+        });
+        const data = await response.json();
+        if (mounted && data.success) setActiveSessions(data.sessions);
+      } catch (error) {
+        if (mounted) console.error('Error fetching active sessions:', error);
+      }
+    };
 
-  const fetchRatingStats = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
-      const businessId = user.businesses?.[0]?.id;
+    const fetchAnalytics = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const dateFrom = getDateFrom(dateRange);
+        const response = await fetch(
+          `/api/visitor/analytics?from=${dateFrom.toISOString()}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        const data = await response.json();
+        if (mounted && data.success) setAnalytics(data.analytics);
+      } catch (error) {
+        if (mounted) console.error('Error fetching analytics:', error);
+      }
+    };
 
-      if (!businessId) return;
+    const fetchRatingStats = async () => {
+      try {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const businessId = user.businesses?.[0]?.id;
 
-      const response = await fetch(`/api/rating/stats/${businessId}`);
-      const data = await response.json();
-      if (data.success) setRatingStats(data.stats);
-    } catch (error) {
-      console.error('Error fetching rating stats:', error);
-    }
-  };
+        if (!businessId) return;
+
+        const response = await fetch(`/api/rating/stats/${businessId}`);
+        const data = await response.json();
+        if (mounted && data.success) setRatingStats(data.stats);
+      } catch (error) {
+        if (mounted) console.error('Error fetching rating stats:', error);
+      }
+    };
+
+    const fetchData = async () => {
+      await Promise.all([
+        fetchActiveSessions(),
+        fetchAnalytics(),
+        fetchRatingStats(),
+      ]);
+      if (mounted) setLoading(false);
+    };
+
+    fetchData();
+    const interval = setInterval(fetchActiveSessions, 30000);
+
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, [dateRange]);
 
   const getDateFrom = range => {
     const now = new Date();

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import PageLayout from '@/components/layout/PageLayout';
 import {
@@ -49,12 +50,15 @@ export default function RetailSolution() {
               transition={{ delay: 0.2 }}
               className="rounded-3xl overflow-hidden shadow-2xl border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-cosmic-800"
             >
-              <img
-                src="/assets/images/retail-hero.jpg"
-                alt="التجارة الإلكترونية"
-                className="w-full h-[500px] object-cover"
-                loading="lazy"
-              />
+              <div className="relative w-full h-[500px]">
+                <Image
+                  src="/assets/images/retail-hero.jpg"
+                  alt="التجارة الإلكترونية"
+                  fill
+                  className="object-cover"
+                  priority={false}
+                />
+              </div>
             </motion.div>
           </div>
         </section>

@@ -16,23 +16,30 @@ export default function LiveSupportView({ addNotification }) {
   const audioRef = useRef(null);
 
   useEffect(() => {
+    let mounted = true;
+
+    const fetchHandoverRequests = async () => {
+      try {
+        const data = await chatApi.getHandoverRequests();
+        if (!mounted) return;
+        // If new requests arrived compared to previous state, notify
+        if (data.length > handoverRequests.length) {
+          playNotificationSound();
+          addNotification('طلب دعم جديد!', 'success');
+        }
+        setHandoverRequests(data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
     fetchHandoverRequests();
     const interval = setInterval(fetchHandoverRequests, 10000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const fetchHandoverRequests = async () => {
-    try {
-      const data = await chatApi.getHandoverRequests();
-      if (data.length > handoverRequests.length) {
-        playNotificationSound();
-        addNotification('طلب دعم جديد!', 'success');
-      }
-      setHandoverRequests(data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, [addNotification, handoverRequests.length]);
 
   const playNotificationSound = () => {
     if (audioRef.current) {

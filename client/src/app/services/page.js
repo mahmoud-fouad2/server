@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 
 const services = [
   {
@@ -134,9 +135,11 @@ export default function ServicesPage() {
               transition={{ duration: 0.5 }}
             >
               <div className="flex items-center justify-center gap-3 mb-6">
-                <img
+                <Image
                   src="/logo.webp"
                   alt="فهملي"
+                  width={64}
+                  height={64}
                   className="w-16 h-16 object-contain"
                 />
                 <h1 className="text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white">

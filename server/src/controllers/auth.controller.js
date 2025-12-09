@@ -156,7 +156,7 @@ exports.demoLogin = async (req, res) => {
       const result = await prisma.$transaction(async (prismaTx) => {
         const newUser = await prismaTx.user.create({
           data: {
-            name: 'Faheemly Demo',
+            name: 'Faheemly Assistant',
             email: demoEmail,
             password: hashedPassword,
             role: 'CLIENT'
@@ -166,7 +166,7 @@ exports.demoLogin = async (req, res) => {
         const business = await prismaTx.business.create({
           data: {
             userId: newUser.id,
-            name: 'Faheemly Demo Business',
+            name: 'Faheemly Assistant',
             activityType: 'OTHER',
             planType: 'TRIAL',
             trialEndsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)

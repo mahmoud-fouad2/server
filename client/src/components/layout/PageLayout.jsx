@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { Moon, Sun, Menu, X, Globe } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
@@ -50,6 +51,7 @@ export default function PageLayout({ children }) {
     { href: '/', label: 'الرئيسية' },
     { href: '/services', label: 'الخدمات' },
     { href: '/solutions', label: 'الحلول' },
+    { href: '/examples', label: 'كيف نعمل' },
     { href: '/pricing', label: 'الأسعار' },
     { href: '/about', label: 'من نحن' },
     { href: '/contact', label: 'اتصل بنا' },
@@ -64,10 +66,13 @@ export default function PageLayout({ children }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-full flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="hover:scale-105 transition-transform">
-            <img
+            <Image
               src="/logo.webp"
               alt="Faheemly"
+              width={160}
+              height={64}
               className={`${scrolled ? 'h-12' : 'h-16'} w-auto object-contain transition-all`}
+              priority={true}
             />
           </Link>
 
@@ -139,7 +144,7 @@ export default function PageLayout({ children }) {
         >
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-white/10">
-            <img src="/logo2.png" alt="فهملي" className="h-20 w-auto" />
+            <Image src="/logo2.png" alt="فهملي" width={160} height={80} className="h-20 w-auto" />
             <button
               onClick={() => setMobileMenuOpen(false)}
               className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"

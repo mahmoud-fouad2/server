@@ -124,8 +124,8 @@ export default function DashboardTour({ run, onComplete }) {
       setTargetRect(rect);
       element.scrollIntoView({ behavior: 'smooth', block: 'center' });
     } else {
-      // Skip step if target not found
-      handleNext();
+      // Skip step if target not found — advance safely without referencing external handler
+      setCurrentStep(prev => (prev < TOUR_STEPS.length - 1 ? prev + 1 : prev));
     }
   }, [currentStep, isVisible]);
 
@@ -177,6 +177,20 @@ export default function DashboardTour({ run, onComplete }) {
     
     // Ensure tooltip stays within viewport
     // (Simplified logic for this demo)
+    // Clamp tooltip position to viewport bounds so the next button is reachable
+    const tooltipWidth = 350;
+    const tooltipHeight = 220; // approximate
+    // calculate raw values
+    let rawLeft = tooltipStyle.left ?? (window.innerWidth - tooltipWidth) / 2;
+    let rawTop = tooltipStyle.top ?? (window.innerHeight - tooltipHeight) / 2;
+
+    // clamp
+    const minMargin = 8;
+    const maxLeft = Math.max(minMargin, window.innerWidth - tooltipWidth - minMargin);
+    const maxTop = Math.max(minMargin, window.innerHeight - tooltipHeight - minMargin);
+
+    tooltipStyle.left = Math.min(Math.max(rawLeft, minMargin), maxLeft);
+    tooltipStyle.top = Math.min(Math.max(rawTop, minMargin), maxTop);
   }
 
   return (

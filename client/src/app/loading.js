@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 
 export default function Loading() {
   const [progress, setProgress] = useState(0);
@@ -32,13 +33,15 @@ export default function Loading() {
         <div className="relative mb-8">
           <div className="absolute inset-0 bg-brand-500/20 rounded-full blur-2xl animate-ping"></div>
           <div className="relative">
-            <img
-              src="/logo.webp"
-              alt="فهملي"
-              className="w-24 h-24 object-contain mx-auto animate-bounce"
-              style={{ animationDuration: '2s' }}
-            />
-          </div>
+              <Image
+                src="/logo2.png"
+                alt="فهملي"
+                width={96}
+                height={96}
+                className="object-contain mx-auto animate-bounce"
+                priority
+              />
+            </div>
         </div>
 
         {/* Brand Name */}
@@ -53,10 +56,10 @@ export default function Loading() {
         </p>
 
         {/* Modern Progress Bar */}
-        <div className="w-80 mx-auto mb-6">
-          <div className="h-2 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden shadow-inner">
+        <div className="w-80 mx-auto mb-10 relative z-0">
+          <div className="h-2 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden shadow-inner relative z-0">
             <div
-              className="h-full bg-gradient-to-r from-brand-500 via-purple-500 to-brand-600 rounded-full transition-all duration-300 ease-out relative"
+              className="h-full bg-gradient-to-r from-brand-500 via-purple-500 to-brand-600 rounded-full transition-all duration-300 ease-out relative z-0"
               style={{ width: `${progress}%` }}
             >
               <div
@@ -72,7 +75,7 @@ export default function Loading() {
         </div>
 
         {/* Loading Text */}
-        <div className="flex items-center justify-center gap-2 text-brand-600 dark:text-brand-400">
+        <div className="flex items-center justify-center gap-2 text-brand-600 dark:text-brand-400 mt-2 z-20 relative">
           <div className="flex gap-1">
             <div className="w-2 h-2 rounded-full bg-brand-500 animate-bounce"></div>
             <div

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 
 export default function Footer() {
@@ -30,9 +31,11 @@ export default function Footer() {
           {/* Brand Column */}
           <div className="col-span-1 md:col-span-1">
             <div className="flex items-center justify-center md:justify-start mb-6">
-              <img
+              <Image
                 src="/logo2.png"
                 alt="فهملي"
+                width={128}
+                height={128}
                 className="w-32 h-32 object-contain"
                 loading="lazy"
               />
@@ -116,7 +119,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="/docs/api"
+                  href="/docs#api"
                   className="hover:text-brand-500 transition-colors"
                 >
                   مرجع API
@@ -169,11 +172,13 @@ export default function Footer() {
             rel="noopener noreferrer"
             className="flex items-center gap-2 opacity-70 hover:opacity-100 transition-opacity group"
           >
-            <img
+            <Image
               src="https://ma-fo.info/logo2.png"
               alt="Ma-Fo Logo"
-              className="w-4 h-4 object-contain"
-              loading="lazy"
+              width={16}
+              height={16}
+              className="object-contain"
+              unoptimized
             />
             <span className="text-xs font-medium tracking-wide group-hover:text-brand-500 transition-colors">
               Development By Ma-Fo

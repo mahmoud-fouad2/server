@@ -17,6 +17,7 @@ import {
   Shield,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 
 export default function ClinicSolution() {
   return (
@@ -63,13 +64,15 @@ export default function ClinicSolution() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2 }}
-              className="rounded-3xl overflow-hidden shadow-2xl border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-cosmic-800"
+              className="rounded-3xl overflow-hidden shadow-2xl border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-cosmic-800 relative"
+              style={{ minHeight: '500px' }}
             >
-              <img
+              <Image
                 src="/assets/images/clinic-hero.jpg"
                 alt="حلول العيادات"
-                className="w-full h-[500px] object-cover"
-                loading="lazy"
+                fill
+                className="object-cover"
+                sizes="100vw"
               />
             </motion.div>
           </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import useTheme from '@/lib/theme';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -53,6 +54,7 @@ function DashboardContent() {
   const router = useRouter();
 
   useEffect(() => {
+    let mounted = true;
     // User is already authenticated by AuthGuard, just load user data
     const userData = localStorage.getItem('user');
     if (userData) {
@@ -62,31 +64,35 @@ function DashboardContent() {
         console.error('Error parsing user data', e);
       }
     }
-    fetchDashboardData();
-  }, []);
 
-  const fetchDashboardData = async () => {
-    try {
-      const [statsData, kbData, chartDataRes] = await Promise.all([
-        businessApi.getStats(),
-        knowledgeApi.list(),
-        businessApi.getChartData(),
-      ]);
+    const fetchDashboardData = async () => {
+      try {
+        const [statsData, kbData, chartDataRes] = await Promise.all([
+          businessApi.getStats(),
+          knowledgeApi.list(),
+          businessApi.getChartData(),
+        ]);
 
-      setStats(statsData.stats);
-      setSubscription(statsData.subscription);
-      setKbList(kbData);
-      setChartData(chartDataRes);
-    } catch (error) {
-      console.error('Failed to fetch dashboard data', error);
-      // AuthGuard handles redirect, but if API returns 401, we might need to handle it too
-      if (error.message && error.message.includes('401')) {
-        router.push('/login');
+        if (!mounted) return;
+        setStats(statsData.stats);
+        setSubscription(statsData.subscription);
+        setKbList(kbData);
+        setChartData(chartDataRes);
+      } catch (error) {
+        console.error('Failed to fetch dashboard data', error);
+        // AuthGuard handles redirect, but if API returns 401, we might need to handle it too
+        if (error.message && error.message.includes('401')) {
+          router.push('/login');
+        }
+      } finally {
+        if (mounted) setLoading(false);
       }
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    fetchDashboardData();
+
+    return () => { mounted = false };
+  }, [router]);
 
   const addNotification = (message, type = 'success') => {
     const id = Date.now();
@@ -347,10 +353,13 @@ function DashboardContent() {
               rel="noopener noreferrer"
               className="text-brand-500 hover:text-brand-600 transition-colors flex items-center gap-1"
             >
-              <img
+              <Image
                 src="https://ma-fo.info/logo2.png"
                 alt="Ma-Fo Logo"
+                width={16}
+                height={16}
                 className="w-4 h-4"
+                unoptimized
               />
               Ma-Fo
             </a>
