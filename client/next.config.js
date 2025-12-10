@@ -1,3 +1,4 @@
+const path = require('path');
 const withBundleAnalyzer = require('@next/bundle-analyzer')({
   enabled: process.env.ANALYZE === 'true',
 });
@@ -38,6 +39,12 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react', 'framer-motion'],
   },
+
+  // When building in a monorepo or when multiple lockfiles exist, Next
+  // attempts to infer the workspace root which can trigger a warning.
+  // Set `outputFileTracingRoot` to the repository root to silence that
+  // warning and make tracing deterministic.
+  outputFileTracingRoot: path.join(__dirname, '..'),
 
   // Webpack optimizations
   webpack: (config, { dev, isServer }) => {
