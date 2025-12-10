@@ -45,32 +45,95 @@ try {
     exit 1
 }
 
-# Regex: find @font-face {... font-weight: <num>; ... src: url(<url>) ... }
-$regex = [regex]::new('@font-face\\s*\\{.*?font-weight\\s*:\\s*(\\d+).*?src\\s*:\\s*url\\((https:[^)]+)\\)', [System.Text.RegularExpressions.RegexOptions]::Singleline)
-$matches = $regex.Matches($css)
+Write-Host "Parsing @font-face blocks and extracting per-weight urls"
 
-if ($matches.Count -eq 0) {
-    Write-Host "No font urls found in CSS. Exiting."
-    exit 1
+# Split into blocks by @font-face and extract weight + first url() per block
+$blocks = $css -split '@font-face' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' }
+
+if ($blocks.Count -eq 0) {
+        Write-Host "No @font-face blocks found. Exiting."
+        exit 1
 }
 
-foreach ($m in $matches) {
-    $weight = $m.Groups[1].Value
-    $url = $m.Groups[2].Value
-    $filename = "Beiruti-$weight.woff2"
-    $out = Join-Path $outDir $filename
-    if ((Test-Path $out) -and (-not $Force)) {
-        Write-Host "$filename already exists, skipping. Use -Force to redownload."
-        continue
+function Download-WithRetries($url, $outPath) {
+    $maxAttempts = 4
+    $attempt = 0
+    while ($attempt -lt $maxAttempts) {
+        $attempt++
+        try {
+            Write-Host "Attempt" $attempt ":" $url "->" $outPath
+            Invoke-WebRequest -Uri $url -OutFile $outPath -Headers @{ 'User-Agent'='Mozilla/5.0 (Windows NT)'} -TimeoutSec 60 -UseBasicParsing -ErrorAction Stop
+            return $true
+        } catch {
+            Write-Warning ("Invoke-WebRequest failed (attempt {0}): {1}" -f $attempt, $_.Exception.Message)
+            try {
+                Write-Output 'Trying Start-BitsTransfer fallback...'
+                Start-BitsTransfer -Source $url -Destination $outPath -ErrorAction Stop
+                return $true
+            } catch {
+                Write-Warning ("BITS fallback failed: {0}" -f $_.Exception.Message)
+            }
+            Start-Sleep -Seconds ([Math]::Pow(2, $attempt))
+        }
     }
-    Write-Host "Downloading weight $weight -> $filename"
-    try {
-        Invoke-WebRequest -Uri $url -OutFile $out -UseBasicParsing -Headers @{ 'User-Agent' = 'Mozilla/5.0 (Windows NT)' }
-        Write-Host "Saved $out"
-    } catch {
-        Write-Host "Failed to download $url : $_"
+    return $false
+}
+
+$downloaded = @()
+foreach ($b in $blocks) {
+        # find weight
+        $wMatch = [regex]::Match($b, 'font-weight\s*:\s*(\d+)', 'IgnoreCase')
+        if (-not $wMatch.Success) { continue }
+        $weight = $wMatch.Groups[1].Value
+        # find first url(...)
+        $uMatch = [regex]::Match($b, 'url\(([^)]+)\)')
+        if (-not $uMatch.Success) { Write-Warning ("No url() for weight {0}" -f $weight); continue }
+        $rawUrl = $uMatch.Groups[1].Value.Trim("'\"")
+        try {
+            $uri = [Uri]$rawUrl
+        } catch {
+            Write-Warning ("Skipping invalid URL: {0}" -f $rawUrl)
+            continue
+        }
+
+        # choose filename: prefer predictable name Beiruti-<weight> with original extension
+        $ext = [IO.Path]::GetExtension($uri.LocalPath)
+        if (-not $ext) { $ext = '.woff2' }
+        $baseName = "Beiruti-$weight$ext"
+        $out = Join-Path $outDir $baseName
+        if (Test-Path $out -and -not $Force) { Write-Host "Already have $baseName"; $downloaded += $baseName; continue }
+
+        $ok = Download-WithRetries $rawUrl $out
+        if ($ok) { Write-Host "Saved $baseName"; $downloaded += $baseName } else { Write-Warning ("Failed to download {0}" -f $rawUrl) }
+}
+
+Write-Host 'Download phase complete. Files present:'
+Get-ChildItem $outDir -File | Select-Object Name, Length | Format-Table -AutoSize
+
+# Convert any downloaded .ttf files to .woff2 using npx ttf2woff2 if Node is available
+function Convert-TtfToWoff2 {
+    param([string]$dir)
+    if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
+        Write-Warning 'Node.js not found in PATH. Skipping conversion. Install Node.js to enable conversion.'
+        return
+    }
+
+    $ttfFiles = Get-ChildItem $dir -Filter *.ttf -File
+    if ($ttfFiles.Count -eq 0) { Write-Host 'No .ttf files to convert.'; return }
+
+    foreach ($f in $ttfFiles) {
+        $in = $f.FullName
+        $out = [IO.Path]::ChangeExtension($in, '.woff2')
+        if (Test-Path $out -and -not $Force) { Write-Host "Already have $([IO.Path]::GetFileName($out))"; continue }
+        Write-Host "Converting $($f.Name) -> $([IO.Path]::GetFileName($out))"
+        $cmd = "npx ttf2woff2 `"$in`" > `"$out`""
+        # Use cmd /c to execute redirected output reliably on Windows
+        cmd /c $cmd
+        if ($LASTEXITCODE -ne 0) { Write-Warning "Conversion failed for $($f.Name). Ensure ttf2woff2 can run via npx." } else { Write-Host "Converted: $out" }
     }
 }
 
-Write-Host "All done. Check client/public/fonts for Beiruti-<weight>.woff2 files."
-  return $false
+Write-Host 'Starting optional conversion step (TTF -> WOFF2)'
+Convert-TtfToWoff2 -dir $outDir
+
+Write-Host 'All done. Check client/public/fonts for .woff2 files.'
