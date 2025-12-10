@@ -1,6 +1,6 @@
-'use client';
+ 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import useTheme from '@/lib/theme';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -40,7 +40,8 @@ import {
   Zap,
 } from 'lucide-react';
 import { authApi, widgetApi, knowledgeApi, businessApi } from '@/lib/api';
-import Confetti from 'react-confetti';
+// Confetti is lazy-loaded dynamically to reduce initial bundle size
+// and to avoid bundling heavy libs into the main vendor chunk.
 
 // Plans Configuration
 const PLANS = {
@@ -130,11 +131,48 @@ const PLANS = {
 };
 
 export default function Wizard() {
+  // Local ErrorBoundary to catch fatal render/runtime errors inside the wizard
+  class LocalWizardBoundary extends React.Component {
+    constructor(props) {
+      super(props);
+      this.state = { hasError: false, error: null };
+    }
+
+    static getDerivedStateFromError(error) {
+      return { hasError: true, error };
+    }
+
+    componentDidCatch(error, info) {
+      console.error('Wizard boundary caught:', error, info);
+      try {
+        window.__LAST_WIZARD_ERROR = { error: error?.toString(), info };
+      } catch (e) {}
+    }
+
+    render() {
+      const debug = typeof window !== 'undefined' && window.location.search.includes('debug_client=1');
+      if (this.state.hasError) {
+        return (
+          <div className="min-h-screen flex items-center justify-center p-6">
+            <div className="max-w-xl text-center">
+              <h2 className="text-xl font-bold mb-3">حدث خطأ في صفحة الإعداد</h2>
+              <p className="mb-4 text-sm text-muted-foreground">الرجاء إعادة المحاولة. لعرض تفاصيل الخطأ أضِف <code>?debug_client=1</code> إلى السطر.</p>
+              {debug && this.state.error && (
+                <pre className="text-left p-4 bg-red-50 rounded text-sm overflow-auto">{this.state.error.toString()}</pre>
+              )}
+            </div>
+          </div>
+        );
+      }
+      return this.props.children;
+    }
+  }
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [isDark, setIsDark] = useTheme(true);
   const [isVerified, setIsVerified] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [ConfettiComp, setConfettiComp] = useState(null);
   const [errors, setErrors] = useState({});
   const [lastSaved, setLastSaved] = useState(null);
   const [copied, setCopied] = useState(false);
@@ -195,6 +233,44 @@ export default function Wizard() {
         console.error('Failed to load draft:', e);
       }
     }
+  }, []);
+
+  // Lazy-load confetti when needed (reduces initial bundle size)
+  useEffect(() => {
+    let mounted = true;
+    if (showConfetti && !ConfettiComp) {
+      import('react-confetti')
+        .then(mod => {
+          if (mounted) setConfettiComp(() => mod.default || mod);
+        })
+        .catch(err => {
+          console.warn('Failed to load react-confetti', err);
+        });
+    }
+    return () => { mounted = false; };
+  }, [showConfetti, ConfettiComp]);
+
+  // Global client-side error capture while on the wizard to help reproduce
+  useEffect(() => {
+    const handler = event => {
+      try {
+        const payload = {
+          message: event.message || (event.reason && event.reason.message) || 'unknown',
+          stack: (event.error && event.error.stack) || (event.reason && event.reason.stack) || null,
+          time: new Date().toISOString(),
+        };
+        window.__WIZARD_CLIENT_ERRORS = window.__WIZARD_CLIENT_ERRORS || [];
+        window.__WIZARD_CLIENT_ERRORS.push(payload);
+        console.error('Captured wizard client error:', payload);
+      } catch (e) {}
+    };
+
+    window.addEventListener('error', handler);
+    window.addEventListener('unhandledrejection', handler);
+    return () => {
+      window.removeEventListener('error', handler);
+      window.removeEventListener('unhandledrejection', handler);
+    };
   }, []);
 
   const saveDraft = useCallback(() => {
@@ -340,8 +416,8 @@ export default function Wizard() {
       className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-cosmic-950 dark:to-cosmic-900 p-4 font-sans relative overflow-hidden transition-colors duration-300"
       dir="rtl"
     >
-      {showConfetti && (
-        <Confetti
+      {showConfetti && ConfettiComp && (
+        <ConfettiComp
           width={typeof window !== 'undefined' ? window.innerWidth : 1200}
           height={typeof window !== 'undefined' ? window.innerHeight : 800}
           recycle={false}
