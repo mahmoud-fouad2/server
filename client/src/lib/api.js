@@ -22,11 +22,23 @@ export const apiCall = async (endpoint, options = {}) => {
   const token =
     typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 
+  // If user object stored in localStorage contains businessId, attach it as a header
+  let storedUser = null;
+  try {
+    if (typeof window !== 'undefined') {
+      const u = localStorage.getItem('user');
+      if (u) storedUser = JSON.parse(u);
+    }
+  } catch (e) {
+    // ignore parse errors
+  }
+
   const config = {
     method,
     headers: {
       'Content-Type': 'application/json',
       ...(token && { Authorization: `Bearer ${token}` }),
+      ...(storedUser && storedUser.businessId && { 'x-business-id': storedUser.businessId }),
       ...headers,
     },
     ...customConfig,

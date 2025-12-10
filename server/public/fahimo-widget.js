@@ -44,19 +44,12 @@
             70% { box-shadow: 0 0 0 10px rgba(0, 212, 170, 0); }
             100% { box-shadow: 0 0 0 0 rgba(0, 212, 170, 0); }
         }
-        #fahimo-launcher:hover {
-            transform: scale(1.1);
-        }
-        #fahimo-launcher svg {
-            width: 30px;
-            height: 30px;
-            fill: white;
-        }
+        #fahimo-launcher:hover { transform: scale(1.05); }
+        #fahimo-launcher svg { width: 30px; height: 30px; fill: white; }
+
         #fahimo-chat-window {
             display: none;
             width: 380px;
-                #fahimo-chat-window {
-                    display: none; 
             background: #ffffff;
             border-radius: 16px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
@@ -69,41 +62,42 @@
             border: 1px solid rgba(0,0,0,0.05);
         }
 
+        /* When JS toggles `.fahimo-open` on the chat window, show it */
+        #fahimo-chat-window.fahimo-open { display: flex !important; }
+
+        @keyframes fahimo-slide-up {
+            from { opacity: 0; transform: translateY(20px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
         /* Mobile behavior: full-width modal-like experience */
         @media (max-width: 640px) {
             #fahimo-chat-window {
                 position: fixed !important;
-                    #fahimo-chat-window {
-                        position: fixed;
-                        left: 10px;
-                        right: 10px;
-                        bottom: 10px;
-                        top: 12vh;
-                        width: auto;
-                        height: auto;
-                        max-height: 78vh;
-                        border-radius: 12px;
-                        box-shadow: 0 12px 50px rgba(0,0,0,0.3);
-                        transform: translateY(0);
-                    }
-                    /* keep launcher slightly inset on small screens */
-                    #fahimo-launcher { right: 14px; bottom: 14px; }
-                    #fahimo-input { font-size: 15px; }
-                }
-
-                /* When JS toggles `.fahimo-open` on the chat window, show it */
-                #fahimo-chat-window.fahimo-open { display: flex !important; }
-            from { opacity: 0; transform: translateY(20px) scale(0.95); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
+                left: 10px;
+                right: 10px;
+                bottom: 10px;
+                top: 12vh;
+                width: auto;
+                height: auto;
+                max-height: 78vh;
+                border-radius: 12px;
+                box-shadow: 0 12px 50px rgba(0,0,0,0.3);
+                transform: translateY(0);
+            }
+            /* keep launcher slightly inset on small screens */
+            #fahimo-launcher { right: 14px; bottom: 14px; }
+            #fahimo-input { font-size: 15px; }
         }
+
         #fahimo-header {
             background: linear-gradient(135deg, #003366, #001a33);
             color: white;
-            padding: 20px;
+            padding: 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
         }
         #fahimo-bot-info {
             display: flex;

@@ -66,14 +66,14 @@ export default function PageLayout({ children }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-full flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="hover:scale-105 transition-transform">
-            <Image
-              src="/logo.webp"
-              alt="Faheemly"
-              width={112}
-              height={56}
-              className={`${scrolled ? 'h-10' : 'h-14'} w-auto object-contain transition-all`}
-              priority={true}
-            />
+              <Image
+                src="/logo.webp"
+                alt="Faheemly"
+                width={160}
+                height={80}
+                className={`${scrolled ? 'h-12' : 'h-20'} w-auto object-contain transition-all`}
+                priority={true}
+              />
           </Link>
 
           {/* Desktop Menu */}
