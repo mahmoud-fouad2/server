@@ -1,4 +1,4 @@
-const { z } = require('zod');
+const { z, ZodError } = require('zod');
 
 // User Schemas
 const registerSchema = z.object({
@@ -92,13 +92,17 @@ const validateSchema = (schema) => {
       req.body = validated; // Replace with validated data
       next();
     } catch (error) {
-      if (error instanceof z.ZodError) {
+      if (error instanceof ZodError || (error && Array.isArray(error.errors))) {
+        const details = Array.isArray(error.errors)
+          ? error.errors.map(e => ({
+              field: Array.isArray(e.path) ? e.path.join('.') : String(e.path || ''),
+              message: e.message || 'Invalid value'
+            }))
+          : [];
+
         return res.status(400).json({
           error: 'Validation failed',
-          details: error.errors.map(e => ({
-            field: e.path.join('.'),
-            message: e.message
-          }))
+          details
         });
       }
       next(error);
@@ -114,13 +118,17 @@ const validateQuerySchema = (schema) => {
       req.query = validated;
       next();
     } catch (error) {
-      if (error instanceof z.ZodError) {
+      if (error instanceof ZodError || (error && Array.isArray(error.errors))) {
+        const details = Array.isArray(error.errors)
+          ? error.errors.map(e => ({
+              field: Array.isArray(e.path) ? e.path.join('.') : String(e.path || ''),
+              message: e.message || 'Invalid query parameter'
+            }))
+          : [];
+
         return res.status(400).json({
           error: 'Query validation failed',
-          details: error.errors.map(e => ({
-            field: e.path.join('.'),
-            message: e.message
-          }))
+          details
         });
       }
       next(error);
