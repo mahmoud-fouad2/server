@@ -348,6 +348,24 @@ export default function RootLayout({ children }) {
         {/* Performance hints */}
         <meta name="format-detection" content="telephone=no" />
         <meta httpEquiv="x-ua-compatible" content="IE=edge" />
+        {/* Canonical Fahimo widget script - loads on every page. Business ID comes from env or defaults. */}
+        {
+          (() => {
+            const bid = process.env.NEXT_PUBLIC_WIDGET_BUSINESS_ID || 'your-business-id';
+            const scriptSrc = (process.env.NODE_ENV === 'production')
+              ? 'https://fahimo-api.onrender.com/fahimo-widget.js'
+              : (process.env.NEXT_PUBLIC_API_URL || 'https://fahimo-api.onrender.com') + '/fahimo-widget.js';
+            return (
+              <script
+                src={scriptSrc}
+                async
+                defer
+                data-business-id={bid}
+                crossOrigin="anonymous"
+              />
+            );
+          })()
+        }
       </head>
       <body
         className={`${beiruti.className} overflow-x-hidden bg-gray-50 dark:bg-cosmic-950 text-gray-900 dark:text-gray-100 transition-colors duration-300 selection:bg-brand-500/30`}
