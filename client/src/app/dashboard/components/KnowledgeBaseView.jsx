@@ -82,9 +82,13 @@ export default function KnowledgeBaseView({ addNotification }) {
       // If server returned validation details, surface them under the field
       if (err && err.data && Array.isArray(err.data.details)) {
         setTextErrors(err.data.details);
-        // Show a compact notification too
-        const first = err.data.details[0];
-        addNotification(`فشل: ${first.field ? first.field + ': ' : ''}${first.message}`, 'error');
+        // Show a compact notification too (guard if details array is empty)
+        const first = err.data.details.length > 0 ? err.data.details[0] : null;
+        if (first) {
+          addNotification(`فشل: ${first.field ? first.field + ': ' : ''}${first.message}`, 'error');
+        } else {
+          addNotification(`فشل: ${err.message || 'خطأ في التحقق من الصحة'}`, 'error');
+        }
       } else {
         addNotification(`فشل: ${err.message}`, 'error');
       }
@@ -105,8 +109,12 @@ export default function KnowledgeBaseView({ addNotification }) {
     } catch (err) {
       if (err && err.data && Array.isArray(err.data.details)) {
         setUrlErrors(err.data.details);
-        const first = err.data.details[0];
-        addNotification(`فشل: ${first.field ? first.field + ': ' : ''}${first.message}`, 'error');
+        const first = err.data.details.length > 0 ? err.data.details[0] : null;
+        if (first) {
+          addNotification(`فشل: ${first.field ? first.field + ': ' : ''}${first.message}`, 'error');
+        } else {
+          addNotification(`فشل: ${err.message || 'خطأ في التحقق من الصحة'}`, 'error');
+        }
       } else {
         addNotification(`فشل: ${err.message}`, 'error');
       }
