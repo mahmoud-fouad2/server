@@ -248,7 +248,7 @@ export default function StatsOverview({
   };
 
   const copyWidgetCode = () => {
-    const code = `<script src="https://fahimo-api.onrender.com/widget/fahimo-widget.js" data-business-id="${user?.businessId}"></script>`;
+    const code = `<script src="/fahimo-widget.js" data-business-id="${user?.businessId}"></script>`;
     copyToClipboard(code);
   };
 
@@ -833,11 +833,11 @@ export default function StatsOverview({
                 <div className="relative group">
                   <div className="bg-muted p-4 rounded-lg font-mono text-xs break-all border border-border">
                     &lt;script
-                    src=&quot;https://fahimo-api.onrender.com/widget/fahimo-widget.js&quot;
+                    src=&quot;/fahimo-widget.js&quot;
                     data-business-id=&quot;{user?.businessId}&quot;&gt;&lt;/script&gt;
                   </div>
                   <div className="absolute top-2 right-2 flex gap-2">
-                    <Button size="sm" variant="ghost" onClick={() => copyToClipboard(`<script src="https://fahimo-api.onrender.com/widget/fahimo-widget.js" data-business-id="${user?.businessId}"></script>`)}>
+                    <Button size="sm" variant="ghost" onClick={() => copyToClipboard(`<script src="/fahimo-widget.js" data-business-id="${user?.businessId}"></script>`)}>
                       <Copy className="w-4 h-4" />
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => exportVisibleDataCSV()}>
@@ -856,12 +856,12 @@ export default function StatsOverview({
                 <div className="relative group">
                   <div className="bg-muted p-4 rounded-lg font-mono text-xs break-all border border-border">
                     {`function add_fahimo_widget() {
-    echo '<script src="https://fahimo-api.onrender.com/widget/fahimo-widget.js" data-business-id="${user?.businessId}"></script>';
+    echo '<script src="/fahimo-widget.js" data-business-id="${user?.businessId}"></script>';
 }
 add_action('wp_footer', 'add_fahimo_widget');`}
                   </div>
                   <div className="absolute top-2 right-2">
-                    <Button size="sm" variant="ghost" onClick={() => copyToClipboard(`function add_fahimo_widget() { echo '<script src="https://fahimo-api.onrender.com/widget/fahimo-widget.js" data-business-id="${user?.businessId}"></script>'; } add_action('wp_footer', 'add_fahimo_widget');`)}>
+                    <Button size="sm" variant="ghost" onClick={() => copyToClipboard(`function add_fahimo_widget() { echo '<script src="/fahimo-widget.js" data-business-id="${user?.businessId}"></script>'; } add_action('wp_footer', 'add_fahimo_widget');`)}>
                       <Copy className="w-4 h-4" />
                     </Button>
                   </div>
