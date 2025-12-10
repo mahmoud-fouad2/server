@@ -1,22 +1,144 @@
 (function() {
-    // Fahimo Widget - single-instance loader
-    // Prevent double-init across multiple script variants
+    // Fahimo Widget - Unified and Enhanced Version
+    // Single-instance loader with session tracking, rating, and analytics
     if (window.__FAHIMO_WIDGET_LOADED) return;
     window.__FAHIMO_WIDGET_LOADED = true;
 
-    // Fahimo Widget - The interface
+    // Configuration
     const scriptTag = document.currentScript;
     const businessId = scriptTag && scriptTag.getAttribute && scriptTag.getAttribute('data-business-id');
-    // Auto-detect API URL based on script source, or fallback to production
-    const scriptSrc = scriptTag.src;
-    const apiUrl = 'https://fahimo-api.onrender.com'; // Fixed to production API
+    const apiUrl = 'https://fahimo-api.onrender.com'; // Unified API URL
 
     if (!businessId) {
         console.error('Fahimo: Business ID is missing.');
         return;
     }
 
-    // Inject Styles (responsive mobile-friendly)
+    // Session Management (from enhanced version)
+    let sessionId = localStorage.getItem('fahimo_session_id');
+    let currentVisitId = null;
+    let pageEnteredAt = Date.now();
+    let scrollDepth = 0;
+    let clicks = 0;
+
+    // Generate browser fingerprint
+    function generateFingerprint() {
+        const nav = navigator;
+        const screen = window.screen;
+        const data = [
+            nav.userAgent,
+            nav.language,
+            screen.colorDepth,
+            screen.width + 'x' + screen.height,
+            new Date().getTimezoneOffset(),
+            !!window.localStorage,
+            !!window.sessionStorage,
+            !!window.indexedDB
+        ].join('|');
+
+        let hash = 0;
+        for (let i = 0; i < data.length; i++) {
+            const char = data.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash;
+        }
+        return Math.abs(hash).toString(36);
+    }
+
+    const fingerprint = generateFingerprint();
+
+    // Initialize Session
+    async function initSession() {
+        try {
+            const response = await fetch(`${apiUrl}/api/visitor/session`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ businessId, fingerprint })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                sessionId = data.session.id;
+                localStorage.setItem('fahimo_session_id', sessionId);
+                await trackPageVisit();
+            }
+        } catch (error) {
+            console.error('[Fahimo] Session init error:', error);
+        }
+    }
+
+    // Track Page Visit
+    async function trackPageVisit() {
+        try {
+            const response = await fetch(`${apiUrl}/api/visitor/page-visit`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    sessionId,
+                    url: window.location.href,
+                    title: document.title,
+                    path: window.location.pathname
+                })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                currentVisitId = data.visitId;
+            }
+        } catch (error) {
+            console.error('[Fahimo] Page visit tracking error:', error);
+        }
+    }
+
+    // Update Page Visit Data
+    async function updatePageVisit() {
+        if (!currentVisitId) return;
+
+        const duration = Math.floor((Date.now() - pageEnteredAt) / 1000);
+
+        try {
+            await fetch(`${apiUrl}/api/visitor/page-visit/${currentVisitId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    duration,
+                    scrollDepth,
+                    clicks,
+                    exitedAt: new Date().toISOString()
+                })
+            });
+        } catch (error) {
+            console.error('[Fahimo] Update page visit error:', error);
+        }
+    }
+
+    // Track scroll depth and clicks
+    function trackScrollDepth() {
+        const windowHeight = window.innerHeight;
+        const documentHeight = document.documentElement.scrollHeight;
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const trackLength = documentHeight - windowHeight;
+        const currentDepth = Math.floor((scrollTop / trackLength) * 100);
+        scrollDepth = Math.max(scrollDepth, currentDepth);
+    }
+
+    function trackClicks() {
+        clicks++;
+    }
+
+    // Event Listeners for tracking
+    window.addEventListener('scroll', trackScrollDepth);
+    document.addEventListener('click', trackClicks);
+    window.addEventListener('beforeunload', updatePageVisit);
+
+    // Initialize session on load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initSession);
+    } else {
+        initSession();
+    }
+
+    // Inject Styles (enhanced from original)
     const style = document.createElement('style');
     style.innerHTML = `
         #fahimo-widget-container {
@@ -50,6 +172,8 @@
         #fahimo-chat-window {
             display: none;
             width: 380px;
+            height: 600px;
+            max-height: calc(100vh - 120px);
             background: #ffffff;
             border-radius: 16px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
@@ -61,33 +185,11 @@
             animation: fahimo-slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             border: 1px solid rgba(0,0,0,0.05);
         }
-
-        /* When JS toggles `.fahimo-open` on the chat window, show it */
         #fahimo-chat-window.fahimo-open { display: flex !important; }
 
         @keyframes fahimo-slide-up {
             from { opacity: 0; transform: translateY(20px) scale(0.98); }
             to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
-        /* Mobile behavior: full-width modal-like experience */
-        @media (max-width: 640px) {
-            #fahimo-chat-window {
-                position: fixed !important;
-                left: 10px;
-                right: 10px;
-                bottom: 10px;
-                top: 12vh;
-                width: auto;
-                height: auto;
-                max-height: 78vh;
-                border-radius: 12px;
-                box-shadow: 0 12px 50px rgba(0,0,0,0.3);
-                transform: translateY(0);
-            }
-            /* keep launcher slightly inset on small screens */
-            #fahimo-launcher { right: 14px; bottom: 14px; }
-            #fahimo-input { font-size: 15px; }
         }
 
         #fahimo-header {
@@ -198,19 +300,82 @@
             text-decoration: none;
             font-weight: bold;
         }
+
+        /* Mobile behavior */
+        @media (max-width: 640px) {
+            #fahimo-chat-window {
+                position: fixed;
+                left: 10px;
+                right: 10px;
+                bottom: 10px;
+                top: 12vh;
+                width: auto;
+                height: auto;
+                max-height: 78vh;
+                border-radius: 12px;
+                box-shadow: 0 12px 50px rgba(0,0,0,0.3);
+                transform: translateY(0);
+            }
+            #fahimo-launcher { right: 14px; bottom: 14px; }
+            #fahimo-input { font-size: 15px; }
+        }
+
+        /* Rating UI */
+        #fahimo-rating-container {
+            padding: 16px;
+            border-top: 1px solid #e5e7eb;
+            background: #f9fafb;
+            text-align: center;
+            display: none;
+        }
+        #fahimo-rating-container p {
+            margin: 0 0 12px;
+            font-size: 14px;
+            color: #4b5563;
+        }
+        #fahimo-stars {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+        }
+        .fahimo-star {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 28px;
+            color: #d1d5db;
+            transition: color 0.2s;
+        }
+        .fahimo-star:hover,
+        .fahimo-star.active {
+            color: #fbbf24;
+        }
+        #fahimo-end-session {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            margin-top: 12px;
+        }
+        #fahimo-end-session:hover {
+            background: #dc2626;
+        }
     `;
     document.head.appendChild(style);
 
-    // Create Widget HTML
+    // Create Widget HTML (with rating added)
     const container = document.createElement('div');
     container.id = 'fahimo-widget-container';
     container.innerHTML = `
         <div id="fahimo-chat-window">
             <div id="fahimo-header">
                 <div id="fahimo-bot-info">
-                            <div id="fahimo-bot-avatar">F</div>
-                            <div>
-                                <div id="fahimo-bot-name" style="font-weight:bold; font-size:15px;">Faheemly Assistant</div>
+                    <div id="fahimo-bot-avatar">F</div>
+                    <div>
+                        <div id="fahimo-bot-name" style="font-weight:bold; font-size:15px;">Faheemly Assistant</div>
                         <div style="font-size:11px; opacity:0.8;">● Online</div>
                     </div>
                 </div>
@@ -220,6 +385,13 @@
                 </div>
             </div>
             <div id="fahimo-messages"></div>
+            <div id="fahimo-rating-container">
+                <p>Rate your experience</p>
+                <div id="fahimo-stars">
+                    ${[1,2,3,4,5].map(i => `<span class="fahimo-star" data-val="${i}" style="cursor:pointer;">☆</span>`).join('')}
+                </div>
+                <button id="fahimo-end-session">End Session</button>
+            </div>
             <div id="fahimo-branding">
                 Powered by <a href="https://faheemly.com" target="_blank">Faheemly AI</a>
             </div>
@@ -236,7 +408,7 @@
     `;
     document.body.appendChild(container);
 
-    // Logic
+    // Logic (enhanced with rating and session management)
     try {
         const launcher = document.getElementById('fahimo-launcher');
         const chatWindow = document.getElementById('fahimo-chat-window');
@@ -244,31 +416,26 @@
         const input = document.getElementById('fahimo-input');
         const sendBtn = document.getElementById('fahimo-send');
         const messagesDiv = document.getElementById('fahimo-messages');
+        const ratingContainer = document.getElementById('fahimo-rating-container');
+        const stars = document.querySelectorAll('.fahimo-star');
+        const endSessionBtn = document.getElementById('fahimo-end-session');
         let isOpen = false;
         let conversationId = localStorage.getItem('fahimo_conversation_id');
+        let selectedRating = 0;
 
         // Load Config
         fetch(`${apiUrl}/api/widget/config/${businessId}`)
             .then(res => res.json())
             .then(data => {
                 const config = data.widgetConfig || {};
-                // Use business name from data.name, fallback to config.name, then default
                 const botName = data.name || config.name || "Faheemly Assistant";
-                const botNameEl = document.getElementById('fahimo-bot-name');
-                if (botNameEl) botNameEl.innerText = botName;
-                
-                // Apply Custom Colors
+                document.getElementById('fahimo-bot-name').innerText = botName;
+
                 if (config.primaryColor) {
                     const color = config.primaryColor;
-                    const launcherEl = document.getElementById('fahimo-launcher');
-                    const header = document.getElementById('fahimo-header');
-                    const sendBtnEl = document.getElementById('fahimo-send');
-                    
-                    if(launcherEl) launcherEl.style.background = color;
-                    if(header) header.style.background = color;
-                    if(sendBtnEl) sendBtnEl.style.background = color;
-                    
-                    // Inject dynamic style for user messages
+                    document.getElementById('fahimo-launcher').style.background = color;
+                    document.getElementById('fahimo-header').style.background = color;
+                    document.getElementById('fahimo-send').style.background = color;
                     const dynamicStyle = document.createElement('style');
                     dynamicStyle.innerHTML = `
                         .fahimo-msg.user { background: ${color} !important; }
@@ -277,33 +444,26 @@
                     document.head.appendChild(dynamicStyle);
                 }
 
-                // Apply Custom Avatar
                 if (config.customIconUrl) {
                     const avatarEl = document.getElementById('fahimo-bot-avatar');
-                    if(avatarEl) {
-                        avatarEl.innerHTML = `<img src="${config.customIconUrl}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;" alt="Bot">`;
-                        avatarEl.style.background = 'transparent';
-                    }
+                    avatarEl.innerHTML = `<img src="${config.customIconUrl}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;" alt="Bot">`;
+                    avatarEl.style.background = 'transparent';
                 }
-                
-                // Add welcome message if no history
+
                 if (!conversationId && messagesDiv) {
                     addMessage(config.welcomeMessage || "Hello! How can I help?", 'bot');
                 }
             })
             .catch(err => console.log('Fahimo: Could not load config'));
 
-        if (sendBtn) sendBtn.onclick = sendMessage;
-        if (input) input.onkeypress = (e) => { if(e.key === 'Enter') sendMessage(); };
-
+        // Send Message
         async function sendMessage() {
-            const text = input ? input.value.trim() : '';
-            if(!text) return;
-            
+            const text = input.value.trim();
+            if (!text) return;
+
             addMessage(text, 'user');
-            if(input) input.value = '';
-            
-            // Show typing indicator
+            input.value = '';
+
             const typingId = 'typing-' + Date.now();
             addMessage('...', 'bot', typingId);
 
@@ -311,18 +471,11 @@
                 const res = await fetch(`${apiUrl}/api/chat/message`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        message: text, 
-                        businessId, 
-                        conversationId 
-                    })
+                    body: JSON.stringify({ message: text, businessId, conversationId, sessionId })
                 });
-                
+
                 const data = await res.json();
-                
-                // Remove typing indicator
-                const typingEl = document.getElementById(typingId);
-                if(typingEl) typingEl.remove();
+                document.getElementById(typingId).remove();
 
                 if (data.conversationId) {
                     conversationId = data.conversationId;
@@ -331,88 +484,71 @@
 
                 if (data.response) {
                     addMessage(data.response, 'bot');
+                    ratingContainer.style.display = 'block';
                 }
             } catch (err) {
-                console.error(err);
-                const typingEl = document.getElementById(typingId);
-                if(typingEl) typingEl.remove();
+                document.getElementById(typingId).remove();
                 addMessage("Sorry, something went wrong.", 'bot');
             }
         }
 
+        // Add Message
         function addMessage(text, sender, id = null) {
             const div = document.createElement('div');
             div.className = `fahimo-msg ${sender}`;
             div.innerText = text;
-            if(id) div.id = id;
-            if (messagesDiv) {
-                messagesDiv.appendChild(div);
-                messagesDiv.scrollTop = messagesDiv.scrollHeight;
-            }
+            if (id) div.id = id;
+            messagesDiv.appendChild(div);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
 
-        const endBtn = document.getElementById('fahimo-end-chat');
-        
-        if (endBtn) endBtn.onclick = () => {
+        // Rating System
+        stars.forEach(star => {
+            star.onclick = () => {
+                selectedRating = star.getAttribute('data-val');
+                stars.forEach(s => s.style.color = s.getAttribute('data-val') <= selectedRating ? '#FFD700' : '#ccc');
+            };
+        });
+
+        // End Chat and Submit Rating
+        document.getElementById('fahimo-end-chat').onclick = () => {
             if (!conversationId) return;
             showRatingUI();
         };
 
         function showRatingUI() {
-            const div = document.createElement('div');
-            div.className = 'fahimo-msg bot';
-            div.style.textAlign = 'center';
-            div.innerHTML = `
-                <div style="margin-bottom:10px; font-weight:bold;">Rate your experience</div>
-                <div style="display:flex; justify-content:center; gap:5px; margin-bottom:10px;">
-                    ${[1,2,3,4,5].map(i => `<span class="fahimo-star" data-val="${i}" style="cursor:pointer; font-size:20px; color:#ccc;">★</span>`).join('')}
-                </div>
-                <textarea id="fahimo-feedback" placeholder="Any feedback?" style="width:100%; border:1px solid #eee; border-radius:5px; padding:5px; font-size:12px;"></textarea>
-                <button id="fahimo-submit-rating" style="margin-top:5px; background:#003366; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer; width:100%;">Submit</button>
-            `;
-            if (messagesDiv) {
-                messagesDiv.appendChild(div);
-                messagesDiv.scrollTop = messagesDiv.scrollHeight;
-            }
-
-            const stars = div.querySelectorAll('.fahimo-star');
-            let selectedRating = 0;
-
-            stars.forEach(star => {
-                star.onclick = () => {
-                    selectedRating = star.getAttribute('data-val');
-                    stars.forEach(s => s.style.color = s.getAttribute('data-val') <= selectedRating ? '#FFD700' : '#ccc');
-                };
-            });
-
-            div.querySelector('#fahimo-submit-rating').onclick = async () => {
-                if (!selectedRating) return;
-                const feedback = div.querySelector('#fahimo-feedback').value;
-                
-                try {
-                    await fetch(`${apiUrl}/api/chat/rating`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ conversationId, rating: selectedRating, feedback })
-                    });
-                    div.innerHTML = '<div style="color:green;">Thank you for your feedback!</div>';
-                    localStorage.removeItem('fahimo_conversation_id');
-                    conversationId = null;
-                } catch (e) {
-                    console.error(e);
-                }
-            };
+            ratingContainer.style.display = 'block';
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
 
-        // Toggle visibility by adding/removing a class so CSS (including media rules)
-        // doesn't force the widget open on small screens.
-        if (launcher) launcher.onclick = () => {
-            isOpen = !isOpen;
-            if (chatWindow) chatWindow.classList.toggle('fahimo-open', isOpen);
+        endSessionBtn.onclick = async () => {
+            if (!selectedRating) return;
+            try {
+                await fetch(`${apiUrl}/api/chat/rating`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ conversationId, rating: selectedRating })
+                });
+                localStorage.removeItem('fahimo_conversation_id');
+                conversationId = null;
+                ratingContainer.style.display = 'none';
+                messagesDiv.innerHTML = '';
+            } catch (e) {
+                console.error(e);
+            }
         };
-        if (closeBtn) closeBtn.onclick = () => {
+
+        // Event Listeners
+        sendBtn.onclick = sendMessage;
+        input.onkeypress = (e) => { if (e.key === 'Enter') sendMessage(); };
+
+        launcher.onclick = () => {
+            isOpen = !isOpen;
+            chatWindow.classList.toggle('fahimo-open', isOpen);
+        };
+        closeBtn.onclick = () => {
             isOpen = false;
-            if (chatWindow) chatWindow.classList.remove('fahimo-open');
+            chatWindow.classList.remove('fahimo-open');
         };
     } catch (e) {
         console.error('Fahimo widget init error', e);
