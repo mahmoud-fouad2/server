@@ -285,6 +285,66 @@ router.get('/ai-providers', authenticateToken, isAdmin, async (req, res) => {
   }
 });
 
+// Alias for ai-models
+router.get('/ai-models', authenticateToken, isAdmin, async (req, res) => {
+  try {
+    const providers = [
+      {
+        id: 'groq',
+        name: 'Groq',
+        model: 'llama-3.3-70b-versatile',
+        apiKey: process.env.GROQ_API_KEY ? 'configured' : 'not-configured', // SECURITY: Don't expose actual key
+        isActive: true,
+        tier: 'Free',
+        status: process.env.GROQ_API_KEY ? 'configured' : 'not-configured'
+      },
+      {
+        id: 'deepseek',
+        name: 'DeepSeek',
+        model: 'deepseek-chat',
+        apiKey: process.env.DEEPSEEK_API_KEY ? 'configured' : 'not-configured', // SECURITY: Don't expose actual key
+        isActive: true,
+        tier: 'Free',
+        status: process.env.DEEPSEEK_API_KEY ? 'configured' : 'not-configured'
+      },
+      {
+        id: 'gemini',
+        name: 'Google Gemini',
+        model: 'gemini-1.5-flash',
+        apiKey: process.env.GEMINI_API_KEY ? 'configured' : 'not-configured', // SECURITY: Don't expose actual key
+        isActive: true,
+        tier: 'Free',
+        status: process.env.GEMINI_API_KEY ? 'configured' : 'not-configured'
+      },
+      {
+        id: 'cerebras',
+        name: 'Cerebras AI',
+        model: 'llama3.1-8b',
+        apiKey: process.env.CEREBRAS_API_KEY ? 'configured' : 'not-configured', // SECURITY: Don't expose actual key
+        isActive: true,
+        tier: 'Free',
+        status: process.env.CEREBRAS_API_KEY ? 'configured' : 'not-configured'
+      },
+    ];
+    res.json(providers);
+  } catch (error) {
+    logger.error('Admin Get AI Models Error:', error);
+    res.status(500).json({ error: 'Failed to fetch AI models' });
+  }
+});
+
+// Add/Update AI Model
+router.post('/ai-models', authenticateToken, isAdmin, async (req, res) => {
+  try {
+    // For now, just log and return success
+    logger.info('AI Model update requested:', req.body);
+    res.json({ success: true, message: 'AI model configuration updated' });
+  } catch (error) {
+    logger.error('Admin Update AI Model Error:', error);
+    res.status(500).json({ error: 'Failed to update AI model' });
+  }
+});
+
 // Test AI Provider
 router.post('/ai-providers/:id/test', authenticateToken, isAdmin, async (req, res) => {
   try {

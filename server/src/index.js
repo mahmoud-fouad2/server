@@ -210,7 +210,9 @@ app.get('/', (req, res) => {
 
 // Auth routes
 const authRoutes = require('./routes/auth.routes');
+const passwordRoutes = require('./routes/password.routes');
 app.use('/api/auth', authRoutes);
+app.use('/api/auth', passwordRoutes);
 
 // Chat routes
 const chatRoutes = require('./routes/chat.routes');
@@ -219,6 +221,10 @@ app.use('/api/chat', chatRoutes);
 // Business routes
 const businessRoutes = require('./routes/business.routes');
 app.use('/api/business', businessRoutes);
+
+// Contact routes
+const contactRoutes = require('./routes/contact.routes');
+app.use('/api/contact', contactRoutes);
 
 // Knowledge routes
 const knowledgeRoutes = require('./routes/knowledge.routes');

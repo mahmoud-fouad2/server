@@ -401,59 +401,19 @@ export default function APIPage() {
             {[
               {
                 lang: 'JavaScript',
-                code: `const response = await fetch('https://api.faheemly.com/v1/auth/login', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    email: 'user@example.com',
-    password: 'password123'
-  })
-});
-
-const data = await response.json();
-console.log(data);
+                code: "const response = await fetch('https://api.faheemly.com/v1/auth/login', {\n  method: 'POST',\n  headers: {\n    'Content-Type': 'application/json'\n  },\n  body: JSON.stringify({\n    email: 'user@example.com',\n    password: 'password123'\n  })\n});\n\nconst data = await response.json();\nconsole.log(data);",
               },
               {
                 lang: 'Python',
-                code: `import requests
-
-response = requests.post(
-    'https://api.faheemly.com/v1/auth/login',
-    json={
-        'email': 'user@example.com',
-        'password': 'password123'
-    }
-)
-
-data = response.json()
-print(data['token'])`,
+                code: "import requests\n\nresponse = requests.post(\n    'https://api.faheemly.com/v1/auth/login',\n    json={\n        'email': 'user@example.com',\n        'password': 'password123'\n    }\n)\n\ndata = response.json()\nprint(data['token'])",
               },
               {
                 lang: 'PHP',
-                code: `$ch = curl_init('https://api.faheemly.com/v1/auth/login');
-
-curl_setopt($ch, CURLOPT_POST, true);
-curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
-    'email' => 'user@example.com',
-    'password' => 'password123'
-]));
-curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-$response = curl_exec($ch);
-$data = json_decode($response);
-echo $data->token;`,
+                code: "$ch = curl_init('https://api.faheemly.com/v1/auth/login');\n\ncurl_setopt($ch, CURLOPT_POST, true);\ncurl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([\n    'email' => 'user@example.com',\n    'password' => 'password123'\n]));\ncurl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);\ncurl_setopt($ch, CURLOPT_RETURNTRANSFER, true);\n\n$response = curl_exec($ch);\n$data = json_decode($response);\necho $data->token;",
               },
               {
                 lang: 'cURL',
-                code: `curl -X POST https://api.faheemly.com/v1/auth/login \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "email": "user@example.com",
-    "password": "password123"
-  }'`,
+                code: "curl -X POST https://api.faheemly.com/v1/auth/login \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"email\": \"user@example.com\",\n    \"password\": \"password123\"\n  }'",
               },
             ].map((example, index) => (
               <motion.div

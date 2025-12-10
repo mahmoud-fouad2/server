@@ -250,7 +250,7 @@ router.post('/track-event', authenticateToken, async (req, res) => {
     }
 
     // Store event for analytics (persist to userAnalytics table when available)
-    const event = {
+    const analyticsEvent = {
       type: eventType,
       data: eventData,
       conversationId,
