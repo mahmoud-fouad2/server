@@ -30,6 +30,8 @@ export default function KnowledgeBaseView({ addNotification }) {
   const [editContent, setEditContent] = useState('');
   const [editTitle, setEditTitle] = useState('');
   const [kbShowAll, setKbShowAll] = useState(false);
+  const [textErrors, setTextErrors] = useState([]);
+  const [urlErrors, setUrlErrors] = useState([]);
 
   useEffect(() => {
     fetchKbList();
@@ -69,6 +71,7 @@ export default function KnowledgeBaseView({ addNotification }) {
   const handleTextSubmit = async () => {
     if (!textInput) return;
     setUploading(true);
+    setTextErrors([]);
     try {
       await knowledgeApi.addText({ text: textInput, title: textTitle });
       addNotification('تم إضافة النص بنجاح');
@@ -76,7 +79,15 @@ export default function KnowledgeBaseView({ addNotification }) {
       setTextTitle('');
       fetchKbList();
     } catch (err) {
-      addNotification(`فشل: ${err.message}`, 'error');
+      // If server returned validation details, surface them under the field
+      if (err && err.data && Array.isArray(err.data.details)) {
+        setTextErrors(err.data.details);
+        // Show a compact notification too
+        const first = err.data.details[0];
+        addNotification(`فشل: ${first.field ? first.field + ': ' : ''}${first.message}`, 'error');
+      } else {
+        addNotification(`فشل: ${err.message}`, 'error');
+      }
     } finally {
       setUploading(false);
     }
@@ -85,13 +96,20 @@ export default function KnowledgeBaseView({ addNotification }) {
   const handleUrlSubmit = async () => {
     if (!urlInput) return;
     setUploading(true);
+    setUrlErrors([]);
     try {
       await knowledgeApi.addUrl({ url: urlInput });
       addNotification('تم استجلاب الرابط بنجاح');
       setUrlInput('');
       fetchKbList();
     } catch (err) {
-      addNotification(`فشل: ${err.message}`, 'error');
+      if (err && err.data && Array.isArray(err.data.details)) {
+        setUrlErrors(err.data.details);
+        const first = err.data.details[0];
+        addNotification(`فشل: ${first.field ? first.field + ': ' : ''}${first.message}`, 'error');
+      } else {
+        addNotification(`فشل: ${err.message}`, 'error');
+      }
     } finally {
       setUploading(false);
     }
