@@ -7,17 +7,42 @@ const logger = require('../utils/logger');
  */
 const resolveBusinessId = async (req, res, next) => {
   try {
-    // If businessId already exists in token, skip lookup
+    // 1) Honor direct header if provided (helps SPA clients)
+    const headerBusinessId = req.headers && (req.headers['x-business-id'] || req.headers['x_business_id'] || req.headers['businessid']);
+    if (headerBusinessId) {
+      // validate business exists
+      const business = await prisma.business.findUnique({ where: { id: headerBusinessId } });
+      if (business) {
+        req.user = req.user || {};
+        req.user.businessId = headerBusinessId;
+        return next();
+      }
+      return res.status(400).json({ error: 'Invalid business id provided in request header.' });
+    }
+
+    // 2) If businessId already exists in token, skip lookup
     if (req.user && req.user.businessId) {
       return next();
     }
 
-    // If no user object, token verification failed upstream
+    // 3) Allow businessId via query param as a fallback (public widget usage)
+    const queryBusinessId = req.query && (req.query.businessId || req.query.business_id);
+    if (queryBusinessId) {
+      const business = await prisma.business.findUnique({ where: { id: queryBusinessId } });
+      if (business) {
+        req.user = req.user || {};
+        req.user.businessId = queryBusinessId;
+        return next();
+      }
+      return res.status(400).json({ error: 'Invalid business id provided in query param.' });
+    }
+
+    // 4) If no user object or lacking identifiers, token verification failed upstream
     if (!req.user || (!req.user.userId && !req.user.email)) {
       return res.status(400).json({ error: 'Business ID missing from token. Please re-login.' });
     }
 
-    // Lookup businessId from database
+    // 5) Lookup businessId from database using token identity
     let dbUser = null;
     if (req.user.userId) {
       dbUser = await prisma.user.findUnique({
