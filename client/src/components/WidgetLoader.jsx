@@ -19,7 +19,7 @@ export default function WidgetLoader() {
 
       if (document.getElementById('fahimo-widget-script') || document.querySelector('script[src*="fahimo-widget"]')) return;
 
-      const bid = process.env.NEXT_PUBLIC_WIDGET_BUSINESS_ID || process.env.NEXT_PUBLIC_BUSINESS_ID || 'your-business-id';
+      const bid = process.env.NEXT_PUBLIC_WIDGET_BUSINESS_ID || process.env.NEXT_PUBLIC_BUSINESS_ID || 'cmivd3c0z0003ulrrn7m1jtjf';
 
       // Use the unified widget file from server
       const widgetUrl = `${window.location.origin}/fahimo-widget.js`;
