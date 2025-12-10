@@ -5,8 +5,13 @@ import { useEffect } from 'react';
 export default function WidgetLoader() {
   useEffect(() => {
     try {
-      const disabled = process.env.NEXT_PUBLIC_DISABLE_WIDGET === 'true';
-      if (disabled) return;
+      // Widget is disabled by default. Only enable when NEXT_PUBLIC_ENABLE_WIDGET=true
+      const enabled = process.env.NEXT_PUBLIC_ENABLE_WIDGET === 'true';
+      if (!enabled) {
+        // Keep widget off unless explicitly enabled in environment
+        console.debug('WidgetLoader: widget disabled by default. Set NEXT_PUBLIC_ENABLE_WIDGET=true to enable.');
+        return;
+      }
 
       const path = typeof window !== 'undefined' ? window.location.pathname : '/';
       // Prevent loading widget on the wizard and other admin pages

@@ -69,9 +69,9 @@ export default function PageLayout({ children }) {
               <Image
                 src="/logo.webp"
                 alt="Faheemly"
-                width={200}
-                height={100}
-                className={`${scrolled ? 'h-14' : 'h-24'} w-auto object-contain transition-all`}
+                width={240}
+                height={120}
+                className={`${scrolled ? 'h-16' : 'h-28'} w-auto object-contain transition-all`}
                 priority={true}
               />
           </Link>
@@ -144,7 +144,7 @@ export default function PageLayout({ children }) {
         >
           {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-white/10">
-            <Image src="/logo2.png" alt="فهملي" width={160} height={80} className="h-16 w-auto" />
+            <Image src="/logo2.png" alt="فهملي" width={200} height={100} className="h-20 w-auto" />
             <button
               onClick={() => setMobileMenuOpen(false)}
               className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
