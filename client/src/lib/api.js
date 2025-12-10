@@ -33,12 +33,16 @@ export const apiCall = async (endpoint, options = {}) => {
     // ignore parse errors
   }
 
+  // Allow an explicit public widget business id injected at build time
+  const publicWidgetBusinessId = typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_WIDGET_BUSINESS_ID : undefined;
+
   const config = {
     method,
     headers: {
       'Content-Type': 'application/json',
       ...(token && { Authorization: `Bearer ${token}` }),
-      ...(storedUser && storedUser.businessId && { 'x-business-id': storedUser.businessId }),
+      // Prefer stored user's businessId, otherwise fall back to a PUBLIC widget business id
+      ...((storedUser && storedUser.businessId) || publicWidgetBusinessId ? { 'x-business-id': (storedUser && storedUser.businessId) || publicWidgetBusinessId } : {}),
       ...headers,
     },
     ...customConfig,
@@ -224,9 +228,35 @@ export const knowledgeApi = {
   list: () => apiCall('/api/knowledge'),
   upload: formData =>
     apiCall('/api/knowledge/upload', { method: 'POST', body: formData }),
-  addText: data =>
-    apiCall('/api/knowledge/text', { method: 'POST', body: data }),
-  addUrl: data => apiCall('/api/knowledge/url', { method: 'POST', body: data }),
+  addText: data => {
+    // Ensure businessId is present in the body for non-authenticated widget flows
+    const dataCopy = { ...(data || {}) };
+    try {
+      const u = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+      if ((!dataCopy.businessId || dataCopy.businessId === '') && u) {
+        const parsed = JSON.parse(u);
+        if (parsed && parsed.businessId) dataCopy.businessId = parsed.businessId;
+      }
+    } catch (e) {}
+    if ((!dataCopy.businessId || dataCopy.businessId === '') && publicWidgetBusinessId) {
+      dataCopy.businessId = publicWidgetBusinessId;
+    }
+    return apiCall('/api/knowledge/text', { method: 'POST', body: dataCopy });
+  },
+  addUrl: data => {
+    const dataCopy = { ...(data || {}) };
+    try {
+      const u = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+      if ((!dataCopy.businessId || dataCopy.businessId === '') && u) {
+        const parsed = JSON.parse(u);
+        if (parsed && parsed.businessId) dataCopy.businessId = parsed.businessId;
+      }
+    } catch (e) {}
+    if ((!dataCopy.businessId || dataCopy.businessId === '') && publicWidgetBusinessId) {
+      dataCopy.businessId = publicWidgetBusinessId;
+    }
+    return apiCall('/api/knowledge/url', { method: 'POST', body: dataCopy });
+  },
   update: (id, data) =>
     apiCall(`/api/knowledge/${id}`, { method: 'PUT', body: data }),
   delete: id => apiCall(`/api/knowledge/${id}`, { method: 'DELETE' }),
