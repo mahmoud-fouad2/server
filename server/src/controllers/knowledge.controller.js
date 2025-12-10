@@ -80,8 +80,18 @@ async function createChunksForKB(kb) {
       metadata: { source: kb.type || 'UNKNOWN', kbId: kb.id, index: idx }
     }));
 
-    await prisma.knowledgeChunk.createMany({ data });
-    logger.info(`Created ${data.length} chunks for KB ${kb.id}`);
+    // Defensive: ensure `data` is an array before passing to Prisma
+    if (!Array.isArray(data) || data.length === 0) {
+      logger.warn('No chunk data to create for KB', { kbId: kb.id, piecesLength: pieces.length });
+    } else {
+      try {
+        await prisma.knowledgeChunk.createMany({ data });
+        logger.info(`Created ${data.length} chunks for KB ${kb.id}`);
+      } catch (e) {
+        logger.error('Prisma createMany failed when creating KB chunks', { kbId: kb.id, error: e && e.message, sample: data.slice(0,3) });
+        throw e; // rethrow so upstream handlers can catch and respond
+      }
+    }
 
     try {
       const pending = await prisma.knowledgeChunk.findMany({ where: { knowledgeBaseId: kb.id, businessId: kb.businessId }, orderBy: { createdAt: 'asc' } });
@@ -188,7 +198,18 @@ exports.uploadKnowledge = async (req, res) => {
 exports.addTextKnowledge = async (req, res) => {
   logger.info('POST /text called', { body: req.body, user: req.user });
   try {
-    const { text, title } = req.body;
+    let { text, title } = req.body || {};
+
+    // Defensive normalization: accept arrays or objects from client and coerce to string
+    if (Array.isArray(text)) {
+      logger.warn('addTextKnowledge: received text as array, joining to single string', { user: req.user && req.user.id, length: text.length });
+      text = text.join('\n\n');
+    } else if (text && typeof text === 'object') {
+      logger.warn('addTextKnowledge: received text as object, coercing to string', { user: req.user && req.user.id });
+      try { text = JSON.stringify(text); } catch (e) { text = String(text); }
+    }
+
+    logger.debug('addTextKnowledge payload summary', { textType: typeof text, textLength: text ? text.length : 0, titleType: typeof title });
     const businessId = await resolveBusinessId(req);
     logger.info('Resolved businessId:', { businessId });
     
@@ -196,25 +217,37 @@ exports.addTextKnowledge = async (req, res) => {
       return res.status(400).json({ error: 'Business ID missing or invalid. Please re-login.' });
     }
 
-    if (!text) {
+    if (!text || typeof text !== 'string' || text.trim().length === 0) {
+      logger.warn('addTextKnowledge: invalid text payload', { user: req.user && req.user.id, textSample: (text || '').substring(0, 100) });
       return res.status(400).json({ error: 'Text is required' });
     }
 
-    const kb = await prisma.knowledgeBase.create({
-      data: {
-        businessId,
-        type: 'TEXT',
-        content: text,
-        metadata: {
-          title: title || 'Untitled Text',
-          source: 'manual',
-          uploadedAt: new Date().toISOString(),
-          status: 'active',
-          wordCount: text.split(/\s+/).length
+    let kb;
+    try {
+      kb = await prisma.knowledgeBase.create({
+        data: {
+          businessId,
+          type: 'TEXT',
+          content: text,
+          metadata: {
+            title: title || 'Untitled Text',
+            source: 'manual',
+            uploadedAt: new Date().toISOString(),
+            status: 'active',
+            wordCount: (text || '').split(/\s+/).filter(Boolean).length
+          }
         }
-      }
-    });
-    try { await createChunksForKB(kb); } catch (e) { logger.error('createChunksForKB failed:', e); }
+      });
+    } catch (e) {
+      logger.error('Prisma create failed in addTextKnowledge', { error: e && e.message, stack: e && e.stack, user: req.user && req.user.id });
+      return res.status(500).json({ error: 'Failed to create knowledge base entry' });
+    }
+
+    try {
+      await createChunksForKB(kb);
+    } catch (e) {
+      logger.error('createChunksForKB failed after creating KB', { kbId: kb && kb.id, error: e && e.message, stack: e && e.stack });
+    }
     await redisCache.invalidate(businessId);
 
     res.json({ message: 'Text added successfully', id: kb.id });
