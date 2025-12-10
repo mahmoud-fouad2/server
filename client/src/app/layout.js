@@ -10,6 +10,9 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 import '@/lib/fetch-proxy';
 import ClientLayout from './ClientLayout';
 import { getOrganizationSchema } from '@/lib/structured-data';
+// WidgetLoader is a client component that appends the widget script when appropriate.
+// Import it directly — Next will render this as a client component at runtime.
+import WidgetLoader from '@/components/WidgetLoader';
 
 export const viewport = {
   width: 'device-width',
@@ -348,27 +351,7 @@ export default function RootLayout({ children }) {
         {/* Performance hints */}
         <meta name="format-detection" content="telephone=no" />
         <meta httpEquiv="x-ua-compatible" content="IE=edge" />
-        {/* Canonical Fahimo widget script - loads on every page. Business ID comes from env or defaults. */}
-        {
-          // Allow disabling the widget via environment in production when troubleshooting
-          (() => {
-            const disabled = process.env.NEXT_PUBLIC_DISABLE_WIDGET === 'true';
-            if (disabled) return null;
-            const bid = process.env.NEXT_PUBLIC_WIDGET_BUSINESS_ID || 'your-business-id';
-            const scriptSrc = (process.env.NODE_ENV === 'production')
-              ? 'https://fahimo-api.onrender.com/fahimo-widget.js'
-              : (process.env.NEXT_PUBLIC_API_URL || 'https://fahimo-api.onrender.com') + '/fahimo-widget.js';
-            return (
-              <script
-                src={scriptSrc}
-                async
-                defer
-                data-business-id={bid}
-                crossOrigin="anonymous"
-              />
-            );
-          })()
-        }
+        {/* Widget loader is handled client-side to avoid injecting the widget on sensitive routes like /wizard. */}
       </head>
       <body
         className={`${beiruti.className} overflow-x-hidden bg-gray-50 dark:bg-cosmic-950 text-gray-900 dark:text-gray-100 transition-colors duration-300 selection:bg-brand-500/30`}
@@ -376,6 +359,8 @@ export default function RootLayout({ children }) {
         <ErrorBoundary>
           <ClientLayout>{children}</ClientLayout>
         </ErrorBoundary>
+        {/* Client-only widget loader (will no-op on blocked routes like /wizard) */}
+        <WidgetLoader />
       </body>
     </html>
   );
