@@ -428,7 +428,11 @@
             .then(res => res.json())
             .then(data => {
                 const config = data.widgetConfig || {};
-                const botName = data.name || config.name || "Faheemly Assistant";
+                // Prefer API/Config name but sanitize to remove any 'Demo' branding
+                const rawName = data.name || config.name || "Faheemly Assistant";
+                let botName = String(rawName || '');
+                botName = botName.replace(/demo/gi, '').replace(/\bBusiness\b/gi, '').trim();
+                if (!botName) botName = 'Faheemly Assistant';
                 document.getElementById('fahimo-bot-name').innerText = botName;
 
                 if (config.primaryColor) {
@@ -451,7 +455,11 @@
                 }
 
                 if (!conversationId && messagesDiv) {
-                    addMessage(config.welcomeMessage || "Hello! How can I help?", 'bot');
+                    // Sanitize welcome message to remove 'Demo' mentions
+                    let welcome = config.welcomeMessage || "Hello! How can I help?";
+                    welcome = String(welcome || '').replace(/demo/gi, '').replace(/\bBusiness\b/gi, '').trim();
+                    if (!welcome) welcome = "Hello! How can I help?";
+                    addMessage(welcome, 'bot');
                 }
             })
             .catch(err => console.log('Fahimo: Could not load config'));
@@ -484,7 +492,8 @@
 
                 if (data.response) {
                     addMessage(data.response, 'bot');
-                    ratingContainer.style.display = 'block';
+                    // Do not auto-show rating after every reply. Rating is shown
+                    // only when the user explicitly ends the chat via End button.
                 }
             } catch (err) {
                 document.getElementById(typingId).remove();
