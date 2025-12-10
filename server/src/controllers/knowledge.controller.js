@@ -140,6 +140,8 @@ exports.uploadKnowledge = async (req, res) => {
     const businessId = await resolveBusinessId(req);
     if (!businessId) {
       try { fs.unlinkSync(req.file.path); } catch (e) { logger.warn('File cleanup failed', { path: req.file.path, error: e.message }); }
+      // Log auth header and user for debugging why businessId could not be resolved
+      logger.warn('uploadKnowledge: businessId missing', { authHeader: req.headers && req.headers.authorization, user: req.user });
       return res.status(400).json({ error: 'Business ID missing or invalid. Please re-login or contact support.' });
     }
 
@@ -214,6 +216,7 @@ exports.addTextKnowledge = async (req, res) => {
     logger.info('Resolved businessId:', { businessId });
     
     if (!businessId) {
+      logger.warn('addTextKnowledge: businessId missing', { authHeader: req.headers && req.headers.authorization, user: req.user });
       return res.status(400).json({ error: 'Business ID missing or invalid. Please re-login.' });
     }
 
@@ -263,6 +266,7 @@ exports.addUrlKnowledge = async (req, res) => {
     let { url, deepCrawl = false } = req.body;
     const businessId = await resolveBusinessId(req);
     if (!businessId) {
+      logger.warn('addUrlKnowledge: businessId missing', { authHeader: req.headers && req.headers.authorization, user: req.user });
       return res.status(400).json({ error: 'Business ID missing or invalid. Please re-login.' });
     }
 
