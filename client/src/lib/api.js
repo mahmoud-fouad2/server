@@ -101,11 +101,17 @@ export const apiCall = async (endpoint, options = {}) => {
           response.status < 500 &&
           response.status !== 429
         ) {
-          throw new Error((data && (data.error || data.message)) || 'Something went wrong');
+          const err = new Error((data && (data.error || data.message)) || 'Something went wrong');
+          err.status = response.status;
+          err.data = data;
+          throw err;
         }
 
         // Retry on 5xx server errors or 429
-        throw new Error((data && (data.error || data.message)) || 'Server error');
+        const err = new Error((data && (data.error || data.message)) || 'Server error');
+        err.status = response.status;
+        err.data = data;
+        throw err;
       }
 
       return data;
