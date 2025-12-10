@@ -32,7 +32,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
   BarChart,
   Bar,
   PieChart as RechartsPieChart,
@@ -98,23 +97,23 @@ export default function StatsOverview({
   // Real-time updates from API
   useEffect(() => {
     const fetchRealTimeStats = async () => {
-      try {
-        const response = await apiCall('api/analytics/realtime');
-        const data = response.data || response;
-        setRealTimeStats({
-          activeUsers: data.activeUsers || 0,
-          responseTime: data.avgResponseTime || 0,
-          satisfaction: data.satisfactionScore || 0,
-        });
-      } catch (e) {
-        // Silent fail for realtime updates
-      }
-    };
-
-    fetchRealTimeStats();
-    const interval = setInterval(fetchRealTimeStats, 30000); // Update every 30s
-
-    return () => clearInterval(interval);
+      import {
+        LineChart,
+        Line,
+        XAxis,
+        YAxis,
+        CartesianGrid,
+        Tooltip,
+        BarChart,
+        Bar,
+        PieChart as RechartsPieChart,
+        Pie,
+        Cell,
+        AreaChart,
+        Area,
+        Brush,
+      } from 'recharts';
+      import SafeResponsiveContainer from '@/components/ui/SafeResponsiveContainer';
   }, []);
 
   // Fetch analytics for charts
@@ -424,8 +423,8 @@ export default function StatsOverview({
             <CardDescription>المحادثات اليومية خلال الأسبوع الماضي</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
+              <div className="h-[300px]">
+              <SafeResponsiveContainer width="100%" height="100%" minHeight={200}>
                 <LineChart syncId={syncId} data={conversationDataState && conversationDataState.length ? conversationDataState : conversationData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
@@ -455,7 +454,7 @@ export default function StatsOverview({
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
+              <SafeResponsiveContainer width="100%" height="100%" minHeight={200}>
                 <LineChart syncId={syncId} data={responseTimeState && responseTimeState.length ? responseTimeState : responseTimeData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
@@ -486,7 +485,7 @@ export default function StatsOverview({
         </CardHeader>
         <CardContent>
           <div className="h-[300px] flex items-center justify-center">
-            <ResponsiveContainer width="100%" height="100%">
+            <SafeResponsiveContainer width="100%" height="100%" minHeight={200}>
               <RechartsPieChart>
                 <Pie
                 data={satisfactionState && satisfactionState.length ? satisfactionState : satisfactionData}
@@ -509,8 +508,8 @@ export default function StatsOverview({
         </CardContent>
           <CardContent>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
+              <div className="h-[300px]">
+              <SafeResponsiveContainer width="100%" height="100%" minHeight={200}>
                 <RechartsPieChart>
                   <Pie
                     data={satisfactionState && satisfactionState.length ? satisfactionState : satisfactionData}
@@ -533,7 +532,7 @@ export default function StatsOverview({
 
             {/* Bar + Area combined section with brush */}
             <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
+              <SafeResponsiveContainer width="100%" height="100%" minHeight={200}>
                 {chartType === 'area' && (
                   <AreaChart syncId={syncId} data={conversationDataState && conversationDataState.length ? conversationDataState : conversationData}>
                     <defs>

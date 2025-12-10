@@ -125,7 +125,8 @@ export const metadata = {
   },
   icons: {
     icon: '/favicon.ico',
-    shortcut: '/favicon-16x16.png',
+    // Use `favicon.ico` as the primary shortcut to avoid 404s when only .ico exists
+    shortcut: '/favicon.ico',
     apple: '/apple-touch-icon.png',
   },
   manifest: '/site.webmanifest',
