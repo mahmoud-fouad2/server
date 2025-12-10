@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button, Input, Card } from './ui/Components';
 import { APP_NAME, TRANSLATIONS } from '../constants';
@@ -14,7 +14,38 @@ export const Login = ({ lang }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isVerified, setIsVerified] = useState(false);
+  const [sessionToast, setSessionToast] = useState('');
+  const [showSessionToast, setShowSessionToast] = useState(false);
   const t = TRANSLATIONS[lang];
+
+  useEffect(() => {
+    try {
+      // Check localStorage flag set by apiCall on 401
+      const fromStorage = localStorage.getItem('sessionExpired');
+      const params = new URLSearchParams(window.location.search);
+      const reason = params.get('reason');
+
+      if (fromStorage || reason === 'session_expired') {
+        const msg = 'انتهت الجلسة، الرجاء تسجيل الدخول مرة أخرى';
+        setSessionToast(msg);
+        setShowSessionToast(true);
+        // Clear the flag so it doesn't show repeatedly
+        localStorage.removeItem('sessionExpired');
+
+        // remove reason param from URL without reloading
+        if (reason) {
+          params.delete('reason');
+          const newUrl = window.location.pathname + (params.toString() ? `?${params.toString()}` : '');
+          window.history.replaceState({}, document.title, newUrl);
+        }
+
+        // Auto-hide after 6s
+        setTimeout(() => setShowSessionToast(false), 6000);
+      }
+    } catch (e) {
+      // ignore in non-browser environments
+    }
+  }, []);
 
   const handleSubmit = async e => {
     e.preventDefault();
@@ -84,6 +115,16 @@ export const Login = ({ lang }) => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {showSessionToast && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                className="mb-4 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-500/30 text-amber-700 dark:text-amber-300 text-sm text-center"
+              >
+                {sessionToast}
+              </motion.div>
+            )}
+
             {error && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
