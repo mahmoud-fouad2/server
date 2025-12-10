@@ -51,7 +51,7 @@ export default function ConversationsView() {
             localSocket = io(API_CONFIG.BASE_URL.replace('/api', ''), { transports: ['websocket'] });
 
             localSocket.on('connect', () => {
-              console.log('Socket connected');
+              // ...existing code...
               localSocket.emit('join_room', `business_${profile.businessId}`);
             });
 

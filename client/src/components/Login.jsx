@@ -59,7 +59,7 @@ export const Login = ({ lang }) => {
       const data = await authApi.login({ email, password });
 
       // Handle login success
-      console.log('Logged in:', data);
+      // ...existing code...
       // You might want to save token here if not handled by the component calling this
       // But usually Login component handles the redirect or state update
       if (data.token) {

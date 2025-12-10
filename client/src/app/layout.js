@@ -341,7 +341,7 @@ export default function RootLayout({ children }) {
           }}
         />
 
-        {/* Preload critical resources - Removed unused font preloads */}
+        {/* Preload critical resources */}
 
         {/* DNS Prefetch for other external resources kept if needed */}
 

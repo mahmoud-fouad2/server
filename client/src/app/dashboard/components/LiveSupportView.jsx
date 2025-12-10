@@ -43,7 +43,7 @@ export default function LiveSupportView({ addNotification }) {
 
   const playNotificationSound = () => {
     if (audioRef.current) {
-      audioRef.current.play().catch(e => console.log('Audio play failed', e));
+      audioRef.current.play().catch(() => {});
     }
   };
 

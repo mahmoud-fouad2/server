@@ -31,7 +31,7 @@ export default function AdminLogin() {
     try {
       const data = await authApi.login({ email, password });
 
-      console.log('Login response:', data); // Debug log
+      // ...existing code...
 
       if (
         !data.user ||

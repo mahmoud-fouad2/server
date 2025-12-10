@@ -1,8 +1,4 @@
-export const MessageRole = {
-  USER: 'user',
-  MODEL: 'model',
-  SYSTEM: 'system',
-};
+// ...existing code...
 
 export const Industry = {
   RESTAURANT: 'Restaurant',

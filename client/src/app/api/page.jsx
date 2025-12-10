@@ -102,6 +102,7 @@ const endpoints = [
 export default function APIPage() {
   const [selectedEndpoint, setSelectedEndpoint] = useState(endpoints[0]);
   const [copied, setCopied] = useState(false);
+  const [activeTab, setActiveTab] = useState(0);
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
@@ -412,7 +413,7 @@ export default function APIPage() {
 });
 
 const data = await response.json();
-console.log(data.token);`,
+console.log(data);
               },
               {
                 lang: 'Python',
