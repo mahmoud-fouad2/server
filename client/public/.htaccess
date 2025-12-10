@@ -165,10 +165,8 @@ Options -Indexes
 # regular weight into `public/fonts/Beiruti-400.ttf` for local serving.
 
 <IfModule mod_headers.c>
-  # Preload local Beiruti woff2 files.
-  # The downloader script `scripts/download-beiruti.ps1` saves predictable
-  # filenames like `Beiruti-200.woff2`, `Beiruti-300.woff2`, ..., `Beiruti-900.woff2`.
-  # Update this header if you choose a different naming scheme.
+  # Preload local Beiruti woff2 files (common weights).
+  # These files are expected to be present in `client/public/fonts/`.
   Header set Link "</fonts/Beiruti-200.woff2>; rel=preload; as=font; type=font/woff2; crossorigin, </fonts/Beiruti-300.woff2>; rel=preload; as=font; type=font/woff2; crossorigin, </fonts/Beiruti-400.woff2>; rel=preload; as=font; type=font/woff2; crossorigin, </fonts/Beiruti-500.woff2>; rel=preload; as=font; type=font/woff2; crossorigin, </fonts/Beiruti-600.woff2>; rel=preload; as=font; type=font/woff2; crossorigin, </fonts/Beiruti-700.woff2>; rel=preload; as=font; type=font/woff2; crossorigin, </fonts/Beiruti-800.woff2>; rel=preload; as=font; type=font/woff2; crossorigin, </fonts/Beiruti-900.woff2>; rel=preload; as=font; type=font/woff2; crossorigin"
 </IfModule>
 
