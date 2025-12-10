@@ -333,10 +333,7 @@ export default function Wizard() {
     }
   };
 
-  const widgetCode = `<script 
-  src="https://server-production-0883.up.railway.app/widget/fahimo-widget-enhanced.js" 
-  data-business-id="${businessId || formData.email?.split('@')[0] || 'your-business-id'}"
-></script>`;
+  const widgetCode = `<script src="https://fahimo-api.onrender.com/fahimo-widget.js" data-business-id="${businessId || formData.email?.split('@')[0] || 'your-business-id'}"></script>`;
 
   return (
     <div

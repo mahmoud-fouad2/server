@@ -119,12 +119,12 @@ const sections = [
         <div className="bg-gray-900 text-gray-100 p-4 rounded-lg relative group" dir="ltr">
           <button
             className="absolute top-2 right-2 p-2 bg-gray-800 rounded hover:bg-gray-700 transition"
-            onClick={() => navigator.clipboard.writeText('<script src="https://faheemly.com/widget/fahimo-widget.js" data-business-id="YOUR_BUSINESS_ID"></script>')}
+            onClick={() => navigator.clipboard.writeText('<script src="https://fahimo-api.onrender.com/fahimo-widget.js" data-business-id="YOUR_BUSINESS_ID"></script>')}
           >
             <FaCopy />
           </button>
           <code className="font-mono text-sm">
-            &lt;script src=&quot;https://faheemly.com/widget/fahimo-widget.js&quot; data-business-id=&quot;YOUR_BUSINESS_ID&quot;&gt;&lt;/script&gt;
+            &lt;script src=&quot;https://fahimo-api.onrender.com/fahimo-widget.js&quot; data-business-id=&quot;YOUR_BUSINESS_ID&quot;&gt;&lt;/script&gt;
           </code>
         </div>
 
