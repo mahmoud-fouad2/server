@@ -69,9 +69,9 @@ export default function PageLayout({ children }) {
               <Image
                 src="/logo.webp"
                 alt="Faheemly"
-                width={160}
-                height={80}
-                className={`${scrolled ? 'h-12' : 'h-20'} w-auto object-contain transition-all`}
+                width={200}
+                height={100}
+                className={`${scrolled ? 'h-14' : 'h-24'} w-auto object-contain transition-all`}
                 priority={true}
               />
           </Link>
@@ -143,8 +143,8 @@ export default function PageLayout({ children }) {
           className={`absolute top-0 right-0 h-full w-80 max-w-[85vw] bg-white dark:bg-cosmic-900 shadow-2xl transform transition-transform duration-300 ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-white/10">
-            <Image src="/logo2.png" alt="فهملي" width={112} height={56} className="h-14 w-auto" />
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-white/10">
+            <Image src="/logo2.png" alt="فهملي" width={160} height={80} className="h-16 w-auto" />
             <button
               onClick={() => setMobileMenuOpen(false)}
               className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
