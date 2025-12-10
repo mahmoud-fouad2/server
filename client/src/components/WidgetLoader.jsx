@@ -37,10 +37,22 @@ export default function WidgetLoader() {
 
         for (const src of candidates) {
           try {
-            // Try a HEAD request for same-origin candidates to validate content-type quickly.
-            const isSameOrigin = new URL(src).origin === window.location.origin;
+            // If the page is opened from the filesystem, do not attempt to load
+            if (window.location.protocol === 'file:') {
+              console.warn('WidgetLoader: running from file:// — skipping widget load for safety', src);
+              continue;
+            }
+
+            // Try a HEAD request for same-origin candidates to validate availability and content-type.
+            let isSameOrigin = false;
+            try { isSameOrigin = new URL(src).origin === window.location.origin; } catch (e) { isSameOrigin = false; }
+
             if (isSameOrigin) {
               const head = await fetch(src, { method: 'HEAD' });
+              if (!head.ok) {
+                console.warn('WidgetLoader: candidate HEAD not OK, skipping', src, head.status);
+                continue;
+              }
               const ct = head.headers.get('content-type') || '';
               if (!ct.toLowerCase().includes('javascript')) {
                 // Not a JS file — skip to next candidate
