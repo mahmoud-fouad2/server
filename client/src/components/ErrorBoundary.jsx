@@ -44,7 +44,7 @@ class ErrorBoundary extends React.Component {
               إذا استمرت المشكلة.
             </p>
 
-            {process.env.NODE_ENV === 'development' && this.state.error && (
+            {(process.env.NODE_ENV === 'development' || window.location.search.includes('debug_client=1')) && this.state.error && (
               <div className="mb-8 p-4 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg text-left">
                 <p className="text-sm text-red-800 dark:text-red-400 font-mono">
                   {this.state.error.toString()}

@@ -350,7 +350,10 @@ export default function RootLayout({ children }) {
         <meta httpEquiv="x-ua-compatible" content="IE=edge" />
         {/* Canonical Fahimo widget script - loads on every page. Business ID comes from env or defaults. */}
         {
+          // Allow disabling the widget via environment in production when troubleshooting
           (() => {
+            const disabled = process.env.NEXT_PUBLIC_DISABLE_WIDGET === 'true';
+            if (disabled) return null;
             const bid = process.env.NEXT_PUBLIC_WIDGET_BUSINESS_ID || 'your-business-id';
             const scriptSrc = (process.env.NODE_ENV === 'production')
               ? 'https://fahimo-api.onrender.com/fahimo-widget.js'
