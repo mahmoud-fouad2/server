@@ -1,9 +1,12 @@
 (function() {
-    // Fahimo Widget - The "Understanding" Interface
-    // Non-removable branding: "Powered by Fahimo"
-    
+    // Fahimo Widget - single-instance loader
+    // Prevent double-init across multiple script variants
+    if (window.__FAHIMO_WIDGET_LOADED) return;
+    window.__FAHIMO_WIDGET_LOADED = true;
+
+    // Fahimo Widget - The interface
     const scriptTag = document.currentScript;
-    const businessId = scriptTag.getAttribute('data-business-id');
+    const businessId = scriptTag && scriptTag.getAttribute && scriptTag.getAttribute('data-business-id');
     // Auto-detect API URL based on script source, or fallback to production
     const scriptSrc = scriptTag.src;
     const apiUrl = scriptSrc ? new URL(scriptSrc).origin : 'https://fahimo-api.onrender.com';
@@ -13,7 +16,7 @@
         return;
     }
 
-    // Inject Styles
+    // Inject Styles (responsive mobile-friendly)
     const style = document.createElement('style');
     style.innerHTML = `
         #fahimo-widget-container {
@@ -21,11 +24,11 @@
             bottom: 20px;
             right: 20px;
             z-index: 9999;
-            font-family: 'Tajawal', 'Segoe UI', sans-serif;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
         }
         #fahimo-launcher {
-            width: 60px;
-            height: 60px;
+            width: 56px;
+            height: 56px;
             background: linear-gradient(135deg, #003366, #00D4AA);
             border-radius: 50%;
             cursor: pointer;
@@ -55,7 +58,7 @@
             height: 600px;
             max-height: 80vh;
             background: #ffffff;
-            border-radius: 20px;
+            border-radius: 16px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
             flex-direction: column;
             overflow: hidden;
@@ -64,6 +67,26 @@
             right: 0;
             animation: fahimo-slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        /* Mobile behavior: full-width modal-like experience */
+        @media (max-width: 640px) {
+            #fahimo-chat-window {
+                position: fixed !important;
+                left: 10px !important;
+                right: 10px !important;
+                bottom: 10px !important;
+                top: 12vh !important;
+                width: auto !important;
+                height: auto !important;
+                max-height: 78vh !important;
+                border-radius: 12px !important;
+                box-shadow: 0 12px 50px rgba(0,0,0,0.3) !important;
+                transform: translateY(0) !important;
+                display: flex !important;
+            }
+            #fahimo-launcher { right: 14px !important; bottom: 14px !important; }
+            #fahimo-input { font-size: 15px !important; }
         }
         @keyframes fahimo-slide-up {
             from { opacity: 0; transform: translateY(20px) scale(0.95); }
@@ -86,7 +109,7 @@
         #fahimo-bot-avatar {
             width: 35px;
             height: 35px;
-            background: rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.12);
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -187,9 +210,9 @@
         <div id="fahimo-chat-window">
             <div id="fahimo-header">
                 <div id="fahimo-bot-info">
-                    <div id="fahimo-bot-avatar">F</div>
-                    <div>
-                        <div id="fahimo-bot-name" style="font-weight:bold; font-size:15px;">مساعد فهملي</div>
+                            <div id="fahimo-bot-avatar">F</div>
+                            <div>
+                                <div id="fahimo-bot-name" style="font-weight:bold; font-size:15px;">Faheemly Assistant</div>
                         <div style="font-size:11px; opacity:0.8;">● Online</div>
                     </div>
                 </div>
@@ -231,7 +254,7 @@
         .then(data => {
             const config = data.widgetConfig || {};
             // Use business name from data.name, fallback to config.name, then default
-            const botName = data.name || config.name || "مساعد فهملي";
+            const botName = data.name || config.name || "Faheemly Assistant";
             document.getElementById('fahimo-bot-name').innerText = botName;
             
             // Apply Custom Colors
