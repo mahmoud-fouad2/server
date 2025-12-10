@@ -110,30 +110,35 @@
         .fahimo-pos-bottom-right { bottom: 20px; right: 20px; }
         .fahimo-pos-bottom-left { bottom: 20px; left: 20px; }
         
-        @media (max-width: 480px) {
+        @media (max-width: 600px) {
           #fahimo-chat-window {
-            width: 100% !important;
-            height: 100% !important;
-            bottom: 0 !important;
-            right: 0 !important;
-            left: 0 !important;
-            border-radius: 0 !important;
+            width: calc(100% - 20px) !important;
+            height: 90vh !important;
+            bottom: 10px !important;
+            right: 10px !important;
+            left: 10px !important;
+            border-radius: 12px !important;
             transform: translateY(100%);
-            max-height: 100vh;
+            max-height: 90vh;
             position: fixed !important;
-            top: 0;
+            top: auto;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.2);
           }
           #fahimo-chat-window.open {
             transform: translateY(0);
           }
           .fahimo-pos-bottom-right, .fahimo-pos-bottom-left {
-            bottom: 10px;
-            right: 10px;
+            bottom: 12px;
+            right: 12px;
+            left: 12px;
           }
           #fahimo-launcher {
-            bottom: 20px !important;
-            right: 20px !important;
+            bottom: 14px !important;
+            right: 14px !important;
+            width: 56px !important;
+            height: 56px !important;
           }
+          #fahimo-launcher svg { width: 22px; height:22px }
         }
 
         #fahimo-launcher {
@@ -231,28 +236,34 @@
         /* Typing Indicator */
         .fahimo-typing {
           display: flex;
-          gap: 4px;
-          padding: 12px 16px;
+          gap: 6px;
+          padding: 10px 14px;
           background: white;
           border-radius: 12px;
           border-bottom-right-radius: 2px;
           width: fit-content;
-          box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+          box-shadow: 0 1px 2px rgba(0,0,0,0.06);
           margin-bottom: 10px;
+          align-items: center;
         }
         .fahimo-typing span {
-          width: 6px;
-          height: 6px;
-          background: #ccc;
+          width: 8px;
+          height: 8px;
+          background: #d1d5db;
           border-radius: 50%;
-          animation: fahimo-bounce 1.4s infinite ease-in-out both;
+          transform-origin: center;
+          animation: fahimo-typing 1.2s infinite ease-in-out;
+          opacity: 0.6;
         }
-        .fahimo-typing span:nth-child(1) { animation-delay: -0.32s; }
-        .fahimo-typing span:nth-child(2) { animation-delay: -0.16s; }
-        
-        @keyframes fahimo-bounce {
-          0%, 80%, 100% { transform: scale(0); }
-          40% { transform: scale(1); }
+        .fahimo-typing span:nth-child(1) { animation-delay: 0s; }
+        .fahimo-typing span:nth-child(2) { animation-delay: 0.12s; }
+        .fahimo-typing span:nth-child(3) { animation-delay: 0.24s; }
+
+        @keyframes fahimo-typing {
+          0% { transform: translateY(0) scale(0.7); opacity: 0.5 }
+          40% { transform: translateY(-6px) scale(1.1); opacity: 1 }
+          80% { transform: translateY(0) scale(0.9); opacity: 0.6 }
+          100% { transform: translateY(0) scale(0.8); opacity: 0.5 }
         }
 
         .fahimo-input-area {

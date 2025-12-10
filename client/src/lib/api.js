@@ -54,9 +54,22 @@ export const apiCall = async (endpoint, options = {}) => {
     try {
       const response = await fetch(url, config);
 
-      // Handle 401 Unauthorized - let caller deal with redirects/auth
+      // Handle 401 Unauthorized globally: clear local session and redirect to login
       if (response.status === 401) {
-        // no-op here; callers may handle
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            // Flag session expiration so login page can show a friendly message
+            localStorage.setItem('sessionExpired', 'true');
+            // Redirect to login with a query param for clarity
+            window.location.href = '/login?reason=session_expired';
+          } catch (e) {
+            // ignore
+          }
+        }
+        // throw so callers know the call didn't succeed
+        throw new Error('Unauthorized');
       }
 
       // Decide how to parse the body based on Content-Type

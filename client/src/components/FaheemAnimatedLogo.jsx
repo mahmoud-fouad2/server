@@ -84,23 +84,24 @@ const FaheemAnimatedLogo = ({
 
     if (isLoading) {
     return (
-      <div className={`flex flex-col items-center justify-center ${className} hidden md:flex`}>
+      // Show loading logo on mobile as well (important to surface branding during load)
+      <div className={`flex flex-col items-center justify-center ${className} flex md:flex`}>
         <div className="relative">
           <div className="absolute inset-0 bg-brand-500/16 rounded-full blur-3xl animate-pulse"></div>
-          <div className="relative w-64 h-64 flex items-center justify-center p-6 bg-white/70 rounded-full overflow-hidden shadow-2xl border border-white/30">
+          <div className="relative w-44 h-44 sm:w-64 sm:h-64 flex items-center justify-center p-4 sm:p-6 bg-white/70 rounded-full overflow-hidden shadow-2xl border border-white/30">
             <Image
               src="/logo2.png"
               alt="فهملي"
-              width={220}
-              height={220}
+              width={160}
+              height={160}
               className="object-contain relative z-10"
               priority
             />
           </div>
-          <div className="absolute -bottom-20 left-1/2 transform -translate-x-1/2 flex gap-2 z-0" aria-hidden="true">
-            <div className="w-3 h-3 bg-brand-500 rounded-full animate-bounce" style={{ animationDelay: '0s', zIndex: 0 }}></div>
-            <div className="w-3 h-3 bg-brand-500 rounded-full animate-bounce" style={{ animationDelay: '0.15s', zIndex: 0 }}></div>
-            <div className="w-3 h-3 bg-brand-500 rounded-full animate-bounce" style={{ animationDelay: '0.3s', zIndex: 0 }}></div>
+          <div className="absolute -bottom-8 sm:-bottom-20 left-1/2 transform -translate-x-1/2 flex gap-2 z-0" aria-hidden="true">
+            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-brand-500 rounded-full animate-bounce" style={{ animationDelay: '0s', zIndex: 0 }}></div>
+            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-brand-500 rounded-full animate-bounce" style={{ animationDelay: '0.12s', zIndex: 0 }}></div>
+            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-brand-500 rounded-full animate-bounce" style={{ animationDelay: '0.24s', zIndex: 0 }}></div>
           </div>
         </div>
       </div>
