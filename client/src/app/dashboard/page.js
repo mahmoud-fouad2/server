@@ -94,6 +94,20 @@ function DashboardContent() {
     return () => { mounted = false };
   }, [router]);
 
+  // When user switches to `conversations` tab, ensure the main content scrolls to top
+  useEffect(() => {
+    try {
+      if (activeTab === 'conversations') {
+        // Smooth scroll the main content into view on mobile/desktop
+        window.requestAnimationFrame(() => {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+      }
+    } catch (e) {
+      // ignore in SSR/test env
+    }
+  }, [activeTab]);
+
   const addNotification = (message, type = 'success') => {
     const id = Date.now();
     setNotifications(prev => [...prev, { id, message, type }]);

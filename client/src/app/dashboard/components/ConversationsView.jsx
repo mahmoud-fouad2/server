@@ -158,7 +158,9 @@ export default function ConversationsView() {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
-      className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-[calc(100vh-250px)]"
+      // Use a responsive height: on small screens use min-height so content can grow,
+      // on large screens keep the previous fixed available-height layout.
+      className="grid grid-cols-1 lg:grid-cols-3 gap-8 min-h-[60vh] lg:h-[calc(100vh-250px)]"
     >
       {/* Conversations List */}
       <Card className="lg:col-span-1 flex flex-col h-full">
