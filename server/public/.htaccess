@@ -30,3 +30,13 @@
     ExpiresByType application/javascript "access plus 1 month"
     ExpiresByType text/css "access plus 1 month"
 </IfModule>
+
+# If faheemly.com doesn't have the Next.js static files, redirect those
+# requests to the Render backend so CSS/JS/_next assets are served correctly.
+RewriteEngine On
+# Only proxy/redirect to Render when the requested file does NOT exist locally.
+# This allows you to upload `public_html/_next/...` to Bluehost and have those
+# files served directly, otherwise fall back to Render.
+RewriteCond %{REQUEST_URI} ^/_next/ [NC]
+RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} !-f
+RewriteRule ^_next/(.*)$ https://fahimo-api.onrender.com/_next/$1 [R=302,L]
