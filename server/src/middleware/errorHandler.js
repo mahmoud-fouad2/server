@@ -24,10 +24,10 @@ const errorHandler = (err, req, res, next) => {
   // ✅ SANITIZE REQUEST DATA before logging
   const sanitizedBody = sanitizeLogData(req.body);
 
-  // Log error
-  logger.error('API Error', {
-    message: err.message,
-    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
+  // Log error (include stack for easier remote debugging).
+  // Pass the original Error object as the second parameter so the logger
+  // can include error.stack and other details in a structured way.
+  logger.error('API Error', err, {
     url: req.originalUrl,
     method: req.method,
     ip: req.ip,

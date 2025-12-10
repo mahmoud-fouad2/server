@@ -45,7 +45,8 @@ class Logger {
 
     const errorDetails = error ? {
       message: error.message,
-      stack: this.isDevelopment ? error.stack : undefined,
+      // Include stack always to aid remote debugging (safe because we sanitize payloads elsewhere)
+      stack: error.stack,
       ...context
     } : context;
 

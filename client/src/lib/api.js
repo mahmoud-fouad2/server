@@ -52,7 +52,13 @@ export const apiCall = async (endpoint, options = {}) => {
 
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
-      const response = await fetch(url, config);
+      // Attach a timeout via AbortController so a hung request doesn't block forever
+      const controller = new AbortController();
+      const timeoutMs = options.timeout || API_CONFIG.TIMEOUT || 30000;
+      const timeoutHandle = setTimeout(() => controller.abort(), timeoutMs);
+      config.signal = controller.signal;
+
+      const response = await fetch(url, config).finally(() => clearTimeout(timeoutHandle));
 
       // Handle 401 Unauthorized globally: clear local session and redirect to login
       if (response.status === 401) {

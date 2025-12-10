@@ -23,8 +23,8 @@ const SalesBot = () => {
   useEffect(() => {
     if (shouldHide) return;
     
-    // Check if script is already loaded
-    if (document.getElementById('fahimo-widget-script')) return;
+    // Check if a fahimo widget script is already present (handle different IDs / variants)
+    if (document.getElementById('fahimo-widget-script') || document.querySelector('script[src*="fahimo-widget"]')) return;
 
     const script = document.createElement('script');
     script.id = 'fahimo-widget-script';

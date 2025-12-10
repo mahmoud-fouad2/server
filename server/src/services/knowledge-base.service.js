@@ -44,10 +44,27 @@ class KnowledgeBaseService {
       const chunkData = (await Promise.all(chunkPromises)).filter(chunk => chunk !== null);
 
       // Store chunks in database
-      const createdChunks = await prisma.knowledgeChunk.createMany({
-        data: chunkData,
-        skipDuplicates: true
-      });
+      // Defensive: ensure chunkData is an array before createMany
+      if (!Array.isArray(chunkData) || chunkData.length === 0) {
+        logger.warn('No chunk data generated for knowledge base processing', { businessId, chunksFound: chunks.length, chunkDataLength: Array.isArray(chunkData) ? chunkData.length : 'invalid' });
+        return {
+          success: true,
+          chunksProcessed: chunks.length,
+          chunksStored: 0,
+          businessId
+        };
+      }
+
+      let createdChunks;
+      try {
+        createdChunks = await prisma.knowledgeChunk.createMany({
+          data: chunkData,
+          skipDuplicates: true
+        });
+      } catch (e) {
+        logger.error('Prisma createMany failed in knowledge-base.service', { businessId, error: e && e.message, sample: chunkData.slice(0,3) });
+        throw e;
+      }
 
       logger.info('Knowledge base chunks stored', { businessId, chunksStored: createdChunks.count });
 

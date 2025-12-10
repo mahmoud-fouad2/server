@@ -41,6 +41,7 @@ import {
   Area,
   Brush,
 } from 'recharts';
+import SafeResponsiveContainer from '@/components/ui/SafeResponsiveContainer';
 
 // Small helper component for safely revealing API Key
 function APIKeyBox({ user, copyToClipboard }) {
@@ -97,23 +98,22 @@ export default function StatsOverview({
   // Real-time updates from API
   useEffect(() => {
     const fetchRealTimeStats = async () => {
-      import {
-        LineChart,
-        Line,
-        XAxis,
-        YAxis,
-        CartesianGrid,
-        Tooltip,
-        BarChart,
-        Bar,
-        PieChart as RechartsPieChart,
-        Pie,
-        Cell,
-        AreaChart,
-        Area,
-        Brush,
-      } from 'recharts';
-      import SafeResponsiveContainer from '@/components/ui/SafeResponsiveContainer';
+      try {
+        const resp = await apiCall('api/analytics/realtime');
+        const d = resp?.data || resp || {};
+        setRealTimeStats({
+          activeUsers: d.activeUsers || 0,
+          responseTime: d.responseTime || 0,
+          satisfaction: d.satisfaction || 0,
+        });
+      } catch (e) {
+        console.warn('Failed to fetch realtime stats:', e?.message || e);
+      }
+    };
+
+    fetchRealTimeStats();
+    const iv = setInterval(fetchRealTimeStats, 15000);
+    return () => clearInterval(iv);
   }, []);
 
   // Fetch analytics for charts
@@ -438,7 +438,7 @@ export default function StatsOverview({
                     dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
                   />
                 </LineChart>
-              </ResponsiveContainer>
+              </SafeResponsiveContainer>
             </div>
           </CardContent>
         </Card>
@@ -468,7 +468,7 @@ export default function StatsOverview({
                     dot={{ fill: '#10B981', strokeWidth: 2, r: 4 }}
                   />
                 </LineChart>
-              </ResponsiveContainer>
+              </SafeResponsiveContainer>
             </div>
           </CardContent>
         </Card>
@@ -503,7 +503,7 @@ export default function StatsOverview({
                 </Pie>
                 <Tooltip />
               </RechartsPieChart>
-            </ResponsiveContainer>
+            </SafeResponsiveContainer>
           </div>
         </CardContent>
           <CardContent>
@@ -527,7 +527,7 @@ export default function StatsOverview({
                   </Pie>
                   <Tooltip />
                 </RechartsPieChart>
-              </ResponsiveContainer>
+              </SafeResponsiveContainer>
             </div>
 
             {/* Bar + Area combined section with brush */}
@@ -571,7 +571,7 @@ export default function StatsOverview({
                     <Brush dataKey="name" height={30} stroke="#3B82F6" />
                   </BarChart>
                 )}
-              </ResponsiveContainer>
+              </SafeResponsiveContainer>
             </div>
           </div>
         </CardContent>

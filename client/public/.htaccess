@@ -155,19 +155,13 @@ Options -Indexes
 # ========================================
 # Preload Critical Resources (Optional)
 # ========================================
-# NOTE: Font preloading is disabled here because the project uses Next's
-# `next/font` (Beiruti) which bundles/serves fonts differently. A stale
-# manual preload referencing `/fonts/Beiruti.woff2` caused 404s in the
-# browser when the file was not present in `client/public/fonts/`.
-#
-# If you prefer manual preloading, add the actual `Beiruti` font files to
-# `client/public/fonts/` and update the block below. We've downloaded the
-# regular weight into `public/fonts/Beiruti-400.ttf` for local serving.
+# NOTE: If you prefer manual font preloading, list the actual files present
+# in `client/public/fonts/`. We now host Beiruti `.woff2` files locally
+# (user-supplied) and preload the real filenames below to avoid 404s.
 
 <IfModule mod_headers.c>
-  # Preload local Beiruti woff2 files (common weights).
-  # These files are expected to be present in `client/public/fonts/`.
-  Header set Link "</fonts/Beiruti-200.woff2>; rel=preload; as=font; type=font/woff2; crossorigin, </fonts/Beiruti-300.woff2>; rel=preload; as=font; type=font/woff2; crossorigin, </fonts/Beiruti-400.woff2>; rel=preload; as=font; type=font/woff2; crossorigin, </fonts/Beiruti-500.woff2>; rel=preload; as=font; type=font/woff2; crossorigin, </fonts/Beiruti-600.woff2>; rel=preload; as=font; type=font/woff2; crossorigin, </fonts/Beiruti-700.woff2>; rel=preload; as=font; type=font/woff2; crossorigin, </fonts/Beiruti-800.woff2>; rel=preload; as=font; type=font/woff2; crossorigin, </fonts/Beiruti-900.woff2>; rel=preload; as=font; type=font/woff2; crossorigin"
+  # Preload the local Beiruti woff2 files that exist in `client/public/fonts/`.
+  Header set Link "</fonts/Beiruti-VariableFont_wght.woff2>; rel=preload; as=font; type=font/woff2; crossorigin, </fonts/Beiruti-ExtraLight.woff2>; rel=preload; as=font; type=font/woff2; crossorigin, </fonts/Beiruti-Light.woff2>; rel=preload; as=font; type=font/woff2; crossorigin, </fonts/Beiruti-Regular.woff2>; rel=preload; as=font; type=font/woff2; crossorigin, </fonts/Beiruti-Medium.woff2>; rel=preload; as=font; type=font/woff2; crossorigin, </fonts/Beiruti-SemiBold.woff2>; rel=preload; as=font; type=font/woff2; crossorigin, </fonts/Beiruti-Bold.woff2>; rel=preload; as=font; type=font/woff2; crossorigin, </fonts/Beiruti-Black.woff2>; rel=preload; as=font; type=font/woff2; crossorigin"
 </IfModule>
 
 # ========================================

@@ -39,6 +39,9 @@ export default function ConversationsView() {
         } catch (err) {
           console.error('Failed to fetch conversations (init):', err);
           if (mounted) setConversations([]);
+        } finally {
+          // Ensure the loading spinner is cleared after initial fetch attempt
+          if (mounted) setLoading(false);
         }
 
         // setup socket
