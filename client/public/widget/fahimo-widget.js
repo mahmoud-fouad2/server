@@ -18,6 +18,18 @@
     },
 
     async init() {
+      // Remove any previous fahimo elements to avoid duplicate widgets
+      try {
+        const oldContainer = document.getElementById('fahimo-widget-container');
+        if (oldContainer) oldContainer.remove();
+        const oldLauncher = document.getElementById('fahimo-launcher');
+        if (oldLauncher) oldLauncher.remove();
+        const oldWindow = document.getElementById('fahimo-chat-window');
+        if (oldWindow) oldWindow.remove();
+      } catch (e) {
+        // ignore cleanup errors
+      }
+
       this.loadConfig();
       try {
         await this.fetchSettings(); // Fetch dynamic settings (branding, welcome msg)
@@ -144,7 +156,7 @@
         #fahimo-launcher {
           width: 60px;
           height: 60px;
-          border-radius: 50%;
+          border-radius: 50%%;
           background-color: ${this.config.color};
           box-shadow: 0 4px 12px rgba(0,0,0,0.15);
           cursor: pointer;
@@ -152,17 +164,17 @@
           align-items: center;
           justify-content: center;
           transition: transform 0.3s ease;
-          position: absolute;
-          bottom: 0;
-          right: 0;
+          position: fixed;
+          bottom: 20px;
+          right: 20px;
         }
         #fahimo-launcher:hover { transform: scale(1.05); }
         #fahimo-launcher svg { width: 30px; height: 30px; fill: white; }
         
         #fahimo-chat-window {
-          position: absolute;
-          bottom: 80px;
-          right: 0;
+          position: fixed;
+          bottom: 90px;
+          right: 20px;
           width: 350px;
           height: 500px;
           background: white;
