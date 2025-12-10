@@ -130,27 +130,6 @@ async function createChunksForKB(kb) {
 
 // --- Controller Methods ---
 
-// Helper: controlled debug response
-function isDebugRequest(req) {
-  try {
-    if (process.env.NODE_ENV !== 'production') return true;
-    const hdr = req && req.headers && (req.headers['x-debug'] || req.headers['x_debug']);
-    const q = req && req.query && (req.query.debug || req.query._debug);
-    return hdr === 'true' || hdr === '1' || q === '1' || q === 'true';
-  } catch (e) {
-    return false;
-  }
-}
-
-function sendDebugResponse(res, status, message, details, req) {
-  const payload = { error: message };
-  if (isDebugRequest(req)) {
-    payload.debug = details || {};
-  }
-  return res.status(status).json(payload);
-}
-
-
 exports.uploadKnowledge = async (req, res) => {
   logger.info('POST /upload called');
   try {
@@ -237,18 +216,13 @@ exports.addTextKnowledge = async (req, res) => {
     logger.info('Resolved businessId:', { businessId });
     
     if (!businessId) {
-      logger.warn('addTextKnowledge: businessId missing', { authHeader: req.headers && (req.headers.authorization ? 'present' : 'missing'), user: req.user });
-      return sendDebugResponse(res, 400, 'Business ID missing or invalid. Please re-login.', {
-        resolvedBusinessId: null,
-        authHeaderPresent: !!(req.headers && req.headers.authorization),
-        providedHeaders: { 'x-business-id': req.headers && (req.headers['x-business-id'] || req.headers['x_business_id']) },
-        bodySample: (req.body && typeof req.body === 'object') ? Object.keys(req.body).slice(0,5) : typeof req.body
-      }, req);
+      logger.warn('addTextKnowledge: businessId missing', { authHeader: req.headers && req.headers.authorization, user: req.user });
+      return res.status(400).json({ error: 'Business ID missing or invalid. Please re-login.' });
     }
 
     if (!text || typeof text !== 'string' || text.trim().length === 0) {
       logger.warn('addTextKnowledge: invalid text payload', { user: req.user && req.user.id, textSample: (text || '').substring(0, 100) });
-      return sendDebugResponse(res, 400, 'Text is required', { textSample: (text || '').substring(0,200) }, req);
+      return res.status(400).json({ error: 'Text is required' });
     }
 
     let kb;
@@ -292,16 +266,11 @@ exports.addUrlKnowledge = async (req, res) => {
     let { url, deepCrawl = false } = req.body;
     const businessId = await resolveBusinessId(req);
     if (!businessId) {
-      logger.warn('addUrlKnowledge: businessId missing', { authHeader: req.headers && (req.headers.authorization ? 'present' : 'missing'), user: req.user });
-      return sendDebugResponse(res, 400, 'Business ID missing or invalid. Please re-login.', {
-        resolvedBusinessId: null,
-        authHeaderPresent: !!(req.headers && req.headers.authorization),
-        providedHeaders: { 'x-business-id': req.headers && (req.headers['x-business-id'] || req.headers['x_business_id']) },
-        bodySample: (req.body && typeof req.body === 'object') ? Object.keys(req.body).slice(0,5) : typeof req.body
-      }, req);
+      logger.warn('addUrlKnowledge: businessId missing', { authHeader: req.headers && req.headers.authorization, user: req.user });
+      return res.status(400).json({ error: 'Business ID missing or invalid. Please re-login.' });
     }
 
-    if (!url) return sendDebugResponse(res, 400, 'URL is required', { body: req.body }, req);
+    if (!url) return res.status(400).json({ error: 'URL is required' });
 
     if (!/^https?:\/\//i.test(url)) {
       url = 'https://' + url;
