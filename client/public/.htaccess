@@ -2,6 +2,11 @@
 # Faheemly.com Performance Optimization
 # ========================================
 
+# Temporary redirects for old build CSS filenames -> point to current build CSS
+# These handle cases where deployed HTML still references old hashed CSS names
+Redirect 302 /_next/static/css/ad1f7b83c15ae3a4.css /_next/static/css/740093cd734bc00f.css
+Redirect 302 /_next/static/css/00a75e27fcf9f46b.css /_next/static/css/b4006069f6ee7ce2.css
+
 # Enable GZIP Compression
 <IfModule mod_deflate.c>
   AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript
