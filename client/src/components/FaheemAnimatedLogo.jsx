@@ -19,6 +19,14 @@ const FaheemAnimatedLogo = ({
   }, []);
 
   const sizes = {
+    tiny: {
+      width: 40,
+      height: 28,
+      fontSize: 14,
+      container: 'w-8 h-8',
+      textMargin: 'mt-0',
+      textScale: 1,
+    },
     small: {
       width: 280,
       height: 120,
@@ -108,10 +116,11 @@ const FaheemAnimatedLogo = ({
     );
   }
 
+  // For small / tiny sizes we want the logo to be visible on mobile (not hidden).
+  const rootClasses = size === 'tiny' ? `inline-flex items-center justify-center ${className} md:hidden` : `inline-flex flex-col items-center justify-center ${className}`;
+
   return (
-    <div
-      className={`inline-flex flex-col items-center justify-center ${className} hidden md:inline-flex`}
-    >
+    <div className={rootClasses}>
       <div
         ref={logoRef}
         className={`relative cursor-pointer transition-all duration-700 ${currentSize.container} overflow-hidden rounded-2xl`}

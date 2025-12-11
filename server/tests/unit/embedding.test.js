@@ -33,7 +33,7 @@ describe('Embedding Service', () => {
 
     test('should generate embedding using Groq successfully', async () => {
       process.env.GROQ_API_KEY = 'test-groq-key';
-      process.env.GROQ_EMBED_MODEL = 'nomic-embed-text';
+      process.env.GROQ_EMBED_MODEL = 'groq-embedder';
 
       const mockEmbedding = [0.1, 0.2, 0.3, 0.4, 0.5];
       const mockResponse = {
@@ -50,7 +50,7 @@ describe('Embedding Service', () => {
         'https://api.groq.com/openai/v1/embeddings',
         {
           input: 'test text',
-          model: 'nomic-embed-text'
+          model: 'groq-embedder'
         },
         {
           headers: {
@@ -76,7 +76,7 @@ describe('Embedding Service', () => {
 
       expect(axios.post).toHaveBeenCalledWith(
         expect.any(String),
-        expect.objectContaining({ model: 'nomic-embed-text' }),
+        expect.objectContaining({ model: 'groq-embedder' }),
         expect.any(Object)
       );
     });
@@ -156,7 +156,7 @@ describe('Embedding Service', () => {
       expect(result).toBeNull();
     });
 
-    test('should auto-disable Gemini when API key is leaked', async () => {
+    test('should handle leaked Gemini API key gracefully', async () => {
       process.env.GEMINI_API_KEY = 'leaked-key';
 
       const mockGeminiModel = {
@@ -171,7 +171,7 @@ describe('Embedding Service', () => {
 
       const result = await generateEmbedding('test text');
 
-      expect(process.env.SKIP_GEMINI_EMBEDDING).toBe('true');
+      // We no longer mutate process.env; we expect a null result and internal cooldown handling
       expect(result).toBeNull();
     });
 

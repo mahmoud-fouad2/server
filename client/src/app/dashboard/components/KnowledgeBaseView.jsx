@@ -275,7 +275,7 @@ export default function KnowledgeBaseView({ addNotification }) {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -10 }}
-        className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-[calc(100vh-250px)]"
+        className="grid grid-cols-1 lg:grid-cols-3 gap-8 min-h-[60vh] lg:h-[calc(100vh-250px)]"
       >
         {/* Left Column: Active Sources */}
         <Card className="lg:col-span-1 flex flex-col h-full">
@@ -330,7 +330,7 @@ export default function KnowledgeBaseView({ addNotification }) {
                           )}
                         </div>
                         <div className="truncate">
-                          <p className="font-medium text-sm truncate max-w-[150px]">
+                          <p className="font-medium text-sm truncate max-w-[150px] sm:max-w-[240px] md:max-w-[320px]">
                             {kb.metadata?.filename ||
                               kb.metadata?.title ||
                               extractTitleFromContent(kb) ||
@@ -365,10 +365,10 @@ export default function KnowledgeBaseView({ addNotification }) {
                     </div>
                     ))}
                     {kbList.length > 5 && (
-                      <div className="text-center mt-4">
-                        <button className="text-sm text-brand-600 underline" onClick={() => setKbShowAll(s => !s)}>
+                      <div className="flex justify-center mt-4">
+                        <Button variant="ghost" size="sm" onClick={() => setKbShowAll(s => !s)}>
                           {kbShowAll ? 'عرض أقل' : `عرض الكل (${kbList.length})`}
-                        </button>
+                        </Button>
                       </div>
                     )}
                   </>

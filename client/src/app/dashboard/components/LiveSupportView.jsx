@@ -15,6 +15,16 @@ export default function LiveSupportView({ addNotification }) {
   const [handoverRequests, setHandoverRequests] = useState([]);
   const audioRef = useRef(null);
 
+  const formatVisitorId = id => {
+    try {
+      if (!id) return '—';
+      const s = String(id).replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+      return s.length <= 6 ? s : s.slice(0, 6);
+    } catch (e) {
+      return String(id).slice(-4);
+    }
+  };
+
   useEffect(() => {
     let mounted = true;
 
@@ -93,7 +103,7 @@ export default function LiveSupportView({ addNotification }) {
                     </div>
                     <div>
                       <h4 className="font-bold">
-                        زائر #{req.conversationId.slice(-4)}
+                        {req.country || req.countryCode || '—'} • {formatVisitorId(req.conversationId)}
                       </h4>
                       <p className="text-sm text-muted-foreground">
                         منذ {new Date(req.createdAt).toLocaleTimeString()}

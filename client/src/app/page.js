@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, Suspense, lazy } from 'react';
+import Loading from './loading';
 
 const LandingPage = lazy(() => import('@/components/LandingPage').then(mod => ({ default: mod.LandingPage })));
 
@@ -55,7 +56,7 @@ export default function Home() {
           </p>
         </div>
       </noscript>
-      <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-32 w-32 border-b-2 border-brand-500"></div></div>}>
+      <Suspense fallback={<Loading />}>
         <LandingPage country="sa" lang={lang} setLang={setLang} />
       </Suspense>
     </>

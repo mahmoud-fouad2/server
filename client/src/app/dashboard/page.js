@@ -233,7 +233,8 @@ function DashboardContent() {
           )}
         </AnimatePresence>
 
-        <header className="flex justify-between items-center mb-8 bg-transparent backdrop-blur-md p-2 rounded-md">
+        <div className="flex-1 flex flex-col">
+          <header className="flex justify-between items-center mb-8 bg-transparent backdrop-blur-md p-2 rounded-md">
           <div className="flex items-center gap-3">
             <div className="md:hidden">
               <FaheemAnimatedLogo size="small" showText={true} />
@@ -347,17 +348,18 @@ function DashboardContent() {
           )}
         </AnimatePresence>
 
-        {/* Help Button - Restart Tour */}
-        <button
-          onClick={resetTour}
-          className="fixed bottom-6 left-6 z-40 p-3 bg-brand-600 hover:bg-brand-700 text-white rounded-full shadow-lg transition-all hover:scale-110"
-          title="إعادة جولة المساعدة"
-        >
-          <HelpCircle className="w-5 h-5" />
-        </button>
+          {/* Help Button - Restart Tour */}
+          <button
+            onClick={resetTour}
+            className="fixed bottom-6 left-6 z-40 p-3 bg-brand-600 hover:bg-brand-700 text-white rounded-full shadow-lg transition-all hover:scale-110"
+            title="إعادة جولة المساعدة"
+          >
+            <HelpCircle className="w-5 h-5" />
+          </button>
+        </div>
 
         {/* Footer - Copyright */}
-        <footer className="mt-8 pt-8 pb-4 text-center text-sm text-muted-foreground border-t border-border/50 space-y-1">
+        <footer className="mt-auto pt-8 pb-4 text-center text-sm text-muted-foreground border-t border-border/50 space-y-1">
           <p>© {new Date().getFullYear()} فهملي - جميع الحقوق محفوظة</p>
           <p className="text-xs flex items-center justify-center gap-2">
             Development By{' '}

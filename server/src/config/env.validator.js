@@ -54,6 +54,10 @@ const REQUIRED_ENV_VARS = {
     required: false,
     description: 'Google Gemini API key for AI responses'
   },
+  VOYAGE_API_KEY: {
+    required: false,
+    description: 'VoyageAI API key for AI responses and embeddings'
+  },
   
   // Client
   CLIENT_URL: {
@@ -131,7 +135,7 @@ function validateEnv() {
   }
 
   // Check for at least one AI provider
-  const hasAnyAIProvider = ['GROQ_API_KEY', 'DEEPSEEK_API_KEY', 'CEREBRAS_API_KEY', 'GEMINI_API_KEY']
+  const hasAnyAIProvider = ['GROQ_API_KEY', 'DEEPSEEK_API_KEY', 'CEREBRAS_API_KEY', 'GEMINI_API_KEY', 'VOYAGE_API_KEY']
     .some(key => process.env[key]);
   
   if (!hasAnyAIProvider) {
@@ -208,7 +212,8 @@ function getEnvSummary() {
       groq: !!process.env.GROQ_API_KEY,
       deepseek: !!process.env.DEEPSEEK_API_KEY,
       cerebras: !!process.env.CEREBRAS_API_KEY,
-      gemini: !!process.env.GEMINI_API_KEY
+      gemini: !!process.env.GEMINI_API_KEY,
+      voyage: !!process.env.VOYAGE_API_KEY
     },
     hasClientURL: !!process.env.CLIENT_URL,
     hasCORSOrigins: !!process.env.CORS_ORIGINS

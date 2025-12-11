@@ -19,7 +19,7 @@ const PROVIDER_DEFINITIONS = {
     name: 'Groq',
     endpoint: 'https://api.groq.com/openai/v1/chat/completions',
     envVar: 'GROQ_API_KEY',
-    model: 'llama-3.3-70b-versatile',
+    model: 'groq/compound',
     rateLimit: { requestsPerMinute: 30, tokensPerMinute: 14400 },
     priority: 1, // PRIMARY - Fast and reliable
     enabled: true
@@ -51,6 +51,16 @@ const PROVIDER_DEFINITIONS = {
     rateLimit: { requestsPerMinute: 60, tokensPerMinute: 50000 },
     priority: 2, // SECONDARY - Balance restored, fast and reliable
     enabled: true // Re-enabled after balance added
+  }
+  ,
+  VOYAGE: {
+    name: 'VoyageAI',
+    endpoint: process.env.VOYAGE_CHAT_URL || 'https://api.voyageai.com/v1/chat/completions',
+    envVar: 'VOYAGE_API_KEY',
+    model: process.env.VOYAGE_MODEL || 'voyage-chat',
+    rateLimit: { requestsPerMinute: 50, tokensPerMinute: 50000 },
+    priority: 2,
+    enabled: true
   }
 };
 
@@ -88,6 +98,7 @@ function resetProviderState() {
 // Usage tracking for rate limit management
 const usageTracker = {
   DEEPSEEK: { requests: [], tokens: [] },
+  VOYAGE: { requests: [], tokens: [] },
   GROQ: { requests: [], tokens: [] },
   CEREBRAS: { requests: [], tokens: [] },
   GEMINI: { requests: [], tokens: [] }

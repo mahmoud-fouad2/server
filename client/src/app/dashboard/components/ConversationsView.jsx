@@ -113,6 +113,62 @@ export default function ConversationsView() {
     }
   };
 
+  // helper: produce a compact, friendly visitor id (alphanumeric, upper, first 6 chars)
+  const formatVisitorId = id => {
+    try {
+      if (!id) return '—';
+      const s = String(id).replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+      return s.length <= 6 ? s : s.slice(0, 6);
+    } catch (e) {
+      return String(id).slice(-4);
+    }
+  };
+
+  // helper: sanitize assistant/demo strings from message content for UI
+  const sanitizeContent = txt => {
+    if (!txt) return txt;
+    return String(txt)
+      .replace(/Faheemly Demo Business/gi, 'فريق الدعم')
+      .replace(/Faheemly Demo/gi, 'فهملي')
+      .trim();
+  };
+
+  // Render assistant content: support numbered lists for multi-line replies and **bold**
+  const renderAssistantContent = (txt, role) => {
+    if (!txt) return null;
+    const content = sanitizeContent(txt);
+    const lines = String(content).split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    const isAssistant = role && role !== 'USER' && role !== 'user';
+
+    const parseBold = text => {
+      const parts = [];
+      const regex = /(\*\*([^*]+)\*\*)/g;
+      let last = 0;
+      let m;
+      while ((m = regex.exec(text)) !== null) {
+        if (m.index > last) parts.push(text.slice(last, m.index));
+        parts.push(<strong key={m.index} className="font-semibold">{m[2]}</strong>);
+        last = m.index + m[0].length;
+      }
+      if (last < text.length) parts.push(text.slice(last));
+      return parts;
+    };
+
+    if (isAssistant && lines.length > 1) {
+      return (
+        <ol className="list-decimal list-inside space-y-1">
+          {lines.map((ln, i) => (
+            <li key={i} className="text-sm">
+              {parseBold(ln)}
+            </li>
+          ))}
+        </ol>
+      );
+    }
+
+    return <div className="text-sm">{parseBold(content)}</div>;
+  };
+
   const fetchConversations = async () => {
     try {
       const response = await chatApi.getConversations();
@@ -189,7 +245,7 @@ export default function ConversationsView() {
               >
                 <div className="flex justify-between items-start">
                   <div className="font-medium text-sm">
-                    زائر #{conv.id.slice(-4)}
+                    {conv.country || conv.countryCode || '—'} • {formatVisitorId(conv.id)}
                   </div>
                   <div className="text-xs text-muted-foreground">
                     {new Date(conv.updatedAt).toLocaleTimeString([], {
@@ -199,15 +255,15 @@ export default function ConversationsView() {
                   </div>
                 </div>
                 <div className="text-xs text-muted-foreground truncate mt-1">
-                  {conv.messages[0]?.content || 'لا توجد رسائل'}
+                  {sanitizeContent(conv.messages[0]?.content) || 'لا توجد رسائل'}
                 </div>
               </div>
               ))}
               {conversations.length > 10 && (
-                <div className="text-center mt-4">
-                  <button className="text-sm text-brand-600 underline" onClick={() => setShowAll(s => !s)}>
+                <div className="flex justify-center mt-4">
+                  <Button size="sm" onClick={() => setShowAll(s => !s)} className="bg-brand-600 text-white hover:bg-brand-700">
                     {showAll ? 'عرض أقل' : `عرض الكل (${conversations.length})`}
-                  </button>
+                  </Button>
                 </div>
               )}
             </>
@@ -226,7 +282,7 @@ export default function ConversationsView() {
                 </div>
                 <div>
                   <CardTitle className="text-base">
-                    زائر #{selectedConversation.id.slice(-4)}
+                    {selectedConversation.country || selectedConversation.countryCode || '—'} • {formatVisitorId(selectedConversation.id)}
                   </CardTitle>
                   <CardDescription className="text-xs">
                     عبر {selectedConversation.channel}
@@ -250,9 +306,9 @@ export default function ConversationsView() {
                     )}
                   </div>
                   <div
-                    className={`p-3 rounded-lg max-w-[80%] text-sm ${msg.role === 'ASSISTANT' ? 'bg-brand-500 text-white rounded-tl-none' : 'bg-white dark:bg-gray-800 border border-border rounded-tr-none'}`}
+                    className={`p-3 rounded-lg max-w-[80%] ${msg.role === 'ASSISTANT' ? 'bg-brand-500 text-white rounded-tl-none' : 'bg-white dark:bg-gray-800 border border-border rounded-tr-none'}`}
                   >
-                    {msg.content}
+                    {renderAssistantContent(msg.content, msg.role)}
                   </div>
                 </div>
               ))}

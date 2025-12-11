@@ -786,10 +786,10 @@ export default function StatsOverview({
                       {(topConversationsExpanded ? topConversations : topConversations.slice(0, 3)).map(conv => (
                         <motion.div key={conv.id} layout initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} className="p-3 bg-muted/20 rounded-lg">
                           <div className="flex items-center justify-between">
-                            <div className="font-medium text-sm">زائر #{conv.id.slice(-4)}</div>
+                            <div className="font-medium text-sm">زائر · {String(conv.id).replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0,6)}</div>
                             <div className="text-xs text-muted-foreground">{new Date(conv.updatedAt).toLocaleTimeString()}</div>
                           </div>
-                          <div className="text-xs text-muted-foreground mt-1 truncate">{conv.messages?.[0]?.content || 'لا توجد رسائل'}</div>
+                          <div className="text-xs text-muted-foreground mt-1 truncate">{(conv.messages?.[0]?.content || 'لا توجد رسائل').replace(/Faheemly Demo Business/gi,'فريق الدعم').replace(/Faheemly Demo/gi,'فهملي')}</div>
                         </motion.div>
                       ))}
                     </AnimatePresence>
@@ -797,13 +797,9 @@ export default function StatsOverview({
                     <div className="pt-2 flex gap-2 items-center">
                       <Button variant="outline" size="sm" className="flex-1" onClick={() => setActiveTab('conversations')}>عرض المحادثات</Button>
                       {topConversations.length > 3 && (
-                        <button
-                          className="text-sm text-brand-500 hover:underline"
-                          onClick={() => setTopConversationsExpanded(!topConversationsExpanded)}
-                          aria-expanded={topConversationsExpanded}
-                        >
+                        <Button size="sm" className="bg-brand-600 text-white hover:bg-brand-700" onClick={() => setTopConversationsExpanded(!topConversationsExpanded)} aria-expanded={topConversationsExpanded}>
                           {topConversationsExpanded ? `عرض أقل` : `عرض المزيد (${topConversations.length})`}
-                        </button>
+                        </Button>
                       )}
                       <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">{(topConversations || []).length} أحدث</div>
                     </div>
