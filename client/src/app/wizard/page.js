@@ -212,6 +212,12 @@ export default function Wizard() {
   const router = useRouter();
   const totalSteps = 6;
 
+  // Save draft function must be declared before any effect that uses it
+  const saveDraft = useCallback(() => {
+    localStorage.setItem('wizard_draft', JSON.stringify(formData));
+    setLastSaved(new Date());
+  }, [formData]);
+
   // Auto-save every 30 seconds
   useEffect(() => {
     const interval = setInterval(() => {
@@ -271,12 +277,8 @@ export default function Wizard() {
       window.removeEventListener('error', handler);
       window.removeEventListener('unhandledrejection', handler);
     };
-  }, []);
 
-  const saveDraft = useCallback(() => {
-    localStorage.setItem('wizard_draft', JSON.stringify(formData));
-    setLastSaved(new Date());
-  }, [formData]);
+  }, []);
 
   const handleInputChange = e => {
     const { name, value } = e.target;
