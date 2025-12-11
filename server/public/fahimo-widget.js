@@ -149,8 +149,8 @@
             font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
         }
         #fahimo-launcher {
-            width: 56px;
-            height: 56px;
+            width: 68px;
+            height: 68px;
             background: linear-gradient(135deg, #003366, #00D4AA);
             border-radius: 50%;
             cursor: pointer;
@@ -167,7 +167,7 @@
             100% { box-shadow: 0 0 0 0 rgba(0, 212, 170, 0); }
         }
         #fahimo-launcher:hover { transform: scale(1.05); }
-        #fahimo-launcher svg { width: 30px; height: 30px; fill: white; }
+        #fahimo-launcher svg { width: 36px; height: 36px; fill: white; }
 
         #fahimo-chat-window {
             display: none;
@@ -207,8 +207,8 @@
             gap: 10px;
         }
         #fahimo-bot-avatar {
-            width: 35px;
-            height: 35px;
+            width: 56px;
+            height: 56px;
             background: rgba(255,255,255,0.12);
             border-radius: 50%;
             display: flex;
@@ -251,7 +251,22 @@
             border-bottom-left-radius: 4px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
             border: 1px solid #e2e8f0;
+            /* Improve text layout: preserve lines and allow simple HTML */
+            white-space: pre-wrap;
         }
+
+        /* Typing indicator styles */
+        .fahimo-typing { display: inline-flex; gap:6px; align-items:center; font-size:13px; color:#64748b; }
+        .fahimo-typing .dots { display:inline-flex; gap:4px; margin-left:6px }
+        .fahimo-typing .dot { width:6px; height:6px; background:#94a3b8; border-radius:50%; opacity:0.3; transform:translateY(0); }
+        @keyframes fahimo-dot {
+            0% { opacity: 0.25; transform: translateY(0); }
+            50% { opacity: 1; transform: translateY(-4px); }
+            100% { opacity: 0.25; transform: translateY(0); }
+        }
+        .fahimo-typing .dot:nth-child(1) { animation: fahimo-dot 1s infinite 0s; }
+        .fahimo-typing .dot:nth-child(2) { animation: fahimo-dot 1s infinite 0.15s; }
+        .fahimo-typing .dot:nth-child(3) { animation: fahimo-dot 1s infinite 0.3s; }
         #fahimo-input-area {
             padding: 15px;
             background: white;
@@ -373,10 +388,10 @@
         <div id="fahimo-chat-window">
             <div id="fahimo-header">
                 <div id="fahimo-bot-info">
-                    <div id="fahimo-bot-avatar">F</div>
+                    <div id="fahimo-bot-avatar" style="background: transparent; width:56px; height:56px;">F</div>
                     <div>
-                        <div id="fahimo-bot-name" style="font-weight:bold; font-size:15px;">Faheemly Assistant</div>
-                        <div style="font-size:11px; opacity:0.8;">● Online</div>
+                        <div id="fahimo-bot-name" style="font-weight:bold; font-size:16px;">Faheemly Assistant</div>
+                        <div style="font-size:12px; opacity:0.85; display:flex; align-items:center; gap:6px;"><span style="width:8px;height:8px;background:#34d399;border-radius:50%;display:inline-block;"></span><span>Online</span></div>
                     </div>
                 </div>
                 <div style="display:flex; gap:10px;">
@@ -384,7 +399,7 @@
                     <span style="cursor:pointer; opacity:0.7;" id="fahimo-close">✕</span>
                 </div>
             </div>
-            <div id="fahimo-messages"></div>
+                <div id="fahimo-messages"></div>
             <div id="fahimo-rating-container">
                 <p>Rate your experience</p>
                 <div id="fahimo-stars">
@@ -422,18 +437,60 @@
         let isOpen = false;
         let conversationId = localStorage.getItem('fahimo_conversation_id');
         let selectedRating = 0;
+        // persisted messages for this business (visitor persistence)
+        let storedMessages = [];
+        let isLoadingStored = false;
+
+        function storageKey() {
+            return `fahimo_msgs_${businessId}`;
+        }
+
+        function saveStoredMessages() {
+            try {
+                // keep last 200 messages to avoid large storage
+                const toSave = storedMessages.slice(-200);
+                localStorage.setItem(storageKey(), JSON.stringify(toSave));
+            } catch (e) {
+                // ignore storage errors
+            }
+        }
+
+        function loadStoredMessages() {
+            try {
+                const raw = localStorage.getItem(storageKey());
+                if (!raw) return;
+                const arr = JSON.parse(raw);
+                if (!Array.isArray(arr) || !arr.length) return;
+                isLoadingStored = true;
+                storedMessages = arr;
+                arr.forEach(m => {
+                    // when loading, avoid re-saving
+                    addMessage(m.text, m.sender);
+                });
+                isLoadingStored = false;
+            } catch (e) {
+                isLoadingStored = false;
+            }
+        }
+
+        // Load any stored messages for this visitor/business
+        loadStoredMessages();
 
         // Load Config
         fetch(`${apiUrl}/api/widget/config/${businessId}`)
             .then(res => res.json())
             .then(data => {
                 const config = data.widgetConfig || {};
-                // Prefer API/Config name but sanitize to remove any 'Demo' branding
-                const rawName = data.name || config.name || "Faheemly Assistant";
+                // Allow script author to override displayed name via data-business-name attribute
+                const scriptName = scriptTag && scriptTag.getAttribute && scriptTag.getAttribute('data-business-name');
+                const rawName = scriptName || data.name || config.name || "Faheemly Assistant";
                 let botName = String(rawName || '');
                 botName = botName.replace(/demo/gi, '').replace(/\bBusiness\b/gi, '').trim();
                 if (!botName) botName = 'Faheemly Assistant';
                 document.getElementById('fahimo-bot-name').innerText = botName;
+
+                // expose botName globally so responses can be normalized
+                window.__FAHIMO_WIDGET_BOT_NAME = botName;
 
                 if (config.primaryColor) {
                     const color = config.primaryColor;
@@ -450,11 +507,11 @@
 
                 if (config.customIconUrl) {
                     const avatarEl = document.getElementById('fahimo-bot-avatar');
-                    avatarEl.innerHTML = `<img src="${config.customIconUrl}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;" alt="Bot">`;
+                    avatarEl.innerHTML = `<img src="${config.customIconUrl}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; display:block;" alt="Bot">`;
                     avatarEl.style.background = 'transparent';
                 }
 
-                if (!conversationId && messagesDiv) {
+                if (!conversationId && messagesDiv && storedMessages.length === 0) {
                     // Sanitize welcome message to remove 'Demo' mentions
                     let welcome = config.welcomeMessage || "Hello! How can I help?";
                     welcome = String(welcome || '').replace(/demo/gi, '').replace(/\bBusiness\b/gi, '').trim();
@@ -472,8 +529,8 @@
             addMessage(text, 'user');
             input.value = '';
 
-            const typingId = 'typing-' + Date.now();
-            addMessage('...', 'bot', typingId);
+                const typingId = 'typing-' + Date.now();
+            addTypingIndicator(typingId);
 
             try {
                 const res = await fetch(`${apiUrl}/api/chat/message`, {
@@ -483,7 +540,7 @@
                 });
 
                 const data = await res.json();
-                document.getElementById(typingId).remove();
+                removeTypingIndicator(typingId);
 
                 if (data.conversationId) {
                     conversationId = data.conversationId;
@@ -491,24 +548,78 @@
                 }
 
                 if (data.response) {
-                    addMessage(data.response, 'bot');
+                    // Normalize any demo-business mentions in the response to the configured bot name
+                    try {
+                        const configuredName = window.__FAHIMO_WIDGET_BOT_NAME || (config && (config.name || data.name)) || 'Faheemly Assistant';
+                        let resp = String(data.response || '');
+                        resp = resp.replace(/Faheemly\s*Demo\s*Business/gi, configuredName);
+                        resp = resp.replace(/Demo\s*Business/gi, configuredName);
+                        resp = resp.replace(/faheemly\s*demo\s*business/gi, configuredName);
+                        addMessage(resp, 'bot');
+                    } catch (e) {
+                        addMessage(data.response, 'bot');
+                    }
                     // Do not auto-show rating after every reply. Rating is shown
                     // only when the user explicitly ends the chat via End button.
                 }
             } catch (err) {
-                document.getElementById(typingId).remove();
+                removeTypingIndicator(typingId);
                 addMessage("Sorry, something went wrong.", 'bot');
             }
         }
 
         // Add Message
+        // Simple formatter: supports **bold** and __underline__ and preserves newlines
+        function formatMessage(text) {
+            if (!text && text !== 0) return '';
+            // Escape HTML first
+            text = String(text)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+            // Bold: **text**
+            text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            // Underline: __text__
+            text = text.replace(/__(.*?)__/g, '<u>$1</u>');
+            // Newlines to <br>
+            text = text.replace(/\n/g, '<br>');
+            return text;
+        }
+
         function addMessage(text, sender, id = null) {
             const div = document.createElement('div');
             div.className = `fahimo-msg ${sender}`;
-            div.innerText = text;
+            if (sender === 'bot') {
+                // Allow simple formatting in bot replies
+                div.innerHTML = formatMessage(text);
+            } else {
+                div.innerText = text;
+            }
             if (id) div.id = id;
             messagesDiv.appendChild(div);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+            // persist (skip when we're hydrating stored messages or when it's a typing indicator)
+            if (isLoadingStored) return;
+            if (id && String(id).startsWith('typing-')) return;
+            try {
+                storedMessages.push({ sender, text, id: id || null, ts: Date.now() });
+                saveStoredMessages();
+            } catch (e) {}
+        }
+
+        function addTypingIndicator(id) {
+            const div = document.createElement('div');
+            div.className = 'fahimo-msg bot';
+            div.id = id;
+            div.innerHTML = `<span class="fahimo-typing">جاري الرد<span class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span></span>`;
+            messagesDiv.appendChild(div);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function removeTypingIndicator(id) {
+            const el = document.getElementById(id);
+            if (el) el.remove();
         }
 
         // Rating System
@@ -542,6 +653,7 @@
                 conversationId = null;
                 ratingContainer.style.display = 'none';
                 messagesDiv.innerHTML = '';
+                try { localStorage.removeItem(storageKey()); storedMessages = []; } catch(e) {}
             } catch (e) {
                 console.error(e);
             }
