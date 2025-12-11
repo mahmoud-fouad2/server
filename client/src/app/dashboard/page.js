@@ -172,7 +172,7 @@ function DashboardContent() {
       </div>
 
       {/* Main Content */}
-      <main className="flex-1 p-4 md:p-8 overflow-y-auto h-screen relative pt-16 md:pt-8">
+      <main className="flex-1 p-4 md:p-8 overflow-y-auto relative pt-16 md:pt-8 min-h-screen">
         {/* Pro Feature Alert Modal */}
         <AnimatePresence>
           {showProAlert && (
@@ -357,7 +357,7 @@ function DashboardContent() {
         </button>
 
         {/* Footer - Copyright */}
-        <footer className="mt-auto pt-8 pb-4 text-center text-sm text-muted-foreground border-t border-border/50 space-y-1">
+        <footer className="mt-8 pt-8 pb-4 text-center text-sm text-muted-foreground border-t border-border/50 space-y-1">
           <p>© {new Date().getFullYear()} فهملي - جميع الحقوق محفوظة</p>
           <p className="text-xs flex items-center justify-center gap-2">
             Development By{' '}

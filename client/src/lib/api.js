@@ -1,5 +1,8 @@
 import { API_CONFIG } from './config';
 
+// Expose the public widget business id at module scope so other functions can reference it.
+const PUBLIC_WIDGET_BUSINESS_ID = typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_WIDGET_BUSINESS_ID : undefined;
+
 /**
  * Generic API client for making HTTP requests
  * Automatically handles:
@@ -34,7 +37,7 @@ export const apiCall = async (endpoint, options = {}) => {
   }
 
   // Allow an explicit public widget business id injected at build time
-  const publicWidgetBusinessId = typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_WIDGET_BUSINESS_ID : undefined;
+  const publicWidgetBusinessId = PUBLIC_WIDGET_BUSINESS_ID;
 
   const config = {
     method,
@@ -238,8 +241,8 @@ export const knowledgeApi = {
         if (parsed && parsed.businessId) dataCopy.businessId = parsed.businessId;
       }
     } catch (e) {}
-    if ((!dataCopy.businessId || dataCopy.businessId === '') && publicWidgetBusinessId) {
-      dataCopy.businessId = publicWidgetBusinessId;
+    if ((!dataCopy.businessId || dataCopy.businessId === '') && PUBLIC_WIDGET_BUSINESS_ID) {
+      dataCopy.businessId = PUBLIC_WIDGET_BUSINESS_ID;
     }
     return apiCall('/api/knowledge/text', { method: 'POST', body: dataCopy });
   },
@@ -252,8 +255,8 @@ export const knowledgeApi = {
         if (parsed && parsed.businessId) dataCopy.businessId = parsed.businessId;
       }
     } catch (e) {}
-    if ((!dataCopy.businessId || dataCopy.businessId === '') && publicWidgetBusinessId) {
-      dataCopy.businessId = publicWidgetBusinessId;
+    if ((!dataCopy.businessId || dataCopy.businessId === '') && PUBLIC_WIDGET_BUSINESS_ID) {
+      dataCopy.businessId = PUBLIC_WIDGET_BUSINESS_ID;
     }
     return apiCall('/api/knowledge/url', { method: 'POST', body: dataCopy });
   },

@@ -398,6 +398,56 @@
     @apply bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700;
   }
 
+/* Docs page typography and RTL helpers */
+.docs-typography {
+  direction: rtl;
+}
+.docs-typography p {
+  font-size: 1.05rem;
+  line-height: 1.9;
+  margin-bottom: 1rem;
+  color: hsl(var(--foreground));
+  text-align: right;
+}
+.docs-typography h3 {
+  font-size: 1.6rem;
+  line-height: 1.2;
+  margin-bottom: 0.6rem;
+  text-align: right;
+}
+.docs-typography h4,
+.docs-typography h5 {
+  text-align: right;
+}
+.docs-typography .max-prose {
+  max-width: 65ch;
+  margin-inline: auto;
+  text-align: right;
+}
+.docs-typography code,
+.docs-typography pre,
+.docs-typography .font-mono {
+  direction: ltr;
+  unicode-bidi: embed;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', 'Courier New', monospace;
+  font-size: 0.95rem;
+}
+
+@media (min-width: 640px) {
+  .docs-typography h3 {
+    font-size: 1.9rem;
+  }
+  .docs-typography p {
+    font-size: 1.1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .docs-typography h3 {
+    font-size: 2.25rem;
+  }
+}
+
   .status-error {
     @apply bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 border border-red-300 dark:border-red-700;
   }

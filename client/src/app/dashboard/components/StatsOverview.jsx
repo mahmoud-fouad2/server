@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Card,
   CardContent,
@@ -42,6 +42,54 @@ import {
   Brush,
 } from 'recharts';
 import SafeResponsiveContainer from '@/components/ui/SafeResponsiveContainer';
+
+// Improved donut chart for satisfaction distribution
+function DonutSatisfaction({ data = [] }) {
+  const total = data.reduce((s, d) => s + (d.value || 0), 0) || 0;
+  const maxItem = data.reduce((best, d) => (d.value > (best.value || 0) ? d : best), {});
+  const maxPercent = total ? Math.round(((maxItem.value || 0) / total) * 100) : 0;
+
+  return (
+    <div className="w-full h-full flex items-center justify-center">
+      <SafeResponsiveContainer width="100%" height="100%" minHeight={200}>
+        <RechartsPieChart>
+          <defs>
+            <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="6" stdDeviation="12" floodColor="#000" floodOpacity="0.08" />
+            </filter>
+          </defs>
+          <Pie
+            data={data}
+            cx="50%"
+            cy="50%"
+            startAngle={90}
+            endAngle={-270}
+            innerRadius={56}
+            outerRadius={92}
+            paddingAngle={4}
+            cornerRadius={8}
+            dataKey="value"
+            isAnimationActive={true}
+            animationDuration={900}
+          >
+            {data.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={entry.color || entry.fill || '#8884d8'} stroke="#ffffff" strokeWidth={1} />
+            ))}
+          </Pie>
+        </RechartsPieChart>
+      </SafeResponsiveContainer>
+
+      {/* Center overlay: total and dominant slice */}
+      <div className="absolute flex flex-col items-center pointer-events-none">
+        <div className="text-xs text-muted-foreground">ردود</div>
+        <div className="text-2xl font-semibold">{total}</div>
+        {maxItem && (
+          <div className="text-sm text-muted-foreground mt-1">{maxItem.name} · {maxPercent}%</div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 // Small helper component for safely revealing API Key
 function APIKeyBox({ user, copyToClipboard }) {
@@ -93,6 +141,7 @@ export default function StatsOverview({
   const syncId = 'dashboardSync';
   const [kbExpanded, setKbExpanded] = useState(false);
   const [topConversations, setTopConversations] = useState([]);
+  const [topConversationsExpanded, setTopConversationsExpanded] = useState(false);
   const [handoverCount, setHandoverCount] = useState(0);
 
   // Real-time updates from API
@@ -485,49 +534,13 @@ export default function StatsOverview({
         </CardHeader>
         <CardContent>
           <div className="h-[300px] flex items-center justify-center">
-            <SafeResponsiveContainer width="100%" height="100%" minHeight={200}>
-              <RechartsPieChart>
-                <Pie
-                data={satisfactionState && satisfactionState.length ? satisfactionState : satisfactionData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {satisfactionData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </RechartsPieChart>
-            </SafeResponsiveContainer>
+              <DonutSatisfaction data={satisfactionState && satisfactionState.length ? satisfactionState : satisfactionData} />
           </div>
         </CardContent>
           <CardContent>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div className="h-[300px]">
-              <SafeResponsiveContainer width="100%" height="100%" minHeight={200}>
-                <RechartsPieChart>
-                  <Pie
-                    data={satisfactionState && satisfactionState.length ? satisfactionState : satisfactionData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {(satisfactionState && satisfactionState.length ? satisfactionState : satisfactionData).map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color || entry.fill || '#8884d8'} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </RechartsPieChart>
-              </SafeResponsiveContainer>
+              <DonutSatisfaction data={satisfactionState && satisfactionState.length ? satisfactionState : satisfactionData} />
             </div>
 
             {/* Bar + Area combined section with brush */}
@@ -688,41 +701,54 @@ export default function StatsOverview({
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {kbList &&
-                (kbExpanded ? kbList : kbList.slice(0, 1)).map(kb => (
-                  <div
-                    key={kb.id}
-                    className="flex items-center justify-between p-3 bg-muted/30 border border-border rounded-lg"
-                  >
-                    <div className="flex items-center gap-3 overflow-hidden">
-                      <div className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0"></div>
-                      <div className="truncate">
-                        <p className="font-medium text-sm truncate">
-                          {kb.metadata?.filename || kb.metadata?.title ||
-                            (kb.content ? (kb.content.replace(/\s+/g, ' ').slice(0, 60) + (kb.content.length > 60 ? '...' : '')) : null) ||
-                            kb.metadata?.url ||
-                            'بدون عنوان'}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {kb.type === 'PDF'
-                            ? `تمت المعالجة · ${kb.metadata?.pageCount || '?'} صفحة`
-                            : `نشط · ${timeAgo(kb.updatedAt)}`}
-                        </p>
-                      </div>
+              {kbList && (
+                <div className="space-y-3">
+                  <motion.div layout className="space-y-2">
+                    <AnimatePresence initial={false}>
+                      {(kbExpanded ? kbList : kbList.slice(0, 1)).map(kb => (
+                        <motion.div
+                          layout
+                          key={kb.id}
+                          initial={{ opacity: 0, y: -6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -6 }}
+                          className="flex items-center justify-between p-3 bg-muted/30 border border-border rounded-lg"
+                        >
+                          <div className="flex items-center gap-3 overflow-hidden">
+                            <div className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0"></div>
+                            <div className="truncate">
+                              <p className="font-medium text-sm truncate">
+                                {kb.metadata?.filename || kb.metadata?.title ||
+                                  (kb.content ? (kb.content.replace(/\s+/g, ' ').slice(0, 60) + (kb.content.length > 60 ? '...' : '')) : null) ||
+                                  kb.metadata?.url ||
+                                  'بدون عنوان'}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {kb.type === 'PDF'
+                                  ? `تمت المعالجة · ${kb.metadata?.pageCount || '?'} صفحة`
+                                  : `نشط · ${timeAgo(kb.updatedAt)}`}
+                              </p>
+                            </div>
+                          </div>
+                          <span className="text-[10px] px-2 py-1 bg-muted rounded uppercase">
+                            {kb.type}
+                          </span>
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+                  </motion.div>
+
+                  {kbList.length > 1 && (
+                    <div className="pt-2">
+                      <button
+                        aria-expanded={kbExpanded}
+                        className="text-sm text-brand-500 hover:underline"
+                        onClick={() => setKbExpanded(!kbExpanded)}
+                      >
+                        {kbExpanded ? 'إخفاء' : `عرض الكل (${kbList.length})`}
+                      </button>
                     </div>
-                    <span className="text-[10px] px-2 py-1 bg-muted rounded uppercase">
-                      {kb.type}
-                    </span>
-                  </div>
-                ))}
-              {kbList && kbList.length > 1 && (
-                <div className="pt-2">
-                  <button
-                    className="text-sm text-brand-500 hover:underline"
-                    onClick={() => setKbExpanded(!kbExpanded)}
-                  >
-                    {kbExpanded ? 'إخفاء' : `عرض الكل (${kbList.length})`}
-                  </button>
+                  )}
                 </div>
               )}
               {(!kbList || kbList.length === 0) && (
@@ -755,22 +781,36 @@ export default function StatsOverview({
             <CardContent>
               <div className="space-y-3">
                 {topConversations && topConversations.length > 0 ? (
-                  topConversations.map(conv => (
-                    <div key={conv.id} className="p-3 bg-muted/20 rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <div className="font-medium text-sm">زائر #{conv.id.slice(-4)}</div>
-                        <div className="text-xs text-muted-foreground">{new Date(conv.updatedAt).toLocaleTimeString()}</div>
-                      </div>
-                      <div className="text-xs text-muted-foreground mt-1 truncate">{conv.messages?.[0]?.content || 'لا توجد رسائل'}</div>
+                  <div className="space-y-2">
+                    <AnimatePresence initial={false}>
+                      {(topConversationsExpanded ? topConversations : topConversations.slice(0, 3)).map(conv => (
+                        <motion.div key={conv.id} layout initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} className="p-3 bg-muted/20 rounded-lg">
+                          <div className="flex items-center justify-between">
+                            <div className="font-medium text-sm">زائر #{conv.id.slice(-4)}</div>
+                            <div className="text-xs text-muted-foreground">{new Date(conv.updatedAt).toLocaleTimeString()}</div>
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-1 truncate">{conv.messages?.[0]?.content || 'لا توجد رسائل'}</div>
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+
+                    <div className="pt-2 flex gap-2 items-center">
+                      <Button variant="outline" size="sm" className="flex-1" onClick={() => setActiveTab('conversations')}>عرض المحادثات</Button>
+                      {topConversations.length > 3 && (
+                        <button
+                          className="text-sm text-brand-500 hover:underline"
+                          onClick={() => setTopConversationsExpanded(!topConversationsExpanded)}
+                          aria-expanded={topConversationsExpanded}
+                        >
+                          {topConversationsExpanded ? `عرض أقل` : `عرض المزيد (${topConversations.length})`}
+                        </button>
+                      )}
+                      <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">{(topConversations || []).length} أحدث</div>
                     </div>
-                  ))
+                  </div>
                 ) : (
                   <div className="text-center text-muted-foreground py-6">لا توجد محادثات حديثة</div>
                 )}
-                <div className="pt-2 flex gap-2">
-                  <Button variant="outline" size="sm" className="flex-1" onClick={() => setActiveTab('conversations')}>عرض المحادثات</Button>
-                  <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">{(topConversations || []).length} أحدث</div>
-                </div>
               </div>
             </CardContent>
           </Card>

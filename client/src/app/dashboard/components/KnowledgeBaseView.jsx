@@ -70,6 +70,12 @@ export default function KnowledgeBaseView({ addNotification }) {
 
   const handleTextSubmit = async () => {
     if (!textInput) return;
+    // Client-side validation: match server rules (min 10 chars)
+    if (textInput.trim().length < 10) {
+      setTextErrors([{ field: 'text', message: 'النص قصير جداً — مطلوب 10 أحرف على الأقل' }]);
+      addNotification('النص قصير جداً — مطلوب 10 أحرف على الأقل', 'error');
+      return;
+    }
     setUploading(true);
     setTextErrors([]);
     try {
@@ -90,6 +96,8 @@ export default function KnowledgeBaseView({ addNotification }) {
           addNotification(`فشل: ${err.message || 'خطأ في التحقق من الصحة'}`, 'error');
         }
       } else {
+        // Log server validation shape for debugging
+        console.error('Knowledge addText error', err);
         addNotification(`فشل: ${err.message}`, 'error');
       }
     } finally {
@@ -99,6 +107,15 @@ export default function KnowledgeBaseView({ addNotification }) {
 
   const handleUrlSubmit = async () => {
     if (!urlInput) return;
+    // Basic client-side URL validation to prevent pointless 400s
+    try {
+      const test = new URL(urlInput);
+      if (!['http:', 'https:'].includes(test.protocol)) throw new Error('Invalid protocol');
+    } catch (e) {
+      setUrlErrors([{ field: 'url', message: 'رابط غير صالح' }]);
+      addNotification('رابط غير صالح', 'error');
+      return;
+    }
     setUploading(true);
     setUrlErrors([]);
     try {
@@ -116,6 +133,7 @@ export default function KnowledgeBaseView({ addNotification }) {
           addNotification(`فشل: ${err.message || 'خطأ في التحقق من الصحة'}`, 'error');
         }
       } else {
+        console.error('Knowledge addUrl error', err);
         addNotification(`فشل: ${err.message}`, 'error');
       }
     } finally {
