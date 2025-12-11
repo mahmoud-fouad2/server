@@ -31,45 +31,50 @@ export default function LoadingScreen({ onComplete }) {
   }, [onComplete]);
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-gradient-to-b from-gray-50 to-gray-100 dark:from-cosmic-950 dark:to-cosmic-900">
+    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 via-white to-brand-50 dark:from-cosmic-950 dark:via-cosmic-900 dark:to-brand-950 transition-all duration-500">
       {/* Background effects */}
       {isDark && (
         <div className="fixed inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute top-[-20%] left-[-10%] w-[60vw] h-[60vw] bg-brand-600/10 rounded-full blur-[150px] animate-pulse-slow" />
-          <div className="absolute bottom-[-20%] right-[-10%] w-[50vw] h-[50vw] bg-purple-600/10 rounded-full blur-[150px] animate-float" />
+          <div className="absolute -left-16 -top-16 w-[60vw] h-[60vw] bg-brand-600/6 rounded-full blur-[150px] animate-pulse" />
+          <div className="absolute -right-20 -bottom-12 w-[50vw] h-[50vw] bg-purple-600/6 rounded-full blur-[150px] animate-float" />
         </div>
       )}
 
-      {/* Logo */}
-      <div className="relative z-10 mb-8">
-        <FaheemAnimatedLogo size="medium" isLoading={true} showText={false} />
-      </div>
-      {/* Spacer to separate logo/dots from the progress bar */}
-      <div className="h-20" aria-hidden="true" />
-
-      {/* Progress Bar Container */}
-      <div className="relative z-50 w-64 sm:w-80">
-        {/* Progress Bar Background */}
-        <div className="h-2 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden shadow-inner">
-          {/* Progress Bar Fill */}
-          <div
-            className="h-full bg-gradient-to-r from-brand-600 to-brand-500 rounded-full transition-all duration-300 ease-out relative overflow-hidden"
-            style={{ width: `${progress}%` }}
-          >
-            {/* Shimmer Effect */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+      <div className="relative z-10 text-center w-full px-4">
+        {/* Circular badge for logo (larger) */}
+        <div className="mb-4">
+          <div className="inline-flex items-center justify-center rounded-full shadow-2xl p-4">
+            <FaheemAnimatedLogo size="large" isLoading={true} showText={false} />
           </div>
         </div>
 
-        {/* Progress Text */}
-        <div className="flex items-center justify-center mt-3 px-1">
-          <span className="text-2xl font-bold bg-gradient-to-r from-brand-600 to-brand-500 bg-clip-text text-transparent">
-            {Math.round(progress)}%
-          </span>
+        {/* Main loading label (animated shimmer) */}
+        <div className="mb-2">
+          <h2 className="text-2xl sm:text-3xl font-semibold">
+            <span className="bg-gradient-to-r from-indigo-500 via-purple-400 to-indigo-500 bg-clip-text text-transparent animate-shimmer">جاري التحميل</span>
+          </h2>
         </div>
-      </div>
 
-      {/* Loading Dots - Removed to avoid duplication with Logo */}
+        {/* Big Progress Bar (raised and slightly thicker) */}
+        <div className="w-full max-w-2xl mx-auto -mt-2 mb-2 px-6">
+          <div className="h-4 md:h-5 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden shadow-inner">
+            <div
+              className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 rounded-full transition-all duration-300 ease-out relative overflow-hidden"
+              style={{ width: `${Math.min(Math.max(progress, 2), 100)}%` }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+            </div>
+          </div>
+        </div>
+
+        {/* Percentage */}
+        <div className="mb-4">
+          <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{Math.round(progress)}%</span>
+        </div>
+
+        {/* Small helper text */}
+        <div className="text-sm text-gray-500 dark:text-gray-400">نرجو الانتظار قليلاً بينما نجهز الملفات والإعدادات</div>
+      </div>
     </div>
   );
 }

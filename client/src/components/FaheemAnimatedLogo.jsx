@@ -90,18 +90,18 @@ const FaheemAnimatedLogo = ({
     return <div className={currentSize.container} />;
   }
 
-    if (isLoading) {
+      if (isLoading) {
     return (
       // Show loading logo on mobile as well (important to surface branding during load)
       <div className={`flex flex-col items-center justify-center ${className} flex md:flex`}>
         <div className="relative">
-          <div className="absolute inset-0 bg-brand-500/16 rounded-full blur-3xl animate-pulse"></div>
-          <div className="relative w-44 h-44 sm:w-64 sm:h-64 flex items-center justify-center p-4 sm:p-6 bg-white/70 rounded-full overflow-hidden shadow-2xl border border-white/30">
+          <div className="absolute inset-0 rounded-full blur-3xl opacity-50" style={{ background: 'transparent' }} />
+          <div className="relative w-52 h-52 sm:w-72 sm:h-72 flex items-center justify-center p-5 sm:p-8 bg-[#f9fafb] rounded-full overflow-hidden shadow-2xl border border-white/30">
             <Image
               src="/logo2.png"
               alt="فهملي"
-              width={160}
-              height={160}
+              width={180}
+              height={180}
               className="object-contain relative z-10"
               priority
             />

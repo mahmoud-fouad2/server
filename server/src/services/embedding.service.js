@@ -221,7 +221,6 @@ async function generateEmbedding(text) {
       if (isValidEmbedding(out)) return out;
     }
   }
-  }
 
   // 5) Development / forced fake fallback — only if explicitly allowed or in dev without providers
   const FORCE_FAKE = process.env.FORCE_FAKE_EMBEDDINGS === 'true';
