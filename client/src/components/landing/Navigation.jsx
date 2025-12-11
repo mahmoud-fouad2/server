@@ -33,9 +33,9 @@ const Navigation = ({
               <Image
                 src="/logo.webp"
                 alt="فهملي"
-                width={scrolled ? 112 : 168}
-                height={56}
-                className={`${scrolled ? 'h-10 md:h-12' : 'h-14 md:h-16'} w-auto object-contain transition-all`}
+                width={scrolled ? 128 : 192}
+                height={64}
+                className={`${scrolled ? 'h-12 md:h-14' : 'h-16 md:h-20'} w-auto object-contain transition-all`}
               />
             </Link>
             {activeCountry === 'eg' && (
@@ -154,7 +154,7 @@ const Navigation = ({
         <div className={`absolute top-0 right-0 h-full w-80 max-w-[85vw] bg-white dark:bg-cosmic-900 shadow-2xl transform transition-transform duration-300 overflow-y-auto ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-white/10 sticky top-0 bg-white dark:bg-cosmic-900 z-10">
-            <Image src="/logo2.png" alt="فهملي" width={84} height={56} className="h-14 w-auto" />
+            <Image src="/logo2.png" alt="فهملي" width={100} height={64} className="h-16 w-auto" />
             <button onClick={() => setMobileMenuOpen(false)} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/5 transition-colors" aria-label="Close menu">
               <X size={24} className="text-gray-600 dark:text-gray-300" />
             </button>

@@ -34,6 +34,22 @@
 # If faheemly.com doesn't have the Next.js static files, redirect those
 # requests to the Render backend so CSS/JS/_next assets are served correctly.
 RewriteEngine On
+
+# Ensure JS and CSS are served with UTF-8 charset to avoid mojibake / garbled text
+<IfModule mod_headers.c>
+    <FilesMatch "\.(js|mjs)$">
+        Header set Content-Type "application/javascript; charset=UTF-8"
+    </FilesMatch>
+    <FilesMatch "\.css$">
+        Header set Content-Type "text/css; charset=UTF-8"
+    </FilesMatch>
+
+    # Allow fonts to be requested cross-origin (prevents some font failures)
+    <FilesMatch "\.(woff2|woff|ttf|eot|otf)$">
+        Header set Access-Control-Allow-Origin "*"
+    </FilesMatch>
+</IfModule>
+
 # Only proxy/redirect to Render when the requested file does NOT exist locally.
 # This allows you to upload `public_html/_next/...` to Bluehost and have those
 # files served directly, otherwise fall back to Render.
