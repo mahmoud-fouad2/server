@@ -262,10 +262,43 @@ export default function WidgetSettingsView({
               type="checkbox"
               checked={widgetConfig.preChatFormEnabled}
               onChange={e => {
-                setWidgetConfig({ ...widgetConfig, preChatFormEnabled: e.target.checked });
+                const checked = e.target.checked;
+                setWidgetConfig({ ...widgetConfig, preChatFormEnabled: checked });
+                // Save immediately to business settings so it takes effect without explicit save
+                try {
+                  businessApi.updatePreChatSettings({ preChatFormEnabled: checked });
+                } catch (err) {
+                  // Notify user if immediate save fails, but do not block UI
+                  addNotification('فشل حفظ حالة نموذج ما قبل المحادثة', 'error');
+                }
               }}
               className="toggle"
             />
+          </div>
+
+          {/* Make the toggle more visible in a quick widget customization panel */}
+          <div className="p-3 border rounded-lg bg-muted/50">
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="text-sm font-medium">تفعيل نموذج ما قبل المحادثة</label>
+                <p className="text-xs text-muted-foreground">تفعيل مباشر لعرض نموذج ما قبل المحادثة في الويدجت</p>
+              </div>
+              <input
+                type="checkbox"
+                checked={widgetConfig.preChatFormEnabled}
+                onChange={async e => {
+                  const checked = e.target.checked;
+                  setWidgetConfig({ ...widgetConfig, preChatFormEnabled: checked });
+                  try {
+                    await businessApi.updatePreChatSettings({ preChatFormEnabled: checked });
+                    addNotification('تم تحديث حالة نموذج ما قبل المحادثة');
+                  } catch (err) {
+                    addNotification('فشل تحديث حالة نموذج ما قبل المحادثة', 'error');
+                  }
+                }}
+                className="toggle"
+              />
+            </div>
           </div>
 
           <Button

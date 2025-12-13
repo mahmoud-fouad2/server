@@ -635,7 +635,25 @@
 
                 if (config.customIconUrl) {
                     const avatarEl = document.getElementById('fahimo-bot-avatar');
-                    avatarEl.innerHTML = `<img src="${config.customIconUrl}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; display:block;" alt="Bot">`;
+                    const img = document.createElement('img');
+                    img.src = config.customIconUrl;
+                    img.alt = 'Bot';
+                    img.style.width = '100%';
+                    img.style.height = '100%';
+                    img.style.borderRadius = '50%';
+                    img.style.objectFit = 'cover';
+                    img.style.display = 'block';
+                    img.onerror = function() {
+                        // Fallback: remove broken image and show initial letter or default style
+                        try {
+                            img.remove();
+                        } catch (e) {}
+                        avatarEl.style.background = 'rgba(255,255,255,0.12)';
+                        avatarEl.innerText = (botName && botName[0]) ? botName[0] : 'F';
+                        console.warn('[Fahimo] custom icon failed to load, using fallback');
+                    };
+                    avatarEl.innerHTML = '';
+                    avatarEl.appendChild(img);
                     avatarEl.style.background = 'transparent';
                 }
 
@@ -910,7 +928,41 @@
         }
 
 
-        launcher.onclick = () => {
+        // Support both click and touch on mobile to toggle the launcher
+        let touchHandled = false;
+        function toggleLauncher(e) {
+            if (e && e.type === 'touchstart') {
+                touchHandled = true;
+            } else if (touchHandled && e && e.type === 'click') {
+                // prevent duplicate click after touch
+                touchHandled = false;
+                return;
+            }
+
+            // If the chat is already open, clicking the launcher should close it
+            if (isOpen) {
+                isOpen = false;
+                chatWindow.classList.remove('fahimo-open');
+                // hide prechat form if visible
+                if (prechatFormVisible) hidePrechatForm();
+                return;
+            }
+
+            // If prechat is enabled and there's no conversation yet, show the form if not submitted
+            if (prechatEnabled && !conversationId) {
+                const prechatSubmitted = localStorage.getItem(`fahimo_prechat_${businessId}_${sessionId}`);
+                if (!prechatSubmitted) {
+                    showPrechatForm();
+                    return;
+                }
+            }
+
+            // Otherwise, open the chat window
+            openChat();
+        }
+
+        launcher.onclick = toggleLauncher;
+        launcher.ontouchstart = toggleLauncher;
             // If the chat is already open, clicking the launcher should close it
             if (isOpen) {
                 isOpen = false;
@@ -932,7 +984,15 @@
             // Otherwise, open the chat window
             openChat();
         };
-        closeBtn.onclick = () => {
+        // close handler: support touchstart and click
+        function closeHandler(e) {
+            if (e && e.type === 'touchstart') touchHandled = true;
+            isOpen = false;
+            chatWindow.classList.remove('fahimo-open');
+            if (prechatFormVisible) hidePrechatForm();
+        }
+        closeBtn.onclick = closeHandler;
+        closeBtn.ontouchstart = closeHandler;
             isOpen = false;
             chatWindow.classList.remove('fahimo-open');
             if (prechatFormVisible) hidePrechatForm();
