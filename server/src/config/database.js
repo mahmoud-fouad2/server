@@ -1,4 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
+const logger = require('../utils/logger');
 
 // Database configuration with connection pooling and optimization
 // If `PGBOUNCER_URL` is set, prefer it so connections are routed through pgbouncer.
@@ -43,23 +44,7 @@ async function testConnection() {
   }
 }
 
-// Graceful shutdown
-// process.on('SIGINT', async () => {
-//   console.log('[Database] Disconnecting...');
-//   await prisma.$disconnect();
-//   process.exit(0);
-// });
-
-// process.on('SIGTERM', async () => {
-//   console.log('[Database] Disconnecting...');
-//   await prisma.$disconnect();
-//   process.exit(0);
-// });
-
-// Initialize connection test
-// Moved to index.js to ensure environment variables are loaded
-// if (process.env.NODE_ENV !== 'test') {
-//   testConnection();
-// }
+// Note: Graceful shutdown is handled in index.js
+// testConnection is called from index.js to ensure environment variables are loaded
 
 module.exports = prisma;

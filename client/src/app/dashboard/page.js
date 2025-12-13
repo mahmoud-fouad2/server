@@ -34,6 +34,7 @@ import TeamView from './components/TeamView';
 import SettingsView from './components/SettingsView';
 import PlaygroundView from './components/PlaygroundView';
 import VisitorAnalytics from './components/VisitorAnalytics';
+import CrmView from './components/CrmView';
 import DashboardTour, { useDashboardTour } from './components/DashboardTour';
 
 function DashboardContent() {
@@ -331,6 +332,14 @@ function DashboardContent() {
           {activeTab === 'playground' && <PlaygroundView key="playground" />}
 
           {activeTab === 'analytics' && <VisitorAnalytics key="analytics" />}
+
+          {activeTab === 'crm' && (
+            <CrmView
+              key="crm"
+              user={user}
+              addNotification={addNotification}
+            />
+          )}
 
           {activeTab === 'subscription' && (
             <motion.div

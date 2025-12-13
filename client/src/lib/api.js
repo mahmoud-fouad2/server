@@ -300,3 +300,20 @@ export const telegramApi = {
   setup: token =>
     apiCall('/api/telegram/setup', { method: 'POST', body: { token } }),
 };
+
+export const crmApi = {
+  getLeads: (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiCall(`/api/crm/leads${queryString ? `?${queryString}` : ''}`);
+  },
+  createLead: data => apiCall('/api/crm/leads', { method: 'POST', body: data }),
+  exportLeads: (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiCall(`/api/crm/export${queryString ? `?${queryString}` : ''}`, {
+      responseType: 'blob'
+    });
+  },
+  toggleCrm: enabled =>
+    apiCall('/api/crm/toggle', { method: 'POST', body: { enabled } }),
+  getCrmStatus: () => apiCall('/api/crm/status'),
+};

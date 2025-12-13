@@ -1,17 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const rateLimit = require('express-rate-limit');
-const sanitizeHtml = require('sanitize-html');
 const { authenticateToken } = require('../middleware/auth');
-const prisma = require('../config/database');
-const cacheService = require('../services/cache.service');
-const visitorSession = require('../services/visitor-session.service');
 const { validateRating, validateChatMessage } = require('../middleware/validation');
-const aiService = require('../services/ai.service');
-const vectorSearch = require('../services/vector-search.service');
-const responseValidator = require('../services/response-validator.service');
 const chatController = require('../controllers/chat.controller');
-const logger = require('../utils/logger');
 
 // Rate limiter for public chat endpoint
 const chatLimiter = rateLimit({
@@ -21,6 +13,21 @@ const chatLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+
+// Rate limiter for pre-chat endpoints
+const preChatLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // 10 requests per 15 minutes per IP
+  message: 'Too many pre-chat requests, please try again later',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Check if pre-chat form is required
+router.get('/pre-chat/:businessId', preChatLimiter, chatController.getPreChatForm);
+
+// Submit pre-chat form data
+router.post('/pre-chat/:businessId', preChatLimiter, chatController.submitPreChatForm);
 
 router.post('/message', chatLimiter, validateChatMessage, chatController.sendMessage);
 

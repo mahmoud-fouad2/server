@@ -18,9 +18,12 @@ dotenv.config();
 
 // Set default CLIENT_URL if not provided (before validation)
 if (!process.env.CLIENT_URL) {
-  process.env.CLIENT_URL = process.env.NODE_ENV === 'production' 
-    ? 'https://fahimo-api.onrender.com' 
-    : 'https://faheemly.com';
+  if (process.env.NODE_ENV === 'production') {
+    logger.error('CLIENT_URL must be set in production environment');
+    process.exit(1);
+  }
+  process.env.CLIENT_URL = 'https://faheemly.com';
+  logger.warn('CLIENT_URL not set, using default (development only)');
 }
 
 const isTestEnvironment = process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID !== undefined;
@@ -253,7 +256,7 @@ try {
   const adminRoutes = require('./routes/admin.routes');
   app.use('/api/admin', adminRoutes);
 } catch (e) {
-  console.warn('Admin routes not available:', e?.message || e);
+  logger.warn('Admin routes not available', { error: e?.message || e });
 }
 
 // Admin Extended routes (Phase 2: User Management & System Control)
@@ -282,7 +285,7 @@ try {
   const proxyRoutes = require('./routes/proxy.routes');
   app.use('/api/proxy', proxyRoutes);
 } catch (e) {
-  console.warn('Proxy routes not available:', e?.message || e);
+  logger.warn('Proxy routes not available', { error: e?.message || e });
 }
 
 // Widget routes (config endpoint used by client widget)
@@ -290,7 +293,7 @@ try {
   const widgetRoutes = require('./routes/widget.routes');
   app.use('/api/widget', widgetRoutes);
 } catch (e) {
-  console.warn('Widget routes not available:', e?.message || e);
+  logger.warn('Widget routes not available', { error: e?.message || e });
 }
 
 // Analytics routes
@@ -298,7 +301,7 @@ try {
   const analyticsRoutes = require('./routes/analytics.routes');
   app.use('/api/analytics', analyticsRoutes);
 } catch (e) {
-  console.warn('Analytics routes not available:', e?.message || e);
+  logger.warn('Analytics routes not available', { error: e?.message || e });
 }
 
 // Visitor routes
@@ -306,7 +309,7 @@ try {
   const visitorRoutes = require('./routes/visitor.routes');
   app.use('/api/visitor', visitorRoutes);
 } catch (e) {
-  console.warn('Visitor routes not available:', e?.message || e);
+  logger.warn('Visitor routes not available', { error: e?.message || e });
 }
 
 // Rating routes
@@ -314,7 +317,15 @@ try {
   const ratingRoutes = require('./routes/rating.routes');
   app.use('/api/rating', ratingRoutes);
 } catch (e) {
-  console.warn('Rating routes not available:', e?.message || e);
+  logger.warn('Rating routes not available', { error: e?.message || e });
+}
+
+// CRM routes
+try {
+  const crmRoutes = require('./routes/crm.routes');
+  app.use('/api/crm', crmRoutes);
+} catch (e) {
+  logger.warn('CRM routes not available', { error: e?.message || e });
 }
 
 // Health endpoint (JSON) to let frontends assert health without parsing HTML
@@ -337,7 +348,7 @@ app.use('/api', (req, res) => {
   try {
     logger.warn('Unmatched API request', { method: req.method, path: req.originalUrl, ip: req.ip });
   } catch (e) {
-    console.warn('Unmatched API request', req.method, req.originalUrl);
+    logger.warn('Unmatched API request', { method: req.method, path: req.originalUrl, error: e?.message });
   }
 
   res.status(404).json({ success: false, error: { message: 'API route not found' } });
@@ -489,9 +500,10 @@ if (!isTestEnvironment) {
       serverInstance = server;
 
       logger.info(`Fahimo Server is running on port ${port}`);
-      logger.info('"The one who understands you" is ready to serve.');
-      console.log('Server listening:', server.listening);
-      console.log('Server address:', server.address());
+      logger.info('"The one who understands you" is ready to serve.', { 
+        listening: server.listening, 
+        address: server.address() 
+      });
 
       try {
         // Validate environment before starting
@@ -515,7 +527,7 @@ if (!isTestEnvironment) {
         }
 
         await checkServicesStatus();
-        console.log('✅ Startup functions completed');
+        logger.info('✅ Startup functions completed');
 
         // Start system monitoring (every 5 minutes)
         const monitor = require('./utils/monitor');
@@ -530,20 +542,20 @@ if (!isTestEnvironment) {
         // Also resume stdin to keep alive
         process.stdin.resume();
 
-        console.log('🚀 Server fully operational and stable');
+        logger.info('🚀 Server fully operational and stable');
       } catch (error) {
-        console.error('❌ Startup error:', error);
+        logger.error('❌ Startup error', error);
         await shutdown(1);
       }
 
       server.on('close', () => logger.info('Server closed'));
-      process.on('exit', (code) => console.log('Process exiting with code', code));
+      process.on('exit', (code) => logger.info('Process exiting', { code }));
     } catch (err) {
-      console.error('Failed to start server:', err);
+      logger.error('Failed to start server', err);
       await shutdown(1);
     }
   }).catch(async err => {
-    console.error('Failed to connect to database:', err);
+    logger.error('Failed to connect to database', err);
     await shutdown(1);
   });
 } else {

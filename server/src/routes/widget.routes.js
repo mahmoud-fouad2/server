@@ -97,10 +97,12 @@ router.get('/config/:businessId', async (req, res) => {
 
     res.json({
       name: business.name,
-      widgetConfig: config
+      widgetConfig: config,
+      preChatFormEnabled: business.preChatFormEnabled || false
     });
   } catch (error) {
-    console.error('Widget Config Error:', error);
+    const logger = require('../utils/logger');
+    logger.error('Widget Config Error', error);
     res.status(500).json({ error: 'Failed to fetch config' });
   }
 });
@@ -131,7 +133,8 @@ router.post('/config', authenticateToken, async (req, res) => {
       widgetConfig: JSON.parse(updatedBusiness.widgetConfig)
     });
   } catch (error) {
-    console.error('Update Widget Config Error:', error);
+    const logger = require('../utils/logger');
+    logger.error('Update Widget Config Error', error);
     res.status(500).json({ error: 'Failed to update widget config' });
   }
 });
@@ -178,7 +181,8 @@ router.post('/upload-icon', authenticateToken, upload.single('icon'), async (req
       iconUrl: iconUrl
     });
   } catch (error) {
-    console.error('Upload Icon Error:', error);
+    const logger = require('../utils/logger');
+    logger.error('Upload Icon Error', error);
     res.status(500).json({ error: 'Failed to upload icon' });
   }
 });

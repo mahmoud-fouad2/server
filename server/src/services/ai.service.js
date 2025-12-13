@@ -1,5 +1,8 @@
 const axios = require('axios');
 const logger = require('../utils/logger');
+const intentDetection = require('./intent-detection.service');
+const conversationState = require('./conversation-state.service');
+const kbPreparation = require('./kb-preparation.service');
 
 /**
  * Hybrid AI Service - Intelligent Load Balancing Across Free Tier Providers
@@ -146,7 +149,7 @@ function isProviderAvailable(providerKey, providerConfig = getProviderConfig(pro
   if (limits.tokensPerMinute) {
     const tokenCount = tracker.tokens.reduce((sum, t) => sum + t.count, 0);
     if (tokenCount >= limits.tokensPerMinute) {
-      console.log(`[HybridAI] ${provider.name} token limit reached: ${tokenCount}/${limits.tokensPerMinute} tokens/min`);
+      logger.warn(`[HybridAI] ${provider.name} token limit reached`, { tokenCount, limit: limits.tokensPerMinute });
       return false;
     }
   }
@@ -496,136 +499,223 @@ async function generateResponseWithProvider(providerKey, messages, options = {})
 }
 
 /**
+ * Generate greeting message based on business and state
+ */
+function generateGreeting(business, state) {
+  const businessName = business.name || 'العميل';
+  const personality = business.widgetConfig?.personality || business.botTone || 'friendly';
+  const welcomeMessage = business.widgetConfig?.welcomeMessage;
+  
+  if (welcomeMessage) {
+    return welcomeMessage;
+  }
+  
+  if (personality === 'formal') {
+    return `مرحباً بك في ${businessName}. كيف يمكنني مساعدتك اليوم؟`;
+  } else if (personality === 'fun') {
+    return `مرحباً! 🎉 أهلاً وسهلاً بك في ${businessName}. كيف يمكنني مساعدتك؟`;
+  } else {
+    return `مرحباً! أهلاً وسهلاً بك في ${businessName}. كيف يمكنني مساعدتك اليوم؟`;
+  }
+}
+
+/**
  * Generate a chat response with full context management (System Prompt, History, Knowledge)
  * @param {string} message - User message
  * @param {Object} business - Business context (name, tone, etc.)
  * @param {Array} history - Conversation history
  * @param {Array} knowledgeBase - Relevant knowledge chunks
+ * @param {string} conversationId - Optional conversation ID for state tracking
  */
-async function generateChatResponse(message, business, history = [], knowledgeBase = []) {
-  // 1. Construct System Prompt
-  let systemPrompt = `You are the AI assistant for ${business.name}. `;
+async function generateChatResponse(message, business, history = [], knowledgeBase = [], conversationId = null) {
+  // 1. Detect intent and get conversation state
+  const intent = intentDetection.detectIntent(message, history);
+  const state = conversationId 
+    ? await conversationState.getState(conversationId)
+    : conversationState.createInitialState();
   
-  if (business.activityType) {
-    // Enhanced business type descriptions for better AI context
-    const businessTypeDescriptions = {
-      // Food & Beverage
-      'RESTAURANT': 'restaurant serving food and beverages with a focus on customer satisfaction and menu recommendations',
-      'CAFE': 'cafe offering coffee, tea, and light meals in a relaxed atmosphere',
-      'BAKERY': 'bakery specializing in fresh baked goods, pastries, and desserts',
-      
-      // Healthcare
-      'CLINIC': 'medical clinic providing healthcare services and patient care',
-      'HOSPITAL': 'hospital offering comprehensive medical care and emergency services',
-      'PHARMACY': 'pharmacy dispensing medications and providing health consultations',
-      'DENTAL': 'dental clinic specializing in oral health and dental procedures',
-      
-      // Retail & Shopping
-      'RETAIL': 'retail store offering various products and shopping assistance',
-      'FASHION': 'fashion boutique offering clothing and style consultations',
-      'ELECTRONICS': 'electronics store providing tech products and gadget advice',
-      'JEWELRY': 'jewelry store offering fine jewelry and luxury accessories',
-      'FURNITURE': 'furniture store helping with home and office furnishings',
-      
-      // Business & Services
-      'COMPANY': 'business providing professional services and corporate solutions',
-      'CONSULTING': 'consulting firm offering expert advice and strategic guidance',
-      'LEGAL': 'law firm providing legal services and legal consultations',
-      'ACCOUNTING': 'accounting firm offering financial and tax services',
-      'REALESTATE': 'real estate agency helping with property sales and rentals',
-      'IT': 'IT company providing technology solutions and support',
-      'SOFTWARE': 'software company developing custom applications and solutions',
-      'DIGITAL': 'digital agency offering online marketing and web services',
-      'MARKETING': 'marketing agency providing promotional and advertising services',
-      'DESIGN': 'design studio creating visual and creative solutions',
-      'PHOTOGRAPHY': 'photography studio offering professional photo services',
-      'EVENTS': 'event planning company organizing weddings and corporate events',
-      'ECOMMERCE': 'e-commerce platform selling products online',
-      'DROPSHIPPING': 'dropshipping business fulfilling orders from suppliers',
-      'MAINTENANCE': 'maintenance company providing repair and upkeep services',
-      'SECURITY': 'security company offering protection and surveillance services',
-      'TELECOM': 'telecommunications company providing communication services',
-      'ARCHITECTURE': 'architecture firm designing buildings and spaces',
-      'INTERIOR': 'interior design company creating beautiful living spaces',
-      'CONSTRUCTION': 'construction company building and renovating properties',
-      
-      // Education
-      'EDUCATION': 'educational institution providing learning and training programs',
-      'SCHOOL': 'school offering primary or secondary education',
-      'UNIVERSITY': 'university providing higher education and research',
-      
-      // Finance
-      'BANK': 'bank offering financial services and banking solutions',
-      'INSURANCE': 'insurance company providing risk management and coverage',
-      'INVESTMENT': 'investment firm helping with financial planning and investments',
-      
-      // Hospitality & Tourism
-      'HOTEL': 'hotel providing accommodation and hospitality services',
-      'TRAVEL': 'travel agency offering vacation planning and bookings',
-      'TOURISM': 'tourism company organizing tours and travel experiences',
-      
-      // Beauty & Wellness
-      'SALON': 'beauty salon offering hair, makeup, and grooming services',
-      'SPA': 'spa providing relaxation and wellness treatments',
-      'GYM': 'gym offering fitness and exercise facilities',
-      
-      // Automotive & Transport
-      'AUTOMOTIVE': 'automotive dealership selling and servicing vehicles',
-      'CARMAINTENANCE': 'auto repair shop providing vehicle maintenance services',
-      'LOGISTICS': 'logistics company managing transportation and supply chain',
-      
-      // Other
-      'OTHER': 'business providing specialized services and solutions'
+  const updatedState = conversationState.updateState(state, intent);
+  
+  // 2. Handle special intents before KB search
+  if (intent.intent === 'GREETING' && updatedState.isFirstMessage) {
+    const greeting = generateGreeting(business, updatedState);
+    return {
+      response: greeting,
+      tokensUsed: 0,
+      model: 'greeting',
+      intent: intent.intent,
+      knowledgeBaseUsed: false
     };
-    
-    const businessDescription = businessTypeDescriptions[business.activityType] || `${business.activityType.toLowerCase()} business`;
-    systemPrompt += `This is a ${businessDescription}. `;
   }
   
-  // Use personality from widgetConfig if available, otherwise use botTone
+  if (intent.intent === 'PROFANITY') {
+    return {
+      response: `أفهم أنك محبط. دعني أوصلك بفريقنا للحصول على مساعدة أفضل.`,
+      tokensUsed: 0,
+      model: 'deflection',
+      intent: intent.intent,
+      knowledgeBaseUsed: false
+    };
+  }
+  
+  if (intent.intent === 'OFF_TOPIC') {
+    return {
+      response: `أنا هنا لمساعدتك بخصوص ${business.name || 'خدماتنا'}. كيف يمكنني مساعدتك؟`,
+      tokensUsed: 0,
+      model: 'redirect',
+      intent: intent.intent,
+      knowledgeBaseUsed: false
+    };
+  }
+  
+  // 3. Prepare knowledge base chunks (summarize, limit to 3)
+  const preparedKB = kbPreparation.prepareKnowledgeChunks(knowledgeBase, 3);
+  const hasKnowledgeBase = preparedKB.length > 0;
+  
+  // 4. Construct System Prompt (SIMPLIFIED - no contradictions)
+  const businessName = business.name || 'العميل';
   const personality = business.widgetConfig?.personality || business.botTone || 'friendly';
-  systemPrompt += `Your personality should be ${personality}. `;
   
+  // Build business-specific context
+  let businessContext = '';
+  if (business.activityType) {
+    const businessTypeDescriptions = {
+      'RESTAURANT': 'مطعم',
+      'CAFE': 'مقهى',
+      'BAKERY': 'مخبز',
+      'CLINIC': 'عيادة طبية',
+      'HOSPITAL': 'مستشفى',
+      'PHARMACY': 'صيدلية',
+      'DENTAL': 'عيادة أسنان',
+      'RETAIL': 'متجر',
+      'FASHION': 'متجر أزياء',
+      'ELECTRONICS': 'متجر إلكترونيات',
+      'JEWELRY': 'متجر مجوهرات',
+      'FURNITURE': 'متجر أثاث',
+      'COMPANY': 'شركة',
+      'CONSULTING': 'شركة استشارات',
+      'LEGAL': 'مكتب محاماة',
+      'ACCOUNTING': 'مكتب محاسبة',
+      'REALESTATE': 'مكتب عقارات',
+      'IT': 'شركة تقنية',
+      'SOFTWARE': 'شركة برمجيات',
+      'DIGITAL': 'وكالة رقمية',
+      'MARKETING': 'وكالة تسويق',
+      'DESIGN': 'استوديو تصميم',
+      'PHOTOGRAPHY': 'استوديو تصوير',
+      'EVENTS': 'شركة فعاليات',
+      'ECOMMERCE': 'متجر إلكتروني',
+      'DROPSHIPPING': 'متجر دروب شيبينج',
+      'MAINTENANCE': 'شركة صيانة',
+      'SECURITY': 'شركة أمن',
+      'TELECOM': 'شركة اتصالات',
+      'ARCHITECTURE': 'مكتب هندسة معمارية',
+      'INTERIOR': 'شركة ديكور داخلي',
+      'CONSTRUCTION': 'شركة بناء',
+      'EDUCATION': 'مؤسسة تعليمية',
+      'SCHOOL': 'مدرسة',
+      'UNIVERSITY': 'جامعة',
+      'BANK': 'بنك',
+      'INSURANCE': 'شركة تأمين',
+      'INVESTMENT': 'شركة استثمار',
+      'HOTEL': 'فندق',
+      'TRAVEL': 'وكالة سفر',
+      'TOURISM': 'شركة سياحة',
+      'SALON': 'صالون تجميل',
+      'SPA': 'سبا',
+      'GYM': 'نادي رياضي',
+      'AUTOMOTIVE': 'معرض سيارات',
+      'CARMAINTENANCE': 'ورشة صيانة سيارات',
+      'LOGISTICS': 'شركة شحن',
+      'OTHER': 'شركة'
+    };
+    businessContext = businessTypeDescriptions[business.activityType] || 'شركة';
+  }
+
+  // Personality instructions
+  let personalityInstructions = '';
   if (personality === 'friendly') {
-    systemPrompt += 'Be warm, approachable, and use friendly language. ';
+    personalityInstructions = 'كن ودوداً ومرحباً، استخدم لغة بسيطة وواضحة.';
   } else if (personality === 'formal') {
-    systemPrompt += 'Be professional, polite, and use formal business language. ';
+    personalityInstructions = 'كن محترفاً ورسمياً، استخدم لغة أعمال رسمية.';
   } else if (personality === 'fun') {
-    systemPrompt += 'Be playful, engaging, and use fun, lighthearted language. ';
-  }
-
-  // Add Time Context
-  if (business.currentDate) {
-    systemPrompt += `\nCurrent Date and Time: ${business.currentDate}. Use this for any time-relative questions (e.g., "is the store open now?"). `;
-  }
-  
-  systemPrompt += `\n\nIMPORTANT INSTRUCTIONS:
-  1. You represent ${business.name}. Never identify as an AI model.
-  2. STRICTLY answer in the SAME language as the user's message. If they speak Arabic, answer in Arabic.
-  3. Use Markdown formatting (lists, bold, links) to make your response readable and professional.
-  4. If the answer is NOT in the provided Knowledge Base, say you don't know or offer to connect them with a human agent. DO NOT fabricate information.
-  5. When the user says "thank you", "bye", or indicates the problem is solved, append "|RATING_REQUEST|" to the end of your response to trigger the feedback form.
-  `;
-  
-  // Add Knowledge Base Context
-  if (knowledgeBase && knowledgeBase.length > 0) {
-    systemPrompt += `\n\nUse the following knowledge base to answer the user's question:\n\nKnowledge Base:\n`;
-    knowledgeBase.forEach((chunk, index) => {
-      systemPrompt += `${index + 1}. ${chunk.content}\n`;
-    });
+    personalityInstructions = 'كن مرحاً وممتعاً، استخدم لغة خفيفة ومشوقة.';
   } else {
-    systemPrompt += `\n\nNo specific knowledge base found for this query. Rely on general knowledge but be cautious.`;
+    personalityInstructions = 'كن ودوداً ومهذباً.';
   }
 
-  // 2. Construct Messages Array
+  // Time context
+  const timeContext = business.currentDate 
+    ? `\nالتاريخ والوقت الحالي: ${business.currentDate}. استخدم هذا للإجابة على أسئلة الوقت (مثل: "المحل مفتوح الآن؟").`
+    : '';
+
+  // 5. Build simplified, non-contradictory system prompt
+  let knowledgeContext = '';
+  if (hasKnowledgeBase) {
+    const formattedKB = kbPreparation.formatForPrompt(preparedKB);
+    knowledgeContext = `
+معلومات من قاعدة المعرفة:
+${formattedKB}
+
+استخدم هذه المعلومات للإجابة على سؤال المستخدم. إذا لم تجد الإجابة في المعلومات أعلاه، قل بصراحة: "عذراً، لا أملك هذه المعلومة. هل تريد التواصل مع فريق ${businessName} مباشرة؟"
+`;
+  } else {
+    knowledgeContext = `
+لا توجد معلومات في قاعدة المعرفة. كن صريحاً مع المستخدم واقترح التواصل مع فريق ${businessName}.
+`;
+  }
+
+  // 6. Build final system prompt (SIMPLIFIED - 3-4 clear rules only)
+  const systemPrompt = `أنت مساعد ${businessName}${businessContext ? ` (${businessContext})` : ''}.
+
+${personalityInstructions}
+${timeContext}
+
+${knowledgeContext}
+
+قواعد:
+1. أجب بنفس لغة المستخدم (عربي أو إنجليزي)
+2. كن مختصراً (2-3 جمل كحد أقصى)
+3. استخدم Markdown للتنسيق
+4. عند إنهاء المحادثة، أضف "|RATING_REQUEST|" في النهاية
+5. لا تذكر أنك AI - أنت فقط مساعد ${businessName}
+`;
+
+  // 2. Construct Messages Array with enhanced context
   const messages = [
     { role: 'system', content: systemPrompt },
     ...history,
     { role: 'user', content: message }
   ];
 
-  // 3. Call Hybrid AI
-  const result = await generateResponse(messages);
+  // 7. Adjust temperature based on intent and KB availability
+  let temperature = 0.7; // Default
+  if (hasKnowledgeBase) {
+    temperature = 0.5; // More focused when KB exists (not too low to avoid robotic)
+  } else if (intent.intent === 'GREETING') {
+    temperature = 0.8; // More creative for greetings
+  }
+  
+  // 8. Call Hybrid AI with optimized options
+  const options = {
+    temperature,
+    maxTokens: 400, // Reduced from 500 for more concise responses
+    topP: 0.9
+  };
+
+  const result = await generateResponse(messages, options);
+  
+  // 9. Add metadata
+  result.knowledgeBaseUsed = hasKnowledgeBase;
+  result.knowledgeBaseCount = preparedKB.length;
+  result.intent = intent.intent;
+  result.intentConfidence = intent.confidence;
+  result.conversationStage = updatedState.stage;
+  
+  // 10. Add rating request if closing
+  if (intent.intent === 'CLOSING' && !result.response.includes('|RATING_REQUEST|')) {
+    result.response += ' |RATING_REQUEST|';
+  }
   
   return result;
 }

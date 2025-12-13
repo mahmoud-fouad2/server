@@ -1,5 +1,6 @@
 const { createClient } = require('redis');
 const crypto = require('crypto');
+const logger = require('../utils/logger');
 
 /**
  * Redis Cache Service for AI Responses
@@ -23,7 +24,7 @@ class RedisCacheService {
    */
   async connect() {
     if (!this.isEnabled) {
-      console.log('[RedisCache] Redis URL not configured, caching disabled');
+      logger.info('[RedisCache] Redis URL not configured, caching disabled');
       return;
     }
 
@@ -37,7 +38,7 @@ class RedisCacheService {
         socket: {
           reconnectStrategy: (retries) => {
             if (retries > 10) {
-              console.error('[RedisCache] Max reconnection attempts reached');
+              logger.error('[RedisCache] Max reconnection attempts reached');
               return new Error('Redis reconnection failed');
             }
             return Math.min(retries * 100, 3000); // Exponential backoff
@@ -46,24 +47,24 @@ class RedisCacheService {
       });
 
       this.client.on('error', (err) => {
-        console.error('[RedisCache] Redis Client Error:', err);
+        logger.error('[RedisCache] Redis Client Error', err);
         this.isConnected = false;
       });
 
       this.client.on('connect', () => {
-        console.log('[RedisCache] ✅ Connected to Redis');
+        logger.info('[RedisCache] ✅ Connected to Redis');
         this.isConnected = true;
       });
 
       this.client.on('disconnect', () => {
-        console.log('[RedisCache] ⚠️ Disconnected from Redis');
+        logger.warn('[RedisCache] ⚠️ Disconnected from Redis');
         this.isConnected = false;
       });
 
       await this.client.connect();
 
     } catch (error) {
-      console.error('[RedisCache] Failed to connect:', error);
+      logger.error('[RedisCache] Failed to connect', error);
       this.isEnabled = false;
     }
   }
@@ -102,7 +103,7 @@ class RedisCacheService {
       const cached = await this.client.get(key);
 
       if (cached) {
-        console.log('[RedisCache] 🎯 Cache HIT for query');
+        logger.debug('[RedisCache] 🎯 Cache HIT for query');
         const data = JSON.parse(cached);
         
         // Update hit count (separate key for stats)
@@ -111,11 +112,11 @@ class RedisCacheService {
         return data;
       }
 
-      console.log('[RedisCache] ❌ Cache MISS for query');
+      logger.debug('[RedisCache] ❌ Cache MISS for query');
       return null;
 
     } catch (error) {
-      console.error('[RedisCache] Get error:', error);
+      logger.error('[RedisCache] Get error', error);
       return null;
     }
   }
@@ -144,12 +145,12 @@ class RedisCacheService {
       });
 
       await this.client.setEx(key, ttl, data);
-      console.log('[RedisCache] 💾 Cached response with TTL:', ttl);
+      logger.debug('[RedisCache] 💾 Cached response with TTL', { ttl });
       
       return true;
 
     } catch (error) {
-      console.error('[RedisCache] Set error:', error);
+      logger.error('[RedisCache] Set error', error);
       return false;
     }
   }
@@ -180,7 +181,7 @@ class RedisCacheService {
             const deleted = await this.client.del(...toDelete);
             totalDeleted += Number(deleted || 0);
           } catch (err) {
-            console.error('[RedisCache] Batch delete error:', err);
+            logger.error('[RedisCache] Batch delete error', err);
           }
           toDelete.length = 0;
         }
@@ -191,15 +192,15 @@ class RedisCacheService {
           const deleted = await this.client.del(...toDelete);
           totalDeleted += Number(deleted || 0);
         } catch (err) {
-          console.error('[RedisCache] Final batch delete error:', err);
+          logger.error('[RedisCache] Final batch delete error', err);
         }
       }
 
-      console.log('[RedisCache] 🗑️ Invalidated cache entries for business, deleted:', totalDeleted);
+      logger.info('[RedisCache] 🗑️ Invalidated cache entries for business', { deleted: totalDeleted });
       return totalDeleted; // return actual count of deleted keys when possible
 
     } catch (error) {
-      console.error('[RedisCache] Invalidation error:', error);
+      logger.error('[RedisCache] Invalidation error', error);
       return 0;
     }
   }
@@ -237,7 +238,7 @@ class RedisCacheService {
       };
 
     } catch (error) {
-      console.error('[RedisCache] Stats error:', error);
+      logger.error('[RedisCache] Stats error', error);
       return { enabled: true, error: error.message };
     }
   }
@@ -254,10 +255,10 @@ class RedisCacheService {
 
     try {
       await this.client.flushDb();
-      console.log('[RedisCache] 🗑️ Cleared ALL cache');
+      logger.info('[RedisCache] 🗑️ Cleared ALL cache');
       return true;
     } catch (error) {
-      console.error('[RedisCache] Clear all error:', error);
+      logger.error('[RedisCache] Clear all error', error);
       return false;
     }
   }
@@ -268,7 +269,7 @@ class RedisCacheService {
   async disconnect() {
     if (this.client && this.isConnected) {
       await this.client.quit();
-      console.log('[RedisCache] Disconnected');
+      logger.info('[RedisCache] Disconnected');
     }
   }
 }

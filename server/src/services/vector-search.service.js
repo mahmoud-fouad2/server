@@ -38,13 +38,17 @@ class VectorSearchService {
         return await this.fallbackKeywordSearch(query, businessId, limit);
       }
 
-      // Step 2: Perform vector similarity search using raw SQL
-      // Note: Prisma doesn't support vector operations natively yet
+      // Step 2: Perform vector similarity search using parameterized query
+      // Note: Prisma doesn't support vector operations natively yet, but we use Prisma.$queryRaw with template literals for safety
       const limitValue = Math.max(1, Math.min(Number(limit) || 5, 50));
       const embeddingVector = queryEmbedding.map(num => Number.isFinite(num) ? Number(num) : 0);
-      const embeddingLiteral = `'[${embeddingVector.join(',')}]'::vector`;
-      const sanitizedBusinessId = String(businessId || '').replace(/'/g, "''");
-      const sql = `
+      
+      // Use Prisma's parameterized query to prevent SQL injection
+      // Convert embedding array to PostgreSQL vector format
+      const embeddingArray = `[${embeddingVector.join(',')}]`;
+      
+      // Use Prisma.$queryRaw with template literal for parameterized query
+      const results = await prisma.$queryRaw`
         SELECT 
           id,
           "knowledgeBaseId",
@@ -52,34 +56,44 @@ class VectorSearchService {
           content,
           metadata,
           "createdAt",
-          1 - (embedding_vector <=> ${embeddingLiteral}) as similarity
-          FROM "KnowledgeChunk"
-          WHERE "businessId" = '${sanitizedBusinessId}'
-            AND embedding_vector IS NOT NULL
-          ORDER BY embedding_vector <=> ${embeddingLiteral}
+          1 - (embedding_vector <=> ${embeddingArray}::vector) as similarity
+        FROM "KnowledgeChunk"
+        WHERE "businessId" = ${businessId}
+          AND embedding_vector IS NOT NULL
+        ORDER BY embedding_vector <=> ${embeddingArray}::vector
         LIMIT ${limitValue}
       `;
-      const rawExecutor = prisma.$queryRaw
-        ? prisma.$queryRaw.bind(prisma)
-        : prisma.$queryRawUnsafe
-          ? prisma.$queryRawUnsafe.bind(prisma)
-          : null;
 
-      if (!rawExecutor) {
-        throw new Error('Prisma client does not expose a raw query executor');
-      }
-      const results = await rawExecutor(sql);
-
-      // Step 3: Filter results by similarity threshold (0.7 = 70% similar)
+      // Step 3: Filter results by similarity threshold (0.7 = 70% similar for quality results)
+      // Higher threshold ensures more relevant results
       const filteredResults = results.filter(r => r.similarity >= 0.7);
 
       if (filteredResults.length === 0) {
-        logger.debug('Vector search: no high-similarity results, using keyword fallback', { businessId });
+        logger.debug('Vector search: no results above threshold, using keyword fallback', { businessId, threshold: 0.7 });
         return await this.fallbackKeywordSearch(originalQuery, businessId, limit);
       }
 
-      logger.debug('Vector search completed', { businessId, resultsCount: filteredResults.length, threshold: 0.7 });
-      return filteredResults.slice(0, limitValue);
+      // Step 4: Rerank by similarity + recency (newer chunks might be more relevant)
+      const now = Date.now();
+      const rerankedResults = filteredResults
+        .map(chunk => {
+          const chunkAge = chunk.createdAt ? (now - new Date(chunk.createdAt).getTime()) : Infinity;
+          const recencyScore = Math.max(0, 1 - (chunkAge / (30 * 24 * 60 * 60 * 1000))); // 30 days max
+          const combinedScore = (chunk.similarity || 0) * 0.8 + recencyScore * 0.2; // 80% similarity, 20% recency
+          return { ...chunk, combinedScore };
+        })
+        .sort((a, b) => (b.combinedScore || 0) - (a.combinedScore || 0))
+        .slice(0, Math.min(limitValue, 3)); // Limit to top 3 for better quality
+
+      logger.debug('Vector search completed', { 
+        businessId, 
+        resultsCount: rerankedResults.length, 
+        threshold: 0.7,
+        topSimilarity: rerankedResults[0]?.similarity,
+        topScore: rerankedResults[0]?.combinedScore
+      });
+      
+      return rerankedResults;
 
     } catch (error) {
       const msg = error && (error.message || error.toString());
@@ -89,7 +103,7 @@ class VectorSearchService {
         return await this.fallbackKeywordSearch(originalQuery, businessId, limit);
       }
 
-      console.error('[VectorSearch] Error:', msg || error);
+      logger.error('[VectorSearch] Error:', { error: msg || error, businessId });
       throw error;
     }
   }
@@ -105,29 +119,62 @@ class VectorSearchService {
    */
   async fallbackKeywordSearch(query, businessId, limit = 5) {
     try {
-      // Simple keyword matching with case-insensitive search
+      // Enhanced keyword matching - extract meaningful keywords
       const keywords = query
         .toLowerCase()
         .split(/\s+/)
         .map(w => w.trim())
         .filter(w => w.length > 2 && !STOP_WORDS.has(w));
       
+      if (keywords.length === 0) {
+        // If no keywords, return recent knowledge base entries
+        const recentKnowledge = await prisma.knowledgeBase.findMany({
+          where: { businessId },
+          orderBy: { createdAt: 'desc' },
+          take: limit
+        });
+        return recentKnowledge.map(kb => ({
+          id: kb.id,
+          businessId: kb.businessId,
+          content: kb.content,
+          metadata: kb.metadata
+        }));
+      }
+
+      // Try to find chunks containing any of the keywords
       const results = await prisma.knowledgeChunk.findMany({
         where: {
           businessId,
-          content: {
-            contains: keywords[0] || query, // At least match the first keyword
-            mode: 'insensitive'
-          }
+          OR: keywords.map(keyword => ({
+            content: {
+              contains: keyword,
+              mode: 'insensitive'
+            }
+          }))
         },
         orderBy: {
           createdAt: 'desc'
         },
-        take: limit
+        take: limit * 2 // Get more results to filter
       });
 
-      logger.debug('Keyword search completed', { businessId, resultsCount: results.length });
-      return results;
+      // Score results by number of matching keywords
+      const scoredResults = results.map(chunk => {
+        const contentLower = chunk.content.toLowerCase();
+        const matchCount = keywords.filter(kw => contentLower.includes(kw)).length;
+        return { ...chunk, matchScore: matchCount };
+      })
+      .filter(chunk => chunk.matchScore > 0)
+      .sort((a, b) => b.matchScore - a.matchScore)
+      .slice(0, limit);
+
+      logger.debug('Keyword search completed', { 
+        businessId, 
+        resultsCount: scoredResults.length,
+        keywords: keywords.length 
+      });
+      
+      return scoredResults;
 
     } catch (error) {
       logger.error('Keyword search failed', { businessId, error: error.message });
@@ -160,18 +207,19 @@ class VectorSearchService {
       }
       
       // Check if vector extension exists (installed or available)
-      const result = await rawExecutor(`
+      // Use Prisma.$queryRaw with template literal for safety
+      const result = await prisma.$queryRaw`
         SELECT EXISTS (
           SELECT 1 FROM pg_available_extensions WHERE name = 'vector'
         ) as available
-      `);
+      `;
       
       const isAvailable = result[0]?.available || false;
       
       // If available, try to create it if not already created
       if (isAvailable) {
         try {
-          await rawExecutor`CREATE EXTENSION IF NOT EXISTS vector`;
+          await prisma.$executeRaw`CREATE EXTENSION IF NOT EXISTS vector`;
         } catch (createError) {
           logger.debug('pgvector extension already exists or cannot be created', { error: createError.message });
         }

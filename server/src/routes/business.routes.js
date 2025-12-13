@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const asyncHandler = require('express-async-handler');
 const { authenticateToken } = require('../middleware/auth');
 const businessController = require('../controllers/business.controller');
 const { 
@@ -7,6 +8,7 @@ const {
   validateUpdateBusinessPlan,
   validatePagination 
 } = require('../middleware/zodValidation');
+const logger = require('../utils/logger');
 
 // Dashboard Routes
 router.get('/stats', authenticateToken, businessController.getDashboardStats);
@@ -15,6 +17,9 @@ router.get('/chart-data', authenticateToken, businessController.getChartData);
 // Settings Routes
 router.get('/settings', authenticateToken, businessController.getSettings);
 router.put('/settings', authenticateToken, validateUpdateBusiness, businessController.updateSettings);
+
+// Pre-chat form settings
+router.put('/pre-chat-settings', authenticateToken, asyncHandler(businessController.updatePreChatSettings));
 
 // Plan Routes
 router.get('/plan', authenticateToken, businessController.getPlan);

@@ -164,35 +164,46 @@ exports.sendMessage = asyncHandler(async (req, res) => {
     allowedAttributes: {}
   });
 
-  // Find or create business
+  // Find or create business (with transaction to prevent race conditions)
   let business = await prisma.business.findUnique({ where: { id: businessId } });
   if (!business) {
     business = await prisma.business.findFirst();
     if (!business) {
-      let defaultUser = await prisma.user.findFirst();
-      if (!defaultUser) {
-        defaultUser = await prisma.user.create({
-          data: {
+      // Use transaction with upsert to prevent race conditions
+      const result = await prisma.$transaction(async (tx) => {
+        // Check again inside transaction
+        let existingBusiness = await tx.business.findFirst();
+        if (existingBusiness) return existingBusiness;
+
+        // Upsert default user to prevent duplicates
+        const defaultUser = await tx.user.upsert({
+          where: { email: 'default@faheemly.com' },
+          update: {},
+          create: {
             email: 'default@faheemly.com',
             password: await require('bcryptjs').hash('default123', 10),
             name: 'Default User',
             role: 'CLIENT'
           }
         });
-      }
-      
-      business = await prisma.business.create({
-        data: {
-          userId: defaultUser.id,
-          name: 'Default Business',
-          activityType: 'COMPANY',
-          botTone: 'friendly',
-          status: 'ACTIVE',
-          planType: 'ENTERPRISE',
-          messageQuota: 999999,
-          messagesUsed: 0
-        }
+
+        // Create default business
+        const newBusiness = await tx.business.create({
+          data: {
+            userId: defaultUser.id,
+            name: 'Default Business',
+            activityType: 'COMPANY',
+            botTone: 'friendly',
+            status: 'ACTIVE',
+            planType: 'ENTERPRISE',
+            messageQuota: 999999,
+            messagesUsed: 0
+          }
+        });
+
+        return newBusiness;
       });
+      business = result;
     }
   }
 
@@ -376,19 +387,48 @@ exports.sendMessage = asyncHandler(async (req, res) => {
   business.widgetConfig = widgetConfig;
   business.currentDate = new Date().toLocaleString('ar-EG', { timeZone: 'Africa/Cairo' });
 
-  // Vector Search
+  // Vector Search - Get more relevant knowledge chunks
   let knowledgeContext = [];
   try {
-    knowledgeContext = await vectorSearch.searchKnowledge(message, businessId, 3);
-    logger.info(`Found ${knowledgeContext.length} relevant knowledge chunks`);
-  } catch (vectorError) {
-    logger.warn('Vector search failed:', vectorError);
-    const fallbackKnowledge = await prisma.knowledgeBase.findMany({
-      where: { businessId },
-      orderBy: { createdAt: 'desc' },
-      take: 2
+    // Search for 5 chunks to have better context
+    knowledgeContext = await vectorSearch.searchKnowledge(message, businessId, 5);
+    logger.info(`Found ${knowledgeContext.length} relevant knowledge chunks for query`, { 
+      businessId, 
+      queryLength: message.length 
     });
-    knowledgeContext = fallbackKnowledge;
+    
+    // If no results, try with a simplified query (remove common words)
+    if (knowledgeContext.length === 0 && message.length > 10) {
+      const simplifiedQuery = message
+        .split(/\s+/)
+        .filter(word => word.length > 3)
+        .slice(0, 5)
+        .join(' ');
+      
+      if (simplifiedQuery.length > 3) {
+        logger.debug('Trying simplified query for knowledge search', { simplifiedQuery });
+        knowledgeContext = await vectorSearch.searchKnowledge(simplifiedQuery, businessId, 3);
+      }
+    }
+  } catch (vectorError) {
+    logger.warn('Vector search failed, using fallback', { error: vectorError.message, businessId });
+    // Fallback: Get recent knowledge base entries
+    try {
+      const fallbackKnowledge = await prisma.knowledgeBase.findMany({
+        where: { businessId },
+        orderBy: { createdAt: 'desc' },
+        take: 3
+      });
+      knowledgeContext = fallbackKnowledge.map(kb => ({
+        id: kb.id,
+        businessId: kb.businessId,
+        content: kb.content,
+        metadata: kb.metadata
+      }));
+    } catch (fallbackError) {
+      logger.error('Fallback knowledge search also failed', fallbackError);
+      knowledgeContext = [];
+    }
   }
 
   const formattedHistory = history.reverse().map(msg => ({
@@ -396,19 +436,21 @@ exports.sendMessage = asyncHandler(async (req, res) => {
     content: msg.content
   }));
 
-  // Generate AI Response
+  // Generate AI Response with conversation state tracking
   try {
     const aiResult = await aiService.generateChatResponse(
       message,
       { ...business, widgetConfig },
       formattedHistory,
-      knowledgeContext
+      knowledgeContext,
+      conversation.id // Pass conversationId for state tracking
     );
 
     const validation = responseValidator.validateResponse(aiResult.response, {
       isFirstMessage: formattedHistory.length === 0,
       expectArabic: business.language === 'ar' || detectedDialect !== 'standard',
-      businessType: business.activityType
+      businessType: business.activityType,
+      hasKnowledgeBase: knowledgeContext.length > 0
     });
 
     if (!validation.isValid) {
@@ -476,4 +518,107 @@ exports.sendMessage = asyncHandler(async (req, res) => {
       error: 'AI_ERROR'
     });
   }
+});
+
+/**
+ * @desc    Get Pre-chat Form Configuration
+ * @route   GET /api/chat/pre-chat/:businessId
+ * @access  Public
+ */
+exports.getPreChatForm = asyncHandler(async (req, res) => {
+  const { businessId } = req.params;
+
+  const business = await prisma.business.findUnique({
+    where: { id: businessId },
+    select: {
+      id: true,
+      name: true,
+      activityType: true,
+      preChatFormEnabled: true
+    }
+  });
+
+  if (!business) {
+    res.status(404);
+    throw new Error('Business not found');
+  }
+
+  if (!business.preChatFormEnabled) {
+    return res.json({ required: false });
+  }
+
+  // Generate dynamic request summary placeholder
+  const crmService = require('../services/crm.service');
+  const requestSummaryPlaceholder = crmService.generateRequestSummary(business.activityType);
+
+  res.json({
+    required: true,
+    businessName: business.name,
+    fields: [
+      { name: 'name', label: 'الاسم', type: 'text', required: true },
+      { name: 'email', label: 'البريد الإلكتروني', type: 'email', required: false },
+      { name: 'phone', label: 'رقم الهاتف', type: 'tel', required: false },
+      { name: 'requestSummary', label: 'ملخص الطلب', type: 'textarea', required: true, placeholder: requestSummaryPlaceholder }
+    ]
+  });
+});
+
+/**
+ * @desc    Submit Pre-chat Form Data
+ * @route   POST /api/chat/pre-chat/:businessId
+ * @access  Public
+ */
+exports.submitPreChatForm = asyncHandler(async (req, res) => {
+  const { businessId } = req.params;
+  const { name, email, phone, requestSummary, sessionId } = req.body;
+
+  if (!name || !requestSummary) {
+    res.status(400);
+    throw new Error('Name and request summary are required');
+  }
+
+  const business = await prisma.business.findUnique({
+    where: { id: businessId },
+    select: { id: true, preChatFormEnabled: true, crmLeadCollectionEnabled: true }
+  });
+
+  if (!business) {
+    res.status(404);
+    throw new Error('Business not found');
+  }
+
+  if (!business.preChatFormEnabled) {
+    res.status(400);
+    throw new Error('Pre-chat form is not enabled for this business');
+  }
+
+  // Create conversation with pre-chat data
+  const conversation = await prisma.conversation.create({
+    data: {
+      businessId,
+      channel: 'WIDGET',
+      status: 'ACTIVE',
+      preChatData: JSON.stringify({ name, email, phone, requestSummary }),
+      visitorSessionId: sessionId || null
+    }
+  });
+
+  // Create CRM lead if CRM is enabled
+  if (business.crmLeadCollectionEnabled) {
+    const crmService = require('../services/crm.service');
+    await crmService.createLead(businessId, {
+      name,
+      email,
+      phone,
+      requestSummary,
+      conversationId: conversation.id,
+      source: 'PRE_CHAT_FORM'
+    });
+  }
+
+  res.json({
+    success: true,
+    conversationId: conversation.id,
+    message: 'Pre-chat data submitted successfully'
+  });
 });

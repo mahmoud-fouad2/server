@@ -119,8 +119,8 @@ class ResponseValidator {
     results.issues.push(...qualityResult.issues);
     results.suggestions.push(...qualityResult.suggestions);
 
-    // Content validation
-    const contentResult = this.validateContent(response);
+    // Content validation (pass context)
+    const contentResult = this.validateContent(response, context);
     results.score = Math.max(0, results.score + contentResult.scoreModifier);
     results.issues.push(...contentResult.issues);
     results.suggestions.push(...contentResult.suggestions);
@@ -181,7 +181,7 @@ class ResponseValidator {
   /**
    * Validate response content
    */
-  validateContent(response) {
+  validateContent(response, context = {}) {
     const result = { scoreModifier: 0, issues: [], suggestions: [] };
 
     // Check for excessive repetition
@@ -204,16 +204,36 @@ class ResponseValidator {
       result.suggestions.push('Reduce repetition for better readability');
     }
 
-    // Check for generic responses
-    const genericPhrases = ['I don\'t know', 'لا أعرف', 'sorry', 'عذراً', 'I\'m not sure'];
+    // Check for generic responses (but allow if knowledge base is empty)
+    const genericPhrases = ['I don\'t know', 'لا أعرف', 'sorry', 'عذراً', 'I\'m not sure', 'لا أستطيع'];
     const hasGeneric = genericPhrases.some(phrase =>
       response.toLowerCase().includes(phrase.toLowerCase())
     );
 
-    if (hasGeneric && response.length < 50) {
-      result.scoreModifier -= 20;
-      result.issues.push('Response is too generic');
-      result.suggestions.push('Provide more specific and helpful information');
+    // Check if response mentions AI providers (should be removed)
+    const aiProviderMentions = ['deepseek', 'groq', 'gemini', 'cerebras', 'chatgpt', 'openai', 'ai assistant', 'مساعد ذكي'];
+    const mentionsAI = aiProviderMentions.some(provider => 
+      response.toLowerCase().includes(provider.toLowerCase())
+    );
+
+    if (mentionsAI) {
+      result.scoreModifier -= 30;
+      result.issues.push('Response mentions AI provider - should be sanitized');
+      result.suggestions.push('Remove AI provider mentions from response');
+    }
+
+    // Check if knowledge base was available but response seems generic
+    if (context.hasKnowledgeBase && hasGeneric && response.length < 100) {
+      result.scoreModifier -= 25;
+      result.issues.push('Response is too generic despite having knowledge base');
+      result.suggestions.push('Use knowledge base information more effectively');
+    }
+
+    // Check for overly verbose responses (common when KB is empty)
+    if (!context.hasKnowledgeBase && response.length > 300) {
+      result.scoreModifier -= 15;
+      result.issues.push('Response too verbose without knowledge base');
+      result.suggestions.push('Keep response concise when knowledge base is empty');
     }
 
     return result;

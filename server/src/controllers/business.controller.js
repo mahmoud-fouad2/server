@@ -19,17 +19,10 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
     where: { businessId }
   });
 
-  // 2. Messages Saved (served from cache) - Optimized query
-  // Get conversation IDs first to avoid N+1 join
-  const conversations = await prisma.conversation.findMany({
-    where: { businessId },
-    select: { id: true }
-  });
-  const conversationIds = conversations.map(c => c.id);
-  
+  // 2. Messages Saved (served from cache) - Optimized query (fixed N+1)
   const savedMessagesCount = await prisma.message.count({
     where: {
-      conversationId: { in: conversationIds },
+      conversation: { businessId },
       wasFromCache: true
     }
   });
@@ -358,6 +351,33 @@ exports.getIntegrations = asyncHandler(async (req, res) => {
   });
 
   res.json(integrations);
+});
+
+/**
+ * @desc    Update Pre-chat Settings
+ * @route   PUT /api/business/pre-chat-settings
+ * @access  Private (Business Owner)
+ */
+exports.updatePreChatSettings = asyncHandler(async (req, res) => {
+  const businessId = req.user.businessId;
+  const { preChatFormEnabled } = req.body;
+
+  if (typeof preChatFormEnabled !== 'boolean') {
+    res.status(400);
+    throw new Error('preChatFormEnabled must be a boolean');
+  }
+
+  const updatedBusiness = await prisma.business.update({
+    where: { id: businessId },
+    data: { preChatFormEnabled }
+  });
+
+  res.json({
+    message: `Pre-chat form ${preChatFormEnabled ? 'enabled' : 'disabled'}`,
+    settings: {
+      preChatFormEnabled: updatedBusiness.preChatFormEnabled
+    }
+  });
 });
 
 /**

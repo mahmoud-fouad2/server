@@ -1,6 +1,8 @@
 const prisma = require('../config/database');
 const logger = require('../utils/logger');
 const aiService = require('../services/ai.service');
+const vectorSearch = require('../services/vector-search.service');
+const responseValidator = require('../services/response-validator.service');
 
 /**
  * Initialize Socket.IO handlers
@@ -12,13 +14,13 @@ function initializeSocket(io) {
 
     socket.on('join_room', (room) => {
       socket.join(room);
-      console.log(`User joined room: ${room}`);
+      logger.debug('User joined room', { room, socketId: socket.id });
     });
 
     socket.on('send_message', async (data) => {
       try {
         const { businessId, content } = data;
-        console.log('Message received:', data);
+        logger.debug('Message received via socket', { businessId, contentLength: content?.length, socketId: socket.id });
 
         if (!businessId || !content) {
           socket.emit('receive_message', {
@@ -131,24 +133,50 @@ function initializeSocket(io) {
           content: msg.content
         }));
 
-        const systemPrompt = `You are the official assistant for ${business.name}. Keep answers concise and helpful.`;
-        const messages = [
-          { role: 'system', content: systemPrompt },
-          ...formattedHistory,
-          { role: 'user', content }
-        ];
+        // Get knowledge base context (same as chat controller)
+        const vectorSearch = require('../services/vector-search.service');
+        let knowledgeContext = [];
+        try {
+          knowledgeContext = await vectorSearch.searchKnowledge(content, businessId, 3);
+        } catch (vectorError) {
+          logger.warn('Vector search failed in socket handler', vectorError);
+          // Fallback to recent knowledge base entries
+          const fallbackKnowledge = await prisma.knowledgeBase.findMany({
+            where: { businessId },
+            orderBy: { createdAt: 'desc' },
+            take: 2
+          });
+          knowledgeContext = fallbackKnowledge;
+        }
 
-        const aiResult = await aiService.generateResponse(messages);
+        // Use same generateChatResponse method for consistency
+        const widgetConfig = typeof business.widgetConfig === 'string' 
+          ? JSON.parse(business.widgetConfig) 
+          : business.widgetConfig || {};
+        
+        business.currentDate = new Date().toLocaleString('ar-EG', { timeZone: 'Africa/Cairo' });
+        
+        const aiResult = await aiService.generateChatResponse(
+          content,
+          { ...business, widgetConfig },
+          formattedHistory,
+          knowledgeContext,
+          conversation.id // Pass conversationId for state tracking
+        );
+
+        // Sanitize response to remove provider/model signatures
+        const responseValidator = require('../services/response-validator.service');
+        const sanitized = responseValidator.sanitizeResponse(aiResult.response || '');
 
         // Save AI Message
         await prisma.message.create({
           data: {
             conversationId: conversation.id,
             role: 'ASSISTANT',
-            content: aiResult.response,
-            tokensUsed: aiResult.tokensUsed,
-            wasFromCache: aiResult.fromCache,
-            aiModel: aiResult.model || 'groq'
+            content: sanitized,
+            tokensUsed: aiResult.tokensUsed || 0,
+            wasFromCache: false,
+            aiModel: aiResult.model || 'groq-llama'
           }
         });
 
@@ -174,9 +202,9 @@ function initializeSocket(io) {
         // Emit response back to client
         socket.emit('receive_message', {
           role: 'assistant',
-          content: aiResult.response,
+          content: sanitized,
           timestamp: new Date(),
-          fromCache: aiResult.fromCache
+          fromCache: false
         });
 
       } catch (error) {

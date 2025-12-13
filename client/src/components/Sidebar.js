@@ -19,6 +19,7 @@ import {
   Headphones,
   LifeBuoy,
   BarChart3,
+  ContactRound,
 } from 'lucide-react';
 import useTheme from '@/lib/theme';
 import { useEffect, useState } from 'react';
@@ -211,6 +212,15 @@ export default function Sidebar({ activeTab, setActiveTab, userRole }) {
             setActiveTab={setActiveTab}
             badge={ticketCount}
           />
+          {!isAgent && (
+            <SidebarItem
+              icon={ContactRound}
+              label="إدارة العملاء"
+              id="crm"
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+            />
+          )}
           <SidebarItem
             icon={User}
             label="إعدادات الحساب"

@@ -316,23 +316,113 @@
             font-weight: bold;
         }
 
-        /* Mobile behavior */
+        #fahimo-prechat-form {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            width: 350px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+            z-index: 10000;
+            display: none;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+            direction: rtl;
+        }
+        #fahimo-prechat-form .prechat-header {
+            background: linear-gradient(135deg, #003366, #002244);
+            color: white;
+            padding: 20px;
+            border-radius: 12px 12px 0 0;
+            text-align: center;
+        }
+        #fahimo-prechat-form .prechat-header h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        #fahimo-prechat-form .prechat-header p {
+            margin: 8px 0 0;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        #fahimo-prechat-form .prechat-body {
+            padding: 20px;
+        }
+        #fahimo-prechat-form .form-group {
+            margin-bottom: 16px;
+        }
+        #fahimo-prechat-form label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #374151;
+            font-size: 14px;
+        }
+        #fahimo-prechat-form input,
+        #fahimo-prechat-form textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+        #fahimo-prechat-form input:focus,
+        #fahimo-prechat-form textarea:focus {
+            outline: none;
+            border-color: #003366;
+            box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.1);
+        }
+        #fahimo-prechat-form textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        #fahimo-prechat-form .prechat-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        #fahimo-prechat-form .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        #fahimo-prechat-form .btn-primary {
+            background: #003366;
+            color: white;
+        }
+        #fahimo-prechat-form .btn-primary:hover {
+            background: #002244;
+        }
+        #fahimo-prechat-form .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+        #fahimo-prechat-form .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+        #fahimo-prechat-form .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Mobile styles for prechat form */
         @media (max-width: 640px) {
-            #fahimo-chat-window {
+            #fahimo-prechat-form {
                 position: fixed;
                 left: 10px;
                 right: 10px;
-                bottom: 10px;
-                top: 12vh;
+                bottom: 80px;
                 width: auto;
-                height: auto;
-                max-height: 78vh;
-                border-radius: 12px;
-                box-shadow: 0 12px 50px rgba(0,0,0,0.3);
-                transform: translateY(0);
+                max-width: none;
             }
-            #fahimo-launcher { right: 14px; bottom: 14px; }
-            #fahimo-input { font-size: 15px; }
         }
 
         /* Rating UI */
@@ -423,6 +513,39 @@
     `;
     document.body.appendChild(container);
 
+    // Pre-chat form HTML
+    const prechatForm = document.createElement('div');
+    prechatForm.id = 'fahimo-prechat-form';
+    prechatForm.innerHTML = `
+        <div class="prechat-header">
+            <h3>مرحباً بك</h3>
+            <p>يرجى تقديم بعض المعلومات قبل بدء المحادثة</p>
+        </div>
+        <div class="prechat-body">
+            <div class="form-group">
+                <label for="prechat-name">الاسم الكامل</label>
+                <input type="text" id="prechat-name" placeholder="أدخل اسمك الكامل">
+            </div>
+            <div class="form-group">
+                <label for="prechat-email">البريد الإلكتروني</label>
+                <input type="email" id="prechat-email" placeholder="example@email.com">
+            </div>
+            <div class="form-group">
+                <label for="prechat-phone">رقم الهاتف</label>
+                <input type="tel" id="prechat-phone" placeholder="+966501234567">
+            </div>
+            <div class="form-group">
+                <label for="prechat-request">كيف يمكننا مساعدتك؟</label>
+                <textarea id="prechat-request" placeholder="يرجى وصف طلبك أو استفسارك..."></textarea>
+            </div>
+            <div class="prechat-actions">
+                <button class="btn btn-secondary" id="prechat-cancel">إلغاء</button>
+                <button class="btn btn-primary" id="prechat-submit">بدء المحادثة</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(prechatForm);
+
     // Logic (enhanced with rating and session management)
     try {
         const launcher = document.getElementById('fahimo-launcher');
@@ -434,12 +557,16 @@
         const ratingContainer = document.getElementById('fahimo-rating-container');
         const stars = document.querySelectorAll('.fahimo-star');
         const endSessionBtn = document.getElementById('fahimo-end-session');
+        const inputArea = document.getElementById('fahimo-input-area');
         let isOpen = false;
         let conversationId = localStorage.getItem('fahimo_conversation_id');
         let selectedRating = 0;
         // persisted messages for this business (visitor persistence)
         let storedMessages = [];
         let isLoadingStored = false;
+        // Pre-chat form variables
+        let prechatEnabled = false;
+        let prechatFormVisible = false;
 
         function storageKey() {
             return `fahimo_msgs_${businessId}`;
@@ -510,6 +637,9 @@
                     avatarEl.innerHTML = `<img src="${config.customIconUrl}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; display:block;" alt="Bot">`;
                     avatarEl.style.background = 'transparent';
                 }
+
+                // Check pre-chat settings
+                prechatEnabled = data.preChatFormEnabled || config.preChatEnabled || false;
 
                 if (!conversationId && messagesDiv && storedMessages.length === 0) {
                     // Sanitize welcome message to remove 'Demo' mentions
@@ -625,47 +755,157 @@
         // Rating System
         stars.forEach(star => {
             star.onclick = () => {
-                selectedRating = star.getAttribute('data-val');
-                stars.forEach(s => s.style.color = s.getAttribute('data-val') <= selectedRating ? '#FFD700' : '#ccc');
+                selectedRating = parseInt(star.getAttribute('data-val'), 10);
+                const ratingNum = selectedRating;
+                stars.forEach(s => {
+                    const starVal = parseInt(s.getAttribute('data-val'), 10);
+                    s.style.color = starVal <= ratingNum ? '#FFD700' : '#ccc';
+                });
             };
         });
-
-        // End Chat and Submit Rating
-        document.getElementById('fahimo-end-chat').onclick = () => {
-            if (!conversationId) return;
-            showRatingUI();
-        };
 
         function showRatingUI() {
             ratingContainer.style.display = 'block';
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
 
-        endSessionBtn.onclick = async () => {
-            if (!selectedRating) return;
+
+        // Pre-chat form functions
+        function showPrechatForm() {
+            prechatFormVisible = true;
+            prechatForm.style.display = 'block';
+            // Focus on first input
+            setTimeout(() => {
+                const firstInput = document.getElementById('prechat-name');
+                if (firstInput) firstInput.focus();
+            }, 100);
+        }
+
+        function hidePrechatForm() {
+            prechatFormVisible = false;
+            prechatForm.style.display = 'none';
+        }
+
+        async function submitPrechatForm() {
+            const name = document.getElementById('prechat-name').value.trim();
+            const email = document.getElementById('prechat-email').value.trim();
+            const phone = document.getElementById('prechat-phone').value.trim();
+            const request = document.getElementById('prechat-request').value.trim();
+
+            if (!name || !request) {
+                alert('يرجى ملء الاسم ووصف الطلب على الأقل');
+                return;
+            }
+
             try {
-                await fetch(`${apiUrl}/api/chat/rating`, {
+                // Submit pre-chat data
+                const res = await fetch(`${apiUrl}/api/chat/pre-chat/${businessId}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ conversationId, rating: selectedRating })
+                    body: JSON.stringify({
+                        sessionId,
+                        name,
+                        email,
+                        phone,
+                        requestSummary: request
+                    })
                 });
-                localStorage.removeItem('fahimo_conversation_id');
-                conversationId = null;
-                ratingContainer.style.display = 'none';
-                messagesDiv.innerHTML = '';
-                try { localStorage.removeItem(storageKey()); storedMessages = []; } catch(e) {}
-            } catch (e) {
-                console.error(e);
+
+                // Check if response is OK (fetch doesn't reject on HTTP errors)
+                if (!res.ok) {
+                    const errorData = await res.json().catch(() => ({ error: 'Unknown error' }));
+                    throw new Error(errorData.error || `Server returned ${res.status}`);
+                }
+
+                // Mark pre-chat as submitted for this session
+                localStorage.setItem(`fahimo_prechat_${businessId}_${sessionId}`, 'true');
+
+                hidePrechatForm();
+                openChat();
+            } catch (error) {
+                console.error('Pre-chat submission error:', error);
+                alert('حدث خطأ في إرسال البيانات. يرجى المحاولة مرة أخرى.');
             }
-        };
+        }
+
+        function openChat() {
+            isOpen = true;
+            chatWindow.classList.add('fahimo-open');
+        }
 
         // Event Listeners
         sendBtn.onclick = sendMessage;
         input.onkeypress = (e) => { if (e.key === 'Enter') sendMessage(); };
 
+        // Pre-chat form event listeners
+        document.getElementById('prechat-submit').onclick = submitPrechatForm;
+        document.getElementById('prechat-cancel').onclick = () => {
+            hidePrechatForm();
+        };
+
+        // End chat/session buttons
+        // Note: endSessionBtn is already defined above (line 559), reusing it here
+        const endChatBtn = document.getElementById('fahimo-end-chat');
+        
+        if (endChatBtn) {
+            endChatBtn.onclick = () => {
+                if (!conversationId) return;
+                // Show rating container
+                ratingContainer.style.display = 'block';
+                inputArea.style.display = 'none';
+            };
+        }
+        
+        if (endSessionBtn) {
+            endSessionBtn.onclick = async () => {
+                try {
+                    // Submit rating if selected
+                    if (selectedRating > 0) {
+                        await fetch(`${apiUrl}/api/chat/rating`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                conversationId,
+                                rating: selectedRating
+                            })
+                        });
+                    }
+                    
+                    // Clear conversation and close chat
+                    conversationId = null;
+                    localStorage.removeItem('fahimo_conversation_id');
+                    storedMessages = [];
+                    saveStoredMessages();
+                    
+                    // Clear messages and show welcome
+                    messagesDiv.innerHTML = '';
+                    addMessage('شكراً لك! تم إنهاء المحادثة. إذا كنت بحاجة لمساعدة مرة أخرى، يمكنك بدء محادثة جديدة.', 'bot');
+                    
+                    // Hide rating and show input
+                    ratingContainer.style.display = 'none';
+                    inputArea.style.display = 'flex';
+                    
+                    // Close chat window
+                    isOpen = false;
+                    chatWindow.classList.remove('fahimo-open');
+                    
+                } catch (error) {
+                    console.error('End session error:', error);
+                }
+            };
+        }
+
+
         launcher.onclick = () => {
-            isOpen = !isOpen;
-            chatWindow.classList.toggle('fahimo-open', isOpen);
+            if (prechatEnabled && !conversationId) {
+                // Check if pre-chat form was already submitted in this session
+                const prechatSubmitted = localStorage.getItem(`fahimo_prechat_${businessId}_${sessionId}`);
+                if (!prechatSubmitted) {
+                    showPrechatForm();
+                    return;
+                }
+            }
+            openChat();
         };
         closeBtn.onclick = () => {
             isOpen = false;

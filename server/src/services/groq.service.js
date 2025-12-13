@@ -9,25 +9,20 @@ async function generateResponse(messages, options = {}) {
 }
 
 // Legacy signature used by Telegram/Twilio/Widget routes
-// message: string, business: object, history: [{role,content}], knowledgeBase: array
-async function generateChatResponse(message, business, history = [], knowledgeBase = []) {
-  const systemPrompt = `You are an AI assistant for ${business?.name || 'the business'}. ` +
-    `Use the provided knowledge base when relevant. Respond concisely.`;
-
-  const messages = [
-    { role: 'system', content: systemPrompt },
-    ...history,
-    { role: 'user', content: message }
-  ];
-
-  const result = await aiService.generateResponse(messages);
+// message: string, business: object, history: [{role,content}], knowledgeBase: array, conversationId: string
+// Now uses the unified generateChatResponse for consistency
+async function generateChatResponse(message, business, history = [], knowledgeBase = [], conversationId = null) {
+  // Use the unified generateChatResponse method for consistency across all channels
+  const result = await aiService.generateChatResponse(message, business, history, knowledgeBase, conversationId);
 
   return {
     response: result.response,
     tokensUsed: result.tokensUsed,
     model: result.model,
     provider: result.provider,
-    knowledgeUsed: knowledgeBase?.length || 0
+    knowledgeUsed: knowledgeBase?.length || 0,
+    knowledgeBaseUsed: result.knowledgeBaseUsed,
+    knowledgeBaseCount: result.knowledgeBaseCount
   };
 }
 

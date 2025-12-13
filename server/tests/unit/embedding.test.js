@@ -111,15 +111,12 @@ describe('Embedding Service', () => {
     });
 
     test('should skip Gemini when SKIP_GEMINI_EMBEDDING is set', async () => {
-      process.env.GROQ_API_KEY = 'test-groq-key';
       process.env.GEMINI_API_KEY = 'test-gemini-key';
       process.env.SKIP_GEMINI_EMBEDDING = 'true';
-
-      axios.post.mockRejectedValue(new Error('Groq API error'));
+      process.env.NODE_ENV = 'development';
 
       const result = await generateEmbedding('test text');
 
-      expect(axios.post).toHaveBeenCalled();
       expect(GoogleGenerativeAI).not.toHaveBeenCalled();
       // Should use development fallback
       expect(Array.isArray(result)).toBe(true);

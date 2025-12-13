@@ -1,152 +1,35 @@
 /**
- * Faheemly™ - Permission Middleware
+ * Faheemly™ - Permission Middleware (Legacy Wrapper)
  * Copyright © 2024-2025 Faheemly.com - All Rights Reserved
  * 
  * PROPRIETARY SOFTWARE - Unauthorized copying or distribution is prohibited.
  * 
- * Role-based access control (RBAC) middleware.
- * Checks user permissions before allowing access to protected routes.
+ * DEPRECATED: This file is a legacy wrapper around the unified authorization system.
+ * New code should use middleware/authorization.js directly.
+ * 
+ * This file maintains backward compatibility for existing routes.
  * 
  * @module middleware/permission
+ * @deprecated Use middleware/authorization.js instead
  */
 
 const logger = require('../utils/logger');
-
-/**
- * Permission map - defines what each role can do
- */
-const PERMISSIONS = {
-  USER: [
-    'profile:read',
-    'profile:update',
-    'business:read',
-    'business:create',
-    'business:update',
-    'conversations:read',
-    'messages:read',
-    'messages:create',
-    'knowledge:read',
-    'knowledge:create'
-  ],
-  ADMIN: [
-    // All USER permissions
-    'profile:read',
-    'profile:update',
-    'business:read',
-    'business:create',
-    'business:update',
-    'business:delete',
-    'conversations:read',
-    'messages:read',
-    'messages:create',
-    'knowledge:read',
-    'knowledge:create',
-    'knowledge:update',
-    'knowledge:delete',
-    // Additional ADMIN permissions
-    'analytics:read',
-    'reports:read',
-    'settings:read',
-    'settings:update'
-  ],
-  SUPERADMIN: [
-    // All ADMIN permissions
-    'profile:read',
-    'profile:update',
-    'business:read',
-    'business:create',
-    'business:update',
-    'business:delete',
-    'conversations:read',
-    'messages:read',
-    'messages:create',
-    'knowledge:read',
-    'knowledge:create',
-    'knowledge:update',
-    'knowledge:delete',
-    'analytics:read',
-    'reports:read',
-    'settings:read',
-    'settings:update',
-    // SUPERADMIN exclusive permissions
-    'users:read',
-    'users:create',
-    'users:update',
-    'users:delete',
-    'system:read',
-    'system:update',
-    'system:delete',
-    'audit:read',
-    'roles:manage'
-  ]
-};
+const { requirePermission: requirePermissionUnified } = require('./authorization');
 
 /**
  * Check if user has required permission
  * @param {string} requiredPermission - Permission to check (e.g., 'users:read')
  * @returns {Function} Express middleware
+ * @deprecated Use requirePermission from middleware/authorization.js
  */
 const requirePermission = (requiredPermission) => {
-  return (req, res, next) => {
-    try {
-      // Check if user is authenticated
-      if (!req.user) {
-        logger.warn('Permission check failed: No authenticated user', {
-          path: req.path,
-          method: req.method
-        });
-        
-        return res.status(401).json({
-          success: false,
-          error: 'Authentication required'
-        });
-      }
-
-      // Get user role
-      const userRole = req.user.role || 'USER';
-      
-      // Check if role exists in permissions map
-      if (!PERMISSIONS[userRole]) {
-        logger.error('Permission check failed: Invalid role', {
-          userId: req.user.id,
-          role: userRole,
-          path: req.path
-        });
-        
-        return res.status(403).json({
-          success: false,
-          error: 'Invalid user role'
-        });
-      }
-
-      // Get user permissions
-      const userPermissions = PERMISSIONS[userRole];
-      
-      // Check if user has required permission
-      const hasPermission = userPermissions.includes(requiredPermission);
-      
-      if (!hasPermission) {
-        logger.warn('Permission denied', {
-          userId: req.user.id,
-          userRole,
-          requiredPermission,
-          path: req.path,
-          method: req.method
-        });
-        
-        return res.status(403).json({
-          success: false,
-          error: 'Insufficient permissions',
-          required: requiredPermission,
-          userRole
-        });
-      }
-
-      // Permission granted
-      logger.debug('Permission granted', {
-        userId: req.user.id,
-        userRole,
-        permission: requiredPermission,
+  logger.warn('Using deprecated permission middleware. Migrate to middleware/authorization.js', {
+    permission: requiredPermission,
+    path: 'middleware/permission.js'
+  });
+  
+  // Delegate to unified authorization system
+  return requirePermissionUnified(requiredPermission);
         path: req.path
       });
       
@@ -312,23 +195,32 @@ const preventSelfAction = (req, res, next) => {
   }
 };
 
+// Re-export from unified authorization system
+const { requireRole: requireRoleUnified, GLOBAL_PERMISSIONS } = require('./authorization');
+
 /**
- * Get all permissions for a role
+ * Require specific role (delegates to unified system)
+ * @deprecated Use requireRole from middleware/authorization.js
+ */
+const requireRole = requireRoleUnified;
+
+/**
+ * Get all permissions for a role (from unified system)
  * @param {string} role - User role
  * @returns {array} Array of permissions
  */
 const getPermissionsForRole = (role) => {
-  return PERMISSIONS[role] || [];
+  return GLOBAL_PERMISSIONS[role] || [];
 };
 
 /**
- * Check if role has permission
+ * Check if role has permission (from unified system)
  * @param {string} role - User role
  * @param {string} permission - Permission to check
  * @returns {boolean} True if role has permission
  */
 const roleHasPermission = (role, permission) => {
-  const permissions = PERMISSIONS[role] || [];
+  const permissions = GLOBAL_PERMISSIONS[role] || [];
   return permissions.includes(permission);
 };
 
@@ -339,5 +231,5 @@ module.exports = {
   preventSelfAction,
   getPermissionsForRole,
   roleHasPermission,
-  PERMISSIONS
+  PERMISSIONS: GLOBAL_PERMISSIONS // Export unified permissions
 };
