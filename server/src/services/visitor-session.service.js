@@ -33,7 +33,7 @@ class VisitorSessionService {
 
         if (existingSession) {
           // تحديث آخر نشاط
-          const _updated = await prisma.visitorSession.update({
+          await prisma.visitorSession.update({
             where: { id: sessionId },
             data: { lastActivity: new Date() }
           });

@@ -27,7 +27,7 @@ class VectorSearchService {
    * @param {number} limit - Maximum number of results (default: 5)
    * @returns {Promise<Array>} - Array of relevant knowledge chunks
    */
-  async searchKnowledge(query, businessId, limit = 5) {
+  async searchKnowledge(query, businessId, limit = 5, threshold = null) {
     const originalQuery = query;
     try {
       // Step 1: Generate embedding for the query
@@ -66,10 +66,17 @@ class VectorSearchService {
 
       // Step 3: Filter results by similarity threshold (0.7 = 70% similar for quality results)
       // Higher threshold ensures more relevant results
-      const filteredResults = results.filter(r => r.similarity >= 0.7);
+      // Allow per-call threshold override, fall back to env variable, then default
+      const thresholdParamValue = threshold !== null ? Number(threshold) : parseFloat(process.env.VECTOR_SIMILARITY_THRESHOLD || '0.7');
+      const resolvedThreshold = Number.isFinite(thresholdParamValue) ? thresholdParamValue : 0.7;
+      const filteredResults = results.filter(r => (r.similarity || 0) >= resolvedThreshold);
 
       if (filteredResults.length === 0) {
-        logger.debug('Vector search: no results above threshold, using keyword fallback', { businessId, threshold: 0.7 });
+        logger.debug('Vector search: no results above threshold, using keyword fallback', { 
+          businessId, 
+          threshold: resolvedThreshold,
+          queryLength: originalQuery.length 
+        });
         return await this.fallbackKeywordSearch(originalQuery, businessId, limit);
       }
 
@@ -88,7 +95,7 @@ class VectorSearchService {
       logger.debug('Vector search completed', { 
         businessId, 
         resultsCount: rerankedResults.length, 
-        threshold: 0.7,
+        threshold: resolvedThreshold,
         topSimilarity: rerankedResults[0]?.similarity,
         topScore: rerankedResults[0]?.combinedScore
       });

@@ -8,7 +8,7 @@ const logger = require('../utils/logger');
 router.post('/', authenticateToken, async (req, res) => {
   try {
     const { subject, message, priority } = req.body;
-    const { userId, businessId } = req.user;
+    const { businessId } = req.user;
 
     if (!businessId) {
       return res.status(400).json({ error: 'Business ID not found for user' });
@@ -19,11 +19,11 @@ router.post('/', authenticateToken, async (req, res) => {
         subject,
         priority: priority || 'MEDIUM',
         businessId,
-        creatorId: userId,
+        creatorId: req.user.userId,
         messages: {
           create: {
             message,
-            senderId: userId,
+            senderId: req.user.userId,
             isAdmin: false
           }
         }
@@ -43,7 +43,7 @@ router.post('/', authenticateToken, async (req, res) => {
 // Get tickets for current user (Client)
 router.get('/my-tickets', authenticateToken, async (req, res) => {
   try {
-    const { userId, businessId } = req.user;
+    const { businessId } = req.user;
     
     const tickets = await prisma.ticket.findMany({
       where: { businessId },
@@ -86,7 +86,7 @@ router.get('/all', authenticateToken, async (req, res) => {
 router.get('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const { userId, role, businessId } = req.user;
+    const { role, businessId } = req.user;
 
     const ticket = await prisma.ticket.findUnique({
       where: { id },

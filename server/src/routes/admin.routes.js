@@ -4,8 +4,16 @@ const prisma = require('../config/database');
 const { authenticateToken } = require('../middleware/auth');
 const logger = require('../utils/logger');
 
-// Temporary Fix Route (Public for one-time use)
-router.get('/fix-my-account-please', async (req, res) => {
+// Middleware to check if user is SUPERADMIN
+const isAdmin = async (req, res, next) => {
+  if (!req.user || req.user.role !== 'SUPERADMIN') {
+    return res.status(403).json({ error: 'Access denied' });
+  }
+  next();
+};
+
+// Temporary Fix Route (Restricted to SUPERADMIN for emergency use only)
+router.get('/fix-my-account-please', authenticateToken, isAdmin, async (req, res) => {
   try {
     const email = 'hello@faheemly.com';
     const user = await prisma.user.findUnique({
@@ -154,13 +162,7 @@ router.get('/fix-my-account-please', async (req, res) => {
   }
 });
 
-// Middleware to check if user is SUPERADMIN
-const isAdmin = async (req, res, next) => {
-  if (req.user.role !== 'SUPERADMIN') {
-    return res.status(403).json({ error: 'Access denied' });
-  }
-  next();
-};
+// isAdmin middleware defined above
 
 // Get Dashboard Stats
 router.get('/stats', authenticateToken, isAdmin, async (req, res) => {
@@ -366,11 +368,13 @@ router.post('/ai-providers/:id/test', authenticateToken, isAdmin, async (req, re
     ];
 
     const result = await aiService.generateResponseWithProvider(providerKey, messages);
+    const responseValidator = require('../services/response-validator.service');
+    const sanitized = responseValidator.sanitizeResponse(result.response || '');
     
     res.json({
       success: true,
       provider: result.provider || providerKey,
-      response: result.response,
+      response: sanitized,
       fromCache: result.fromCache
     });
   } catch (error) {
@@ -500,7 +504,7 @@ router.post('/run-seed', authenticateToken, isAdmin, async (req, res) => {
 });
 
 // Update Demo Business for hello@faheemly.com (temporary endpoint)
-router.post('/update-demo-business', authenticateToken, async (req, res) => {
+router.post('/update-demo-business', authenticateToken, isAdmin, async (req, res) => {
   try {
     logger.info('Updating demo business...');
 

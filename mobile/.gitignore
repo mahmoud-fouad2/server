@@ -1,0 +1,11 @@
+node_modules/
+.expo/
+.expo-shared/
+.env
+.eas
+*.log
+**/*.log
+.DS_Store
+android/
+ios/
+coverage/

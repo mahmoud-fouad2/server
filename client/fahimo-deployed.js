@@ -533,7 +533,7 @@
         endSessionBtn.onclick = async () => {
             if (!selectedRating) return;
             try {
-                await fetch(`${apiUrl}/api/chat/rating`, {
+                await fetch(`${apiUrl}/api/rating/conversation`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ conversationId, rating: selectedRating })

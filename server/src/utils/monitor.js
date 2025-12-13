@@ -6,6 +6,7 @@
  */
 
 const prisma = require('../config/database');
+const logger = require('./logger');
 
 class SystemMonitor {
   constructor() {
@@ -140,7 +141,6 @@ class SystemMonitor {
   async logHealthStatus() {
     const status = await this.getHealthStatus();
     
-    const logger = require('./logger');
     logger.info('FAHEEMLY SYSTEM HEALTH', {
       uptime: status.uptime.formatted,
       memory: status.memory,
@@ -155,11 +155,10 @@ class SystemMonitor {
    * Start periodic health checks
    */
   startPeriodicMonitoring(intervalMinutes = 5) {
-    const logger = require('./logger');
     logger.info(`Starting health monitoring (every ${intervalMinutes} minutes)...`);
     
     // Initial check
-    this.logHealthStatus().catch(error => console.error('Initial health check error:', error));
+    this.logHealthStatus().catch(error => logger.error('Initial health check error', { error }));
 
     // Periodic checks
     if (this.monitorInterval) {
@@ -170,7 +169,7 @@ class SystemMonitor {
       try {
         await this.logHealthStatus();
       } catch (error) {
-        console.error('Periodic health check error:', error);
+        logger.error('Periodic health check error', { error });
       }
     }, intervalMinutes * 60 * 1000);
   }
@@ -220,7 +219,8 @@ class SystemMonitor {
         }
       };
     } catch (error) {
-      console.error('Error fetching business metrics:', error);
+      const logger = require('./logger');
+      logger.error('Error fetching business metrics', { error });
       return null;
     }
   }
@@ -239,7 +239,8 @@ class SystemMonitor {
     };
 
     // Log alert
-    console.error(`🚨 ALERT [${alert.severity}]: ${type} - ${message}`);
+    const logger = require('./logger');
+    logger.error(`🚨 ALERT [${alert.severity}]: ${type} - ${message}`);
 
     // In production, send to external monitoring service
     // Example: SendGrid email, Slack webhook, PagerDuty, etc.

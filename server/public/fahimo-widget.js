@@ -628,6 +628,7 @@
                     dynamicStyle.innerHTML = `
                         .fahimo-msg.user { background: ${color} !important; }
                         #fahimo-launcher { background: ${color} !important; }
+                        .fahimo-kb-badge { display:inline-block; margin-top:6px; background: rgba(0,0,0,0.05); color: #333; font-size: 0.7em; padding: 2px 6px; border-radius: 6px; margin-left:6px; }
                     `;
                     document.head.appendChild(dynamicStyle);
                 }
@@ -685,7 +686,20 @@
                         resp = resp.replace(/Faheemly\s*Demo\s*Business/gi, configuredName);
                         resp = resp.replace(/Demo\s*Business/gi, configuredName);
                         resp = resp.replace(/faheemly\s*demo\s*business/gi, configuredName);
-                        addMessage(resp, 'bot');
+                        const botMsgId = 'bot-' + Date.now();
+                        addMessage(resp, 'bot', botMsgId);
+                        // If response used KB, show a subtle badge next to the reply
+                        if (data.knowledgeBaseUsed) {
+                            const badge = document.createElement('div');
+                            badge.className = 'fahimo-kb-badge';
+                            badge.title = 'هذا الرد استُخرج من قاعدة المعرفة';
+                            badge.innerText = 'من قاعدة المعرفة';
+                            const botEl = document.getElementById(botMsgId);
+                            if (botEl) {
+                                botEl.appendChild(document.createElement('br'));
+                                botEl.appendChild(badge);
+                            }
+                        }
                     } catch (e) {
                         addMessage(data.response, 'bot');
                     }
@@ -861,7 +875,7 @@
                 try {
                     // Submit rating if selected
                     if (selectedRating > 0) {
-                        await fetch(`${apiUrl}/api/chat/rating`, {
+                        await fetch(`${apiUrl}/api/rating/conversation`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({

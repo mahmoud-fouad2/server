@@ -1,4 +1,5 @@
 const EventEmitter = require('events');
+const logger = require('../utils/logger');
 
 /**
  * Agent Handoff Service
@@ -274,7 +275,7 @@ class AgentHandoffService extends EventEmitter {
       };
 
     } catch (error) {
-      console.error('[AgentHandoff] Handoff initiation error:', error);
+      logger.error('[AgentHandoff] Handoff initiation error', { error });
       this.qualityMetrics.handoffFailures++;
       return {
         success: false,
@@ -288,7 +289,7 @@ class AgentHandoffService extends EventEmitter {
    * @param {string} priority - Handoff priority
    * @returns {Object} Available agent or null
    */
-  async findAvailableAgent(priority) {
+  async findAvailableAgent(_priority) {
     // In a real implementation, this would query a database or agent management system
     // For demo purposes, we'll simulate agent availability
 

@@ -1,4 +1,4 @@
-const { body, param, query, validationResult } = require('express-validator');
+const { body, param, validationResult } = require('express-validator');
 
 /**
  * Input Validation Middleware

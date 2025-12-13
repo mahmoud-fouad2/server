@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const prisma = require('../config/database');
 const { authenticateToken } = require('../middleware/auth');
+const logger = require('../utils/logger');
 
 // Fix for BigInt serialization in JSON (Prisma COUNT returns BigInt)
 BigInt.prototype.toJSON = function() { return Number(this) }
@@ -76,7 +77,7 @@ router.get('/dashboard', authenticateToken, async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Dashboard custom range error:', error);
+    logger.error('Dashboard custom range error', { error });
     res.status(500).json({ error: 'Failed to fetch dashboard stats' });
   }
 });
@@ -149,7 +150,7 @@ router.get('/dashboard/:days', authenticateToken, async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Dashboard stats error:', error);
+    logger.error('Dashboard stats error', { error });
     res.status(500).json({ error: 'Failed to fetch dashboard stats' });
   }
 });
@@ -174,7 +175,7 @@ router.get('/vector-stats', authenticateToken, async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Vector stats error:', error);
+    logger.error('Vector stats error', { error });
     res.status(500).json({ error: 'Failed to fetch vector stats' });
   }
 });
@@ -291,7 +292,7 @@ router.get('/stats/overview/:businessId', authenticateToken, async (req, res) =>
     });
 
   } catch (error) {
-    console.error('Analytics error:', error);
+    logger.error('Analytics error', { error });
     res.status(500).json({ error: 'فشل جلب الإحصائيات' });
   }
 });
@@ -332,7 +333,7 @@ router.get('/stats/top-questions/:businessId', authenticateToken, async (req, re
     res.json({ topQuestions });
 
   } catch (error) {
-    console.error('Top questions error:', error);
+    logger.error('Top questions error', { error });
     res.status(500).json({ error: 'فشل جلب الأسئلة الشائعة' });
   }
 });
@@ -376,7 +377,7 @@ router.get('/stats/response-time/:businessId', authenticateToken, async (req, re
     });
 
   } catch (error) {
-    console.error('Response time error:', error);
+    logger.error('Response time error', { error });
     res.status(500).json({ error: 'فشل جلب إحصائيات وقت الاستجابة' });
   }
 });
@@ -430,7 +431,7 @@ router.get('/stats/satisfaction/:businessId', authenticateToken, async (req, res
     });
 
   } catch (error) {
-    console.error('Satisfaction stats error:', error);
+    logger.error('Satisfaction stats error', { error });
     res.status(500).json({ error: 'فشل جلب إحصائيات الرضا' });
   }
 });
@@ -467,7 +468,7 @@ router.get('/realtime', authenticateToken, async (req, res) => {
       satisfaction: 4.5 // Calculate from ratings
     });
   } catch (error) {
-    console.error('Realtime analytics error:', error);
+    logger.error('Realtime analytics error', { error });
     res.status(500).json({ error: error.message });
   }
 });
@@ -496,7 +497,7 @@ router.get('/alerts', authenticateToken, async (req, res) => {
     
     res.json({ alerts });
   } catch (error) {
-    console.error('Alerts error:', error);
+    logger.error('Alerts error', { error });
     res.status(500).json({ error: error.message });
   }
 });

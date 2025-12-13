@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { authenticateToken } = require('../middleware/auth');
 const ContinuousImprovementService = require('../services/continuous-improvement.service');
+const logger = require('../utils/logger');
 
 /**
  * @route GET /api/improvement/gaps
@@ -30,7 +31,7 @@ router.get('/gaps', authenticateToken, async (req, res) => {
       data: gaps
     });
   } catch (error) {
-    console.error('[Continuous Improvement Routes] Get gaps error:', error);
+    logger.error('[Continuous Improvement Routes] Get gaps error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to analyze knowledge gaps',
@@ -56,7 +57,7 @@ router.post('/gaps/:gapId/suggestions', authenticateToken, async (req, res) => {
       data: suggestions
     });
   } catch (error) {
-    console.error('[Continuous Improvement Routes] Generate suggestions error:', error);
+    logger.error('[Continuous Improvement Routes] Generate suggestions error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to generate improvement suggestions',
@@ -101,7 +102,7 @@ router.post('/knowledge/update', authenticateToken, async (req, res) => {
       data: result
     });
   } catch (error) {
-    console.error('[Continuous Improvement Routes] Update knowledge error:', error);
+    logger.error('[Continuous Improvement Routes] Update knowledge error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to update knowledge base',
@@ -134,7 +135,7 @@ router.get('/metrics', authenticateToken, async (req, res) => {
       data: metrics
     });
   } catch (error) {
-    console.error('[Continuous Improvement Routes] Get metrics error:', error);
+    logger.error('[Continuous Improvement Routes] Get metrics error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to get improvement metrics',
@@ -174,7 +175,7 @@ router.post('/feedback', authenticateToken, async (req, res) => {
       data: result
     });
   } catch (error) {
-    console.error('[Continuous Improvement Routes] Submit feedback error:', error);
+    logger.error('[Continuous Improvement Routes] Submit feedback error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to submit feedback',
@@ -205,7 +206,7 @@ router.get('/feedback', authenticateToken, async (req, res) => {
       data: feedback
     });
   } catch (error) {
-    console.error('[Continuous Improvement Routes] Get feedback error:', error);
+    logger.error('[Continuous Improvement Routes] Get feedback error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to get feedback analytics',
@@ -241,7 +242,7 @@ router.post('/auto-update', authenticateToken, async (req, res) => {
       data: result
     });
   } catch (error) {
-    console.error('[Continuous Improvement Routes] Auto update error:', error);
+    logger.error('[Continuous Improvement Routes] Auto update error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to trigger auto update',
@@ -273,7 +274,7 @@ router.get('/recommendations', authenticateToken, async (req, res) => {
       data: recommendations
     });
   } catch (error) {
-    console.error('[Continuous Improvement Routes] Get recommendations error:', error);
+    logger.error('[Continuous Improvement Routes] Get recommendations error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to get recommendations',
@@ -309,7 +310,7 @@ router.post('/train-model', authenticateToken, async (req, res) => {
       data: result
     });
   } catch (error) {
-    console.error('[Continuous Improvement Routes] Train model error:', error);
+    logger.error('[Continuous Improvement Routes] Train model error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to train improvement model',
@@ -345,7 +346,7 @@ router.get('/performance', authenticateToken, async (req, res) => {
       data: performance
     });
   } catch (error) {
-    console.error('[Continuous Improvement Routes] Get performance error:', error);
+    logger.error('[Continuous Improvement Routes] Get performance error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to get performance data',
@@ -381,7 +382,7 @@ router.post('/benchmark', authenticateToken, async (req, res) => {
       data: benchmark
     });
   } catch (error) {
-    console.error('[Continuous Improvement Routes] Benchmark error:', error);
+    logger.error('[Continuous Improvement Routes] Benchmark error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to run benchmark',
@@ -417,7 +418,7 @@ router.get('/trends', authenticateToken, async (req, res) => {
       data: trends
     });
   } catch (error) {
-    console.error('[Continuous Improvement Routes] Get trends error:', error);
+    logger.error('[Continuous Improvement Routes] Get trends error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to get improvement trends',
@@ -457,7 +458,7 @@ router.post('/goals', authenticateToken, async (req, res) => {
       data: result
     });
   } catch (error) {
-    console.error('[Continuous Improvement Routes] Set goals error:', error);
+    logger.error('[Continuous Improvement Routes] Set goals error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to set improvement goals',
@@ -489,7 +490,7 @@ router.get('/goals/progress', authenticateToken, async (req, res) => {
       data: progress
     });
   } catch (error) {
-    console.error('[Continuous Improvement Routes] Get goals progress error:', error);
+    logger.error('[Continuous Improvement Routes] Get goals progress error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to get goals progress',

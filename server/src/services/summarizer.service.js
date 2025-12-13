@@ -1,4 +1,5 @@
 const axios = require('axios');
+const logger = require('../utils/logger');
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const GROQ_API_URL = process.env.GROQ_API_URL || 'https://api.groq.com/openai/v1/chat/completions';
@@ -39,7 +40,7 @@ Content:\n${text}\n`;
     const out = resp.data?.choices?.[0]?.message?.content;
     return out ? out.trim() : '';
   } catch (err) {
-    console.error('Groq summarization error:', err.response?.data || err.message);
+    logger.error('Groq summarization error', { error: err.response?.data || err.message });
     return ''; // degrade gracefully
   }
 }
