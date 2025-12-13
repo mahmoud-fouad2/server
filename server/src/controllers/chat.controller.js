@@ -424,21 +424,26 @@ exports.sendMessage = asyncHandler(async (req, res) => {
       logger.warn('Failed to update business usage:', e);
     }
 
+    // Sanitize response to remove provider/model signatures
+    const sanitized = responseValidator.sanitizeResponse(aiResult.response || '');
+
     await prisma.message.create({
       data: {
         conversationId: conversation.id,
         role: 'ASSISTANT',
-        content: aiResult.response,
+        content: sanitized,
         tokensUsed: aiResult.tokensUsed || 0,
         wasFromCache: false,
         aiModel: aiResult.model || 'groq-llama'
       }
     });
 
-    await cacheService.set(businessId, message, aiResult, 7 * 24 * 60 * 60);
+    // Cache sanitized result
+    const cachePayload = { ...aiResult, response: sanitized };
+    await cacheService.set(businessId, message, cachePayload, 7 * 24 * 60 * 60);
 
     res.json({
-      response: aiResult.response,
+      response: sanitized,
       conversationId: conversation.id,
       sessionId: visitorSessionData?.id || null,
       fromCache: false,

@@ -239,7 +239,9 @@ async function generateEmbedding(text) {
 
   // Production: no provider produced an embedding
   if (process.env.NODE_ENV === 'production') {
-    throw new Error('No embedding provider available. Configure GROQ_API_KEY or other embedding providers.');
+    logger.error('[Embedding] No embedding provider produced an embedding in production. Configure GROQ_API_KEY or other providers. Falling back to null embedding to avoid crashing.');
+    // Return null so callers can fallback to keyword search or other strategies
+    return null;
   }
 
   return null;

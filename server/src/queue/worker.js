@@ -46,7 +46,28 @@ const worker = new Worker('process-chunk', async (job) => {
     const prevMeta = chunk.metadata || {};
     const newMeta = { ...prevMeta, summary, type };
 
-    await prisma.knowledgeChunk.update({ where: { id: chunkId }, data: { embedding, metadata: newMeta } });
+    // If embedding is available and is numeric array, update both JSON field and pgvector column
+    try {
+      if (Array.isArray(embedding) && embedding.length > 0 && embedding.every(n => typeof n === 'number' && Number.isFinite(n))) {
+        const nums = embedding.map(n => Number(n));
+        const vectorLiteral = `'[${nums.join(',')}]'::vector`;
+        const embeddingJson = JSON.stringify(nums);
+        // Use raw SQL to update pgvector column (Prisma doesn't have native vector type)
+        await prisma.$executeRawUnsafe(`UPDATE "KnowledgeChunk" SET embedding = '${embeddingJson}', embedding_vector = ${vectorLiteral}, metadata = '${JSON.stringify(newMeta)}' WHERE id = '${chunkId}'`);
+      } else {
+        // Fallback: update JSON embedding only
+        await prisma.knowledgeChunk.update({ where: { id: chunkId }, data: { embedding, metadata: newMeta } });
+      }
+    } catch (e) {
+      console.error('Worker: failed to persist embedding/vector', e);
+      // As a fallback, attempt normal update
+      try {
+        await prisma.knowledgeChunk.update({ where: { id: chunkId }, data: { embedding, metadata: newMeta } });
+      } catch (err) {
+        console.error('Worker: fallback update failed', err);
+      }
+    }
+
     return { processed: true, id: chunkId };
 
   } catch (err) {

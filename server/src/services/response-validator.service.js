@@ -27,6 +27,45 @@ class ResponseValidator {
   }
 
   /**
+   * Sanitize AI response to remove provider/model self-identification or leaked provider signatures
+   * Returns cleaned string
+   */
+  sanitizeResponse(response) {
+    if (!response || typeof response !== 'string') return response;
+
+    let out = response;
+
+    // Remove sentences that claim provider identity or model names
+    // e.g. "I am Compound", "I'm Compound", "You are Compound", or provider signatures
+    const providerNames = ['Compound', 'Groq', 'Cerebras', 'DeepSeek', 'Gemini', 'Voyage', 'VoyageAI', 'nomic', 'Deepseek'];
+    const providerRegex = new RegExp(`\\b(${providerNames.join('|')})\\b`, 'i');
+
+    // Split into sentences and filter ones that contain provider identity patterns
+    const sentences = out
+      .replace(/\r/g, '')
+      .split(/(?<=[.?!\n])\s+/)
+      .filter(Boolean);
+
+    const filtered = sentences.filter(s => {
+      // If sentence explicitly says "I am <provider>" or mentions provider in first-person, drop it
+      if (/\bI\s*(am|'m|’m)\b/i.test(s) && providerRegex.test(s)) return false;
+      if (/\bI'm\b/i.test(s) && providerRegex.test(s)) return false;
+      if (/\bYou\s*(are|'re)\b/i.test(s) && providerRegex.test(s)) return false;
+      // Also drop short signatures that only contain provider name or model id
+      if (providerRegex.test(s) && s.trim().length < 60 && /\b(model|system|assistant|I am|I'm)\b/i.test(s)) return false;
+      return true;
+    });
+
+    out = filtered.join(' ').trim();
+
+    // As a last resort, remove standalone provider names at start/end
+    out = out.replace(new RegExp('^\\s*(?:' + providerNames.join('|') + ')[:\-\\s]*', 'i'), '');
+    out = out.replace(new RegExp('(?:' + providerNames.join('|') + ')\\s*$', 'i'), '');
+
+    return out;
+  }
+
+  /**
    * Validate response quality
    * @param {string} response - AI response text
    * @param {Object} context - Validation context

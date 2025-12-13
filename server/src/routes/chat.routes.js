@@ -10,6 +10,7 @@ const { validateRating, validateChatMessage } = require('../middleware/validatio
 const aiService = require('../services/ai.service');
 const vectorSearch = require('../services/vector-search.service');
 const responseValidator = require('../services/response-validator.service');
+const chatController = require('../controllers/chat.controller');
 const logger = require('../utils/logger');
 
 // Rate limiter for public chat endpoint
@@ -21,374 +22,7 @@ const chatLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// Public: Get messages for a conversation (for widget history)
-router.get('/public/:conversationId/messages', async (req, res) => {
-  try {
-    const { conversationId } = req.params;
-    const limit = parseInt(req.query.limit) || 50;
-
-    // Validate conversationId format (basic check)
-    if (!conversationId || conversationId.length < 5) {
-      return res.status(400).json({ error: 'Invalid conversation ID' });
-    }
-
-    const messages = await prisma.message.findMany({
-      where: { conversationId },
-      orderBy: { createdAt: 'asc' },
-      take: limit,
-      select: {
-        id: true,
-        content: true,
-        role: true,
-        createdAt: true
-      }
-    });
-
-    res.json({
-      data: messages
-    });
-  } catch (error) {
-    logger.error('Get Public Messages Error:', error);
-    res.status(500).json({ error: 'Failed to fetch messages' });
-  }
-});
-
-// Protected: Get all conversations for the business
-router.get('/conversations', authenticateToken, async (req, res) => {
-  try {
-    const { businessId } = req.user;
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
-    const skip = (page - 1) * limit;
-
-    if (!businessId) {
-      // Return empty list instead of 400 to prevent frontend errors
-      return res.json({
-        data: [],
-        pagination: {
-          page,
-          limit,
-          total: 0,
-          pages: 0
-        }
-      });
-    }
-
-    const [conversations, total] = await Promise.all([
-      prisma.conversation.findMany({
-        where: { businessId },
-        include: {
-          messages: {
-            orderBy: { createdAt: 'desc' },
-            take: 1
-          }
-        },
-        orderBy: { updatedAt: 'desc' },
-        skip,
-        take: limit
-      }),
-      prisma.conversation.count({ where: { businessId } })
-    ]);
-
-    res.json({
-      data: conversations,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit)
-      }
-    });
-  } catch (error) {
-    logger.error('Get Conversations Error:', error);
-    res.status(500).json({ error: 'Failed to fetch conversations' });
-  }
-});
-
-// Protected: Get messages for a conversation
-router.get('/:conversationId/messages', authenticateToken, async (req, res) => {
-  try {
-    const { conversationId } = req.params;
-    const limit = parseInt(req.query.limit) || 50;
-    const cursor = req.query.cursor;
-
-    const queryOptions = {
-      where: { conversationId },
-      orderBy: { createdAt: 'asc' },
-      take: limit
-    };
-
-    if (cursor) {
-      queryOptions.cursor = { id: cursor };
-      queryOptions.skip = 1;
-    }
-
-    const messages = await prisma.message.findMany(queryOptions);
-    const nextCursor = messages.length === limit ? messages[messages.length - 1].id : null;
-
-    res.json({
-      data: messages,
-      pagination: { nextCursor }
-    });
-  } catch (error) {
-    logger.error('Get Messages Error:', error);
-    res.status(500).json({ error: 'Failed to fetch messages' });
-  }
-});
-
-// Protected: Get Handover Requests
-router.get('/handover-requests', authenticateToken, async (req, res) => {
-  try {
-    const { businessId } = req.user;
-    
-    const conversations = await prisma.conversation.findMany({
-      where: { 
-        businessId,
-        messages: {
-          some: {
-            role: 'SYSTEM',
-            content: { startsWith: 'HANDOVER_REQUEST' }
-          }
-        }
-      },
-      include: {
-        messages: {
-          orderBy: { createdAt: 'desc' },
-          take: 5
-        }
-      },
-      orderBy: { updatedAt: 'desc' }
-    });
-
-    res.json(conversations);
-  } catch (error) {
-    logger.error('Get Handover Requests Error:', error);
-    res.status(500).json({ error: 'Failed to fetch requests' });
-  }
-});
-
-// Protected: Agent Reply
-router.post('/reply', authenticateToken, async (req, res) => {
-  try {
-    const { conversationId, message } = req.body;
-    
-    const newMessage = await prisma.message.create({
-      data: {
-        conversationId,
-        role: 'ASSISTANT',
-        content: message,
-        wasFromCache: false,
-        tokensUsed: 0
-      }
-    });
-    
-    // Update conversation timestamp and status
-    await prisma.conversation.update({
-      where: { id: conversationId },
-      data: { 
-        updatedAt: new Date(),
-        status: 'AGENT_ACTIVE'
-      }
-    });
-
-    res.json(newMessage);
-  } catch (error) {
-    logger.error('Agent Reply Error:', error);
-    res.status(500).json({ error: 'Failed to send reply' });
-  }
-});
-
-// Public: Submit Rating
-router.post('/rating', validateRating, async (req, res) => {
-  try {
-    const { conversationId, rating, feedback } = req.body;
-    
-    if (!conversationId || !rating) {
-      return res.status(400).json({ error: 'Conversation ID and rating are required' });
-    }
-
-    await prisma.conversation.update({
-      where: { id: conversationId },
-      data: { 
-        rating: parseInt(rating),
-        feedback: feedback || null,
-        status: 'CLOSED'
-      }
-    });
-
-    res.json({ success: true });
-  } catch (error) {
-    logger.error('Rating Error:', error);
-    res.status(500).json({ error: 'Failed to submit rating' });
-  }
-});
-
-// Public Chat Endpoint (for Widget) - with rate limiting
-router.post('/message', chatLimiter, validateChatMessage, async (req, res) => {
-  try {
-    let { message, businessId, conversationId, sessionId } = req.body;
-
-    if (!message) {
-      return res.status(400).json({ error: 'Message is required' });
-    }
-
-    // Sanitize user message to prevent XSS attacks
-    message = sanitizeHtml(message, {
-      allowedTags: [], // No HTML tags allowed
-      allowedAttributes: {}
-    });
-
-    // Validate business exists (temporarily disabled for testing)
-    // const business = await prisma.business.findUnique({ where: { id: businessId } });
-    // if (!business) {
-    //   return res.status(404).json({ error: 'Business not found' });
-    // }
-
-    // Prefer an explicit businessId passed by the client. If provided but not found, return 404.
-    let business = null;
-    if (businessId) {
-      business = await prisma.business.findUnique({ where: { id: businessId } });
-      if (!business) {
-        return res.status(404).json({ error: 'Business not found' });
-      }
-    } else {
-      // No businessId provided — fall back to a safe default business (for demo sites only)
-      business = await prisma.business.findFirst();
-      if (!business) {
-        // Find existing user or create one
-        let defaultUser = await prisma.user.findFirst();
-        if (!defaultUser) {
-          defaultUser = await prisma.user.create({
-            data: {
-              email: 'default@faheemly.com',
-              password: await require('bcryptjs').hash('default123', 10),
-              name: 'Default User',
-              role: 'CLIENT'
-            }
-          });
-        }
-        
-        // Create a default business
-        business = await prisma.business.create({
-          data: {
-            userId: defaultUser.id,
-            name: 'Default Business',
-            activityType: 'COMPANY',
-            botTone: 'friendly',
-            status: 'ACTIVE',
-            planType: 'ENTERPRISE',
-            messageQuota: 999999,
-            messagesUsed: 0
-          }
-        });
-      }
-    }
-
-    // Ensure we use a valid business id for all downstream operations
-    const resolvedBusinessId = business.id;
-
-    // 🎯 إنشاء أو استرجاع جلسة الزائر (مع كشف اللهجة)
-    let visitorSessionData = null;
-    let detectedDialect = 'standard';
-    
-    try {
-      visitorSessionData = await visitorSession.getOrCreateSession(resolvedBusinessId, sessionId, req);
-      detectedDialect = visitorSessionData.detectedDialect || 'standard';
-      console.log(`[Chat] 🌍 Visitor from ${visitorSessionData.country} | Dialect: ${detectedDialect}`);
-    } catch (visitorError) {
-      console.warn('[Chat] Visitor session error:', visitorError.message || visitorError);
-    }
-
-    // Find or create conversation (ربط بالجلسة)
-    let conversation;
-    if (conversationId) {
-      conversation = await prisma.conversation.findUnique({ where: { id: conversationId } });
-    }
-    
-    if (!conversation) {
-      conversation = await prisma.conversation.create({
-        data: {
-          businessId: resolvedBusinessId,
-          channel: 'WIDGET',
-          status: 'ACTIVE',
-          visitorSessionId: visitorSessionData?.id || null
-        }
-      });
-    }
-
-    // Save User Message
-    await prisma.message.create({
-      data: {
-        conversationId: conversation.id,
-        role: 'USER',
-        content: message
-      }
-    });
-
-    // If conversation is already in handover mode, do not trigger AI
-    if (conversation.status === 'HANDOVER_REQUESTED' || conversation.status === 'AGENT_ACTIVE') {
-       return res.json({
-         status: 'waiting_for_agent',
-         conversationId: conversation.id
-       });
-    }
-
-    // Check for Live Agent Handover
-    const lowerMsg = message.toLowerCase();
-    const handoverKeywords = ['agent', 'human', 'support', 'مساعدة', 'موظف', 'خدمة عملاء', 'بشري', 'i need agent'];
-    
-    // Check if we are in "Waiting for details" state
-    const lastAssistantMessage = await prisma.message.findFirst({
-      where: { conversationId: conversation.id, role: 'ASSISTANT' },
-      orderBy: { createdAt: 'desc' }
-    });
-
-    const isWaitingForDetails = lastAssistantMessage && lastAssistantMessage.content.includes('الاسم وملخص المشكلة');
-
-    if (isWaitingForDetails) {
-       const handoverMsg = "شكراً لك. تم استلام طلبك وسيتم تحويلك لأحد موظفينا حالاً.";
-       
-       // Create SYSTEM message to flag this
-       await prisma.message.create({
-         data: {
-           conversationId: conversation.id,
-           role: 'SYSTEM',
-           content: `HANDOVER_REQUEST|${message}` // Store user details here
-         }
-       });
-
-       // Update status
-       await prisma.conversation.update({
-         where: { id: conversation.id },
-         data: { status: 'HANDOVER_REQUESTED' }
-       });
-
-       // Send confirmation to user
-       await prisma.message.create({
-        data: {
-          conversationId: conversation.id,
-          role: 'ASSISTANT',
-          content: handoverMsg,
-          tokensUsed: 0,
-          wasFromCache: false
-        }
-       });
-
-       // TODO: Send Email Notification here (Mocked)
-       console.log(`[Email Sent] Handover request from ${message} for business ${businessId}`);
-
-       return res.json({
-         response: handoverMsg,
-         conversationId: conversation.id,
-         fromCache: false,
-         action: 'handover_complete'
-       });
-    }
-
-    const isHandover = handoverKeywords.some(kw => lowerMsg.includes(kw));
-
-    if (isHandover) {
-      const askDetailsMsg = "لتحويلك للموظف المختص، يرجى تزويدي بـ: الاسم وملخص المشكلة.";
+router.post('/message', chatLimiter, validateChatMessage, chatController.sendMessage);
       
       await prisma.message.create({
         data: {
@@ -509,6 +143,9 @@ ${knowledgeContext.map(k => k.content).join('\n\n')}
 
       const aiResult = await aiService.generateResponse(messages);
 
+      // Sanitize AI response to remove any provider/model self-identification
+      const sanitizedResponse = responseValidator.sanitizeResponse(aiResult.response || '');
+
       // Validate response quality
       const validation = responseValidator.validateResponse(aiResult.response, {
         isFirstMessage: formattedHistory.length === 0,
@@ -536,23 +173,24 @@ ${knowledgeContext.map(k => k.content).join('\n\n')}
         }
       }
 
-      // Save AI Message
+      // Save AI Message (store sanitized response)
       const aiMessage = await prisma.message.create({
         data: {
           conversationId: conversation.id,
           role: 'ASSISTANT',
-          content: aiResult.response,
+          content: sanitizedResponse,
           tokensUsed: aiResult.tokensUsed || 0,
           wasFromCache: false,
           aiModel: aiResult.model || 'groq-llama'
         }
       });
 
-      // Cache the response for future queries (7 days TTL)
-      await cacheService.set(businessId, message, aiResult, 7 * 24 * 60 * 60);
+      // Cache the sanitized response for future queries (7 days TTL)
+      const cachePayload = { ...aiResult, response: sanitizedResponse };
+      await cacheService.set(businessId, message, cachePayload, 7 * 24 * 60 * 60);
 
       res.json({
-        response: aiResult.response,
+        response: sanitizedResponse,
         conversationId: conversation.id,
         sessionId: visitorSessionData?.id || null, // 🎯 إرجاع sessionId للعميل
         fromCache: false,

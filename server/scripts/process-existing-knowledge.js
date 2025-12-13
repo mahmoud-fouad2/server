@@ -7,7 +7,7 @@
  */
 
 const { PrismaClient } = require('@prisma/client');
-const knowledgeBaseService = require('./src/services/knowledge-base.service');
+const knowledgeBaseService = require('../src/services/knowledge-base.service');
 
 const prisma = new PrismaClient();
 

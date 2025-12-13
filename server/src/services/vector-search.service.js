@@ -52,11 +52,11 @@ class VectorSearchService {
           content,
           metadata,
           "createdAt",
-          1 - (embedding <=> ${embeddingLiteral}) as similarity
-        FROM "KnowledgeChunk"
-        WHERE "businessId" = '${sanitizedBusinessId}'
-          AND embedding IS NOT NULL
-        ORDER BY embedding <=> ${embeddingLiteral}
+          1 - (embedding_vector <=> ${embeddingLiteral}) as similarity
+          FROM "KnowledgeChunk"
+          WHERE "businessId" = '${sanitizedBusinessId}'
+            AND embedding_vector IS NOT NULL
+          ORDER BY embedding_vector <=> ${embeddingLiteral}
         LIMIT ${limitValue}
       `;
       const rawExecutor = prisma.$queryRaw
@@ -208,7 +208,11 @@ class VectorSearchService {
       const chunksWithEmbeddings = await prisma.knowledgeChunk.count({
         where: {
           businessId,
-          embedding: { not: null }
+          // count by vector column when available
+          OR: [
+            { embedding: { not: null } },
+            { embedding_vector: { not: null } }
+          ]
         }
       });
 

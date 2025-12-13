@@ -106,7 +106,7 @@ const FaheemAnimatedLogo = ({
               priority
             />
           </div>
-          <div className="absolute -bottom-8 sm:-bottom-20 left-1/2 transform -translate-x-1/2 flex gap-2 z-0" aria-hidden="true">
+          <div className="absolute -bottom-12 sm:-bottom-28 left-1/2 transform -translate-x-1/2 flex gap-2 z-0" aria-hidden="true">
             <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-brand-500 rounded-full animate-bounce" style={{ animationDelay: '0s', zIndex: 0 }}></div>
             <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-brand-500 rounded-full animate-bounce" style={{ animationDelay: '0.12s', zIndex: 0 }}></div>
             <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-brand-500 rounded-full animate-bounce" style={{ animationDelay: '0.24s', zIndex: 0 }}></div>

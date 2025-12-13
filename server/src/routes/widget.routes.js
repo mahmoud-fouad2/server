@@ -93,134 +93,9 @@ router.get('/config/:businessId', async (req, res) => {
   }
 });
 
-// Upload Custom Icon (Protected)
-router.post('/upload-icon', authenticateToken, upload.single('icon'), async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded' });
-    }
-
-    // Determine Base URL with priority:
-    // 1. Environment Variable (API_URL)
-    // 2. Hardcoded Production URL (if NODE_ENV is production)
-    // 3. Localhost (fallback)
-    let baseUrl = process.env.API_URL;
-    
-    if (!baseUrl) {
-      if (process.env.NODE_ENV === 'production') {
-        baseUrl = 'https://fahimo-api.onrender.com';
-      } else {
-        baseUrl = 'http://localhost:3001';
-      }
-    }
-    
-    baseUrl = baseUrl.replace(/\/$/, '');
-
-    // Force HTTPS in production
-    const finalBaseUrl = (process.env.NODE_ENV === 'production' && !baseUrl.startsWith('https')) 
-      ? baseUrl.replace('http:', 'https:') 
-      : baseUrl;
-      
-    const iconUrl = `${finalBaseUrl}/uploads/icons/${req.file.filename}`;
-    res.json({ url: iconUrl });
-  } catch (error) {
-    console.error('Icon Upload Error:', error);
-    res.status(500).json({ error: 'Failed to upload icon' });
-  }
-});
-
-// Update Widget Config (Protected)
-router.post('/config', authenticateToken, async (req, res) => {
-  try {
-    const { welcomeMessage, primaryColor, personality, showBranding, avatar, customIconUrl } = req.body;
-    const businessId = req.user.businessId;
-
-    if (!businessId) {
-      return res.status(400).json({ error: 'Business ID missing. Please re-login.' });
-    }
-
-    // Check if business exists
-    const business = await prisma.business.findUnique({ where: { id: businessId } });
-    if (!business) {
-      return res.status(404).json({ error: 'Business not found. Please contact support.' });
-    }
-
-    const config = {
-      welcomeMessage,
-      primaryColor,
-      personality,
-      showBranding,
-      avatar,
-      customIconUrl
-    };
-
-    await prisma.business.update({
-      where: { id: businessId },
-      data: {
-        widgetConfig: JSON.stringify(config)
-      }
-    });
-
-    res.json({ message: 'Widget configuration updated', config });
-  } catch (error) {
-    console.error('Widget Update Error:', error);
-    res.status(500).json({ error: 'Failed to update config' });
-  }
-});
-
-// Widget Chat Endpoint (Public) - Forwards to chat/message
-router.post('/chat', async (req, res) => {
-  try {
-    const { businessId, message, conversationId, sessionId } = req.body;
-
-    if (!message || !businessId) {
-      return res.status(400).json({ error: 'Message and Business ID are required' });
-    }
-
-    // Import chat logic (simple forward for now)
-    const chatRoutes = require('./chat.routes');
-    // Since it's the same app, we can simulate the request
-    // For simplicity, duplicate the logic or call the handler
-
-    // Temporarily duplicate the validation and business check from chat.routes.js
-    const business = await prisma.business.findUnique({ where: { id: businessId } });
-    if (!business) {
-      return res.status(404).json({ error: 'Business not found' });
-    }
-
-    // Create a mock req object for the chat handler
-    const mockReq = {
-      body: { message, businessId, conversationId, sessionId },
-      ip: req.ip,
-      headers: req.headers
-    };
-
-    // Call the chat message handler logic (simplified)
-    // Since we can't easily call the handler, duplicate the core logic
-    const visitorSession = require('../services/visitor-session.service');
-    const redisCache = require('../services/cache.service');
-    const groqService = require('../services/groq.service');
-    const vectorSearch = require('../services/vector-search.service');
-    const responseValidator = require('../services/response-validator.service');
-    const logger = require('../utils/logger');
-
-    // Find or create conversation
-    let conversation;
-    if (conversationId) {
-      conversation = await prisma.conversation.findUnique({ where: { id: conversationId } });
-    }
-    if (!conversation) {
-      conversation = await prisma.conversation.create({
-        data: {
-          businessId,
-          channel: 'WIDGET',
-          status: 'ACTIVE'
-        }
-      });
-    }
-
-    // Save User Message
-    await prisma.message.create({
+// Widget Chat Endpoint (Public) - delegate to central chat controller for unified behavior
+const chatController = require('../controllers/chat.controller');
+router.post('/chat', chatController.sendMessage);
       data: {
         conversationId: conversation.id,
         role: 'USER',
@@ -257,34 +132,56 @@ router.post('/chat', async (req, res) => {
       take: 20
     });
 
-    // Generate response
+    // Use Vector Search to fetch relevant knowledge chunks (same as chat.routes)
+    let knowledgeContext = [];
+    try {
+      knowledgeContext = await vectorSearch.searchKnowledge(message, businessId, 3);
+      console.log(`[Widget] 📚 Found ${knowledgeContext.length} relevant knowledge chunks`);
+    } catch (vectorError) {
+      console.warn('[Widget] Vector search failed, falling back to recent knowledge:', vectorError.message || vectorError);
+      const fallbackKnowledge = await prisma.knowledgeBase.findMany({
+        where: { businessId },
+        orderBy: { createdAt: 'desc' },
+        take: 2
+      });
+      knowledgeContext = fallbackKnowledge;
+    }
+
+    // Prepare history for the chat call
+    const formattedHistory = history.reverse().map(msg => ({
+      role: msg.role === 'USER' ? 'user' : 'assistant',
+      content: msg.content
+    }));
+
+    // Generate response with knowledge context
     const aiResult = await groqService.generateChatResponse(
       message,
       business,
-      history.reverse().map(msg => ({
-        role: msg.role === 'USER' ? 'user' : 'assistant',
-        content: msg.content
-      })),
-      []
+      formattedHistory,
+      knowledgeContext
     );
 
-    // Save AI Message
+    // Sanitize response to remove provider/model signatures
+    const sanitized = responseValidator.sanitizeResponse(aiResult.response || '');
+
+    // Save AI Message (store sanitized response)
     await prisma.message.create({
       data: {
         conversationId: conversation.id,
         role: 'ASSISTANT',
-        content: aiResult.response,
+        content: sanitized,
         tokensUsed: aiResult.tokensUsed || 0,
         wasFromCache: false,
         aiModel: aiResult.model || 'groq-llama'
       }
     });
 
-    // Cache
-    await redisCache.set(businessId, message, aiResult, 7 * 24 * 60 * 60);
+    // Cache sanitized result
+    const cachePayload = { ...aiResult, response: sanitized };
+    await redisCache.set(businessId, message, cachePayload, 7 * 24 * 60 * 60);
 
     res.json({
-      response: aiResult.response,
+      response: sanitized,
       conversationId: conversation.id,
       fromCache: false,
       tokensUsed: aiResult.tokensUsed,
