@@ -179,6 +179,8 @@ export const businessApi = {
   getSettings: () => apiCall('/api/business/settings'),
   updateSettings: data =>
     apiCall('/api/business/settings', { method: 'PUT', body: data }),
+  updatePreChatSettings: enabled =>
+    apiCall('/api/business/pre-chat-settings', { method: 'PUT', body: { preChatFormEnabled: enabled } }),
   updatePlan: data =>
     apiCall('/api/business/plan', { method: 'PUT', body: data }),
   getIntegrations: () => apiCall('/api/business/integrations'),

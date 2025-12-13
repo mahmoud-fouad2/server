@@ -15,7 +15,7 @@ import {
   Save,
   Loader2,
 } from 'lucide-react';
-import { widgetApi } from '@/lib/api';
+import { widgetApi, businessApi } from '@/lib/api';
 import { BRAND } from '@/constants';
 
 export default function WidgetSettingsView({
@@ -29,6 +29,7 @@ export default function WidgetSettingsView({
     personality: 'friendly',
     showBranding: true,
     avatar: 'robot',
+    preChatFormEnabled: false,
   });
   const [savingConfig, setSavingConfig] = useState(false);
 
@@ -41,7 +42,11 @@ export default function WidgetSettingsView({
   const fetchConfig = async businessId => {
     try {
       const data = await widgetApi.getConfig(businessId);
-      setWidgetConfig(prev => ({ ...prev, ...(data?.widgetConfig || {}) }));
+      setWidgetConfig(prev => ({
+        ...prev,
+        ...(data?.widgetConfig || {}),
+        preChatFormEnabled: data?.preChatFormEnabled ?? prev.preChatFormEnabled,
+      }));
     } catch (err) {
       console.error(err);
     }
@@ -231,6 +236,31 @@ export default function WidgetSettingsView({
                   ...widgetConfig,
                   showBranding: e.target.checked,
                 });
+              }}
+              className="toggle"
+            />
+          </div>
+
+          <div className="flex items-center justify-between p-3 border rounded-lg">
+            <div className="space-y-0.5">
+              <label className="text-sm font-medium">نموذج ما قبل المحادثة</label>
+              <p className="text-xs text-muted-foreground">
+                اجمع بيانات العميل قبل بدء المحادثة (الاسم، البريد، الهاتف، ملخص الطلب)
+              </p>
+            </div>
+            <input
+              type="checkbox"
+              checked={widgetConfig.preChatFormEnabled}
+              onChange={async e => {
+                const enabled = e.target.checked;
+                try {
+                  // Persist via Business API
+                  await businessApi.updatePreChatSettings(enabled);
+                  setWidgetConfig({ ...widgetConfig, preChatFormEnabled: enabled });
+                  addNotification('تم تحديث إعدادات نموذج ما قبل المحادثة');
+                } catch (err) {
+                  addNotification('فشل في تحديث إعدادات نموذج ما قبل المحادثة', 'error');
+                }
               }}
               className="toggle"
             />
