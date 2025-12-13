@@ -142,7 +142,7 @@ Add to your `.env`:
 # Required (already should exist)
 JWT_SECRET=your-strong-secret-32-chars-minimum
 DATABASE_URL=postgresql://...
-GROQ_API_KEY=gsk_...
+GROQ_API_KEY=gsk_your_groq_api_key_here
 
 # Optional (for Redis caching)
 REDIS_URL=redis://localhost:6379
