@@ -24,6 +24,13 @@ const chatLimiter = rateLimit({
 
 router.post('/message', chatLimiter, validateChatMessage, chatController.sendMessage);
 
+// Admin / Dashboard routes (require authentication)
+router.get('/conversations', authenticateToken, chatController.getConversations);
+router.get('/:conversationId/messages', authenticateToken, chatController.getMessages);
+router.get('/handover-requests', authenticateToken, chatController.getHandoverRequests);
+router.post('/agent/reply', authenticateToken, chatController.agentReply);
+router.post('/:conversationId/rate', authenticateToken, chatController.submitRating);
+
 // Test endpoint for widget/examples page
 router.post('/test', chatLimiter, async (req, res) => {
   try {
