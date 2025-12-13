@@ -96,101 +96,68 @@ router.get('/config/:businessId', async (req, res) => {
 // Widget Chat Endpoint (Public) - delegate to central chat controller for unified behavior
 const chatController = require('../controllers/chat.controller');
 router.post('/chat', chatController.sendMessage);
-      data: {
-        conversationId: conversation.id,
-        role: 'USER',
-        content: message
-      }
-    });
 
-    // Check cache
-    const cachedResponse = await redisCache.get(businessId, message);
-    if (cachedResponse) {
-      await prisma.message.create({
-        data: {
-          conversationId: conversation.id,
-          role: 'ASSISTANT',
-          content: cachedResponse.response.response || cachedResponse.response,
-          tokensUsed: 0,
-          wasFromCache: true,
-          aiModel: 'cached'
-        }
-      });
-      return res.json({
-        response: cachedResponse.response.response || cachedResponse.response,
-        conversationId: conversation.id,
-        fromCache: true,
-        tokensUsed: 0,
-        model: 'redis-cache'
-      });
+// Update Widget Config (Authenticated)
+router.post('/config', authenticateToken, async (req, res) => {
+  try {
+    const businessId = req.user.businessId;
+    const widgetConfig = req.body;
+
+    // Validate widget config structure
+    if (typeof widgetConfig !== 'object') {
+      return res.status(400).json({ error: 'Invalid widget config format' });
     }
 
-    // Get history
-    const history = await prisma.message.findMany({
-      where: { conversationId: conversation.id },
-      orderBy: { createdAt: 'desc' },
-      take: 20
+    // Update business widget config
+    const updatedBusiness = await prisma.business.update({
+      where: { id: businessId },
+      data: { widgetConfig: JSON.stringify(widgetConfig) }
     });
 
-    // Use Vector Search to fetch relevant knowledge chunks (same as chat.routes)
-    let knowledgeContext = [];
-    try {
-      knowledgeContext = await vectorSearch.searchKnowledge(message, businessId, 3);
-      console.log(`[Widget] 📚 Found ${knowledgeContext.length} relevant knowledge chunks`);
-    } catch (vectorError) {
-      console.warn('[Widget] Vector search failed, falling back to recent knowledge:', vectorError.message || vectorError);
-      const fallbackKnowledge = await prisma.knowledgeBase.findMany({
-        where: { businessId },
-        orderBy: { createdAt: 'desc' },
-        take: 2
-      });
-      knowledgeContext = fallbackKnowledge;
-    }
-
-    // Prepare history for the chat call
-    const formattedHistory = history.reverse().map(msg => ({
-      role: msg.role === 'USER' ? 'user' : 'assistant',
-      content: msg.content
-    }));
-
-    // Generate response with knowledge context
-    const aiResult = await groqService.generateChatResponse(
-      message,
-      business,
-      formattedHistory,
-      knowledgeContext
-    );
-
-    // Sanitize response to remove provider/model signatures
-    const sanitized = responseValidator.sanitizeResponse(aiResult.response || '');
-
-    // Save AI Message (store sanitized response)
-    await prisma.message.create({
-      data: {
-        conversationId: conversation.id,
-        role: 'ASSISTANT',
-        content: sanitized,
-        tokensUsed: aiResult.tokensUsed || 0,
-        wasFromCache: false,
-        aiModel: aiResult.model || 'groq-llama'
-      }
+    res.json({ 
+      message: 'Widget config updated successfully',
+      widgetConfig: JSON.parse(updatedBusiness.widgetConfig)
     });
-
-    // Cache sanitized result
-    const cachePayload = { ...aiResult, response: sanitized };
-    await redisCache.set(businessId, message, cachePayload, 7 * 24 * 60 * 60);
-
-    res.json({
-      response: sanitized,
-      conversationId: conversation.id,
-      fromCache: false,
-      tokensUsed: aiResult.tokensUsed,
-      model: aiResult.model
-    });
-
   } catch (error) {
-    logger.error('Widget Chat Error:', error);
-    res.status(500).json({ error: 'Failed to process message' });
+    console.error('Update Widget Config Error:', error);
+    res.status(500).json({ error: 'Failed to update widget config' });
+  }
+});
+
+// Upload Widget Icon (Authenticated)
+router.post('/upload-icon', authenticateToken, upload.single('icon'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const businessId = req.user.businessId;
+    const iconUrl = `/uploads/icons/${req.file.filename}`;
+
+    // Update business widget config with new icon URL
+    const business = await prisma.business.findUnique({
+      where: { id: businessId }
+    });
+
+    if (!business) {
+      return res.status(404).json({ error: 'Business not found' });
+    }
+
+    const currentConfig = business.widgetConfig ? JSON.parse(business.widgetConfig) : {};
+    currentConfig.customIconUrl = iconUrl;
+
+    await prisma.business.update({
+      where: { id: businessId },
+      data: { widgetConfig: JSON.stringify(currentConfig) }
+    });
+
+    res.json({ 
+      message: 'Icon uploaded successfully',
+      iconUrl: iconUrl
+    });
+  } catch (error) {
+    console.error('Upload Icon Error:', error);
+    res.status(500).json({ error: 'Failed to upload icon' });
   }
 });
 

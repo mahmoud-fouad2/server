@@ -57,8 +57,11 @@ router.post('/test', chatLimiter, async (req, res) => {
       [{ role: 'user', content: message }]
     );
 
+    // Sanitize AI response to remove any provider/model self-identification
+    const sanitizedResponse = responseValidator.sanitizeResponse(aiResponse?.response || '');
+
     res.json({
-      response: aiResponse?.response || 'مرحباً! كيف يمكنني مساعدتك؟',
+      response: sanitizedResponse || 'مرحباً! كيف يمكنني مساعدتك؟',
       businessId: business.id
     });
 

@@ -58,7 +58,7 @@ async function generateEmbedding(text) {
   // Configs
   const GROQ_KEY = process.env.GROQ_API_KEY;
   const GROQ_EMBED_URL = process.env.GROQ_EMBED_URL || 'https://api.groq.com/openai/v1/embeddings';
-  const GROQ_EMBED_MODEL = process.env.GROQ_EMBED_MODEL || 'groq-embedder';
+  const GROQ_EMBED_MODEL = process.env.GROQ_EMBED_MODEL || 'text-embedding-ada-002';
   const skipGeminiEnv = process.env.SKIP_GEMINI_EMBEDDING === 'true';
 
   // Determine provider priority. Can be overridden with EMBEDDING_PROVIDER_ORDER
@@ -74,7 +74,7 @@ async function generateEmbedding(text) {
   // Helper to attempt Groq with candidate models
   async function tryGroq() {
     if (!GROQ_KEY) return null;
-    const candidates = [GROQ_EMBED_MODEL, 'groq-embedder', 'groq-embed-multilingual-v3'].filter(Boolean);
+    const candidates = [GROQ_EMBED_MODEL, 'text-embedding-ada-002', 'text-embedding-3-small'].filter(Boolean);
     for (const modelName of candidates) {
       try {
         const resp = await postWithRetry(

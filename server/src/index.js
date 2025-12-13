@@ -325,14 +325,6 @@ if (!app._router || !app._router.stack.some(layer => layer.route && layer.route.
   app.get('/api/widget/config/:businessId', (req, res) => {
     res.json(defaultWidgetConfig);
   });
-
-  app.post('/api/widget/config', (req, res) => {
-    res.status(503).json({ error: 'Widget service unavailable' });
-  });
-
-  app.post('/api/widget/upload-icon', (req, res) => {
-    res.status(503).json({ error: 'Widget service unavailable' });
-  });
 }
 
 // Health endpoint (JSON) to let frontends assert health without parsing HTML
