@@ -15,7 +15,7 @@ import {
   Save,
   Loader2,
 } from 'lucide-react';
-import { widgetApi } from '@/lib/api';
+import { widgetApi, businessApi } from '@/lib/api';
 import { BRAND } from '@/constants';
 
 export default function WidgetSettingsView({
@@ -28,6 +28,7 @@ export default function WidgetSettingsView({
     primaryColor: '#000000',
     personality: 'friendly',
     showBranding: true,
+    preChatFormEnabled: false,
     avatar: 'robot',
   });
   const [savingConfig, setSavingConfig] = useState(false);
@@ -41,7 +42,12 @@ export default function WidgetSettingsView({
   const fetchConfig = async businessId => {
     try {
       const data = await widgetApi.getConfig(businessId);
-      setWidgetConfig(prev => ({ ...prev, ...(data?.widgetConfig || {}) }));
+      // Include business-level settings like preChatFormEnabled from widget config response
+      setWidgetConfig(prev => ({
+        ...prev,
+        ...(data?.widgetConfig || {}),
+        preChatFormEnabled: data?.preChatFormEnabled ?? prev.preChatFormEnabled,
+      }));
     } catch (err) {
       console.error(err);
     }
@@ -51,6 +57,15 @@ export default function WidgetSettingsView({
     setSavingConfig(true);
     try {
       await widgetApi.updateConfig(widgetConfig);
+      // Update business pre-chat form setting separately if present
+      if (typeof widgetConfig.preChatFormEnabled === 'boolean') {
+        try {
+          await businessApi.updatePreChatSettings({ preChatFormEnabled: widgetConfig.preChatFormEnabled });
+        } catch (err) {
+          // ignore here - widget API update was the main payload; show a notification
+          addNotification('فشل تحديث حالة نموذج ما قبل المحادثة', 'error');
+        }
+      }
       addNotification('تم حفظ الإعدادات');
     } catch (err) {
       addNotification('فشل الحفظ', 'error');
@@ -209,28 +224,17 @@ export default function WidgetSettingsView({
           <div className="flex items-center justify-between p-3 border rounded-lg">
             <div className="space-y-0.5">
               <label className="text-sm font-medium">
-                علامة &quot;مدعوم من فهيم&quot;
+                نموذج ما قبل المحادثة
               </label>
               <p className="text-xs text-muted-foreground">
-                إظهار شعار فهيم في أسفل الويدجت (متاح فقط في الباقة الاحترافية)
+                طلب معلومات من الزائر قبل بدء المحادثة (اسم، إيميل، أو رقم هاتف)
               </p>
             </div>
             <input
               type="checkbox"
-              checked={widgetConfig.showBranding}
+              checked={widgetConfig.preChatFormEnabled}
               onChange={e => {
-                if (
-                  user?.planType !== 'PRO' &&
-                  user?.planType !== 'ENTERPRISE' &&
-                  user?.planType !== 'AGENCY'
-                ) {
-                  setShowProAlert(true);
-                  return;
-                }
-                setWidgetConfig({
-                  ...widgetConfig,
-                  showBranding: e.target.checked,
-                });
+                setWidgetConfig({ ...widgetConfig, preChatFormEnabled: e.target.checked });
               }}
               className="toggle"
             />

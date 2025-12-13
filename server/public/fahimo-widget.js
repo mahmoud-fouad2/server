@@ -911,19 +911,31 @@
 
 
         launcher.onclick = () => {
+            // If the chat is already open, clicking the launcher should close it
+            if (isOpen) {
+                isOpen = false;
+                chatWindow.classList.remove('fahimo-open');
+                // hide prechat form if visible
+                if (prechatFormVisible) hidePrechatForm();
+                return;
+            }
+
+            // If prechat is enabled and there's no conversation yet, show the form if not submitted
             if (prechatEnabled && !conversationId) {
-                // Check if pre-chat form was already submitted in this session
                 const prechatSubmitted = localStorage.getItem(`fahimo_prechat_${businessId}_${sessionId}`);
                 if (!prechatSubmitted) {
                     showPrechatForm();
                     return;
                 }
             }
+
+            // Otherwise, open the chat window
             openChat();
         };
         closeBtn.onclick = () => {
             isOpen = false;
             chatWindow.classList.remove('fahimo-open');
+            if (prechatFormVisible) hidePrechatForm();
         };
     } catch (e) {
         console.error('Fahimo widget init error', e);

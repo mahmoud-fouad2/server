@@ -184,6 +184,7 @@ export const businessApi = {
   getIntegrations: () => apiCall('/api/business/integrations'),
   getChartData: () => apiCall('/api/business/chart-data'),
   getConversations: () => apiCall('/api/business/conversations'),
+  updatePreChatSettings: data => apiCall('/api/business/pre-chat-settings', { method: 'PUT', body: data }),
 };
 
 export const contactApi = {
