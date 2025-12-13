@@ -507,7 +507,79 @@ async function generateChatResponse(message, business, history = [], knowledgeBa
   let systemPrompt = `You are the AI assistant for ${business.name}. `;
   
   if (business.activityType) {
-    systemPrompt += `This is a ${business.activityType} business. `;
+    // Enhanced business type descriptions for better AI context
+    const businessTypeDescriptions = {
+      // Food & Beverage
+      'RESTAURANT': 'restaurant serving food and beverages with a focus on customer satisfaction and menu recommendations',
+      'CAFE': 'cafe offering coffee, tea, and light meals in a relaxed atmosphere',
+      'BAKERY': 'bakery specializing in fresh baked goods, pastries, and desserts',
+      
+      // Healthcare
+      'CLINIC': 'medical clinic providing healthcare services and patient care',
+      'HOSPITAL': 'hospital offering comprehensive medical care and emergency services',
+      'PHARMACY': 'pharmacy dispensing medications and providing health consultations',
+      'DENTAL': 'dental clinic specializing in oral health and dental procedures',
+      
+      // Retail & Shopping
+      'RETAIL': 'retail store offering various products and shopping assistance',
+      'FASHION': 'fashion boutique offering clothing and style consultations',
+      'ELECTRONICS': 'electronics store providing tech products and gadget advice',
+      'JEWELRY': 'jewelry store offering fine jewelry and luxury accessories',
+      'FURNITURE': 'furniture store helping with home and office furnishings',
+      
+      // Business & Services
+      'COMPANY': 'business providing professional services and corporate solutions',
+      'CONSULTING': 'consulting firm offering expert advice and strategic guidance',
+      'LEGAL': 'law firm providing legal services and legal consultations',
+      'ACCOUNTING': 'accounting firm offering financial and tax services',
+      'REALESTATE': 'real estate agency helping with property sales and rentals',
+      'IT': 'IT company providing technology solutions and support',
+      'SOFTWARE': 'software company developing custom applications and solutions',
+      'DIGITAL': 'digital agency offering online marketing and web services',
+      'MARKETING': 'marketing agency providing promotional and advertising services',
+      'DESIGN': 'design studio creating visual and creative solutions',
+      'PHOTOGRAPHY': 'photography studio offering professional photo services',
+      'EVENTS': 'event planning company organizing weddings and corporate events',
+      'ECOMMERCE': 'e-commerce platform selling products online',
+      'DROPSHIPPING': 'dropshipping business fulfilling orders from suppliers',
+      'MAINTENANCE': 'maintenance company providing repair and upkeep services',
+      'SECURITY': 'security company offering protection and surveillance services',
+      'TELECOM': 'telecommunications company providing communication services',
+      'ARCHITECTURE': 'architecture firm designing buildings and spaces',
+      'INTERIOR': 'interior design company creating beautiful living spaces',
+      'CONSTRUCTION': 'construction company building and renovating properties',
+      
+      // Education
+      'EDUCATION': 'educational institution providing learning and training programs',
+      'SCHOOL': 'school offering primary or secondary education',
+      'UNIVERSITY': 'university providing higher education and research',
+      
+      // Finance
+      'BANK': 'bank offering financial services and banking solutions',
+      'INSURANCE': 'insurance company providing risk management and coverage',
+      'INVESTMENT': 'investment firm helping with financial planning and investments',
+      
+      // Hospitality & Tourism
+      'HOTEL': 'hotel providing accommodation and hospitality services',
+      'TRAVEL': 'travel agency offering vacation planning and bookings',
+      'TOURISM': 'tourism company organizing tours and travel experiences',
+      
+      // Beauty & Wellness
+      'SALON': 'beauty salon offering hair, makeup, and grooming services',
+      'SPA': 'spa providing relaxation and wellness treatments',
+      'GYM': 'gym offering fitness and exercise facilities',
+      
+      // Automotive & Transport
+      'AUTOMOTIVE': 'automotive dealership selling and servicing vehicles',
+      'CARMAINTENANCE': 'auto repair shop providing vehicle maintenance services',
+      'LOGISTICS': 'logistics company managing transportation and supply chain',
+      
+      // Other
+      'OTHER': 'business providing specialized services and solutions'
+    };
+    
+    const businessDescription = businessTypeDescriptions[business.activityType] || `${business.activityType.toLowerCase()} business`;
+    systemPrompt += `This is a ${businessDescription}. `;
   }
   
   // Use personality from widgetConfig if available, otherwise use botTone

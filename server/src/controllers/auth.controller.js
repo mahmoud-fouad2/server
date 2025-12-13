@@ -38,7 +38,16 @@ exports.register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Validate Activity Type
-    const validActivityTypes = ['RESTAURANT', 'RETAIL', 'CLINIC', 'COMPANY', 'OTHER'];
+    const validActivityTypes = [
+      'RESTAURANT', 'CAFE', 'BAKERY', 'CLINIC', 'HOSPITAL', 'PHARMACY', 'DENTAL',
+      'RETAIL', 'FASHION', 'ELECTRONICS', 'JEWELRY', 'FURNITURE', 'COMPANY',
+      'CONSULTING', 'LEGAL', 'ACCOUNTING', 'REALESTATE', 'EDUCATION', 'SCHOOL',
+      'UNIVERSITY', 'BANK', 'INSURANCE', 'INVESTMENT', 'HOTEL', 'TRAVEL',
+      'TOURISM', 'SALON', 'SPA', 'GYM', 'AUTOMOTIVE', 'CARMAINTENANCE',
+      'LOGISTICS', 'CONSTRUCTION', 'ARCHITECTURE', 'INTERIOR', 'IT',
+      'MAINTENANCE', 'SECURITY', 'SOFTWARE', 'TELECOM', 'DIGITAL', 'MARKETING',
+      'DESIGN', 'PHOTOGRAPHY', 'EVENTS', 'ECOMMERCE', 'DROPSHIPPING', 'OTHER'
+    ];
     let validActivityType = activityType || 'OTHER';
     if (!validActivityTypes.includes(validActivityType)) {
       validActivityType = 'OTHER';
