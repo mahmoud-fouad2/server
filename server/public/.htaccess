@@ -35,6 +35,11 @@ Redirect 302 /_next/static/css/00a75e27fcf9f46b.css /_next/static/css/b4006069f6
     ExpiresByType text/css "access plus 1 month"
 </IfModule>
 
+# Ensure CSS files are served with correct mime
+<IfModule mod_mime.c>
+    AddType text/css .css
+</IfModule>
+
 # If faheemly.com doesn't have the Next.js static files, redirect those
 # requests to the Render backend so CSS/JS/_next assets are served correctly.
 RewriteEngine On

@@ -37,7 +37,7 @@ class ResponseValidator {
 
     // Remove sentences that claim provider identity or model names
     // e.g. "I am Compound", "I'm Compound", "You are Compound", or provider signatures
-    const providerNames = ['Compound', 'Groq', 'Cerebras', 'DeepSeek', 'Gemini', 'Voyage', 'VoyageAI', 'nomic', 'Deepseek'];
+    const providerNames = ['Compound', 'Groq', 'Cerebras', 'DeepSeek', 'Deepseek', 'Deep Seek', 'Gemini', 'Voyage', 'VoyageAI', 'nomic', 'OpenAI', 'ChatGPT', 'GPT', 'Claude'];
     const providerRegex = new RegExp(`\\b(${providerNames.join('|')})\\b`, 'i');
 
     // Split into sentences and filter ones that contain provider identity patterns
@@ -57,6 +57,15 @@ class ResponseValidator {
     });
 
     out = filtered.join(' ').trim();
+
+    // Remove any remaining lines that contain provider names (best-effort)
+    try {
+      const lines = out.split(/\n+/).map(l => l.trim()).filter(Boolean);
+      const cleanLines = lines.filter(l => !providerRegex.test(l));
+      out = cleanLines.join('\n');
+    } catch (e) {
+      // if anything odd happens while trimming lines, fallback to original output
+    }
 
     // As a last resort, remove standalone provider names at start/end
       // Remove leading provider name and following punctuation/whitespace (colon, hyphen, spaces)

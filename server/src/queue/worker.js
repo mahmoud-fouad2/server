@@ -94,8 +94,22 @@ async function startWorker() {
   }
   }, { connection: { url: REDIS_URL }, concurrency: 3, lockDuration: 60000 });
 
-  worker.on('completed', job => logger.info('Chunk job completed', { jobId: job.id }));
-  worker.on('failed', (job, err) => logger.error('Chunk job failed', { jobId: job.id, error: err.message }));
+  worker.on('completed', job => {
+    logger.info('Chunk job completed', { jobId: job.id, chunkId: job.data?.chunkId });
+  });
+  
+  worker.on('failed', (job, err) => {
+    logger.error('Chunk job failed', { 
+      jobId: job.id, 
+      chunkId: job.data?.chunkId,
+      error: err.message,
+      stack: err.stack 
+    });
+  });
+
+  worker.on('error', (err) => {
+    logger.error('Worker error', { error: err.message, stack: err.stack });
+  });
 
   logger.info('Chunk worker running, connected to Redis', { redis: REDIS_URL });
   return worker;
@@ -104,11 +118,21 @@ async function startWorker() {
 async function stopWorker() {
   if (!worker) return;
   try {
-    await worker.close();
+    logger.info('Stopping chunk worker...');
+    // Wait for active jobs to complete (with timeout)
+    await Promise.race([
+      worker.close(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Worker close timeout')), 10000))
+    ]).catch(err => {
+      if (err.message !== 'Worker close timeout') throw err;
+      logger.warn('Worker close timeout, forcing close');
+    });
+    logger.info('Chunk worker stopped successfully');
   } catch (e) {
     logger.warn('Failed to close worker', { message: e.message || e });
+  } finally {
+    worker = null;
   }
-  worker = null;
 }
 
 // Only auto-start the worker when running as a dedicated process (not when

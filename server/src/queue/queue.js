@@ -1,4 +1,4 @@
-const { Queue, QueueScheduler } = require('bullmq');
+const { Queue, JobScheduler } = require('bullmq');
 const logger = require('../utils/logger');
 
 const REDIS_URL = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
@@ -12,7 +12,15 @@ function initQueues() {
 	if (chunkQueue) return { chunkQueue, scheduler };
 	const connection = { connection: { url: REDIS_URL } };
 	chunkQueue = new Queue('process-chunk', connection);
-	scheduler = new QueueScheduler('process-chunk', connection).catch(err => logger.warn('QueueScheduler error', { error: err }));
+		try {
+			// In bullmq v5, `QueueScheduler` was renamed to `JobScheduler`.
+			// Use `JobScheduler` where available for scheduling background job maintenance.
+			scheduler = new JobScheduler('process-chunk', connection);
+		} catch (err) {
+			// Some environments or older bullmq versions may not export QueueScheduler; fail gracefully
+			logger.warn('QueueScheduler failed to initialize (skipping)', { error: err && (err.message || err) });
+			scheduler = null;
+		}
 	return { chunkQueue, scheduler };
 }
 

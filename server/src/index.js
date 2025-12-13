@@ -329,6 +329,12 @@ try {
   logger.warn('Rating routes not available', { error: e?.message || e });
 }
 
+// Backwards-compatible route: some widgets/clients may still post to /api/chat/rating
+// Redirect (307) to the new /api/rating/conversation route to preserve HTTP method
+app.post('/api/chat/rating', (req, res) => {
+  res.redirect(307, '/api/rating/conversation');
+});
+
 // CRM routes
 try {
   const crmRoutes = require('./routes/crm.routes');

@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "Faheemly",
+    "slug": "faheemly-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/logo2.png",
+    "splash": {
+      "image": "./assets/logo2.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#011841"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "extra": {
+      "API_URL": "http://localhost:3002",
+      "DEMO_USER_EMAIL": "hello@faheemly.com",
+      "DEMO_USER_PASSWORD": "demo"
+    },
+    "android": {
+      "package": "com.faheemly.app",
+      "versionCode": 1,
+      "permissions": []
+    }
+  }
+}
