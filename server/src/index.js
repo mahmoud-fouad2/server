@@ -264,19 +264,82 @@ app.use('/api/team', teamRoutes);
 try {
   const adminRoutes = require('./routes/admin.routes');
   app.use('/api/admin', adminRoutes);
+  logger.info('✅ Admin routes loaded');
 } catch (e) {
   logger.warn('Admin routes not available', { error: e?.message || e });
 }
 
+// Admin Business Management routes
+try {
+  const adminBusinessRoutes = require('./routes/admin-business.routes');
+  app.use('/api/admin', adminBusinessRoutes);
+  logger.info('✅ Admin Business Management routes loaded');
+} catch (e) {
+  logger.warn('Admin Business routes not available', { error: e?.message || e });
+}
+
+// Admin Conversation Management routes
+try {
+  const adminConversationsRoutes = require('./routes/admin-conversations.routes');
+  app.use('/api/admin', adminConversationsRoutes);
+  logger.info('✅ Admin Conversation Management routes loaded');
+} catch (e) {
+  logger.warn('Admin Conversation routes not available', { error: e?.message || e });
+}
+
+// Admin Knowledge Base Management routes
+try {
+  const adminKnowledgeRoutes = require('./routes/admin-knowledge.routes');
+  app.use('/api/admin', adminKnowledgeRoutes);
+  logger.info('✅ Admin Knowledge Base Management routes loaded');
+} catch (e) {
+  logger.warn('Admin Knowledge routes not available', { error: e?.message || e });
+}
+
+// Payment routes
+try {
+  const paymentRoutes = require('./routes/payment.routes');
+  app.use('/api/payments', paymentRoutes);
+  logger.info('✅ Payment routes loaded');
+} catch (e) {
+  logger.warn('Payment routes not available', { error: e?.message || e });
+}
+
+// Payment webhook routes
+try {
+  const paymentWebhookRoutes = require('./routes/payment-webhooks.routes');
+  app.use('/api/payments/webhook', paymentWebhookRoutes);
+  logger.info('✅ Payment webhook routes loaded');
+} catch (e) {
+  logger.warn('Payment webhook routes not available', { error: e?.message || e });
+}
+
+// Admin Payment Management routes
+try {
+  const adminPaymentRoutes = require('./routes/admin-payment.routes');
+  app.use('/api/admin/payments', adminPaymentRoutes);
+  logger.info('✅ Admin Payment Management routes loaded');
+} catch (e) {
+  logger.warn('Admin Payment routes not available', { error: e?.message || e });
+}
+
+// Admin CRM Management routes
+try {
+  const adminCrmRoutes = require('./routes/admin-crm.routes');
+  app.use('/api/admin/crm', adminCrmRoutes);
+  logger.info('✅ Admin CRM Management routes loaded');
+} catch (e) {
+  logger.warn('Admin CRM routes not available', { error: e?.message || e });
+}
+
 // Admin Extended routes (Phase 2: User Management & System Control)
-// TEMPORARILY DISABLED - Requires database migration
-// try {
-//   const adminExtendedRoutes = require('./routes/admin-extended.routes');
-//   app.use('/api/admin', adminExtendedRoutes);
-//   logger.info('✅ Admin Extended routes loaded (User Management & System Control)');
-// } catch (e) {
-//   logger.warn('Admin Extended routes not available:', e?.message || e);
-// }
+try {
+  const adminExtendedRoutes = require('./routes/admin-extended.routes');
+  app.use('/api/admin', adminExtendedRoutes);
+  logger.info('✅ Admin Extended routes loaded (User Management & System Control)');
+} catch (e) {
+  logger.warn('Admin Extended routes not available:', e?.message || e);
+}
 
 // Tickets routes
 const ticketsRoutes = require('./routes/tickets.routes');

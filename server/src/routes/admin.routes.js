@@ -164,19 +164,85 @@ router.get('/fix-my-account-please', authenticateToken, isAdmin, async (req, res
 
 // isAdmin middleware defined above
 
-// Get Dashboard Stats
+// Get Dashboard Stats (Enhanced)
 router.get('/stats', authenticateToken, isAdmin, async (req, res) => {
   try {
-    const totalUsers = await prisma.user.count();
-    const totalBusinesses = await prisma.business.count();
-    const totalConversations = await prisma.conversation.count();
-    const totalMessages = await prisma.message.count();
+    const { days = 30 } = req.query;
+    const since = new Date();
+    since.setDate(since.getDate() - parseInt(days));
+
+    const [
+      totalUsers,
+      activeUsers,
+      totalBusinesses,
+      activeBusinesses,
+      totalConversations,
+      recentConversations,
+      totalMessages,
+      recentMessages,
+      totalKnowledgeBase,
+      businessesByPlan
+    ] = await Promise.all([
+      prisma.user.count({ where: { deletedAt: null } }),
+      prisma.user.count({ where: { isActive: true, deletedAt: null } }),
+      prisma.business.count(),
+      prisma.business.count({ where: { status: 'ACTIVE' } }),
+      prisma.conversation.count(),
+      prisma.conversation.count({ where: { createdAt: { gte: since } } }),
+      prisma.message.count(),
+      prisma.message.count({ where: { createdAt: { gte: since } } }),
+      prisma.knowledgeBase.count(),
+      prisma.business.groupBy({
+        by: ['planType'],
+        _count: { id: true }
+      })
+    ]);
+
+    // Calculate quota usage statistics
+    const businessesWithQuota = await prisma.business.findMany({
+      select: {
+        messageQuota: true,
+        messagesUsed: true
+      }
+    });
+
+    const totalQuota = businessesWithQuota.reduce((sum, b) => sum + (b.messageQuota || 0), 0);
+    const totalUsed = businessesWithQuota.reduce((sum, b) => sum + (b.messagesUsed || 0), 0);
+    const quotaUsagePercentage = totalQuota > 0 ? Math.round((totalUsed / totalQuota) * 100) : 0;
 
     res.json({
-      totalUsers,
-      totalBusinesses,
-      totalConversations,
-      totalMessages
+      users: {
+        total: totalUsers,
+        active: activeUsers,
+        inactive: totalUsers - activeUsers
+      },
+      businesses: {
+        total: totalBusinesses,
+        active: activeBusinesses,
+        byPlan: businessesByPlan.reduce((acc, item) => {
+          acc[item.planType] = item._count.id;
+          return acc;
+        }, {})
+      },
+      conversations: {
+        total: totalConversations,
+        recent: recentConversations,
+        period: `${days} days`
+      },
+      messages: {
+        total: totalMessages,
+        recent: recentMessages,
+        period: `${days} days`
+      },
+      knowledgeBase: {
+        total: totalKnowledgeBase
+      },
+      quota: {
+        total: totalQuota,
+        used: totalUsed,
+        remaining: totalQuota - totalUsed,
+        usagePercentage: quotaUsagePercentage
+      }
     });
   } catch (error) {
     logger.error('Admin Stats Error:', error);
@@ -184,16 +250,60 @@ router.get('/stats', authenticateToken, isAdmin, async (req, res) => {
   }
 });
 
-// Get All Users
+// Get All Users (Enhanced with pagination and filtering)
 router.get('/users', authenticateToken, isAdmin, async (req, res) => {
   try {
-    const users = await prisma.user.findMany({
-      include: {
-        businesses: true
-      },
-      orderBy: { createdAt: 'desc' }
+    const { page = 1, limit = 20, search = '', role = '', status = '', sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const where = {
+      deletedAt: null,
+      ...(search && {
+        OR: [
+          { email: { contains: search, mode: 'insensitive' } },
+          { name: { contains: search, mode: 'insensitive' } }
+        ]
+      }),
+      ...(role && { role }),
+      ...(status === 'active' && { isActive: true }),
+      ...(status === 'inactive' && { isActive: false })
+    };
+
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        skip,
+        take: parseInt(limit),
+        orderBy: { [sortBy]: sortOrder },
+        include: {
+          businesses: {
+            select: {
+              id: true,
+              name: true,
+              status: true,
+              planType: true
+            }
+          },
+          _count: {
+            select: {
+              businesses: true,
+              sessions: true
+            }
+          }
+        }
+      }),
+      prisma.user.count({ where })
+    ]);
+
+    res.json({
+      users,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        totalPages: Math.ceil(total / parseInt(limit))
+      }
     });
-    res.json(users);
   } catch (error) {
     logger.error('Admin Users Error:', error);
     res.status(500).json({ error: 'Failed to fetch users' });

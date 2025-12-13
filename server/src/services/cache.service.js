@@ -47,7 +47,10 @@ class RedisCacheService {
       });
 
       this.client.on('error', (err) => {
-        logger.error('[RedisCache] Redis Client Error', err);
+        // Only log error if not already disconnected (avoid spam)
+        if (this.isConnected) {
+          logger.warn('[RedisCache] Redis Client Error - caching disabled', { error: err.message });
+        }
         this.isConnected = false;
       });
 
@@ -64,8 +67,15 @@ class RedisCacheService {
       await this.client.connect();
 
     } catch (error) {
-      logger.error('[RedisCache] Failed to connect', error);
+      // Don't spam logs if Redis is intentionally not available
+      if (process.env.NODE_ENV !== 'test') {
+        logger.warn('[RedisCache] Redis not available - caching disabled', { 
+          error: error.message,
+          hint: 'Set REDIS_URL environment variable to enable caching'
+        });
+      }
       this.isEnabled = false;
+      this.isConnected = false;
     }
   }
 
@@ -106,8 +116,12 @@ class RedisCacheService {
         logger.debug('[RedisCache] 🎯 Cache HIT for query');
         const data = JSON.parse(cached);
         
-        // Update hit count (separate key for stats)
-        await this.client.incr(`${key}:hits`);
+        // Update hit count (separate key for stats) - don't fail if this errors
+        try {
+          await this.client.incr(`${key}:hits`);
+        } catch (e) {
+          // Ignore stats update errors
+        }
         
         return data;
       }
@@ -116,8 +130,12 @@ class RedisCacheService {
       return null;
 
     } catch (error) {
-      logger.error('[RedisCache] Get error', error);
-      return null;
+      // Don't spam logs if Redis is intentionally unavailable
+      if (error.code !== 'ECONNREFUSED' && error.code !== 'ENOTFOUND') {
+        logger.warn('[RedisCache] Get error', { error: error.message });
+      }
+      this.isConnected = false;
+      return null; // Gracefully degrade - return null to indicate cache miss
     }
   }
 
@@ -150,8 +168,12 @@ class RedisCacheService {
       return true;
 
     } catch (error) {
-      logger.error('[RedisCache] Set error', error);
-      return false;
+      // Don't spam logs if Redis is intentionally unavailable
+      if (error.code !== 'ECONNREFUSED' && error.code !== 'ENOTFOUND') {
+        logger.warn('[RedisCache] Set error', { error: error.message });
+      }
+      this.isConnected = false;
+      return false; // Gracefully degrade - caching failed but app continues
     }
   }
 
@@ -200,7 +222,11 @@ class RedisCacheService {
       return totalDeleted; // return actual count of deleted keys when possible
 
     } catch (error) {
-      logger.error('[RedisCache] Invalidation error', error);
+      // Don't spam logs if Redis is intentionally unavailable
+      if (error.code !== 'ECONNREFUSED' && error.code !== 'ENOTFOUND') {
+        logger.warn('[RedisCache] Invalidation error', { error: error.message });
+      }
+      this.isConnected = false;
       return 0;
     }
   }

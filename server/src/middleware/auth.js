@@ -49,4 +49,7 @@ const requireRole = (...roles) => (req, res, next) => {
   next();
 };
 
-module.exports = { authenticateToken, requireRole };
+// Alias for compatibility
+const protect = authenticateToken;
+
+module.exports = { authenticateToken, requireRole, protect };
