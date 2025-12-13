@@ -495,7 +495,15 @@ async function generateResponseWithProvider(providerKey, messages, options = {})
     throw new Error(`${provider.name} is not configured or disabled`);
   }
 
-  return callProvider(key, provider, messages, options);
+  const result = await callProvider(key, provider, messages, options);
+  // Sanitize provider responses to avoid leaking model/provider identity
+  try {
+    const responseValidator = require('./response-validator.service');
+    result.response = responseValidator.sanitizeResponse(result.response || '');
+  } catch (e) {
+    logger.warn('Failed to sanitize provider response', { error: e.message || e });
+  }
+  return result;
 }
 
 /**
@@ -649,23 +657,30 @@ async function generateChatResponse(message, business, history = [], knowledgeBa
     ? `\nالتاريخ والوقت الحالي: ${business.currentDate}. استخدم هذا للإجابة على أسئلة الوقت (مثل: "المحل مفتوح الآن؟").`
     : '';
 
-  // 5. Build simplified, non-contradictory system prompt
+  // 5. Build optimized, clear system prompt with better KB integration
   let knowledgeContext = '';
   if (hasKnowledgeBase) {
     const formattedKB = kbPreparation.formatForPrompt(preparedKB);
     knowledgeContext = `
-معلومات من قاعدة المعرفة:
+=== معلومات من قاعدة المعرفة ===
 ${formattedKB}
 
-استخدم هذه المعلومات للإجابة على سؤال المستخدم. إذا لم تجد الإجابة في المعلومات أعلاه، قل بصراحة: "عذراً، لا أملك هذه المعلومة. هل تريد التواصل مع فريق ${businessName} مباشرة؟"
+**تعليمات مهمة:**
+- استخدم المعلومات أعلاه حصرياً للإجابة على سؤال المستخدم
+- إذا كانت الإجابة موجودة في المعلومات أعلاه، استخدمها مباشرة
+- إذا لم تجد الإجابة في المعلومات أعلاه، قل: "عذراً، لا أملك هذه المعلومة في قاعدة المعرفة. هل تريد التواصل مع فريق ${businessName} مباشرة للحصول على المساعدة؟"
+- لا تخترع معلومات غير موجودة في قاعدة المعرفة
 `;
   } else {
     knowledgeContext = `
-لا توجد معلومات في قاعدة المعرفة. كن صريحاً مع المستخدم واقترح التواصل مع فريق ${businessName}.
+**ملاحظة:** لا توجد معلومات متاحة في قاعدة المعرفة حالياً.
+- كن صريحاً مع المستخدم
+- اقترح التواصل مع فريق ${businessName} للحصول على معلومات دقيقة
+- لا تخترع معلومات عن ${businessName}
 `;
   }
 
-  // 6. Build final system prompt (SIMPLIFIED - 3-4 clear rules only)
+  // 6. Build final system prompt (CLEAR, CONCISE, NON-CONTRADICTORY)
   const systemPrompt = `أنت مساعد ${businessName}${businessContext ? ` (${businessContext})` : ''}.
 
 ${personalityInstructions}
@@ -673,12 +688,14 @@ ${timeContext}
 
 ${knowledgeContext}
 
-قواعد:
+**قواعد الإجابة:**
 1. أجب بنفس لغة المستخدم (عربي أو إنجليزي)
-2. كن مختصراً (2-3 جمل كحد أقصى)
-3. استخدم Markdown للتنسيق
-4. عند إنهاء المحادثة، أضف "|RATING_REQUEST|" في النهاية
-5. لا تذكر أنك AI - أنت فقط مساعد ${businessName}
+2. كن مختصراً ومفيداً (2-3 جمل كحد أقصى، إلا إذا كان السؤال يتطلب تفصيلاً)
+3. استخدم Markdown للتنسيق عند الحاجة (مثل **نص عريض** أو قوائم)
+4. كن ودوداً ومهذباً في جميع الأوقات
+5. لا تذكر أنك AI أو مساعد ذكي - أنت فقط مساعد ${businessName}
+6. لا تذكر أسماء مزودين أو موديلات تقنية
+7. عند إنهاء المحادثة، أضف "|RATING_REQUEST|" في النهاية
 `;
 
   // 2. Construct Messages Array with enhanced context
@@ -688,18 +705,21 @@ ${knowledgeContext}
     { role: 'user', content: message }
   ];
 
-  // 7. Adjust temperature based on intent and KB availability
-  let temperature = 0.7; // Default
+  // 7. Adjust temperature based on intent and KB availability (optimized for better responses)
+  let temperature = 0.7; // Default - balanced for natural responses
   if (hasKnowledgeBase) {
-    temperature = 0.5; // More focused when KB exists (not too low to avoid robotic)
+    // When KB exists, use slightly lower temp for accuracy but not too low to avoid robotic responses
+    temperature = 0.6; // Balanced: accurate but still natural
   } else if (intent.intent === 'GREETING') {
-    temperature = 0.8; // More creative for greetings
+    temperature = 0.8; // More creative and warm for greetings
+  } else if (intent.intent === 'QUESTION') {
+    temperature = 0.65; // Slightly lower for factual questions
   }
   
   // 8. Call Hybrid AI with optimized options
   const options = {
     temperature,
-    maxTokens: 400, // Reduced from 500 for more concise responses
+    maxTokens: 450, // Increased slightly for more complete responses while staying concise
     topP: 0.9
   };
 

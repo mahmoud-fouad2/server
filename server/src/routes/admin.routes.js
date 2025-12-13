@@ -368,11 +368,13 @@ router.post('/ai-providers/:id/test', authenticateToken, isAdmin, async (req, re
     ];
 
     const result = await aiService.generateResponseWithProvider(providerKey, messages);
+    const responseValidator = require('../services/response-validator.service');
+    const sanitized = responseValidator.sanitizeResponse(result.response || '');
     
     res.json({
       success: true,
       provider: result.provider || providerKey,
-      response: result.response,
+      response: sanitized,
       fromCache: result.fromCache
     });
   } catch (error) {
