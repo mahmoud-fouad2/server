@@ -3,7 +3,7 @@ const router = express.Router();
 const rateLimit = require('express-rate-limit');
 const { authenticateToken } = require('../middleware/auth');
 const asyncHandler = require('express-async-handler');
-const { validateRegister, validateLogin, validateUpdateProfile } = require('../middleware/zodValidation');
+const { validateRegister, validateLogin } = require('../middleware/zodValidation');
 const authController = require('../controllers/auth.controller');
 
 // Rate limiter for login attempts (prevent brute force)

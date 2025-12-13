@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const logger = require('../utils/logger');
 
 /**
  * POST /api/rating/conversation
@@ -35,7 +36,7 @@ router.post('/conversation', async (req, res) => {
 
     res.json({ success: true, conversation });
   } catch (error) {
-    console.error('Rating error:', error);
+    logger.error('Rating error', { error });
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
@@ -72,7 +73,7 @@ router.post('/agent', async (req, res) => {
 
     res.json({ success: true, conversation });
   } catch (error) {
-    console.error('Agent rating error:', error);
+    logger.error('Agent rating error', { error });
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
@@ -141,7 +142,7 @@ router.get('/stats/:businessId', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Rating stats error:', error);
+    logger.error('Rating stats error', { error });
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
@@ -178,7 +179,7 @@ router.get('/recent/:businessId', async (req, res) => {
 
     res.json({ success: true, ratings: conversations });
   } catch (error) {
-    console.error('Recent ratings error:', error);
+    logger.error('Recent ratings error', { error });
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });

@@ -255,7 +255,7 @@ router.get('/dialect/:code', async (req, res) => {
       data: dialect
     });
   } catch (error) {
-    console.error('[MultiLanguage Routes] Get dialect error:', error);
+    logger.error('[MultiLanguage Routes] Get dialect error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to get dialect information',

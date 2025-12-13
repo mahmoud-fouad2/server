@@ -388,6 +388,9 @@ async function shutdown(code = 0) {
       // ignore
     }
 
+    // Stop continuous improvement background tasks (non-fatal)
+    try { const continuousImprovement = require('./services/continuous-improvement.service'); if (continuousImprovement && typeof continuousImprovement.stop === 'function') continuousImprovement.stop(); } catch (e) { logger.warn('Error stopping continuous improvement service', e?.message || e); }
+
     // Disconnect external resources
     try { await prisma.$disconnect(); } catch (e) { logger.warn('Error disconnecting Prisma', e?.message || e); }
     try { const cacheService = require('./services/cache.service'); if (cacheService && cacheService.disconnect) await cacheService.disconnect(); } catch (e) { logger.warn('Error disconnecting Redis', e?.message || e); }
@@ -546,6 +549,17 @@ if (!isTestEnvironment) {
 
         await checkServicesStatus();
         logger.info('✅ Startup functions completed');
+
+        // Start continuous improvement tasks now the server is ready
+        try {
+          const continuousImprovement = require('./services/continuous-improvement.service');
+          if (continuousImprovement && typeof continuousImprovement.start === 'function') {
+            continuousImprovement.start();
+            logger.info('Continuous Improvement tasks started');
+          }
+        } catch (e) {
+          logger.warn('Failed to start Continuous Improvement service (non-fatal):', e?.message || e);
+        }
 
         // Start system monitoring (every 5 minutes)
         const monitor = require('./utils/monitor');

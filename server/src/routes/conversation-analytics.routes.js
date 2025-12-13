@@ -170,7 +170,6 @@ router.get('/export', authenticateToken, async (req, res) => {
  */
 router.get('/topics', authenticateToken, async (req, res) => {
   try {
-    const businessId = req.business?.id;
     const dashboard = ConversationAnalyticsService.getDashboardData(30);
 
     res.json({
@@ -197,7 +196,6 @@ router.get('/topics', authenticateToken, async (req, res) => {
  */
 router.get('/performance', authenticateToken, async (req, res) => {
   try {
-    const businessId = req.business?.id;
     const dashboard = ConversationAnalyticsService.getDashboardData(7);
 
     res.json({
@@ -259,20 +257,11 @@ router.post('/track-event', authenticateToken, async (req, res) => {
       businessId: req.user?.businessId || req.business?.id,
       userId: req.user?.id
     };
-
-    logger.info('[Conversation Analytics Routes] Event tracked', { event });
+    logger.info('[Conversation Analytics Routes] Event tracked', analyticsEvent);
 
     try {
       // Attempt to persist to userAnalytics table (visitor.service tracks similar actions)
-      await require('../config/database').userAnalytics.create({
-        data: {
-          businessId: req.user?.businessId || req.business?.id || null,
-          userId: req.user?.id || null,
-          action: eventType,
-          metadata: eventData || {},
-          createdAt: new Date()
-        }
-      });
+      await require('../config/database').userAnalytics.create({ data: analyticsEvent });
       logger.info('[Conversation Analytics Routes] Event persisted to DB');
     } catch (dbErr) {
       logger.warn('[Conversation Analytics Routes] Failed to persist analytics event:', { message: dbErr?.message || dbErr });

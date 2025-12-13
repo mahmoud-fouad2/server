@@ -3,7 +3,6 @@
  * Classifies user messages into intents for better response handling
  */
 
-const logger = require('../utils/logger');
 
 class IntentDetectionService {
   constructor() {

@@ -47,7 +47,7 @@ router.get('/config/:businessId', async (req, res) => {
 
     if (!business) {
       // Return default config for non-existent businesses
-      return res.json({
+        return res.json({
         name: 'Demo Business',
         widgetConfig: {
           welcomeMessage: "مرحباً! كيف يمكنني مساعدتك اليوم؟",
@@ -102,7 +102,6 @@ router.get('/config/:businessId', async (req, res) => {
       preChatFormEnabled: business.preChatFormEnabled || false
     });
   } catch (error) {
-    const logger = require('../utils/logger');
     logger.error('Widget Config Error', error);
     res.status(500).json({ error: 'Failed to fetch config' });
   }
@@ -145,7 +144,6 @@ router.post('/config', authenticateToken, async (req, res) => {
       widgetConfig: JSON.parse(updatedBusiness.widgetConfig)
     });
   } catch (error) {
-    const logger = require('../utils/logger');
     logger.error('Update Widget Config Error', error);
     res.status(500).json({ error: 'Failed to update widget config' });
   }
@@ -193,7 +191,6 @@ router.post('/upload-icon', authenticateToken, upload.single('icon'), async (req
       iconUrl: iconUrl
     });
   } catch (error) {
-    const logger = require('../utils/logger');
     logger.error('Upload Icon Error', error);
     res.status(500).json({ error: 'Failed to upload icon' });
   }

@@ -501,7 +501,7 @@ async function generateResponseWithProvider(providerKey, messages, options = {})
 /**
  * Generate greeting message based on business and state
  */
-function generateGreeting(business, state) {
+function generateGreeting(business, _state) {
   const businessName = business.name || 'العميل';
   const personality = business.widgetConfig?.personality || business.botTone || 'friendly';
   const welcomeMessage = business.widgetConfig?.welcomeMessage;

@@ -3,7 +3,6 @@
  * Prepares KB chunks for AI consumption: summarize, limit, format
  */
 
-const logger = require('../utils/logger');
 
 class KBPreparationService {
   /**

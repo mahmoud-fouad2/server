@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { authenticateToken } = require('../middleware/auth');
+const logger = require('../utils/logger');
 const IntegrationsService = require('../services/integrations.service');
 
 /**
@@ -16,7 +17,7 @@ router.get('/', authenticateToken, async (req, res) => {
       data: integrations
     });
   } catch (error) {
-    console.error('[Integrations Routes] Get all error:', error);
+    logger.error('[Integrations Routes] Get all error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to get integrations',
@@ -47,7 +48,7 @@ router.get('/:integrationId', authenticateToken, async (req, res) => {
       data: integration
     });
   } catch (error) {
-    console.error('[Integrations Routes] Get integration error:', error);
+    logger.error('[Integrations Routes] Get integration error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to get integration status',
@@ -72,7 +73,7 @@ router.post('/:integrationId/configure', authenticateToken, async (req, res) => 
       data: result
     });
   } catch (error) {
-    console.error('[Integrations Routes] Configure error:', error);
+    logger.error('[Integrations Routes] Configure error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to configure integration',
@@ -96,7 +97,7 @@ router.post('/:integrationId/test', authenticateToken, async (req, res) => {
       data: result
     });
   } catch (error) {
-    console.error('[Integrations Routes] Test error:', error);
+    logger.error('[Integrations Routes] Test error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to test integration',
@@ -128,7 +129,7 @@ router.post('/:integrationId/send', authenticateToken, async (req, res) => {
       data: result
     });
   } catch (error) {
-    console.error('[Integrations Routes] Send message error:', error);
+    logger.error('[Integrations Routes] Send message error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to send message',
@@ -153,7 +154,7 @@ router.post('/:integrationId/crm/sync', authenticateToken, async (req, res) => {
       data: result
     });
   } catch (error) {
-    console.error('[Integrations Routes] CRM sync error:', error);
+    logger.error('[Integrations Routes] CRM sync error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to sync with CRM',

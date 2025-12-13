@@ -1,4 +1,5 @@
 const natural = require('natural');
+const logger = require('../utils/logger');
 const SentimentAnalyzer = natural.SentimentAnalyzer;
 const stemmer = natural.PorterStemmer;
 
@@ -64,7 +65,7 @@ class SentimentAnalysisService {
       return result;
 
     } catch (error) {
-      console.error('[SentimentAnalysis] Analysis error:', error);
+      logger.error('[SentimentAnalysis] Analysis error', { error });
       return this.getNeutralSentiment();
     }
   }
@@ -282,7 +283,7 @@ class SentimentAnalysisService {
    * @param {Object} sentiment - Sentiment details
    * @returns {string} Empathetic response
    */
-  handleNegativeSentiment(response, sentiment) {
+  handleNegativeSentiment(response, _sentiment) {
     const empathizers = [
       'أعتذر عن أي إزعاج.',
       'أفهم مخاوفك وأريد مساعدتك.',

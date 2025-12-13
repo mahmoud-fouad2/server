@@ -34,8 +34,7 @@ router.post('/forgot-password', async (req, res) => {
       }
     });
 
-    // Create reset URL
-    const resetUrl = `https://faheemly.com/reset-password?token=${resetToken}`;
+    // Reset URL created when sending email; don't construct it here to avoid leaking
 
     // TODO: Send email with reset link (use nodemailer or SendGrid)
     // SECURITY: Reset URL should ONLY be sent via email, never logged or returned in response
@@ -44,7 +43,8 @@ router.post('/forgot-password', async (req, res) => {
     // Always return generic message (don't expose reset URL in response)
     res.json({ message: 'إذا كان البريد موجودًا، سيتم إرسال رابط الاسترجاع' });
   } catch (error) {
-    console.error('Forgot password error:', error);
+    const logger = require('../utils/logger');
+    logger.error('Forgot password error:', error);
     res.status(500).json({ error: 'حدث خطأ في النظام' });
   }
 });
@@ -94,7 +94,8 @@ router.post('/reset-password', async (req, res) => {
 
     res.json({ message: 'تم إعادة تعيين كلمة المرور بنجاح' });
   } catch (error) {
-    console.error('Reset password error:', error);
+    const logger = require('../utils/logger');
+    logger.error('Reset password error:', error);
     res.status(500).json({ error: 'حدث خطأ في النظام' });
   }
 });

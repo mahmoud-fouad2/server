@@ -1,5 +1,3 @@
-const fs = require('fs').promises;
-const path = require('path');
 const logger = require('../utils/logger');
 
 /**
@@ -7,21 +5,26 @@ const logger = require('../utils/logger');
  * Handles auto-update knowledge bases and gap detection
  */
 class ContinuousImprovementService {
-  constructor() {
+  constructor(options = {}) {
     this.knowledgeBaseUpdates = new Map();
     this.gapAnalysis = new Map();
     this.improvementMetrics = new Map();
     this.feedbackLoop = new Map();
+    this._intervals = { gap: null, knowledge: null, feedback: null };
+    this._started = false;
 
     // Configuration
-    this.config = {
+    this.config = Object.assign({
       autoUpdateThreshold: 10, // Minimum new queries before update
       gapDetectionInterval: 24 * 60 * 60 * 1000, // 24 hours
       knowledgeRefreshInterval: 7 * 24 * 60 * 60 * 1000, // 7 days
       feedbackAnalysisInterval: 60 * 60 * 1000 // 1 hour
-    };
+    }, options.config || {});
 
-    this.initializeImprovementTracking();
+    // Auto-start background tasks unless running under test environment
+    const isTest = process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID !== undefined;
+    const autoStart = options.autoStart !== undefined ? options.autoStart : !isTest;
+    if (autoStart) this.initializeImprovementTracking();
   }
 
   /**
@@ -32,6 +35,7 @@ class ContinuousImprovementService {
     this.startGapDetection();
     this.startKnowledgeBaseUpdates();
     this.startFeedbackAnalysis();
+    this._started = true;
   }
 
   /**
@@ -231,8 +235,9 @@ class ContinuousImprovementService {
    */
   async generateImprovedResponse(query, originalResponse) {
     // In a real implementation, this would use AI to generate better responses
-    // For demo, we'll return a placeholder
-    return `تحسين للاستعلام: "${query}" - إجابة محسنة وأكثر تفصيلاً`;
+    // For demo, we'll return a placeholder but include originalResponse for traceability
+    const preview = typeof originalResponse === 'string' ? originalResponse : (originalResponse?.text || '');
+    return `تحسين للاستعلام: "${query}" - إجابة محسنة وأكثر تفصيلاً (المصدر: "${preview}")`;
   }
 
   /**
@@ -529,12 +534,13 @@ class ContinuousImprovementService {
    * Start gap detection background process
    */
   startGapDetection() {
-    setInterval(async () => {
+    if (this._intervals.gap) return; // already started
+    this._intervals.gap = setInterval(async () => {
       for (const businessId of this.gapAnalysis.keys()) {
         try {
           await this.performGapAnalysis(businessId);
         } catch (error) {
-          console.error(`[ContinuousImprovement] Gap analysis error for ${businessId}:`, error);
+          logger.error(`[ContinuousImprovement] Gap analysis error for ${businessId}:`, error);
         }
       }
     }, this.config.gapDetectionInterval);
@@ -544,12 +550,13 @@ class ContinuousImprovementService {
    * Start knowledge base updates background process
    */
   startKnowledgeBaseUpdates() {
-    setInterval(async () => {
+    if (this._intervals.knowledge) return;
+    this._intervals.knowledge = setInterval(async () => {
       for (const businessId of this.knowledgeBaseUpdates.keys()) {
         try {
           await this.performKnowledgeBaseUpdate(businessId);
         } catch (error) {
-          console.error(`[ContinuousImprovement] Knowledge update error for ${businessId}:`, error);
+          logger.error(`[ContinuousImprovement] Knowledge update error for ${businessId}:`, error);
         }
       }
     }, this.config.knowledgeRefreshInterval);
@@ -559,15 +566,43 @@ class ContinuousImprovementService {
    * Start feedback analysis background process
    */
   startFeedbackAnalysis() {
-    setInterval(async () => {
+    if (this._intervals.feedback) return;
+    this._intervals.feedback = setInterval(async () => {
       for (const businessId of this.improvementMetrics.keys()) {
         try {
           await this.analyzeFeedbackTrends(businessId);
         } catch (error) {
-          console.error(`[ContinuousImprovement] Feedback analysis error for ${businessId}:`, error);
+          logger.error(`[ContinuousImprovement] Feedback analysis error for ${businessId}:`, error);
         }
       }
     }, this.config.feedbackAnalysisInterval);
+  }
+
+  /**
+   * Start all improvement background tasks (idempotent)
+   */
+  start() {
+    if (this._started) return;
+    this.initializeImprovementTracking();
+  }
+
+  /**
+   * Stop all scheduled background tasks and clean timers
+   */
+  stop() {
+    if (this._intervals.gap) {
+      clearInterval(this._intervals.gap);
+      this._intervals.gap = null;
+    }
+    if (this._intervals.knowledge) {
+      clearInterval(this._intervals.knowledge);
+      this._intervals.knowledge = null;
+    }
+    if (this._intervals.feedback) {
+      clearInterval(this._intervals.feedback);
+      this._intervals.feedback = null;
+    }
+    this._started = false;
   }
 
   /**

@@ -17,7 +17,7 @@ class AppError extends Error {
 }
 
 // Error handler middleware
-const errorHandler = (err, req, res, next) => {
+const errorHandler = (err, req, res, _next) => {
   let error = { ...err };
   error.message = err.message;
 
@@ -94,8 +94,7 @@ const catchAsync = (fn) => {
 
 // Handle unhandled promise rejections
 const handleUnhandledRejections = () => {
-  process.on('unhandledRejection', (err, promise) => {
-    console.error('Unhandled Rejection:', err && (err.message || err));
+  process.on('unhandledRejection', (err, _promise) => {
     logger.error('Unhandled Rejection', err);
     // In production, it's safer to fail fast so an external process manager can restart the app.
     if (process.env.NODE_ENV === 'production') {
@@ -107,7 +106,6 @@ const handleUnhandledRejections = () => {
 // Handle uncaught exceptions
 const handleUncaughtExceptions = () => {
   process.on('uncaughtException', (err) => {
-    console.error('Uncaught Exception:', err && (err.message || err));
     logger.error('Uncaught Exception', err);
     // In production, exit after logging so process manager can restart the service.
     if (process.env.NODE_ENV === 'production') {
