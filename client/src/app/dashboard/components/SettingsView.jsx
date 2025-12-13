@@ -149,10 +149,80 @@ export default function SettingsView({ user, addNotification }) {
                 })
               }
             >
-              <option value="RESTAURANT">مطعم</option>
-              <option value="RETAIL">متجر تجزئة</option>
-              <option value="CLINIC">عيادة</option>
-              <option value="COMPANY">شركة</option>
+              <optgroup label="🍽️ الأطعمة والمشروبات">
+                <option value="RESTAURANT">مطعم</option>
+                <option value="CAFE">مقهى</option>
+                <option value="BAKERY">مخبز / حلويات</option>
+              </optgroup>
+
+              <optgroup label="🏥 الرعاية الصحية">
+                <option value="CLINIC">عيادة طبية</option>
+                <option value="HOSPITAL">مستشفى</option>
+                <option value="PHARMACY">صيدلية</option>
+                <option value="DENTAL">عيادة أسنان</option>
+              </optgroup>
+
+              <optgroup label="🛍️ التجارة والتجزئة">
+                <option value="RETAIL">متجر تجزئة</option>
+                <option value="FASHION">أزياء وموضة</option>
+                <option value="ELECTRONICS">إلكترونيات</option>
+                <option value="JEWELRY">مجوهرات</option>
+                <option value="FURNITURE">أثاث</option>
+              </optgroup>
+
+              <optgroup label="💼 الأعمال والخدمات">
+                <option value="COMPANY">شركة</option>
+                <option value="CONSULTING">استشارات</option>
+                <option value="LEGAL">خدمات قانونية</option>
+                <option value="ACCOUNTING">محاسبة</option>
+                <option value="REALESTATE">عقارات</option>
+                <option value="IT">تقنية معلومات</option>
+                <option value="SOFTWARE">برمجيات</option>
+                <option value="DIGITAL">خدمات رقمية</option>
+                <option value="MARKETING">تسويق</option>
+                <option value="DESIGN">تصميم</option>
+                <option value="PHOTOGRAPHY">تصوير</option>
+                <option value="EVENTS">تنظيم فعاليات</option>
+                <option value="ECOMMERCE">تجارة إلكترونية</option>
+                <option value="DROPSHIPPING">دروب شيبينج</option>
+                <option value="MAINTENANCE">صيانة</option>
+                <option value="SECURITY">أمن</option>
+                <option value="TELECOM">اتصالات</option>
+                <option value="ARCHITECTURE">عمارة</option>
+                <option value="INTERIOR">تصميم داخلي</option>
+                <option value="CONSTRUCTION">إنشاءات</option>
+              </optgroup>
+
+              <optgroup label="🎓 التعليم والتدريب">
+                <option value="EDUCATION">مركز تدريب</option>
+                <option value="SCHOOL">مدرسة</option>
+                <option value="UNIVERSITY">جامعة</option>
+              </optgroup>
+
+              <optgroup label="💰 الخدمات المالية">
+                <option value="BANK">بنك</option>
+                <option value="INSURANCE">تأمين</option>
+                <option value="INVESTMENT">استثمار</option>
+              </optgroup>
+
+              <optgroup label="🏨 السياحة والضيافة">
+                <option value="HOTEL">فندق</option>
+                <option value="TRAVEL">وكالة سفر</option>
+                <option value="TOURISM">سياحة</option>
+              </optgroup>
+
+              <optgroup label="💅 الجمال والعناية">
+                <option value="SALON">صالون تجميل</option>
+                <option value="SPA">سبا</option>
+                <option value="GYM">نادي رياضي</option>
+              </optgroup>
+
+              <optgroup label="🚗 السيارات والنقل">
+                <option value="AUTOMOTIVE">معرض سيارات</option>
+                <option value="CARMAINTENANCE">صيانة سيارات</option>
+                <option value="LOGISTICS">لوجستيات</option>
+              </optgroup>
+
               <option value="OTHER">أخرى</option>
             </select>
           </div>
