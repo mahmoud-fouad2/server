@@ -357,7 +357,7 @@ class IntegrationDashboardService {
    * @param {string} businessId - Business ID
    * @returns {Array} Integrations list
    */
-  async getBusinessIntegrations(businessId) {
+  async getBusinessIntegrations(_businessId) {
     // In a real implementation, this would fetch from database
     return [
       {
@@ -400,7 +400,7 @@ class IntegrationDashboardService {
    * @param {string} businessId - Business ID
    * @returns {Object} Dashboard stats
    */
-  async getDashboardStats(businessId) {
+  async getDashboardStats(_businessId) {
     // In a real implementation, this would calculate from database
     return {
       activeIntegrations: 2,
@@ -445,7 +445,7 @@ class IntegrationDashboardService {
    * @param {string} businessId - Business ID
    * @returns {Object} User permissions
    */
-  getUserPermissions(businessId) {
+  getUserPermissions(_businessId) {
     // In a real implementation, this would check user roles
     return {
       canView: true,

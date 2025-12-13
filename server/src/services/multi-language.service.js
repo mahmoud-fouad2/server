@@ -1,4 +1,4 @@
-const axios = require('axios');
+const logger = require('../utils/logger');
 
 /**
  * Multi-Language & Dialect Support Service
@@ -69,8 +69,8 @@ class MultiLanguageService {
    * @returns {boolean} True if Egyptian indicators found
    */
   containsEgyptianIndicators(text) {
-    const egyptianWords = ['ايه', 'ازاي', 'كده', 'كده', 'دلوقتي', 'بعدين', 'يلا'];
-    const egyptianPatterns = [/ايه/, /ازاي/, /كده/, /كده/, /دلوقتي/, /بعدين/, /يلا/];
+    const egyptianWords = ['ايه', 'ازاي', 'كده', 'دلوقتي', 'بعدين', 'يلا'];
+    const egyptianPatterns = [/ايه/, /ازاي/, /كده/, /دلوقتي/, /بعدين/, /يلا/];
 
     return egyptianPatterns.some(pattern => pattern.test(text)) ||
            egyptianWords.some(word => text.includes(word));
@@ -120,7 +120,7 @@ class MultiLanguageService {
       return translated;
 
     } catch (error) {
-      console.error('[MultiLanguage] Translation error:', error);
+      logger.error('[MultiLanguage] Translation error:', error);
       return text; // Return original text on error
     }
   }
@@ -159,7 +159,6 @@ class MultiLanguageService {
       'ايه': 'ماذا',
       'ازاي': 'كيف',
       'كده': 'هكذا',
-      'كده': 'مثل هذا',
       'دلوقتي': 'الآن',
       'بعدين': 'بعد ذلك',
       'يلا': 'هيا'
@@ -241,7 +240,7 @@ class MultiLanguageService {
    * @param {string} targetDialect - Target dialect
    * @returns {string} Dialect-specific response
    */
-  generateDialectResponse(response, targetDialect) {
+  generateDialectResponse(response, _targetDialect) {
     // In a real implementation, this would translate the response to the target dialect
     // For demo, we'll return the response as-is with dialect awareness
     return response;

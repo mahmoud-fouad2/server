@@ -137,11 +137,13 @@ exports.testAiProvider = asyncHandler(async (req, res) => {
       }
     });
 
+    const responseValidator = require('../services/response-validator.service');
+    const sanitized = responseValidator.sanitizeResponse(response.response || '');
     res.json({
       success: true,
       provider,
       latency: `${latency}ms`,
-      response: response.response.substring(0, 100) + '...'
+      response: sanitized.substring(0, 100) + '...'
     });
   } catch (error) {
     // Update error status

@@ -1,4 +1,5 @@
 const axios = require('axios');
+const logger = require('../utils/logger');
 
 const TELEGRAM_API_BASE = 'https://api.telegram.org/bot';
 
@@ -15,7 +16,7 @@ class TelegramService {
       });
       return response.data;
     } catch (error) {
-      console.error('Telegram setWebhook Error:', error.response?.data || error.message);
+      logger.error('Telegram setWebhook Error', { error: error.response?.data || error.message });
       throw new Error('Failed to set Telegram webhook');
     }
   }
@@ -34,7 +35,7 @@ class TelegramService {
       });
       return response.data;
     } catch (error) {
-      console.error('Telegram sendMessage Error:', error.response?.data || error.message);
+      logger.error('Telegram sendMessage Error', { error: error.response?.data || error.message });
       throw new Error('Failed to send Telegram message');
     }
   }
@@ -48,7 +49,7 @@ class TelegramService {
       const response = await axios.get(`${TELEGRAM_API_BASE}${token}/getMe`);
       return response.data;
     } catch (error) {
-      console.error('Telegram getMe Error:', error.response?.data || error.message);
+      logger.error('Telegram getMe Error', { error: error.response?.data || error.message });
       throw new Error('Invalid Bot Token');
     }
   }

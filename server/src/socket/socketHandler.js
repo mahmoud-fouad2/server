@@ -134,7 +134,7 @@ function initializeSocket(io) {
         }));
 
         // Get knowledge base context (same as chat controller)
-        const vectorSearch = require('../services/vector-search.service');
+        // Use the shared vectorSearch service imported at module top
         let knowledgeContext = [];
         try {
           knowledgeContext = await vectorSearch.searchKnowledge(content, businessId, 3);
@@ -165,7 +165,6 @@ function initializeSocket(io) {
         );
 
         // Sanitize response to remove provider/model signatures
-        const responseValidator = require('../services/response-validator.service');
         const sanitized = responseValidator.sanitizeResponse(aiResult.response || '');
 
         // Save AI Message

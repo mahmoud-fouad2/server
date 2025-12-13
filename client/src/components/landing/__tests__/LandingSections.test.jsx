@@ -28,14 +28,6 @@ jest.mock('next/link', () => ({
   default: ({ children, href }) => <a href={href}>{children}</a>,
 }));
 
-// Mock framer-motion
-jest.mock('framer-motion', () => ({
-  motion: {
-    div: ({ children, ...props }) => <div {...props}>{children}</div>,
-    button: ({ children, ...props }) => <button {...props}>{children}</button>,
-  },
-  AnimatePresence: ({ children }) => <>{children}</>,
-}));
 
 // Mock lucide-react icons
 jest.mock('lucide-react', () => ({
@@ -60,11 +52,7 @@ jest.mock('lucide-react', () => ({
   Lock: () => <div data-testid="lock-icon">Lock</div>,
 }));
 
-// Mock next/image
-jest.mock('next/image', () => ({
-  __esModule: true,
-  default: ({ src, alt, ...props }) => <div data-testid="next-image-mock" {...props} role="img" aria-label={alt} />,
-}));
+// relying on global mocks in jest.setup.js for next/image and framer-motion
 
 // Mock constants
 jest.mock('../../../constants', () => ({

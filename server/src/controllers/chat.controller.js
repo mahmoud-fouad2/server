@@ -491,7 +491,10 @@ exports.sendMessage = asyncHandler(async (req, res) => {
       fromCache: false,
       tokensUsed: aiResult.tokensUsed,
       model: aiResult.model,
-      dialect: detectedDialect
+      dialect: detectedDialect,
+      knowledgeBaseUsed: !!aiResult.knowledgeBaseUsed,
+      knowledgeBaseCount: aiResult.knowledgeBaseCount || 0,
+      knowledgeChunkIds: knowledgeContext.map(k => k.id).filter(Boolean)
     });
 
   } catch (aiError) {

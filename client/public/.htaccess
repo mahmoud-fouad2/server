@@ -6,6 +6,7 @@
 # These handle cases where deployed HTML still references old hashed CSS names
 Redirect 302 /_next/static/css/ad1f7b83c15ae3a4.css /_next/static/css/740093cd734bc00f.css
 Redirect 302 /_next/static/css/00a75e27fcf9f46b.css /_next/static/css/b4006069f6ee7ce2.css
+Redirect 302 /_next/static/css/75e63ccc6f390e3c.css /_next/static/css/740093cd734bc00f.css
 
 # If the canonical fahimo widget file is missing on this host, redirect to the
 # canonical widget hosted on Render so the widget loads immediately.
@@ -119,6 +120,8 @@ RewriteRule ^fahimo-widget\.js$ https://fahimo-api.onrender.com/fahimo-widget.js
 # ========================================
 # Prevent Directory Browsing
 # ========================================
+  # CSS
+  AddType text/css .css
 Options -Indexes
 
 # ========================================

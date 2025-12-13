@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const logger = require('../utils/logger');
 
 /**
  * Simple proxy endpoints to forward requests to external APIs and avoid CORS
@@ -35,7 +36,7 @@ router.post('/chat/message', async (req, res) => {
       res.status(response.status).send(text);
     }
   } catch (error) {
-    console.error('[Proxy] chat/message forward error:', error);
+    logger.error('[Proxy] chat/message forward error', { error });
     res.status(502).json({ success: false, message: 'Proxy forward failed', error: error.message });
   }
 });

@@ -11,7 +11,7 @@ const logger = require('../utils/logger');
  */
 router.get('/', authenticateToken, async (req, res) => {
   try {
-    const businessId = req.business?.id;
+    const businessId = req.user?.businessId || req.business?.id;
 
     if (!businessId) {
       return res.status(400).json({
@@ -315,7 +315,6 @@ router.get('/layout', authenticateToken, async (req, res) => {
 router.post('/share', authenticateToken, async (req, res) => {
   try {
     const { userIds, permissions } = req.body;
-    const businessId = req.business?.id;
 
     if (!userIds || !Array.isArray(userIds)) {
       return res.status(400).json({

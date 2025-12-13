@@ -75,7 +75,7 @@ router.post('/setup', authenticateToken, async (req, res) => {
     res.json({ success: true, bot: botInfo.result });
 
   } catch (error) {
-    console.error('Telegram Setup Error:', error);
+    logger.error('Telegram Setup Error', { error });
     res.status(500).json({ error: 'Failed to setup Telegram bot' });
   }
 });

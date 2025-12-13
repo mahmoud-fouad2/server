@@ -27,7 +27,7 @@ const getTwilioClient = async () => {
 // Webhook for Incoming WhatsApp Messages
 router.post('/webhook', async (req, res) => {
   try {
-    const { From, Body, ProfileName } = req.body;
+    const { From, Body } = req.body;
     
     // From format is usually "whatsapp:+1234567890"
     const phoneNumber = From.replace('whatsapp:', '');

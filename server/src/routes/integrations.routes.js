@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { authenticateToken } = require('../middleware/auth');
+const logger = require('../utils/logger');
 const IntegrationsService = require('../services/integrations.service');
 
 /**
@@ -16,7 +17,7 @@ router.get('/', authenticateToken, async (req, res) => {
       data: integrations
     });
   } catch (error) {
-    console.error('[Integrations Routes] Get all error:', error);
+    logger.error('[Integrations Routes] Get all error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to get integrations',
@@ -47,7 +48,7 @@ router.get('/:integrationId', authenticateToken, async (req, res) => {
       data: integration
     });
   } catch (error) {
-    console.error('[Integrations Routes] Get integration error:', error);
+    logger.error('[Integrations Routes] Get integration error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to get integration status',
@@ -72,7 +73,7 @@ router.post('/:integrationId/configure', authenticateToken, async (req, res) => 
       data: result
     });
   } catch (error) {
-    console.error('[Integrations Routes] Configure error:', error);
+    logger.error('[Integrations Routes] Configure error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to configure integration',
@@ -96,7 +97,7 @@ router.post('/:integrationId/test', authenticateToken, async (req, res) => {
       data: result
     });
   } catch (error) {
-    console.error('[Integrations Routes] Test error:', error);
+    logger.error('[Integrations Routes] Test error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to test integration',
@@ -128,7 +129,7 @@ router.post('/:integrationId/send', authenticateToken, async (req, res) => {
       data: result
     });
   } catch (error) {
-    console.error('[Integrations Routes] Send message error:', error);
+    logger.error('[Integrations Routes] Send message error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to send message',
@@ -153,7 +154,7 @@ router.post('/:integrationId/crm/sync', authenticateToken, async (req, res) => {
       data: result
     });
   } catch (error) {
-    console.error('[Integrations Routes] CRM sync error:', error);
+    logger.error('[Integrations Routes] CRM sync error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to sync with CRM',
@@ -185,7 +186,7 @@ router.post('/:integrationId/webhook', authenticateToken, async (req, res) => {
       data: result
     });
   } catch (error) {
-    console.error('[Integrations Routes] Webhook registration error:', error);
+    logger.error('[Integrations Routes] Webhook registration error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to register webhook',
@@ -218,7 +219,7 @@ router.post('/webhook/:integrationId', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('[Integrations Routes] Webhook handling error:', error);
+    logger.error('[Integrations Routes] Webhook handling error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to handle webhook',
@@ -242,7 +243,7 @@ router.delete('/:integrationId', authenticateToken, async (req, res) => {
       data: result
     });
   } catch (error) {
-    console.error('[Integrations Routes] Remove integration error:', error);
+    logger.error('[Integrations Routes] Remove integration error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to remove integration',
@@ -267,7 +268,7 @@ router.get('/whatsapp/qr', authenticateToken, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('[Integrations Routes] WhatsApp QR error:', error);
+    logger.error('[Integrations Routes] WhatsApp QR error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to get WhatsApp QR code',
@@ -296,7 +297,7 @@ router.post('/telegram/set-commands', authenticateToken, async (req, res) => {
       data: { commands }
     });
   } catch (error) {
-    console.error('[Integrations Routes] Telegram commands error:', error);
+    logger.error('[Integrations Routes] Telegram commands error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to set Telegram commands',
@@ -336,7 +337,7 @@ router.get('/logs/:integrationId', authenticateToken, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('[Integrations Routes] Get logs error:', error);
+    logger.error('[Integrations Routes] Get logs error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to get integration logs',

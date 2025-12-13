@@ -92,9 +92,8 @@ router.post('/webhook', async (req, res) => {
             return res.sendStatus(200); // Return 200 to stop Meta from retrying
         }
 
-        // For MVP, pick the first active bot
-        const bot = whatsappAccount.business.bots.find(b => b.isActive) || whatsappAccount.business.bots[0];
-        const botId = bot.id;
+        // For MVP, pick the first active bot (unused variable removed if not needed)
+        // const bot = whatsappAccount.business.bots.find(b => b.isActive) || whatsappAccount.business.bots[0];
 
         // Generate AI Response
         const systemPrompt = `You are the WhatsApp assistant for ${whatsappAccount.business?.name || 'our business'}. Keep answers brief and helpful.`;

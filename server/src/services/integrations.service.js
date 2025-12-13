@@ -1,5 +1,6 @@
 const axios = require('axios');
 const crypto = require('crypto');
+const logger = require('../utils/logger');
 
 /**
  * Integrations Service
@@ -112,7 +113,6 @@ class IntegrationsService {
    * @param {Object} config - Configuration to validate
    */
   async validateIntegrationConfig(integrationId, config) {
-    const integration = this.integrations.get(integrationId);
     const requiredFields = this.getRequiredFields(integrationId);
 
     for (const field of requiredFields) {
@@ -253,20 +253,13 @@ class IntegrationsService {
    * @param {Object} integration - Salesforce integration config
    * @returns {Object} Test result
    */
-  async testSalesforceConnection(integration) {
-    try {
-      // Salesforce OAuth flow would be implemented here
-      // For demo, we'll simulate a successful connection
-      return {
-        success: true,
-        message: 'Salesforce connection simulated successfully'
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message: `Salesforce connection failed: ${error.message}`
-      };
-    }
+  async testSalesforceConnection(_integration) {
+    // Salesforce OAuth flow would be implemented here
+    // For demo, we'll simulate a successful connection
+    return {
+      success: true,
+      message: 'Salesforce connection simulated successfully'
+    };
   }
 
   /**
@@ -324,7 +317,7 @@ class IntegrationsService {
           throw new Error(`Sending not supported for ${integrationId}`);
       }
     } catch (error) {
-      console.error(`[Integrations] Send message error:`, error);
+        logger.error(`[Integrations] Send message error:`, error);
       throw error;
     }
   }
@@ -409,7 +402,7 @@ class IntegrationsService {
           throw new Error(`CRM sync not supported for ${integrationId}`);
       }
     } catch (error) {
-      console.error(`[Integrations] CRM sync error:`, error);
+        logger.error(`[Integrations] CRM sync error:`, error);
       throw error;
     }
   }
@@ -420,7 +413,7 @@ class IntegrationsService {
    * @param {Object} data - Contact/lead data
    * @returns {Object} Sync result
    */
-  async syncWithSalesforce(integration, data) {
+  async syncWithSalesforce(_integration, _data) {
     // Salesforce API integration would be implemented here
     // For demo, we'll simulate the sync
     return {
@@ -487,7 +480,7 @@ class IntegrationsService {
           return { success: true, message: 'Webhook registered' };
       }
     } catch (error) {
-      console.error(`[Integrations] Webhook registration error:`, error);
+        logger.error(`[Integrations] Webhook registration error:`, error);
       throw error;
     }
   }
@@ -500,7 +493,6 @@ class IntegrationsService {
    * @returns {Object} Registration result
    */
   async registerWhatsAppWebhook(integrationId, webhookUrl, config) {
-    const integration = this.integrations.get(integrationId);
 
     // WhatsApp webhook registration would be done through their dashboard
     // Here we just store the configuration
@@ -569,7 +561,7 @@ class IntegrationsService {
           return { success: false, message: 'Unknown integration' };
       }
     } catch (error) {
-      console.error(`[Integrations] Webhook handling error:`, error);
+      logger.error(`[Integrations] Webhook handling error:`, error);
       return { success: false, error: error.message };
     }
   }
@@ -663,7 +655,7 @@ class IntegrationsService {
   getAllIntegrationsStatus() {
     const statuses = [];
 
-    for (const [id, integration] of this.integrations) {
+    for (const [id] of this.integrations) {
       statuses.push(this.getIntegrationStatus(id));
     }
 

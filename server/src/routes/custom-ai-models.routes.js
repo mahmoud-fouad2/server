@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { authenticateToken } = require('../middleware/auth');
 const CustomAIModelsService = require('../services/custom-ai-models.service');
+const logger = require('../utils/logger');
 
 /**
  * @route POST /api/ai-models/create
@@ -39,7 +40,7 @@ router.post('/create', authenticateToken, async (req, res) => {
       data: result
     });
   } catch (error) {
-    console.error('[Custom AI Models Routes] Create error:', error);
+    logger.error('[Custom AI Models Routes] Create error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to create custom AI model',
@@ -70,7 +71,7 @@ router.get('/', authenticateToken, async (req, res) => {
       data: models
     });
   } catch (error) {
-    console.error('[Custom AI Models Routes] Get models error:', error);
+    logger.error('[Custom AI Models Routes] Get models error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to get custom models',
@@ -103,7 +104,7 @@ router.get('/:modelId', authenticateToken, async (req, res) => {
       data: model
     });
   } catch (error) {
-    console.error('[Custom AI Models Routes] Get model error:', error);
+    logger.error('[Custom AI Models Routes] Get model error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to get custom model',
@@ -133,7 +134,7 @@ router.post('/:modelId/train', authenticateToken, async (req, res) => {
       data: result
     });
   } catch (error) {
-    console.error('[Custom AI Models Routes] Train model error:', error);
+    logger.error('[Custom AI Models Routes] Train model error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to start model training',
@@ -158,7 +159,7 @@ router.get('/:modelId/status', authenticateToken, async (req, res) => {
       data: status
     });
   } catch (error) {
-    console.error('[Custom AI Models Routes] Get status error:', error);
+    logger.error('[Custom AI Models Routes] Get status error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to get training status',
@@ -189,7 +190,7 @@ router.post('/:modelId/fine-tune', authenticateToken, async (req, res) => {
       data: result
     });
   } catch (error) {
-    console.error('[Custom AI Models Routes] Fine-tune error:', error);
+    logger.error('[Custom AI Models Routes] Fine-tune error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to fine-tune model',
@@ -227,7 +228,7 @@ router.post('/generate', authenticateToken, async (req, res) => {
       data: result
     });
   } catch (error) {
-    console.error('[Custom AI Models Routes] Generate response error:', error);
+    logger.error('[Custom AI Models Routes] Generate response error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to generate custom response',
@@ -260,7 +261,7 @@ router.delete('/:modelId', authenticateToken, async (req, res) => {
       message: 'Custom model deleted successfully'
     });
   } catch (error) {
-    console.error('[Custom AI Models Routes] Delete model error:', error);
+    logger.error('[Custom AI Models Routes] Delete model error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to delete custom model',
@@ -316,7 +317,7 @@ router.get('/templates', authenticateToken, async (req, res) => {
       data: templates
     });
   } catch (error) {
-    console.error('[Custom AI Models Routes] Get templates error:', error);
+    logger.error('[Custom AI Models Routes] Get templates error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to get model templates',
@@ -350,7 +351,7 @@ router.post('/:modelId/data', authenticateToken, async (req, res) => {
       data: result
     });
   } catch (error) {
-    console.error('[Custom AI Models Routes] Add training data error:', error);
+    logger.error('[Custom AI Models Routes] Add training data error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to add training data',
@@ -376,7 +377,7 @@ router.get('/:modelId/metrics', authenticateToken, async (req, res) => {
       data: metrics
     });
   } catch (error) {
-    console.error('[Custom AI Models Routes] Get metrics error:', error);
+    logger.error('[Custom AI Models Routes] Get metrics error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to get model metrics',
@@ -403,7 +404,7 @@ router.post('/:modelId/deploy', authenticateToken, async (req, res) => {
       data: result
     });
   } catch (error) {
-    console.error('[Custom AI Models Routes] Deploy model error:', error);
+    logger.error('[Custom AI Models Routes] Deploy model error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to deploy model',
@@ -459,7 +460,7 @@ router.get('/base-models', authenticateToken, async (req, res) => {
       data: baseModels
     });
   } catch (error) {
-    console.error('[Custom AI Models Routes] Get base models error:', error);
+    logger.error('[Custom AI Models Routes] Get base models error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to get base models',

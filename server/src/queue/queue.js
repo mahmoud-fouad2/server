@@ -1,4 +1,5 @@
-const { Queue, QueueScheduler } = require('bullmq');
+const { Queue, JobScheduler } = require('bullmq');
+const logger = require('../utils/logger');
 
 const REDIS_URL = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
 
@@ -11,7 +12,15 @@ function initQueues() {
 	if (chunkQueue) return { chunkQueue, scheduler };
 	const connection = { connection: { url: REDIS_URL } };
 	chunkQueue = new Queue('process-chunk', connection);
-	scheduler = new QueueScheduler('process-chunk', connection).catch(err => console.warn('QueueScheduler error', err));
+		try {
+			// In bullmq v5, `QueueScheduler` was renamed to `JobScheduler`.
+			// Use `JobScheduler` where available for scheduling background job maintenance.
+			scheduler = new JobScheduler('process-chunk', connection);
+		} catch (err) {
+			// Some environments or older bullmq versions may not export QueueScheduler; fail gracefully
+			logger.warn('QueueScheduler failed to initialize (skipping)', { error: err && (err.message || err) });
+			scheduler = null;
+		}
 	return { chunkQueue, scheduler };
 }
 
@@ -27,7 +36,7 @@ async function closeQueues() {
 		try {
 			await chunkQueue.close();
 		} catch (e) {
-			console.warn('Failed to close chunkQueue', e.message || e);
+			logger.warn('Failed to close chunkQueue', { error: e.message || e });
 		}
 		chunkQueue = null;
 	}
@@ -35,7 +44,7 @@ async function closeQueues() {
 		try {
 			await scheduler.close();
 		} catch (e) {
-			console.warn('Failed to close scheduler', e.message || e);
+			logger.warn('Failed to close scheduler', { error: e.message || e });
 		}
 		scheduler = null;
 	}
