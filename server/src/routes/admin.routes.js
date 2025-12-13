@@ -502,7 +502,7 @@ router.post('/run-seed', authenticateToken, isAdmin, async (req, res) => {
 });
 
 // Update Demo Business for hello@faheemly.com (temporary endpoint)
-router.post('/update-demo-business', authenticateToken, async (req, res) => {
+router.post('/update-demo-business', authenticateToken, isAdmin, async (req, res) => {
   try {
     logger.info('Updating demo business...');
 
