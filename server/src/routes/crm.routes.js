@@ -94,6 +94,123 @@ router.get('/status', authenticateToken, async (req, res) => {
   }
 });
 
+// Get CRM statistics
+router.get('/stats', authenticateToken, async (req, res) => {
+  try {
+    const businessId = req.user.businessId;
+    const { startDate, endDate } = req.query;
+
+    const stats = await crmService.getCrmStats(businessId, { startDate, endDate });
+
+    res.json({
+      success: true,
+      data: stats
+    });
+  } catch (error) {
+    logger.error('CRM stats error:', error);
+    res.status(500).json({ error: 'Failed to fetch CRM stats' });
+  }
+});
+
+// Get lead by ID
+router.get('/leads/:id', authenticateToken, async (req, res) => {
+  try {
+    const businessId = req.user.businessId;
+    const { id } = req.params;
+
+    const lead = await crmService.getLeadById(businessId, id);
+
+    if (!lead) {
+      return res.status(404).json({ error: 'Lead not found' });
+    }
+
+    res.json({
+      success: true,
+      data: lead
+    });
+  } catch (error) {
+    logger.error('CRM lead fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch lead' });
+  }
+});
+
+// Update lead
+router.put('/leads/:id', authenticateToken, async (req, res) => {
+  try {
+    const businessId = req.user.businessId;
+    const { id } = req.params;
+    const { name, email, phone, requestSummary } = req.body;
+
+    const lead = await prisma.crmLead.findFirst({
+      where: { id, businessId }
+    });
+
+    if (!lead) {
+      return res.status(404).json({ error: 'Lead not found' });
+    }
+
+    const updatedLead = await prisma.crmLead.update({
+      where: { id },
+      data: {
+        ...(name !== undefined && { name }),
+        ...(email !== undefined && { email }),
+        ...(phone !== undefined && { phone }),
+        ...(requestSummary !== undefined && { requestSummary })
+      }
+    });
+
+    res.json({
+      success: true,
+      message: 'Lead updated successfully',
+      data: updatedLead
+    });
+  } catch (error) {
+    logger.error('CRM lead update error:', error);
+    res.status(500).json({ error: 'Failed to update lead' });
+  }
+});
+
+// Delete lead
+router.delete('/leads/:id', authenticateToken, async (req, res) => {
+  try {
+    const businessId = req.user.businessId;
+    const { id } = req.params;
+
+    await crmService.deleteLead(businessId, id);
+
+    res.json({
+      success: true,
+      message: 'Lead deleted successfully'
+    });
+  } catch (error) {
+    logger.error('CRM lead delete error:', error);
+    res.status(500).json({ error: 'Failed to delete lead' });
+  }
+});
+
+// Bulk update leads
+router.post('/leads/bulk-update', authenticateToken, async (req, res) => {
+  try {
+    const businessId = req.user.businessId;
+    const { leadIds, updates } = req.body;
+
+    if (!leadIds || !Array.isArray(leadIds) || leadIds.length === 0) {
+      return res.status(400).json({ error: 'leadIds array is required' });
+    }
+
+    const result = await crmService.bulkUpdateLeads(businessId, leadIds, updates);
+
+    res.json({
+      success: true,
+      message: `Updated ${result.count} leads`,
+      count: result.count
+    });
+  } catch (error) {
+    logger.error('CRM bulk update error:', error);
+    res.status(500).json({ error: 'Failed to bulk update leads' });
+  }
+});
+
 // Super Admin: Toggle CRM for a business
 router.post('/toggle/:businessId', authenticateToken, async (req, res) => {
   try {
@@ -110,13 +227,164 @@ router.post('/toggle/:businessId', authenticateToken, async (req, res) => {
       data: { crmLeadCollectionEnabled: enabled }
     });
 
+    logger.info(`Super Admin ${req.user.email} ${enabled ? 'enabled' : 'disabled'} CRM for business ${businessId}`);
+
     res.json({
+      success: true,
       message: `CRM ${enabled ? 'enabled' : 'disabled'} for business`,
-      business: { id: business.id, name: business.name, crmLeadCollectionEnabled: business.crmLeadCollectionEnabled }
+      data: { 
+        id: business.id, 
+        name: business.name, 
+        crmLeadCollectionEnabled: business.crmLeadCollectionEnabled 
+      }
     });
   } catch (error) {
     logger.error('CRM toggle error:', error);
     res.status(500).json({ error: 'Failed to toggle CRM' });
+  }
+});
+
+// Super Admin: Get all CRM leads across all businesses
+router.get('/admin/leads', authenticateToken, async (req, res) => {
+  try {
+    if (req.user.role !== 'SUPERADMIN') {
+      return res.status(403).json({ error: 'Only Super Admin can access this endpoint' });
+    }
+
+    const { page = 1, limit = 50, businessId, search, startDate, endDate } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const where = {
+      ...(businessId && { businessId }),
+      ...(search && {
+        OR: [
+          { name: { contains: search, mode: 'insensitive' } },
+          { email: { contains: search, mode: 'insensitive' } },
+          { phone: { contains: search, mode: 'insensitive' } },
+          { requestSummary: { contains: search, mode: 'insensitive' } }
+        ]
+      }),
+      ...(startDate && endDate && {
+        createdAt: {
+          gte: new Date(startDate),
+          lte: new Date(endDate)
+        }
+      })
+    };
+
+    const [leads, total] = await Promise.all([
+      prisma.crmLead.findMany({
+        where,
+        skip,
+        take: parseInt(limit),
+        orderBy: { createdAt: 'desc' },
+        include: {
+          business: {
+            select: {
+              id: true,
+              name: true,
+              activityType: true
+            }
+          }
+        }
+      }),
+      prisma.crmLead.count({ where })
+    ]);
+
+    res.json({
+      success: true,
+      data: leads,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        totalPages: Math.ceil(total / parseInt(limit))
+      }
+    });
+  } catch (error) {
+    logger.error('Admin CRM leads fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch CRM leads' });
+  }
+});
+
+// Super Admin: Get CRM statistics across all businesses
+router.get('/admin/stats', authenticateToken, async (req, res) => {
+  try {
+    if (req.user.role !== 'SUPERADMIN') {
+      return res.status(403).json({ error: 'Only Super Admin can access this endpoint' });
+    }
+
+    const { startDate, endDate } = req.query;
+
+    const where = {
+      ...(startDate && endDate && {
+        createdAt: {
+          gte: new Date(startDate),
+          lte: new Date(endDate)
+        }
+      })
+    };
+
+    const [
+      totalLeads,
+      leadsBySource,
+      leadsByBusiness,
+      leadsByDay
+    ] = await Promise.all([
+      prisma.crmLead.count({ where }),
+      prisma.crmLead.groupBy({
+        by: ['source'],
+        where,
+        _count: { id: true }
+      }),
+      prisma.crmLead.groupBy({
+        by: ['businessId'],
+        where,
+        _count: { id: true },
+        orderBy: { _count: { id: 'desc' } },
+        take: 10
+      }).then(async (groups) => {
+        const businessIds = groups.map(g => g.businessId);
+        const businesses = await prisma.business.findMany({
+          where: { id: { in: businessIds } },
+          select: { id: true, name: true, activityType: true }
+        });
+        return groups.map(g => ({
+          businessId: g.businessId,
+          businessName: businesses.find(b => b.id === g.businessId)?.name || 'Unknown',
+          activityType: businesses.find(b => b.id === g.businessId)?.activityType || 'OTHER',
+          count: g._count.id
+        }));
+      }),
+      prisma.$queryRaw`
+        SELECT 
+          DATE("createdAt") as date,
+          COUNT(*)::int as count
+        FROM "crm_leads"
+        WHERE 1=1
+          ${startDate ? prisma.$queryRaw`AND "createdAt" >= ${new Date(startDate)}` : prisma.$queryRaw``}
+          ${endDate ? prisma.$queryRaw`AND "createdAt" <= ${new Date(endDate)}` : prisma.$queryRaw``}
+        GROUP BY DATE("createdAt")
+        ORDER BY date DESC
+        LIMIT 30
+      `
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        total: totalLeads,
+        bySource: leadsBySource.reduce((acc, item) => {
+          acc[item.source] = item._count.id;
+          return acc;
+        }, {}),
+        byBusiness: leadsByBusiness,
+        byDay: leadsByDay
+      }
+    });
+  } catch (error) {
+    logger.error('Admin CRM stats error:', error);
+    res.status(500).json({ error: 'Failed to fetch CRM stats' });
   }
 });
 

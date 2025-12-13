@@ -657,30 +657,34 @@ async function generateChatResponse(message, business, history = [], knowledgeBa
     ? `\nالتاريخ والوقت الحالي: ${business.currentDate}. استخدم هذا للإجابة على أسئلة الوقت (مثل: "المحل مفتوح الآن؟").`
     : '';
 
-  // 5. Build optimized, clear system prompt with better KB integration
+  // 5. Build STRICT system prompt that FORCES KB usage
   let knowledgeContext = '';
   if (hasKnowledgeBase) {
     const formattedKB = kbPreparation.formatForPrompt(preparedKB);
     knowledgeContext = `
-=== معلومات من قاعدة المعرفة ===
+=== قاعدة المعرفة (يجب استخدامها حصرياً) ===
 ${formattedKB}
 
-**تعليمات مهمة:**
-- استخدم المعلومات أعلاه حصرياً للإجابة على سؤال المستخدم
-- إذا كانت الإجابة موجودة في المعلومات أعلاه، استخدمها مباشرة
-- إذا لم تجد الإجابة في المعلومات أعلاه، قل: "عذراً، لا أملك هذه المعلومة في قاعدة المعرفة. هل تريد التواصل مع فريق ${businessName} مباشرة للحصول على المساعدة؟"
-- لا تخترع معلومات غير موجودة في قاعدة المعرفة
+⚠️ **قواعد صارمة - اتبعها بدقة:**
+1. استخدم المعلومات أعلاه فقط للإجابة - لا تستخدم معلومات خارجية
+2. إذا كانت الإجابة موجودة في المعلومات أعلاه، استخدمها مباشرة بدون إضافات
+3. إذا لم تجد الإجابة في المعلومات أعلاه، قل بصراحة: "عذراً، لا أملك هذه المعلومة في قاعدة المعرفة. هل تريد التواصل مع فريق ${businessName} مباشرة؟"
+4. ممنوع منعاً باتاً اختراع معلومات غير موجودة في قاعدة المعرفة
+5. لا تقدم معلومات عامة - فقط من قاعدة المعرفة أعلاه
 `;
   } else {
     knowledgeContext = `
-**ملاحظة:** لا توجد معلومات متاحة في قاعدة المعرفة حالياً.
-- كن صريحاً مع المستخدم
-- اقترح التواصل مع فريق ${businessName} للحصول على معلومات دقيقة
+⚠️ **تحذير:** لا توجد معلومات متاحة في قاعدة المعرفة حالياً.
+
+**قواعد صارمة:**
 - لا تخترع معلومات عن ${businessName}
+- لا تقدم معلومات عامة أو افتراضية
+- قل بصراحة: "عذراً، لا أملك معلومات مفصلة حالياً. يرجى التواصل مع فريق ${businessName} مباشرة للحصول على المساعدة."
+- اقترح التواصل: البريد الإلكتروني أو الهاتف أو زيارة الموقع
 `;
   }
 
-  // 6. Build final system prompt (CLEAR, CONCISE, NON-CONTRADICTORY)
+  // 6. Build STRICT system prompt that prevents generic responses
   const systemPrompt = `أنت مساعد ${businessName}${businessContext ? ` (${businessContext})` : ''}.
 
 ${personalityInstructions}
@@ -688,14 +692,21 @@ ${timeContext}
 
 ${knowledgeContext}
 
-**قواعد الإجابة:**
+**قواعد الإجابة الصارمة:**
 1. أجب بنفس لغة المستخدم (عربي أو إنجليزي)
-2. كن مختصراً ومفيداً (2-3 جمل كحد أقصى، إلا إذا كان السؤال يتطلب تفصيلاً)
-3. استخدم Markdown للتنسيق عند الحاجة (مثل **نص عريض** أو قوائم)
-4. كن ودوداً ومهذباً في جميع الأوقات
-5. لا تذكر أنك AI أو مساعد ذكي - أنت فقط مساعد ${businessName}
-6. لا تذكر أسماء مزودين أو موديلات تقنية
-7. عند إنهاء المحادثة، أضف "|RATING_REQUEST|" في النهاية
+2. كن مختصراً ومفيداً (2-3 جمل كحد أقصى)
+3. استخدم المعلومات من قاعدة المعرفة فقط - لا تخترع
+4. إذا لم تجد الإجابة في قاعدة المعرفة، اعترف بذلك واقترح التواصل مع الفريق
+5. لا تقدم معلومات عامة أو افتراضية
+6. كن ودوداً ومهذباً ومحترفاً
+7. لا تذكر أنك AI - أنت فقط مساعد ${businessName}
+8. لا تذكر أسماء مزودين أو موديلات تقنية
+9. عند إنهاء المحادثة، أضف "|RATING_REQUEST|" في النهاية
+
+**مثال على إجابة صحيحة:**
+المستخدم: "ما هي خدماتك؟"
+إذا كانت المعلومات موجودة في قاعدة المعرفة: استخدمها مباشرة
+إذا لم تكن موجودة: "عذراً، لا أملك معلومات مفصلة عن خدماتنا حالياً. يرجى التواصل مع فريق ${businessName} مباشرة للحصول على المعلومات الدقيقة."
 `;
 
   // 2. Construct Messages Array with enhanced context
@@ -705,22 +716,22 @@ ${knowledgeContext}
     { role: 'user', content: message }
   ];
 
-  // 7. Adjust temperature based on intent and KB availability (optimized for better responses)
-  let temperature = 0.7; // Default - balanced for natural responses
+  // 7. Adjust temperature based on intent and KB availability (STRICT for KB usage)
+  let temperature = 0.5; // Lower default for more focused responses
   if (hasKnowledgeBase) {
-    // When KB exists, use slightly lower temp for accuracy but not too low to avoid robotic responses
-    temperature = 0.6; // Balanced: accurate but still natural
+    // When KB exists, use lower temp to force strict adherence to KB content
+    temperature = 0.4; // Very focused - forces use of KB content
   } else if (intent.intent === 'GREETING') {
-    temperature = 0.8; // More creative and warm for greetings
+    temperature = 0.7; // More creative for greetings when no KB
   } else if (intent.intent === 'QUESTION') {
-    temperature = 0.65; // Slightly lower for factual questions
+    temperature = 0.5; // Lower for factual questions
   }
   
-  // 8. Call Hybrid AI with optimized options
+  // 8. Call Hybrid AI with STRICT options to prevent generic responses
   const options = {
     temperature,
-    maxTokens: 450, // Increased slightly for more complete responses while staying concise
-    topP: 0.9
+    maxTokens: 300, // Reduced to force concise, KB-based responses
+    topP: 0.85 // Lower topP for more focused responses
   };
 
   const result = await generateResponse(messages, options);

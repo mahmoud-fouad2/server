@@ -188,6 +188,155 @@ class CrmService {
       data: { crmLeadCollectionEnabled: enabled }
     });
   }
+
+  /**
+   * Get CRM statistics for a business
+   */
+  async getCrmStats(businessId, filters = {}) {
+    const { startDate, endDate } = filters;
+    
+    const where = {
+      businessId,
+      ...(startDate && endDate && {
+        createdAt: {
+          gte: new Date(startDate),
+          lte: new Date(endDate)
+        }
+      })
+    };
+
+    const [
+      totalLeads,
+      leadsBySource,
+      recentLeads,
+      leadsByDay
+    ] = await Promise.all([
+      prisma.crmLead.count({ where }),
+      prisma.crmLead.groupBy({
+        by: ['source'],
+        where,
+        _count: { id: true }
+      }),
+      prisma.crmLead.findMany({
+        where,
+        take: 10,
+        orderBy: { createdAt: 'desc' }
+      }),
+      prisma.$queryRaw`
+        SELECT 
+          DATE("createdAt") as date,
+          COUNT(*)::int as count
+        FROM "crm_leads"
+        WHERE "businessId" = ${businessId}
+          ${startDate ? prisma.$queryRaw`AND "createdAt" >= ${new Date(startDate)}` : prisma.$queryRaw``}
+          ${endDate ? prisma.$queryRaw`AND "createdAt" <= ${new Date(endDate)}` : prisma.$queryRaw``}
+        GROUP BY DATE("createdAt")
+        ORDER BY date DESC
+        LIMIT 30
+      `
+    ]);
+
+    return {
+      total: totalLeads,
+      bySource: leadsBySource.reduce((acc, item) => {
+        acc[item.source] = item._count.id;
+        return acc;
+      }, {}),
+      recent: recentLeads,
+      byDay: leadsByDay
+    };
+  }
+
+  /**
+   * Get leads by activity type (for admin)
+   */
+  async getLeadsByActivityType(businessId, activityType) {
+    const business = await prisma.business.findUnique({
+      where: { id: businessId },
+      select: { activityType: true }
+    });
+
+    if (!business) {
+      return [];
+    }
+
+    // Get leads with matching activity type context
+    const leads = await prisma.crmLead.findMany({
+      where: { businessId },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    // Filter by activity type context in requestSummary
+    const activityKeywords = this.getActivityKeywords(activityType);
+    return leads.filter(lead => {
+      const summary = lead.requestSummary.toLowerCase();
+      return activityKeywords.some(keyword => summary.includes(keyword));
+    });
+  }
+
+  /**
+   * Get activity-specific keywords for filtering
+   */
+  getActivityKeywords(activityType) {
+    const keywords = {
+      'RESTAURANT': ['طعام', 'أكل', 'مطعم', 'حجز', 'طاولة', 'قائمة', 'طلب'],
+      'CLINIC': ['موعد', 'طبيب', 'استشارة', 'علاج', 'فحص', 'مرض'],
+      'HOTEL': ['حجز', 'غرفة', 'فندق', 'إقامة', 'سكن'],
+      'RETAIL': ['منتج', 'شراء', 'سعر', 'عرض', 'تخفيض'],
+      'ECOMMERCE': ['طلب', 'شراء', 'منتج', 'سلة', 'تسوق'],
+      'SALON': ['موعد', 'صالون', 'تجميل', 'قص', 'صبغة'],
+      'GYM': ['اشتراك', 'نادي', 'رياضة', 'تمرين', 'لياقة'],
+      'EDUCATION': ['دورة', 'تدريب', 'تعليم', 'تسجيل', 'برنامج']
+    };
+
+    return keywords[activityType] || ['استفسار', 'طلب', 'خدمة'];
+  }
+
+  /**
+   * Bulk update leads
+   */
+  async bulkUpdateLeads(businessId, leadIds, updates) {
+    return await prisma.crmLead.updateMany({
+      where: {
+        businessId,
+        id: { in: leadIds }
+      },
+      data: updates
+    });
+  }
+
+  /**
+   * Delete lead
+   */
+  async deleteLead(businessId, leadId) {
+    return await prisma.crmLead.delete({
+      where: {
+        id: leadId,
+        businessId
+      }
+    });
+  }
+
+  /**
+   * Get lead by ID
+   */
+  async getLeadById(businessId, leadId) {
+    return await prisma.crmLead.findFirst({
+      where: {
+        id: leadId,
+        businessId
+      },
+      include: {
+        business: {
+          select: {
+            id: true,
+            name: true,
+            activityType: true
+          }
+        }
+      }
+    });
+  }
 }
 
 module.exports = new CrmService();

@@ -40,6 +40,7 @@ router.get('/conversations', authenticateToken, chatController.getConversations)
 router.get('/:conversationId/messages', authenticateToken, chatController.getMessages);
 router.get('/handover-requests', authenticateToken, chatController.getHandoverRequests);
 router.post('/agent/reply', authenticateToken, chatController.agentReply);
+router.post('/reply', authenticateToken, chatController.agentReply); // Alias for /api/chat/reply
 router.post('/:conversationId/rate', authenticateToken, chatController.submitRating);
 
 // Test endpoint for widget/examples page

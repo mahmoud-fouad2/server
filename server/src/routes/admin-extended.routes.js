@@ -18,14 +18,14 @@ const adminUsersController = require('../controllers/admin-users.controller');
 const systemController = require('../controllers/system.controller');
 
 // Middleware
-const { protect } = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 // Use unified authorization middleware (replace deprecated permission wrapper)
 const { requirePermission } = require('../middleware/authorization');
 
 // ============================================
 // 🔐 AUTHENTICATION REQUIRED FOR ALL ROUTES
 // ============================================
-router.use(protect);
+router.use(authenticateToken);
 
 // ============================================
 // 👥 USER MANAGEMENT ROUTES

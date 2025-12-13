@@ -224,7 +224,11 @@ export const widgetApi = {
   updateConfig: data =>
     apiCall('/api/widget/config', { method: 'POST', body: data }),
   uploadIcon: formData =>
-    apiCall('/api/widget/upload-icon', { method: 'POST', body: formData }),
+    apiCall('/api/widget/upload-icon', { 
+      method: 'POST', 
+      body: formData,
+      headers: {} // Don't set Content-Type for FormData, let browser set it with boundary
+    }),
 };
 
 export const knowledgeApi = {
@@ -316,4 +320,14 @@ export const crmApi = {
   toggleCrm: enabled =>
     apiCall('/api/crm/toggle', { method: 'POST', body: { enabled } }),
   getCrmStatus: () => apiCall('/api/crm/status'),
+};
+
+export const paymentApi = {
+  getGateways: () => apiCall('/api/payments/gateways'),
+  createPayment: (data) => apiCall('/api/payments/create', { method: 'POST', body: data }),
+  getPayment: (id) => apiCall(`/api/payments/${id}`),
+  getPayments: (params) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiCall(`/api/payments${queryString ? `?${queryString}` : ''}`);
+  }
 };

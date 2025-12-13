@@ -186,9 +186,17 @@ router.post('/upload-icon', authenticateToken, upload.single('icon'), async (req
       data: { widgetConfig: JSON.stringify(currentConfig) }
     });
 
+    // Return the updated config to ensure frontend gets the new icon
+    const updatedBusiness = await prisma.business.findUnique({
+      where: { id: businessId },
+      select: { widgetConfig: true }
+    });
+
     res.json({ 
+      success: true,
       message: 'Icon uploaded successfully',
-      iconUrl: iconUrl
+      iconUrl: iconUrl,
+      widgetConfig: updatedBusiness?.widgetConfig ? JSON.parse(updatedBusiness.widgetConfig) : currentConfig
     });
   } catch (error) {
     logger.error('Upload Icon Error', error);

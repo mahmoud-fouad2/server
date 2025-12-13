@@ -63,19 +63,47 @@ export default function WidgetSettingsView({
     const file = e.target.files[0];
     if (!file) return;
 
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      addNotification('حجم الملف كبير جداً (الحد الأقصى 2MB)', 'error');
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      addNotification('الملف يجب أن يكون صورة', 'error');
+      return;
+    }
+
     const formData = new FormData();
     formData.append('icon', file);
 
     try {
       const data = await widgetApi.uploadIcon(formData);
+      // Fix: Use iconUrl instead of url
+      const iconUrl = data.iconUrl || data.url || data.customIconUrl;
+      
+      if (!iconUrl) {
+        throw new Error('لم يتم إرجاع رابط الأيقونة');
+      }
+
       setWidgetConfig(prev => ({
         ...prev,
-        customIconUrl: data.url,
+        customIconUrl: iconUrl,
         avatar: 'custom',
       }));
-      addNotification('تم رفع الأيقونة بنجاح');
+      
+      // Auto-save after upload
+      await widgetApi.updateConfig({
+        ...widgetConfig,
+        customIconUrl: iconUrl,
+        avatar: 'custom',
+      });
+      
+      addNotification('تم رفع الأيقونة بنجاح وحفظها');
     } catch (err) {
-      addNotification('فشل رفع الأيقونة', 'error');
+      console.error('Icon upload error:', err);
+      addNotification(err.message || 'فشل رفع الأيقونة', 'error');
     }
   };
 
