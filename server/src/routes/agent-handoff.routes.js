@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { authenticateToken } = require('../middleware/auth');
 const AgentHandoffService = require('../services/agent-handoff.service');
+const logger = require('../utils/logger');
 
 /**
  * @route POST /api/handoff/evaluate
@@ -25,7 +26,7 @@ router.post('/evaluate', authenticateToken, async (req, res) => {
       data: evaluation
     });
   } catch (error) {
-    console.error('[Agent Handoff Routes] Evaluate error:', error);
+    logger.error('[Agent Handoff Routes] Evaluate error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to evaluate handoff',
@@ -56,7 +57,7 @@ router.post('/initiate', authenticateToken, async (req, res) => {
       data: result
     });
   } catch (error) {
-    console.error('[Agent Handoff Routes] Initiate error:', error);
+    logger.error('[Agent Handoff Routes] Initiate error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to initiate handoff',
@@ -87,7 +88,7 @@ router.post('/complete', authenticateToken, async (req, res) => {
       message: 'Handoff completed successfully'
     });
   } catch (error) {
-    console.error('[Agent Handoff Routes] Complete error:', error);
+    logger.error('[Agent Handoff Routes] Complete error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to complete handoff',
@@ -125,7 +126,7 @@ router.get('/status/:handoffId', authenticateToken, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('[Agent Handoff Routes] Status error:', error);
+    logger.error('[Agent Handoff Routes] Status error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to get handoff status',
@@ -158,7 +159,7 @@ router.get('/queue', authenticateToken, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('[Agent Handoff Routes] Queue error:', error);
+    logger.error('[Agent Handoff Routes] Queue error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to get handoff queue',
@@ -194,7 +195,7 @@ router.get('/active', authenticateToken, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('[Agent Handoff Routes] Active error:', error);
+    logger.error('[Agent Handoff Routes] Active error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to get active handoffs',
@@ -233,7 +234,7 @@ router.post('/agent/add', authenticateToken, async (req, res) => {
       message: 'Agent added to pool successfully'
     });
   } catch (error) {
-    console.error('[Agent Handoff Routes] Add agent error:', error);
+    logger.error('[Agent Handoff Routes] Add agent error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to add agent',
@@ -257,7 +258,7 @@ router.delete('/agent/:agentId', authenticateToken, async (req, res) => {
       message: 'Agent removed from pool successfully'
     });
   } catch (error) {
-    console.error('[Agent Handoff Routes] Remove agent error:', error);
+    logger.error('[Agent Handoff Routes] Remove agent error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to remove agent',
@@ -279,7 +280,7 @@ router.get('/agent/status', authenticateToken, async (req, res) => {
       data: status
     });
   } catch (error) {
-    console.error('[Agent Handoff Routes] Agent status error:', error);
+    logger.error('[Agent Handoff Routes] Agent status error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to get agent status',
@@ -301,7 +302,7 @@ router.get('/statistics', authenticateToken, async (req, res) => {
       data: stats
     });
   } catch (error) {
-    console.error('[Agent Handoff Routes] Statistics error:', error);
+    logger.error('[Agent Handoff Routes] Statistics error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to get handoff statistics',
@@ -325,7 +326,7 @@ router.post('/cancel/:handoffId', authenticateToken, async (req, res) => {
       message: 'Handoff cancelled successfully'
     });
   } catch (error) {
-    console.error('[Agent Handoff Routes] Cancel error:', error);
+    logger.error('[Agent Handoff Routes] Cancel error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to cancel handoff',

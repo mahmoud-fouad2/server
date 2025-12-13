@@ -186,7 +186,7 @@ router.post('/:integrationId/webhook', authenticateToken, async (req, res) => {
       data: result
     });
   } catch (error) {
-    console.error('[Integrations Routes] Webhook registration error:', error);
+    logger.error('[Integrations Routes] Webhook registration error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to register webhook',
@@ -219,7 +219,7 @@ router.post('/webhook/:integrationId', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('[Integrations Routes] Webhook handling error:', error);
+    logger.error('[Integrations Routes] Webhook handling error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to handle webhook',
@@ -243,7 +243,7 @@ router.delete('/:integrationId', authenticateToken, async (req, res) => {
       data: result
     });
   } catch (error) {
-    console.error('[Integrations Routes] Remove integration error:', error);
+    logger.error('[Integrations Routes] Remove integration error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to remove integration',
@@ -268,7 +268,7 @@ router.get('/whatsapp/qr', authenticateToken, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('[Integrations Routes] WhatsApp QR error:', error);
+    logger.error('[Integrations Routes] WhatsApp QR error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to get WhatsApp QR code',
@@ -297,7 +297,7 @@ router.post('/telegram/set-commands', authenticateToken, async (req, res) => {
       data: { commands }
     });
   } catch (error) {
-    console.error('[Integrations Routes] Telegram commands error:', error);
+    logger.error('[Integrations Routes] Telegram commands error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to set Telegram commands',
@@ -337,7 +337,7 @@ router.get('/logs/:integrationId', authenticateToken, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('[Integrations Routes] Get logs error:', error);
+    logger.error('[Integrations Routes] Get logs error', { error });
     res.status(500).json({
       success: false,
       message: 'Failed to get integration logs',
