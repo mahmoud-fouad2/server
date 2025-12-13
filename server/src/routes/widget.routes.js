@@ -69,7 +69,19 @@ router.get('/config/:businessId', async (req, res) => {
 
     const config = business.widgetConfig ? JSON.parse(business.widgetConfig) : defaultConfig;
 
-    // Fix: Replace localhost URLs with current API URL to prevent CSP errors
+    // Fix: Convert relative icon URLs to full URLs
+    if (config.customIconUrl && config.customIconUrl.startsWith('/uploads/')) {
+       let baseUrl = process.env.CLIENT_URL || process.env.API_URL;
+       if (!baseUrl) {
+         baseUrl = process.env.NODE_ENV === 'production' 
+           ? 'https://faheemly.com' 
+           : 'http://localhost:3000';
+       }
+       baseUrl = baseUrl.replace(/\/$/, '');
+       config.customIconUrl = `${baseUrl}${config.customIconUrl}`;
+    }
+
+    // Legacy: Replace localhost URLs with current API URL to prevent CSP errors
     if (config.customIconUrl && config.customIconUrl.includes('localhost')) {
        let baseUrl = process.env.API_URL;
        if (!baseUrl) {
@@ -132,7 +144,17 @@ router.post('/upload-icon', authenticateToken, upload.single('icon'), async (req
     }
 
     const businessId = req.user.businessId;
-    const iconUrl = `/uploads/icons/${req.file.filename}`;
+    const relativeIconUrl = `/uploads/icons/${req.file.filename}`;
+    
+    // Build full URL for the icon
+    let baseUrl = process.env.CLIENT_URL || process.env.API_URL;
+    if (!baseUrl) {
+      baseUrl = process.env.NODE_ENV === 'production' 
+        ? 'https://faheemly.com' 
+        : 'http://localhost:3000';
+    }
+    baseUrl = baseUrl.replace(/\/$/, '');
+    const iconUrl = `${baseUrl}${relativeIconUrl}`;
 
     // Update business widget config with new icon URL
     const business = await prisma.business.findUnique({

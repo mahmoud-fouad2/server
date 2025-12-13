@@ -18,7 +18,9 @@ dotenv.config();
 
 // Set default CLIENT_URL if not provided (before validation)
 if (!process.env.CLIENT_URL) {
-  process.env.CLIENT_URL = 'https://faheemly.com';
+  process.env.CLIENT_URL = process.env.NODE_ENV === 'production' 
+    ? 'https://fahimo-api.onrender.com' 
+    : 'https://faheemly.com';
 }
 
 const isTestEnvironment = process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID !== undefined;
@@ -93,7 +95,9 @@ app.use(
 // Production-safe CORS: Use FRONTEND_URL and CORS_ORIGINS from environment
 const allowedOrigins = [
   process.env.FRONTEND_URL || 'https://faheemly.com',
-  ...(process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',').map(s => s.trim()) : [])
+  ...(process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',').map(s => s.trim()) : []),
+  // Allow API domain for widget assets
+  ...(process.env.NODE_ENV === 'production' ? ['https://fahimo-api.onrender.com'] : [])
 ].filter(Boolean);
 
 // Add localhost ONLY in development
@@ -200,6 +204,16 @@ app.use(express.static(path.join(__dirname, '../public'), {
     // Allow cross-origin loading of static assets (scripts, images)
     res.set('Cross-Origin-Resource-Policy', 'cross-origin');
     res.set('Access-Control-Allow-Origin', '*');
+  }
+}));
+
+// Special route for uploaded icons to ensure CORS headers
+app.use('/uploads', express.static(path.join(__dirname, '../public/uploads'), {
+  setHeaders: (res, path, stat) => {
+    // Allow cross-origin loading of uploaded images
+    res.set('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
   }
 }));
 

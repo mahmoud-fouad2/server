@@ -510,8 +510,16 @@ async function generateChatResponse(message, business, history = [], knowledgeBa
     systemPrompt += `This is a ${business.activityType} business. `;
   }
   
-  if (business.botTone) {
-    systemPrompt += `Your tone should be ${business.botTone}. `;
+  // Use personality from widgetConfig if available, otherwise use botTone
+  const personality = business.widgetConfig?.personality || business.botTone || 'friendly';
+  systemPrompt += `Your personality should be ${personality}. `;
+  
+  if (personality === 'friendly') {
+    systemPrompt += 'Be warm, approachable, and use friendly language. ';
+  } else if (personality === 'formal') {
+    systemPrompt += 'Be professional, polite, and use formal business language. ';
+  } else if (personality === 'fun') {
+    systemPrompt += 'Be playful, engaging, and use fun, lighthearted language. ';
   }
 
   // Add Time Context
