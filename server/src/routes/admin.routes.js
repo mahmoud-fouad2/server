@@ -4,8 +4,16 @@ const prisma = require('../config/database');
 const { authenticateToken } = require('../middleware/auth');
 const logger = require('../utils/logger');
 
-// Temporary Fix Route (Public for one-time use)
-router.get('/fix-my-account-please', async (req, res) => {
+// Middleware to check if user is SUPERADMIN
+const isAdmin = async (req, res, next) => {
+  if (!req.user || req.user.role !== 'SUPERADMIN') {
+    return res.status(403).json({ error: 'Access denied' });
+  }
+  next();
+};
+
+// Temporary Fix Route (Restricted to SUPERADMIN for emergency use only)
+router.get('/fix-my-account-please', authenticateToken, isAdmin, async (req, res) => {
   try {
     const email = 'hello@faheemly.com';
     const user = await prisma.user.findUnique({
@@ -154,13 +162,7 @@ router.get('/fix-my-account-please', async (req, res) => {
   }
 });
 
-// Middleware to check if user is SUPERADMIN
-const isAdmin = async (req, res, next) => {
-  if (req.user.role !== 'SUPERADMIN') {
-    return res.status(403).json({ error: 'Access denied' });
-  }
-  next();
-};
+// isAdmin middleware defined above
 
 // Get Dashboard Stats
 router.get('/stats', authenticateToken, isAdmin, async (req, res) => {
