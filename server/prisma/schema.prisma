@@ -1154,6 +1154,9 @@ model Payment {
   
   business        Business        @relation(fields: [businessId], references: [id])
   user            User            @relation(fields: [userId], references: [id])
+
+  // Optional link back to Subscription if this payment belongs to a subscription
+  subscription    Subscription?
   
   @@index([businessId])
   @@index([userId])
@@ -1188,7 +1191,7 @@ model Subscription {
   autoRenew       Boolean         @default(false)
   
   // Payment Link
-  paymentId       String?
+  paymentId       String?         @unique
   payment         Payment?        @relation(fields: [paymentId], references: [id])
   
   // Metadata
