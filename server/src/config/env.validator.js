@@ -62,7 +62,12 @@ const REQUIRED_ENV_VARS = {
   // Client
   CLIENT_URL: {
     required: false, // Optional - will use default if not provided
-    description: 'Frontend client URL for CORS',
+    description: 'Frontend client URL for CORS (legacy name - prefer FRONTEND_URL)',
+    validate: (value) => !value || value.startsWith('http://') || value.startsWith('https://')
+  },
+  FRONTEND_URL: {
+    required: false, // Preferred name for the same setting
+    description: 'Frontend client URL for CORS (preferred name)',
     validate: (value) => !value || value.startsWith('http://') || value.startsWith('https://')
   },
   
@@ -157,8 +162,9 @@ function validateEnv() {
     }
 
     // Ensure HTTPS in production
-    if (process.env.CLIENT_URL && !process.env.CLIENT_URL.startsWith('https://')) {
-      warnings.push('⚠️  CLIENT_URL should use HTTPS in production');
+    const clientUrlToCheck = process.env.FRONTEND_URL || process.env.CLIENT_URL;
+    if (clientUrlToCheck && !clientUrlToCheck.startsWith('https://')) {
+      warnings.push('⚠️  FRONTEND_URL/CLIENT_URL should use HTTPS in production');
     }
   }
 
@@ -215,7 +221,7 @@ function getEnvSummary() {
       gemini: !!process.env.GEMINI_API_KEY,
       voyage: !!process.env.VOYAGE_API_KEY
     },
-    hasClientURL: !!process.env.CLIENT_URL,
+    hasClientURL: !!(process.env.CLIENT_URL || process.env.FRONTEND_URL),
     hasCORSOrigins: !!process.env.CORS_ORIGINS
   };
 }

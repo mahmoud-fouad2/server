@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const nodemailer = require('nodemailer');
+const logger = require('../utils/logger');
 
 // Configure transporter
 // Note: In production, use environment variables for credentials
@@ -46,13 +47,13 @@ router.post('/', async (req, res) => {
     // Attempt to send email
     try {
         if (process.env.SMTP_PASSWORD) {
-            await transporter.sendMail(mailOptions);
-            console.log('Email sent successfully');
+          await transporter.sendMail(mailOptions);
+          logger.info('Email sent successfully', { to: mailOptions.to });
         } else {
-            console.log('SMTP_PASSWORD not set. Logging email instead:', mailOptions);
+          logger.warn('SMTP_PASSWORD not set. Logging email instead', { mailOptions });
         }
     } catch (emailError) {
-        console.error('Failed to send email:', emailError);
+      logger.error('Failed to send email:', emailError);
         // We still return success to the user but log the error, 
         // or we could return an error if email is critical.
         // For now, let's assume success if we processed the request.
@@ -60,7 +61,7 @@ router.post('/', async (req, res) => {
 
     res.json({ message: 'Message received successfully' });
   } catch (error) {
-    console.error('Contact Form Error:', error);
+    logger.error('Contact Form Error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

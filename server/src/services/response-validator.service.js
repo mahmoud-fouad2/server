@@ -59,7 +59,8 @@ class ResponseValidator {
     out = filtered.join(' ').trim();
 
     // As a last resort, remove standalone provider names at start/end
-    out = out.replace(new RegExp('^\\s*(?:' + providerNames.join('|') + ')[:\-\\s]*', 'i'), '');
+      // Remove leading provider name and following punctuation/whitespace (colon, hyphen, spaces)
+      out = out.replace(new RegExp('^\\s*(?:' + providerNames.join('|') + ')[:\\s-]*', 'i'), '');
     out = out.replace(new RegExp('(?:' + providerNames.join('|') + ')\\s*$', 'i'), '');
 
     return out;
@@ -222,9 +223,16 @@ class ResponseValidator {
       result.suggestions.push('Remove AI provider mentions from response');
     }
 
-    // Check if knowledge base was available but response seems generic
+    // Penalize generic phrases in all contexts (smaller penalty), and apply
+    // an extra penalty when knowledge base exists but response is still generic.
+    if (hasGeneric) {
+      result.scoreModifier -= 10;
+      result.issues.push('Response contains generic phrasing');
+      result.suggestions.push('Provide a more specific or informative answer');
+    }
+
     if (context.hasKnowledgeBase && hasGeneric && response.length < 100) {
-      result.scoreModifier -= 25;
+      result.scoreModifier -= 15; // additional penalty on top of the generic penalty
       result.issues.push('Response is too generic despite having knowledge base');
       result.suggestions.push('Use knowledge base information more effectively');
     }

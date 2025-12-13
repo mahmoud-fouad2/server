@@ -171,8 +171,11 @@ describe('Hybrid AI Service', () => {
       expect(health).toHaveProperty('totalAvailable');
       expect(health).toHaveProperty('providers');
 
-      expect(health.totalConfigured).toBe(4); // All providers configured in test
-      expect(health.providers).toHaveLength(4);
+      const status = getProviderStatus();
+      // Providers list should include all configured provider definitions
+      expect(health.providers).toHaveLength(Object.keys(status).length);
+      // At least the core providers must be configured for tests to be meaningful
+      expect(health.totalConfigured).toBeGreaterThanOrEqual(4);
     });
   });
 

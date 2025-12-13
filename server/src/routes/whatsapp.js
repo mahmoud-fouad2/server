@@ -8,7 +8,8 @@ const whatsappService = require('../services/whatsappService');
 // This is a placeholder structure. To make this live, you need to:
 // 1. Verify a Meta Developer Account
 // 2. Configure the Webhook URL in Meta Dashboard to point here
-// 3. Add WHATSAPP_TOKEN to .env
+// 3. Set WHATSAPP_VERIFY_TOKEN and WHATSAPP_APP_SECRET in your environment
+const crypto = require('crypto');
 
 router.get('/webhook', (req, res) => {
   // Meta verification challenge
@@ -16,23 +17,53 @@ router.get('/webhook', (req, res) => {
   const token = req.query['hub.verify_token'];
   const challenge = req.query['hub.challenge'];
 
-  // Default verify token if not set in env
-  const verifyToken = process.env.WHATSAPP_VERIFY_TOKEN || 'fahimo_secret_123';
+  const verifyToken = process.env.WHATSAPP_VERIFY_TOKEN;
+
+  if (!verifyToken) {
+    const logger = require('../utils/logger');
+    logger.error('WHATSAPP_VERIFY_TOKEN not configured - cannot verify webhook');
+    return res.sendStatus(500);
+  }
 
   if (mode && token) {
     if (mode === 'subscribe' && token === verifyToken) {
       const logger = require('../utils/logger');
       logger.info('WhatsApp webhook verified successfully');
-      res.status(200).send(challenge);
-    } else {
-      res.sendStatus(403);
+      return res.status(200).send(challenge);
     }
+    return res.sendStatus(403);
   }
 });
 
 router.post('/webhook', async (req, res) => {
   try {
     const body = req.body;
+
+    // Verify webhook signature if app secret is configured
+    const logger = require('../utils/logger');
+    const appSecret = process.env.WHATSAPP_APP_SECRET;
+    if (appSecret) {
+      const signatureHeader = req.get('x-hub-signature-256') || req.get('x-hub-signature');
+      if (!signatureHeader) {
+        logger.warn('Missing webhook signature header');
+        return res.sendStatus(403);
+      }
+
+      const expected = 'sha256=' + crypto.createHmac('sha256', appSecret).update(req.rawBody || JSON.stringify(req.body)).digest('hex');
+      try {
+        const sigBuf = Buffer.from(signatureHeader);
+        const expBuf = Buffer.from(expected);
+        if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
+          logger.warn('Invalid webhook signature');
+          return res.sendStatus(403);
+        }
+      } catch (e) {
+        logger.warn('Error verifying webhook signature', { error: e.message });
+        return res.sendStatus(403);
+      }
+    } else {
+      logger.warn('WHATSAPP_APP_SECRET not set; skipping webhook signature verification (not recommended for production)');
+    }
 
     // Check if this is an event from a WhatsApp API subscription
     if (body.object) {

@@ -6,6 +6,7 @@ const logger = require('../utils/logger');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const rateLimit = require('express-rate-limit');
 
 // Configure Multer for Icon Uploads
 const storage = multer.diskStorage({
@@ -109,7 +110,18 @@ router.get('/config/:businessId', async (req, res) => {
 
 // Widget Chat Endpoint (Public) - delegate to central chat controller for unified behavior
 const chatController = require('../controllers/chat.controller');
-router.post('/chat', chatController.sendMessage);
+const asyncHandler = require('express-async-handler');
+
+// Rate limiter for public widget chat to prevent abuse and excessive AI calls
+const widgetChatLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 20, // limit each IP to 20 requests per windowMs
+  message: 'Too many requests from this IP, please try again later',
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+router.post('/chat', widgetChatLimiter, asyncHandler(chatController.sendMessage));
 
 // Update Widget Config (Authenticated)
 router.post('/config', authenticateToken, async (req, res) => {

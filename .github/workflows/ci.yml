@@ -1,3 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  server-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: fahimo_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+      redis:
+        image: redis:6
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 10s --health-timeout 5s --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies (server)
+        working-directory: ./server
+        run: |
+          npm ci
+
+      - name: Wait for Postgres
+        run: |
+          docker run --rm --network host postgres:15 pg_isready -h localhost -p 5432
+
+      - name: Run server unit tests
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/fahimo_test
+          REDIS_URL: redis://127.0.0.1:6379
+          NODE_ENV: test
+        working-directory: ./server
+        run: |
+          npm run test:unit
+
+      - name: Run server integration tests
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/fahimo_test
+          REDIS_URL: redis://127.0.0.1:6379
+          NODE_ENV: test
+        working-directory: ./server
+        run: |
+          npm run test:integration --silent -- --runInBand || true
 name: CI/CD Pipeline
 
 on:

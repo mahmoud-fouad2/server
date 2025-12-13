@@ -1,5 +1,6 @@
 const fs = require('fs').promises;
 const path = require('path');
+const logger = require('../utils/logger');
 
 /**
  * Continuous Improvement Service
@@ -189,10 +190,10 @@ class ContinuousImprovementService {
       updates.lastUpdate = new Date();
       updates.updateCount++;
 
-      console.log(`[ContinuousImprovement] Knowledge base updated for ${businessId}: ${updatesToProcess.length} updates processed`);
+      logger.info(`[ContinuousImprovement] Knowledge base updated for ${businessId}: ${updatesToProcess.length} updates processed`, { processed: updatesToProcess.length });
 
     } catch (error) {
-      console.error('[ContinuousImprovement] Knowledge base update error:', error);
+      logger.error('[ContinuousImprovement] Knowledge base update error:', error);
     }
   }
 

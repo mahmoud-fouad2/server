@@ -2,7 +2,7 @@ const pdf = require('pdf-parse');
 const fs = require('fs');
 const axios = require('axios');
 const cheerio = require('cheerio');
-const path = require('path');
+// path not used directly; keep minimal imports
 const prisma = require('../config/database');
 const logger = require('../utils/logger');
 const { generateEmbedding } = require('../services/embedding.service');
@@ -99,7 +99,13 @@ async function createChunksForKB(kb) {
       const hasRedis = !!process.env.REDIS_URL;
       let chunkQueue = null;
       if (hasRedis) {
-        try { chunkQueue = require('../queue/queue').chunkQueue; } catch (e) { chunkQueue = null; }
+        try {
+          const queueService = require('../queue/queue');
+          // Prefer explicit getter; fall back to legacy export for compatibility
+          chunkQueue = (queueService.getChunkQueue && queueService.getChunkQueue()) || queueService.chunkQueue || null;
+        } catch (e) {
+          chunkQueue = null;
+        }
       }
 
       for (const chunk of pending) {
@@ -152,10 +158,8 @@ exports.uploadKnowledge = async (req, res) => {
     if (req.file.mimetype === 'application/pdf') {
       const dataBuffer = fs.readFileSync(req.file.path);
       const data = await pdf(dataBuffer);
-      content = (data.text || '')
-        .replace(/[\u0000-\u001F\u007F-\u009F]/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
+      const normalized = (data.text || '').replace(/\s+/g, ' ');
+      content = normalized.split('').filter(ch => ch.charCodeAt(0) >= 32).join('').trim();
       pageCount = data.numpages || 1;
       type = 'PDF';
       
@@ -505,7 +509,12 @@ exports.embedChunks = async (req, res) => {
     const hasRedis = !!process.env.REDIS_URL;
     let chunkQueue = null;
     if (hasRedis) {
-      try { chunkQueue = require('../queue/queue').chunkQueue; } catch (e) { chunkQueue = null; }
+      try {
+        const queueService = require('../queue/queue');
+        chunkQueue = (queueService.getChunkQueue && queueService.getChunkQueue()) || queueService.chunkQueue || null;
+      } catch (e) {
+        chunkQueue = null;
+      }
     }
 
     if (chunkQueue) {

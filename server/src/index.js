@@ -3,10 +3,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
 const http = require('http');
-const { Server } = require('socket.io');
 const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
-const hpp = require('hpp');
 const prisma = require('./config/database');
 const logger = require('./utils/logger');
 const redisCache = require('./services/cache.service');
@@ -16,14 +13,22 @@ const { validateEnv, getEnvSummary } = require('./config/env.validator');
 // Initialize environment variables
 dotenv.config();
 
-// Set default CLIENT_URL if not provided (before validation)
-if (!process.env.CLIENT_URL) {
+// Ensure we have a client URL environment variable for CORS and CSP
+// Accept FRONTEND_URL as the preferred name, or fallback to CLIENT_URL for historic reasons
+const configuredFrontendUrl = process.env.FRONTEND_URL || process.env.CLIENT_URL;
+if (!configuredFrontendUrl) {
   if (process.env.NODE_ENV === 'production') {
-    logger.error('CLIENT_URL must be set in production environment');
+    logger.error('FRONTEND_URL or CLIENT_URL must be set in production environment');
     process.exit(1);
   }
+  // Default in development
   process.env.CLIENT_URL = 'https://faheemly.com';
-  logger.warn('CLIENT_URL not set, using default (development only)');
+  process.env.FRONTEND_URL = process.env.CLIENT_URL;
+  logger.warn('FRONTEND_URL/CLIENT_URL not set; using default CLIENT_URL (development only)');
+} else {
+  // Normalize so both names exist for backward compatibility
+  process.env.CLIENT_URL = configuredFrontendUrl;
+  process.env.FRONTEND_URL = configuredFrontendUrl;
 }
 
 const isTestEnvironment = process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID !== undefined;
@@ -182,7 +187,7 @@ async function startServerWithRetries(startPort, maxAttempts = 10) {
       return { server: s, port };
     } catch (err) {
       // Clean up and try next port on EADDRINUSE
-      try { s.close(); } catch (e) {}
+      try { s.close(); } catch (e) { logger.warn('Failed to close server instance after binding error', e); }
 
       if (err && err.code === 'EADDRINUSE') {
         logger.warn(`Port ${port} in use, trying port ${port + 1}`);
@@ -201,9 +206,13 @@ async function startServerWithRetries(startPort, maxAttempts = 10) {
 }
 
 // Middleware
-app.use(express.json());
+// Capture raw body for webhook signature verification (useful for WhatsApp/Hubs)
+const rawBodySaver = (req, res, buf, encoding) => {
+  if (buf && buf.length) req.rawBody = buf.toString(encoding || 'utf8');
+};
+app.use(express.json({ verify: rawBodySaver }));
 app.use(express.static(path.join(__dirname, '../public'), {
-  setHeaders: (res, path, stat) => {
+  setHeaders: (res, _path, _stat) => {
     // Allow cross-origin loading of static assets (scripts, images)
     res.set('Cross-Origin-Resource-Policy', 'cross-origin');
     res.set('Access-Control-Allow-Origin', '*');
@@ -212,7 +221,7 @@ app.use(express.static(path.join(__dirname, '../public'), {
 
 // Special route for uploaded icons to ensure CORS headers
 app.use('/uploads', express.static(path.join(__dirname, '../public/uploads'), {
-  setHeaders: (res, path, stat) => {
+  setHeaders: (res, _path, _stat) => {
     // Allow cross-origin loading of uploaded images
     res.set('Cross-Origin-Resource-Policy', 'cross-origin');
     res.set('Access-Control-Allow-Origin', '*');
@@ -382,6 +391,8 @@ async function shutdown(code = 0) {
     // Disconnect external resources
     try { await prisma.$disconnect(); } catch (e) { logger.warn('Error disconnecting Prisma', e?.message || e); }
     try { const cacheService = require('./services/cache.service'); if (cacheService && cacheService.disconnect) await cacheService.disconnect(); } catch (e) { logger.warn('Error disconnecting Redis', e?.message || e); }
+    // Close any initialized job queues
+    try { const queueService = require('./queue/queue'); if (queueService && queueService.closeQueues) await queueService.closeQueues(); } catch (e) { logger.warn('Error closing job queues', e?.message || e); }
 
     if (serverInstance && serverInstance.close) {
       await new Promise((resolve) => serverInstance.close(resolve));
@@ -521,6 +532,13 @@ if (!isTestEnvironment) {
           const redisCache = require('./services/cache.service');
           if (redisCache.isEnabled && !redisCache.isConnected) {
             await redisCache.connect();
+          }
+          // Initialize background queues (if configured)
+          try {
+            const queueService = require('./queue/queue');
+            if (queueService && queueService.initQueues) queueService.initQueues();
+          } catch (err) {
+            logger.warn('Failed to initialize job queues', err?.message || err);
           }
         } catch (e) {
           logger.warn('Redis connect attempt failed:', e?.message || e);

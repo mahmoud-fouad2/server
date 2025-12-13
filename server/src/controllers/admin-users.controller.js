@@ -10,6 +10,8 @@
 const asyncHandler = require('express-async-handler');
 const adminUserService = require('../services/admin-users.service');
 const logger = require('../utils/logger');
+const prisma = require('../config/database');
+const bcrypt = require('bcryptjs');
 
 /**
  * @desc    Get all users with pagination, filtering, and search

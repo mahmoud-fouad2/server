@@ -8,7 +8,7 @@ const {
   validateUpdateBusinessPlan,
   validatePagination 
 } = require('../middleware/zodValidation');
-const logger = require('../utils/logger');
+// logger intentionally not used in routes; use controller-level logging where required
 
 // Dashboard Routes
 router.get('/stats', authenticateToken, businessController.getDashboardStats);

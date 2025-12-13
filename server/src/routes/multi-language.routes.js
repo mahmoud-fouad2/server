@@ -84,7 +84,7 @@ router.post('/translate', async (req, res) => {
       }
     });
   } catch (error) {
-    logger.error('Multi-language translate endpoint error', { fromDialect, toDialect, error: error.message });
+    logger.error('Multi-language translate endpoint error', { fromDialect: req.body?.fromDialect, toDialect: req.body?.toDialect, error: error.message });
     res.status(500).json({
       success: false,
       message: 'Failed to translate text',
@@ -125,7 +125,7 @@ router.post('/translate', async (req, res) => {
 // });
 router.post('/process', async (req, res) => {
   try {
-    const { message, language } = req.body;
+    const { message } = req.body;
 
     if (!message) {
       return res.status(400).json({
@@ -204,7 +204,7 @@ router.post('/generate-response', async (req, res) => {
       }
     });
   } catch (error) {
-    logger.error('Multi-language generate endpoint error', { targetDialect, error: error.message });
+    logger.error('Multi-language generate endpoint error', { targetDialect: req.body?.targetDialect, error: error.message });
     res.status(500).json({
       success: false,
       message: 'Failed to generate dialect response',

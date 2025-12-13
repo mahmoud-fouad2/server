@@ -19,7 +19,8 @@ const systemController = require('../controllers/system.controller');
 
 // Middleware
 const { protect } = require('../middleware/auth');
-const { requirePermission } = require('../middleware/permission');
+// Use unified authorization middleware (replace deprecated permission wrapper)
+const { requirePermission } = require('../middleware/authorization');
 
 // ============================================
 // 🔐 AUTHENTICATION REQUIRED FOR ALL ROUTES

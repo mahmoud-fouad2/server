@@ -31,6 +31,9 @@
     "test:comprehensive": "node tests/comprehensive-test.js",
     "test:create-users": "node scripts/create-test-users.js",
     "test:full": "npm run test:create-users && npm run test:comprehensive"
+    ,
+    "lint": "eslint 'src/**/*.js'",
+    "lint:fix": "eslint 'src/**/*.js' --fix"
   },
   "keywords": [],
   "author": "ma-fo.info",
@@ -71,7 +74,8 @@
   "devDependencies": {
     "jest": "^29.7.0",
     "nodemon": "^3.1.0",
-    "supertest": "^7.0.0"
+    "supertest": "^7.0.0",
+    "eslint": "^8.57.0"
   },
   "jest": {
     "testEnvironment": "node",

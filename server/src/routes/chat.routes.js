@@ -4,6 +4,10 @@ const rateLimit = require('express-rate-limit');
 const { authenticateToken } = require('../middleware/auth');
 const { validateRating, validateChatMessage } = require('../middleware/validation');
 const chatController = require('../controllers/chat.controller');
+const prisma = require('../config/database');
+const aiService = require('../services/ai.service');
+const responseValidator = require('../services/response-validator.service');
+const logger = require('../utils/logger');
 
 // Rate limiter for public chat endpoint
 const chatLimiter = rateLimit({

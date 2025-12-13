@@ -27,7 +27,7 @@ router.get('/', authenticateToken, async (req, res) => {
 
     res.json(employees);
   } catch (error) {
-    console.error('Get Employees Error:', error);
+    logger.error('Get Employees Error:', error);
     res.status(500).json({ error: 'Failed to fetch employees' });
   }
 });
@@ -68,7 +68,7 @@ router.post('/', authenticateToken, async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Add Employee Error:', error);
+    logger.error('Add Employee Error:', error);
     res.status(500).json({ error: 'Failed to add employee' });
   }
 });
@@ -96,7 +96,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
 
     res.json({ success: true });
   } catch (error) {
-    console.error('Delete Employee Error:', error);
+    logger.error('Delete Employee Error:', error);
     res.status(500).json({ error: 'Failed to delete employee' });
   }
 });

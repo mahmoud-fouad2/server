@@ -140,14 +140,13 @@ class SystemMonitor {
   async logHealthStatus() {
     const status = await this.getHealthStatus();
     
-    console.log('\n═══════════════════════════════════════════════════');
-    console.log('📊 FAHEEMLY SYSTEM HEALTH');
-    console.log('═══════════════════════════════════════════════════');
-    console.log(`⏱️  Uptime: ${status.uptime.formatted}`);
-    console.log(`💾 Memory: ${status.memory.heapUsed} / ${status.memory.heapTotal} (${status.memory.percentage}%)`);
-    console.log(`🗄️  Database: ${status.database.connected ? '✅ Connected' : '❌ Disconnected'} (${status.database.latency})`);
-    console.log(`🤖 AI Providers: ${status.aiProviders.totalAvailable || 0} available`);
-    console.log('═══════════════════════════════════════════════════\n');
+    const logger = require('./logger');
+    logger.info('FAHEEMLY SYSTEM HEALTH', {
+      uptime: status.uptime.formatted,
+      memory: status.memory,
+      database: status.database,
+      aiProviders: status.aiProviders,
+    });
 
     return status;
   }
@@ -156,7 +155,8 @@ class SystemMonitor {
    * Start periodic health checks
    */
   startPeriodicMonitoring(intervalMinutes = 5) {
-    console.log(`🔍 Starting health monitoring (every ${intervalMinutes} minutes)...`);
+    const logger = require('./logger');
+    logger.info(`Starting health monitoring (every ${intervalMinutes} minutes)...`);
     
     // Initial check
     this.logHealthStatus().catch(error => console.error('Initial health check error:', error));

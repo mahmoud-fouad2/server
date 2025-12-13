@@ -35,7 +35,7 @@ router.post('/', authenticateToken, async (req, res) => {
 
     res.status(201).json(ticket);
   } catch (error) {
-    console.error('Create Ticket Error:', error);
+    logger.error('Create Ticket Error:', error);
     res.status(500).json({ error: 'Failed to create ticket' });
   }
 });
@@ -55,7 +55,7 @@ router.get('/my-tickets', authenticateToken, async (req, res) => {
 
     res.json(tickets);
   } catch (error) {
-    console.error('Get My Tickets Error:', error);
+    logger.error('Get My Tickets Error:', error);
     res.status(500).json({ error: 'Failed to fetch tickets' });
   }
 });
@@ -77,7 +77,7 @@ router.get('/all', authenticateToken, async (req, res) => {
 
     res.json(tickets);
   } catch (error) {
-    console.error('Get All Tickets Error:', error);
+    logger.error('Get All Tickets Error:', error);
     res.status(500).json({ error: 'Failed to fetch tickets' });
   }
 });
@@ -109,7 +109,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
 
     res.json(ticket);
   } catch (error) {
-    console.error('Get Ticket Details Error:', error);
+    logger.error('Get Ticket Details Error:', error);
     res.status(500).json({ error: 'Failed to fetch ticket details' });
   }
 });
@@ -152,7 +152,7 @@ router.post('/:id/reply', authenticateToken, async (req, res) => {
 
     res.json(newMessage);
   } catch (error) {
-    console.error('Reply Ticket Error:', error);
+    logger.error('Reply Ticket Error:', error);
     res.status(500).json({ error: 'Failed to send reply' });
   }
 });
@@ -180,7 +180,7 @@ router.put('/:id/status', authenticateToken, async (req, res) => {
 
     res.json(updatedTicket);
   } catch (error) {
-    console.error('Update Status Error:', error);
+    logger.error('Update Status Error:', error);
     res.status(500).json({ error: 'Failed to update status' });
   }
 });

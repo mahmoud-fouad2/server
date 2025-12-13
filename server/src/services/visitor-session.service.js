@@ -33,7 +33,7 @@ class VisitorSessionService {
 
         if (existingSession) {
           // تحديث آخر نشاط
-          const updated = await prisma.visitorSession.update({
+          const _updated = await prisma.visitorSession.update({
             where: { id: sessionId },
             data: { lastActivity: new Date() }
           });
@@ -164,7 +164,7 @@ class VisitorSessionService {
         };
       }
     } catch (error) {
-      logger.error('GeoIP API error', { ipAddress, error: error.message });
+      logger.error('GeoIP API error', { ip, error: error.message });
     }
     
     return { country: 'Unknown', countryCode: 'XX' };

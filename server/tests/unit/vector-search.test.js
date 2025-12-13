@@ -41,9 +41,15 @@ describe('Vector Search Service', () => {
 
       expect(embeddingService.generateEmbedding).toHaveBeenCalledWith('test query');
       expect(prisma.$queryRaw).toHaveBeenCalled();
-      expect(result).toEqual(mockResults);
       expect(result).toHaveLength(1);
-      expect(result[0].similarity).toBe(0.85);
+      expect(result[0]).toEqual(expect.objectContaining({
+        id: 'chunk-1',
+        knowledgeBaseId: 'kb-1',
+        businessId: 'business-123',
+        content: 'Test content',
+        similarity: 0.85
+      }));
+      expect(typeof result[0].combinedScore).toBe('number');
     });
 
     test('should filter results by similarity threshold', async () => {
@@ -83,8 +89,9 @@ describe('Vector Search Service', () => {
           id: 'chunk-1',
           knowledgeBaseId: 'kb-1',
           businessId: 'business-123',
-          content: 'Keyword match content',
+          content: 'Keyword match content including test',
           metadata: null,
+          matchScore: 1,
           createdAt: new Date()
         }
       ];
@@ -110,8 +117,9 @@ describe('Vector Search Service', () => {
           id: 'chunk-1',
           knowledgeBaseId: 'kb-1',
           businessId: 'business-123',
-          content: 'Fallback content',
+          content: 'Fallback content with test keyword',
           metadata: null,
+          matchScore: 1,
           createdAt: new Date()
         }
       ];
@@ -159,9 +167,9 @@ describe('Vector Search Service', () => {
       const result = await vectorSearch.searchKnowledge('test query', 'business-123', 3);
 
       expect(result).toHaveLength(3);
-      expect(prisma.$queryRaw).toHaveBeenCalledWith(
-        expect.stringContaining('LIMIT 3')
-      );
+      // The limit is passed as the last parameter to the template call; ensure it's 3
+      const lastArg = prisma.$queryRaw.mock.calls[0][prisma.$queryRaw.mock.calls[0].length - 1];
+      expect(lastArg).toBe(3);
     });
   });
 
@@ -174,6 +182,7 @@ describe('Vector Search Service', () => {
           businessId: 'business-123',
           content: 'This contains the keyword test',
           metadata: null,
+          matchScore: 1,
           createdAt: new Date()
         }
       ];
@@ -184,16 +193,14 @@ describe('Vector Search Service', () => {
 
       expect(prisma.knowledgeChunk.findMany).toHaveBeenCalledWith({
         where: {
-          businessId: 'business-123',
-          content: {
-            contains: 'test',
-            mode: 'insensitive'
-          }
+          OR: [
+            { content: { contains: 'test', mode: 'insensitive' } },
+            { content: { contains: 'query', mode: 'insensitive' } }
+          ],
+          businessId: 'business-123'
         },
-        orderBy: {
-          createdAt: 'desc'
-        },
-        take: 5
+        orderBy: { createdAt: 'desc' },
+        take: 10 // We fetch more results then filter down to limit
       });
 
       expect(result).toEqual(mockResults);
@@ -213,17 +220,10 @@ describe('Vector Search Service', () => {
       // Query with short words that get filtered out
       const result = await vectorSearch.fallbackKeywordSearch('a an the', 'business-123', 5);
 
-      expect(prisma.knowledgeChunk.findMany).toHaveBeenCalledWith({
-        where: {
-          businessId: 'business-123',
-          content: {
-            contains: 'a an the', // Falls back to full query
-            mode: 'insensitive'
-          }
-        },
-        orderBy: {
-          createdAt: 'desc'
-        },
+      // Short words are removed; fallback should return recent knowledgeBase entries
+      expect(prisma.knowledgeBase.findMany).toHaveBeenCalledWith({
+        where: { businessId: 'business-123' },
+        orderBy: { createdAt: 'desc' },
         take: 5
       });
     });
@@ -244,9 +244,8 @@ describe('Vector Search Service', () => {
       const result = await vectorSearch.isPgVectorAvailable();
 
       expect(result).toBe(true);
-      expect(prisma.$queryRaw).toHaveBeenCalledWith(
-        expect.stringContaining("SELECT EXISTS")
-      );
+      // The SQL query is passed as the first element of the template literal parts
+      expect(prisma.$queryRaw.mock.calls[0][0][0]).toEqual(expect.stringContaining("SELECT EXISTS"));
     });
 
     test('should return false when pgvector is not available', async () => {

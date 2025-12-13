@@ -1,6 +1,7 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
 const { URL } = require('url');
+const logger = require('../utils/logger');
 
 /**
  * Advanced Web Crawler Service
@@ -102,10 +103,9 @@ class WebCrawler {
     }
 
     // Clean text
-    const cleanText = mainContent
-      .replace(/\s+/g, ' ')
-      .replace(/[\u0000-\u001F\u007F-\u009F]/g, '')
-      .trim();
+      // Normalize whitespace and strip control/non-printable characters
+      const withSpaces = mainContent.replace(/\s+/g, ' ');
+      const cleanText = withSpaces.split('').filter(ch => ch.charCodeAt(0) >= 32).join('').trim();
 
     // Extract links for further crawling
     const links = [];
@@ -137,7 +137,7 @@ class WebCrawler {
    */
   async fetchPage(url) {
     try {
-      console.log(`[Crawler] Fetching: ${url}`);
+      logger.info(`[Crawler] Fetching: ${url}`);
       
       const response = await axios.get(url, {
         headers: {
@@ -155,7 +155,7 @@ class WebCrawler {
       
       return null;
     } catch (error) {
-      console.error(`[Crawler] Error fetching ${url}:`, error.message);
+      logger.error(`[Crawler] Error fetching ${url}:`, error, { url });
       return null;
     }
   }
@@ -191,7 +191,7 @@ class WebCrawler {
       depth: depth
     });
 
-    console.log(`[Crawler] ✅ Crawled: ${pageData.title} (${pageData.wordCount} words)`);
+    logger.info(`[Crawler] ✅ Crawled: ${pageData.title} (${pageData.wordCount} words)`, { wordCount: pageData.wordCount });
 
     // Crawl linked pages (if depth allows)
     if (depth < this.maxDepth && this.visitedUrls.size < this.maxPages) {
@@ -210,12 +210,12 @@ class WebCrawler {
    * Start crawling and return all collected pages
    */
   async start(url) {
-    console.log(`[Crawler] Starting crawl of: ${url}`);
-    console.log(`[Crawler] Max pages: ${this.maxPages}, Max depth: ${this.maxDepth}`);
+    logger.info(`[Crawler] Starting crawl of: ${url}`);
+    logger.debug(`[Crawler] Max pages: ${this.maxPages}, Max depth: ${this.maxDepth}`, { maxPages: this.maxPages, maxDepth: this.maxDepth });
     
     await this.crawl(url, 0);
 
-    console.log(`[Crawler] ✅ Crawl complete! Collected ${this.pages.length} pages`);
+    logger.info(`[Crawler] ✅ Crawl complete! Collected ${this.pages.length} pages`, { total: this.pages.length });
     
     return {
       pages: this.pages,

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const rateLimit = require('express-rate-limit');
 const { authenticateToken } = require('../middleware/auth');
+const asyncHandler = require('express-async-handler');
 const { validateRegister, validateLogin, validateUpdateProfile } = require('../middleware/zodValidation');
 const authController = require('../controllers/auth.controller');
 
@@ -24,18 +25,18 @@ const registerLimiter = rateLimit({
 });
 
 // Register - with rate limiting
-router.post('/register', registerLimiter, validateRegister, authController.register);
+router.post('/register', registerLimiter, validateRegister, asyncHandler(authController.register));
 
 // Login - with rate limiting to prevent brute force
-router.post('/login', loginLimiter, validateLogin, authController.login);
+router.post('/login', loginLimiter, validateLogin, asyncHandler(authController.login));
 
 // Demo login (safe helper for testing / demo environments)
-router.post('/demo-login', authController.demoLogin);
+router.post('/demo-login', asyncHandler(authController.demoLogin));
 
 // Update Profile
-router.put('/profile', authenticateToken, authController.updateProfile);
+router.put('/profile', authenticateToken, asyncHandler(authController.updateProfile));
 
 // Get current profile
-router.get('/profile', authenticateToken, authController.getProfile);
+router.get('/profile', authenticateToken, asyncHandler(authController.getProfile));
 
 module.exports = router;

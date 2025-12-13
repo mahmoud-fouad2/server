@@ -32,6 +32,8 @@ const runIfDbAvailable = (title, testFn, timeout) => {
 };
 
 describe('Complete User Journey Integration Tests', () => {
+  // Increase timeout because starting the app and DB operations may take longer
+  jest.setTimeout(30000);
   let app;
   let server;
   let testUser;

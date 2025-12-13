@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { authenticateToken } = require('../middleware/auth');
 const ConversationAnalyticsService = require('../services/conversation-analytics.service');
+const logger = require('../utils/logger');
 
 /**
  * @route POST /api/analytics/conversation
@@ -29,7 +30,7 @@ router.post('/conversation', authenticateToken, async (req, res) => {
       data: analysis
     });
   } catch (error) {
-    console.error('[Conversation Analytics Routes] Analyze error:', error);
+    logger.error('[Conversation Analytics Routes] Analyze error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to analyze conversation',
@@ -50,7 +51,7 @@ router.get('/dashboard/:days?', authenticateToken, async (req, res) => {
     const businessId = req.user.businessId || req.params.businessId;
 
     if (!businessId) {
-      console.warn('[Analytics] Missing businessId in request - returning empty data', { 
+      logger.warn('[Analytics] Missing businessId in request - returning empty data', { 
         user: req.user, 
         params: req.params
       });
@@ -71,7 +72,7 @@ router.get('/dashboard/:days?', authenticateToken, async (req, res) => {
       data: dashboard
     });
   } catch (error) {
-    console.error('[Conversation Analytics Routes] Dashboard error:', error);
+    logger.error('[Conversation Analytics Routes] Dashboard error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to get dashboard data',
@@ -87,7 +88,7 @@ router.get('/dashboard-public/:days?', async (req, res) => {
     const dashboard = ConversationAnalyticsService.getDashboardData(days);
     res.json({ success: true, data: dashboard });
   } catch (error) {
-    console.error('[Conversation Analytics Routes] Public Dashboard error:', error);
+    logger.error('[Conversation Analytics Routes] Public Dashboard error:', error);
     res.status(500).json({ success: false, message: 'Failed to get dashboard data', error: error.message });
   }
 });
@@ -114,7 +115,7 @@ router.get('/report/:date', authenticateToken, async (req, res) => {
       data: report
     });
   } catch (error) {
-    console.error('[Conversation Analytics Routes] Report error:', error);
+    logger.error('[Conversation Analytics Routes] Report error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to get analytics report',
@@ -153,7 +154,7 @@ router.get('/export', authenticateToken, async (req, res) => {
 
     res.send(exportData);
   } catch (error) {
-    console.error('[Conversation Analytics Routes] Export error:', error);
+    logger.error('[Conversation Analytics Routes] Export error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to export analytics data',
@@ -180,7 +181,7 @@ router.get('/topics', authenticateToken, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('[Conversation Analytics Routes] Topics error:', error);
+    logger.error('[Conversation Analytics Routes] Topics error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to get topic analysis',
@@ -209,7 +210,7 @@ router.get('/performance', authenticateToken, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('[Conversation Analytics Routes] Performance error:', error);
+    logger.error('[Conversation Analytics Routes] Performance error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to get performance metrics',
@@ -230,7 +231,7 @@ router.get('/vector-stats', authenticateToken, async (req, res) => {
     const stats = await vectorSearch.getSearchStats(businessId);
     res.json({ success: true, data: stats });
   } catch (error) {
-    console.error('[Conversation Analytics Routes] Vector stats error:', error);
+    logger.error('[Conversation Analytics Routes] Vector stats error:', error);
     res.status(500).json({ success: false, message: 'Failed to get vector stats', error: error.message });
   }
 });
@@ -259,7 +260,7 @@ router.post('/track-event', authenticateToken, async (req, res) => {
       userId: req.user?.id
     };
 
-    console.log('[Conversation Analytics Routes] Event tracked:', event);
+    logger.info('[Conversation Analytics Routes] Event tracked', { event });
 
     try {
       // Attempt to persist to userAnalytics table (visitor.service tracks similar actions)
@@ -272,14 +273,14 @@ router.post('/track-event', authenticateToken, async (req, res) => {
           createdAt: new Date()
         }
       });
-      console.log('[Conversation Analytics Routes] Event persisted to DB');
+      logger.info('[Conversation Analytics Routes] Event persisted to DB');
     } catch (dbErr) {
-      console.warn('[Conversation Analytics Routes] Failed to persist analytics event:', dbErr?.message || dbErr);
+      logger.warn('[Conversation Analytics Routes] Failed to persist analytics event:', { message: dbErr?.message || dbErr });
     }
 
     res.json({ success: true, message: 'Event tracked successfully' });
   } catch (error) {
-    console.error('[Conversation Analytics Routes] Track event error:', error);
+    logger.error('[Conversation Analytics Routes] Track event error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to track event',
@@ -308,7 +309,7 @@ router.post('/public/track-event', async (req, res) => {
       businessId: businessId || null
     };
 
-    console.log('[Conversation Analytics Routes - Public] Event tracked:', eventRecord);
+    logger.info('[Conversation Analytics Routes - Public] Event tracked', { eventRecord });
 
     try {
       await require('../config/database').userAnalytics.create({
@@ -320,14 +321,14 @@ router.post('/public/track-event', async (req, res) => {
           createdAt: eventRecord.timestamp
         }
       });
-      console.log('[Conversation Analytics Routes - Public] Event persisted to DB');
+      logger.info('[Conversation Analytics Routes - Public] Event persisted to DB');
     } catch (e) {
-      console.warn('[Conversation Analytics Routes - Public] DB persist failed:', e?.message || e);
+      logger.warn('[Conversation Analytics Routes - Public] DB persist failed:', { message: e?.message || e });
     }
 
     res.json({ success: true, message: 'Event tracked (public)' });
   } catch (error) {
-    console.error('[Conversation Analytics Routes - Public] Track event error:', error);
+    logger.error('[Conversation Analytics Routes - Public] Track event error:', error);
     res.status(500).json({ success: false, message: 'Failed to track event', error: error.message });
   }
 });

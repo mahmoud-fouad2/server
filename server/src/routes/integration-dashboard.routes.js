@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { authenticateToken } = require('../middleware/auth');
 const IntegrationDashboardService = require('../services/integration-dashboard.service');
+const logger = require('../utils/logger');
 
 /**
  * @route GET /api/dashboard/integrations
@@ -25,7 +26,7 @@ router.get('/', authenticateToken, async (req, res) => {
       data: dashboard
     });
   } catch (error) {
-    console.error('[Integration Dashboard Routes] Get dashboard error:', error);
+    logger.error('[Integration Dashboard Routes] Get dashboard error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to get integration dashboard',
@@ -49,7 +50,7 @@ router.put('/config', authenticateToken, async (req, res) => {
       data: result
     });
   } catch (error) {
-    console.error('[Integration Dashboard Routes] Update config error:', error);
+    logger.error('[Integration Dashboard Routes] Update config error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to update dashboard configuration',
@@ -80,7 +81,7 @@ router.post('/custom', authenticateToken, async (req, res) => {
       data: result
     });
   } catch (error) {
-    console.error('[Integration Dashboard Routes] Add custom integration error:', error);
+    logger.error('[Integration Dashboard Routes] Add custom integration error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to add custom integration',
@@ -118,7 +119,7 @@ router.get('/export', authenticateToken, async (req, res) => {
 
     res.send(exportData);
   } catch (error) {
-    console.error('[Integration Dashboard Routes] Export error:', error);
+    logger.error('[Integration Dashboard Routes] Export error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to export dashboard data',
@@ -140,7 +141,7 @@ router.get('/themes', authenticateToken, async (req, res) => {
       data: themes
     });
   } catch (error) {
-    console.error('[Integration Dashboard Routes] Get themes error:', error);
+    logger.error('[Integration Dashboard Routes] Get themes error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to get dashboard themes',
@@ -164,7 +165,7 @@ router.post('/validate-config', authenticateToken, async (req, res) => {
       data: result
     });
   } catch (error) {
-    console.error('[Integration Dashboard Routes] Validate config error:', error);
+    logger.error('[Integration Dashboard Routes] Validate config error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to validate dashboard configuration',
@@ -230,7 +231,7 @@ router.get('/widgets', authenticateToken, async (req, res) => {
       data: widgets
     });
   } catch (error) {
-    console.error('[Integration Dashboard Routes] Get widgets error:', error);
+    logger.error('[Integration Dashboard Routes] Get widgets error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to get dashboard widgets',
@@ -256,14 +257,14 @@ router.post('/layout', authenticateToken, async (req, res) => {
     }
 
     // In a real implementation, this would save to database
-    console.log('[Integration Dashboard Routes] Layout saved for business:', businessId);
+    logger.info('[Integration Dashboard Routes] Layout saved for business:', { businessId });
 
     res.json({
       success: true,
       message: 'Dashboard layout saved successfully'
     });
   } catch (error) {
-    console.error('[Integration Dashboard Routes] Save layout error:', error);
+    logger.error('[Integration Dashboard Routes] Save layout error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to save dashboard layout',
@@ -297,7 +298,7 @@ router.get('/layout', authenticateToken, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('[Integration Dashboard Routes] Get layout error:', error);
+    logger.error('[Integration Dashboard Routes] Get layout error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to get dashboard layout',
@@ -324,7 +325,7 @@ router.post('/share', authenticateToken, async (req, res) => {
     }
 
     // In a real implementation, this would update user permissions
-    console.log('[Integration Dashboard Routes] Dashboard shared with users:', userIds);
+    logger.info('[Integration Dashboard Routes] Dashboard shared with users:', { userIds, count: userIds.length });
 
     res.json({
       success: true,
@@ -335,7 +336,7 @@ router.post('/share', authenticateToken, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('[Integration Dashboard Routes] Share dashboard error:', error);
+    logger.error('[Integration Dashboard Routes] Share dashboard error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to share dashboard',

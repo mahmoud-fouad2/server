@@ -392,7 +392,8 @@ describe('System Monitor', () => {
 
   describe('logHealthStatus', () => {
     test('should log formatted health status', async () => {
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      const logger = require('../../src/utils/logger');
+      const loggerSpy = jest.spyOn(logger, 'info').mockImplementation();
 
       prisma.$queryRaw.mockResolvedValue([{ result: 1 }]);
       aiService.checkProvidersHealth.mockReturnValue({
@@ -403,20 +404,9 @@ describe('System Monitor', () => {
 
       const status = await monitor.logHealthStatus();
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('FAHEEMLY SYSTEM HEALTH')
-      );
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Uptime:')
-      );
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Memory:')
-      );
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Database:')
-      );
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('AI Providers:')
+      expect(loggerSpy).toHaveBeenCalledWith(
+        expect.stringContaining('FAHEEMLY SYSTEM HEALTH'),
+        expect.objectContaining({ uptime: expect.any(String), memory: expect.any(Object), database: expect.any(Object), aiProviders: expect.any(Object) })
       );
 
       expect(status).toHaveProperty('uptime');
@@ -424,7 +414,7 @@ describe('System Monitor', () => {
       expect(status).toHaveProperty('database');
       expect(status).toHaveProperty('aiProviders');
 
-      consoleSpy.mockRestore();
+      loggerSpy.mockRestore();
     });
   });
 

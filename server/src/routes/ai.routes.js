@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { authenticateToken } = require('../middleware/auth');
 const aiService = require('../services/ai.service');
+const logger = require('../utils/logger');
 
 /**
  * Get AI Provider Status and Usage Statistics
@@ -21,7 +22,7 @@ router.get('/status', authenticateToken, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('[AI Status] Error:', error);
+    logger.error('[AI Status] Error:', error);
     res.status(500).json({ error: 'Failed to fetch AI provider status' });
   }
 });
@@ -32,7 +33,7 @@ router.get('/status', authenticateToken, async (req, res) => {
  */
 router.post('/health', authenticateToken, async (req, res) => {
   try {
-    console.log('[AI Health] Running health check for all providers...');
+    logger.info('[AI Health] Running health check for all providers...');
     const healthResults = await aiService.healthCheck();
     
     const healthySummary = {
@@ -48,7 +49,7 @@ router.post('/health', authenticateToken, async (req, res) => {
       overallHealth: healthySummary.healthy > 0 ? 'operational' : 'degraded'
     });
   } catch (error) {
-    console.error('[AI Health] Error:', error);
+    logger.error('[AI Health] Error:', error);
     res.status(500).json({ error: 'Failed to perform health check' });
   }
 });
@@ -86,7 +87,7 @@ router.post('/test', authenticateToken, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('[AI Test] Error:', error);
+    logger.error('[AI Test] Error:', error);
     res.status(500).json({ 
       error: 'Failed to generate AI response',
       details: error.message 

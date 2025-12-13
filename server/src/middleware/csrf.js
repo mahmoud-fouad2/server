@@ -5,22 +5,20 @@ const crypto = require('crypto');
  * Generates and validates CSRF tokens for state-changing operations
  */
 
-// In-memory store for CSRF tokens (in production, use Redis or database)
-const csrfTokens = new Map();
+const csrfStore = require('../services/csrfStore');
 const TOKEN_EXPIRY = 60 * 60 * 1000; // 1 hour
 
 /**
  * Generate CSRF token
  */
-const generateCSRFToken = (req, res, next) => {
+const generateCSRFToken = async (req, res, next) => {
   const token = crypto.randomBytes(32).toString('hex');
-  const expiry = Date.now() + TOKEN_EXPIRY;
 
   // Store token with session/user identifier
   const sessionId = req.user?.id || req.ip || 'anonymous';
-  csrfTokens.set(`${sessionId}:${token}`, expiry);
+  await csrfStore.set(sessionId, token, TOKEN_EXPIRY);
 
-  // Clean up expired tokens periodically
+  // Clean up expired tokens periodically (only affects in-memory fallback)
   if (Math.random() < 0.01) { // 1% chance to cleanup
     cleanupExpiredTokens();
   }
@@ -32,7 +30,7 @@ const generateCSRFToken = (req, res, next) => {
 /**
  * Validate CSRF token
  */
-const validateCSRFToken = (req, res, next) => {
+const validateCSRFToken = async (req, res, next) => {
   // Skip for GET, HEAD, OPTIONS
   if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
     return next();
@@ -40,7 +38,6 @@ const validateCSRFToken = (req, res, next) => {
 
   const token = req.headers['x-csrf-token'] || req.body?._csrf;
   const sessionId = req.user?.id || req.ip || 'anonymous';
-  const tokenKey = `${sessionId}:${token}`;
 
   if (!token) {
     return res.status(403).json({
@@ -49,8 +46,8 @@ const validateCSRFToken = (req, res, next) => {
     });
   }
 
-  const expiry = csrfTokens.get(tokenKey);
-  if (!expiry || Date.now() > expiry) {
+  const exists = await csrfStore.get(sessionId, token);
+  if (!exists) {
     return res.status(403).json({
       error: 'CSRF token invalid or expired',
       message: 'Please refresh and try again'
@@ -58,7 +55,7 @@ const validateCSRFToken = (req, res, next) => {
   }
 
   // Token used, remove it (one-time use)
-  csrfTokens.delete(tokenKey);
+  await csrfStore.delete(sessionId, token);
 
   next();
 };
@@ -67,10 +64,13 @@ const validateCSRFToken = (req, res, next) => {
  * Cleanup expired tokens
  */
 function cleanupExpiredTokens() {
-  const now = Date.now();
-  for (const [key, expiry] of csrfTokens.entries()) {
-    if (now > expiry) {
-      csrfTokens.delete(key);
+  // Only applicable when the fallback in-memory store is used
+  if (csrfStore && csrfStore.store && csrfStore.store instanceof Map) {
+    const now = Date.now();
+    for (const [key, expiry] of csrfStore.store.entries()) {
+      if (now > expiry) {
+        csrfStore.store.delete(key);
+      }
     }
   }
 }
