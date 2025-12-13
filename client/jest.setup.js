@@ -76,3 +76,40 @@ global.ResizeObserver = class ResizeObserver {
     return null
   }
 }
+
+// Mock Next.js Image component for jest env (avoid next/image DOM warnings)
+jest.mock('next/image', () => ({
+  __esModule: true,
+  default: ({ src, alt, ...props }) => {
+    // Remove next/image-specific props that would create DOM warnings in JSDOM
+    const { unoptimized, placeholder, blurDataURL, className, quality, priority, sizes, fill, ...rest } = props;
+    return <img src={src} alt={alt} className={className} {...rest} />;
+  },
+}));
+
+// Mock framer-motion to render simple DOM nodes and avoid unknown prop warnings
+jest.mock('framer-motion', () => ({
+  motion: {
+    div: ({ children, ...props }) => {
+      const { whileInView, initial, animate, exit, transition, variants, ...rest } = props;
+      return <div {...rest}>{children}</div>;
+    },
+    button: ({ children, ...props }) => {
+      const { whileInView, initial, animate, exit, transition, variants, ...rest } = props;
+      return <button {...rest}>{children}</button>;
+    },
+    h1: ({ children, ...props }) => {
+      const { whileInView, initial, animate, exit, transition, variants, ...rest } = props;
+      return <h1 {...rest}>{children}</h1>;
+    },
+    h2: ({ children, ...props }) => {
+      const { whileInView, initial, animate, exit, transition, variants, ...rest } = props;
+      return <h2 {...rest}>{children}</h2>;
+    },
+    p: ({ children, ...props }) => {
+      const { whileInView, initial, animate, exit, transition, variants, ...rest } = props;
+      return <p {...rest}>{children}</p>;
+    },
+  },
+  AnimatePresence: ({ children }) => <>{children}</>,
+}));

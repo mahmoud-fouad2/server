@@ -9,11 +9,7 @@ jest.mock('next/link', () => ({
   default: ({ children, href }) => <a href={href}>{children}</a>,
 }));
 
-// Mock next/image
-jest.mock('next/image', () => ({
-  __esModule: true,
-  default: ({ src, alt, ...props }) => <div data-testid="next-image-mock" {...props} role="img" aria-label={alt} />,
-}));
+// relying on global mocks in jest.setup.js for next/image
 
 describe('Footer', () => {
   it('renders footer with main sections', () => {
@@ -103,7 +99,7 @@ describe('Footer', () => {
   it('renders development credit link', () => {
     render(<Footer />);
 
-    const devLink = screen.getByText('Development By Ma-Fo.info').closest('a');
+    const devLink = screen.getByText('Development By Ma-Fo').closest('a');
     expect(devLink).toHaveAttribute('href', 'https://ma-fo.info');
     expect(devLink).toHaveAttribute('target', '_blank');
     expect(devLink).toHaveAttribute('rel', 'noopener noreferrer');
