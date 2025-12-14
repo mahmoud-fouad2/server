@@ -6,13 +6,16 @@ exports.getUnreadCount = async (req, res) => {
     const businessId = req.user && req.user.businessId;
     if (!businessId) return res.status(400).json({ error: 'Business ID required' });
 
-    const ticketsUnread = await prisma.ticketMessage.count({
+    // Count distinct tickets that have at least one unread ticket message
+    const ticketsUnread = await prisma.ticket.count({
       where: {
-        ticket: { businessId },
-        AND: [
-          { isReadByBusiness: false },
-          { NOT: { senderId: req.user.userId } }
-        ]
+        businessId,
+        messages: {
+          some: {
+            isReadByBusiness: false,
+            NOT: { senderId: req.user.userId }
+          }
+        }
       }
     });
 
