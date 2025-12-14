@@ -76,6 +76,9 @@ const GLOBAL_PERMISSIONS = {
     'users:create',
     'users:update',
     'users:delete',
+    // Integrations management
+    'integrations:read',
+    'integrations:update',
     'system:read',
     'system:update',
     'system:delete',

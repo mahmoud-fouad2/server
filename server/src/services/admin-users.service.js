@@ -9,7 +9,6 @@ class AdminUserService {
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     const where = {
-      deletedAt: null,
       ...(search && {
         OR: [
           { email: { contains: search, mode: 'insensitive' } },
@@ -143,7 +142,7 @@ class AdminUserService {
     return prisma.user.update({
       where: { id },
       data: {
-        deletedAt: new Date(),
+        // Note: Prisma schema does not include a `deletedAt` field. Use `isActive=false` for soft-deletes.
         isActive: false
       }
     });

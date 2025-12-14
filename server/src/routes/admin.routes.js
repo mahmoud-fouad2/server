@@ -183,8 +183,8 @@ router.get('/stats', authenticateToken, isAdmin, async (req, res) => {
       totalKnowledgeBase,
       businessesByPlan
     ] = await Promise.all([
-      prisma.user.count({ where: { deletedAt: null } }),
-      prisma.user.count({ where: { isActive: true, deletedAt: null } }),
+      prisma.user.count(),
+        prisma.user.count({ where: { isActive: true } }),
       prisma.business.count(),
       prisma.business.count({ where: { status: 'ACTIVE' } }),
       prisma.conversation.count(),
@@ -257,7 +257,6 @@ router.get('/users', authenticateToken, isAdmin, async (req, res) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     const where = {
-      deletedAt: null,
       ...(search && {
         OR: [
           { email: { contains: search, mode: 'insensitive' } },

@@ -322,31 +322,16 @@ exports.deleteUser = asyncHandler(async (req, res) => {
     throw new Error('User not found');
   }
 
-  if (user.deletedAt) {
+  if (!user.isActive) {
     res.status(400);
-    throw new Error('User is already deleted');
+    throw new Error('User is already inactive/deleted');
   }
 
-  // Soft delete user
+  // Soft delete user by marking inactive and logging the deletion (no userDeletion table in schema)
   const deletedUser = await prisma.user.update({
     where: { id },
     data: {
-      deletedAt: new Date(),
       isActive: false
-    }
-  });
-
-  // Create deletion record for potential restore
-  const restoreUntil = new Date();
-  restoreUntil.setDate(restoreUntil.getDate() + 30); // 30 days
-
-  await prisma.userDeletion.create({
-    data: {
-      userId: id,
-      deletedBy: req.user.id,
-      reason,
-      userData: user,
-      restoreUntil
     }
   });
 
@@ -370,8 +355,8 @@ exports.deleteUser = asyncHandler(async (req, res) => {
   logger.warn(`Admin ${req.user.email} deleted user ${user.email}`, { reason });
 
   res.json({
-    message: 'User deleted successfully (can be restored within 30 days)',
-    deletedAt: deletedUser.deletedAt
+    message: 'User deactivated successfully (can be restored)',
+    userId: deletedUser.id
   });
 });
 
@@ -427,30 +412,22 @@ exports.hardDeleteUser = asyncHandler(async (req, res) => {
 exports.restoreUser = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  const deletionRecord = await prisma.userDeletion.findUnique({
-    where: { userId: id }
-  });
+  // Restore user by re-activating the account
+  const existingUser = await prisma.user.findUnique({ where: { id } });
 
-  if (!deletionRecord) {
+  if (!existingUser) {
     res.status(404);
-    throw new Error('No deletion record found for this user');
+    throw new Error('User not found');
   }
 
-  if (!deletionRecord.canRestore) {
+  if (existingUser.isActive) {
     res.status(400);
-    throw new Error('This user cannot be restored');
+    throw new Error('User is already active');
   }
 
-  if (new Date() > deletionRecord.restoreUntil) {
-    res.status(400);
-    throw new Error('Restoration period has expired (30 days)');
-  }
-
-  // Restore user
   const restoredUser = await prisma.user.update({
     where: { id },
     data: {
-      deletedAt: null,
       isActive: true
     },
     select: {
@@ -459,11 +436,6 @@ exports.restoreUser = asyncHandler(async (req, res) => {
       name: true,
       isActive: true
     }
-  });
-
-  // Remove deletion record
-  await prisma.userDeletion.delete({
-    where: { userId: id }
   });
 
   // Create audit log
