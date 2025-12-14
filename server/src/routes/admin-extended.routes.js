@@ -17,6 +17,7 @@ const router = express.Router();
 const adminUsersController = require('../controllers/admin-users.controller');
 const systemController = require('../controllers/system.controller');
 const adminIntegrationsController = require('../controllers/admin-integrations.controller');
+const adminAnalyticsController = require('../controllers/admin-analytics.controller');
 
 // Middleware
 const { authenticateToken } = require('../middleware/auth');
@@ -356,6 +357,26 @@ router.get(
   '/system/feature-flags',
   requirePermission('system:read'),
   systemController.getFeatureFlags
+);
+
+/**
+ * @route GET /api/admin/analytics/overview
+ * @desc  Global analytics overview (SUPERADMIN)
+ */
+router.get(
+  '/analytics/overview',
+  requirePermission('analytics:read'),
+  adminAnalyticsController.getOverview
+);
+
+/**
+ * @route GET /api/admin/analytics/by-country
+ * @desc  Sessions grouped by country
+ */
+router.get(
+  '/analytics/by-country',
+  requirePermission('analytics:read'),
+  adminAnalyticsController.getSessionsByCountry
 );
 
 /**
