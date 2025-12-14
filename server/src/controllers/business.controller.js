@@ -5,6 +5,7 @@
 
 const asyncHandler = require('express-async-handler');
 const prisma = require('../config/database');
+const cacheService = require('../services/cache.service');
 
 /**
  * @desc    Get Dashboard Statistics
@@ -263,6 +264,25 @@ exports.getConversations = asyncHandler(async (req, res) => {
       totalPages: Math.ceil(total / parseInt(limit))
     }
   });
+});
+
+/**
+ * Invalidate cached chat responses for the authenticated business
+ * @route POST /api/business/cache/invalidate
+ * @access Private (Business Owner)
+ */
+exports.invalidateCache = asyncHandler(async (req, res) => {
+  const businessId = req.user && req.user.businessId;
+  if (!businessId) return res.status(400).json({ error: 'Business ID required' });
+
+  try {
+    await cacheService.connect();
+    const deleted = await cacheService.invalidate(businessId);
+    res.json({ success: true, deleted });
+  } catch (err) {
+    logger.error('invalidateCache error', err);
+    res.status(500).json({ error: 'Failed to invalidate cache' });
+  }
 });
 
 /**

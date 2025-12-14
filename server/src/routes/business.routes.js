@@ -32,6 +32,9 @@ router.get('/conversations/:id', authenticateToken, businessController.getConver
 // Integrations Routes
 router.get('/integrations', authenticateToken, businessController.getIntegrations);
 
+// Cache control (invalidate cached chat responses for this business)
+router.post('/cache/invalidate', authenticateToken, businessController.invalidateCache);
+
 // Demo Business Update (Admin Only)
 router.post('/update-demo', authenticateToken, businessController.updateDemoBusiness);
 
