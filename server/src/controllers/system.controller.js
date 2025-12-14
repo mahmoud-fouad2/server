@@ -586,20 +586,25 @@ exports.updateSystemSetting = asyncHandler(async (req, res) => {
   });
 
   // Create audit log
-  await prisma.auditLog.create({
-    data: {
-      userId: req.user.id,
-      action: 'UPDATE',
-      entity: 'SystemSetting',
-      entityId: key,
-      changes: {
-        before: currentSetting ? { value: currentSetting.value } : null,
-        after: { value }
-      },
-      ipAddress: req.ip,
-      userAgent: req.get('user-agent')
-    }
-  });
+  try {
+    await prisma.auditLog.create({
+      data: {
+        userId: req.user?.id,
+        action: 'UPDATE',
+        entity: 'SystemSetting',
+        entityId: key,
+        changes: {
+          before: currentSetting ? { value: currentSetting.value } : null,
+          after: { value }
+        },
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent')
+      }
+    });
+  } catch (err) {
+    // Audit logging should not block the setting update; warn and continue
+    logger.warn('updateSystemSetting: failed to create audit log', { error: err?.message || err });
+  }
 
   logger.info(`Admin ${req.user.email} updated system setting ${key}`, { value });
 

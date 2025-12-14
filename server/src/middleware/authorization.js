@@ -80,6 +80,14 @@ const GLOBAL_PERMISSIONS = {
     // Integrations management
     'integrations:read',
     'integrations:update',
+    // Media management
+    'media:read',
+    'media:delete',
+    // Content and SEO
+    'content:read',
+    'content:delete',
+    'seo:read',
+    'seo:update',
     'system:read',
     'system:update',
     'system:delete',

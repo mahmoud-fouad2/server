@@ -83,6 +83,65 @@ class AdminAnalyticsService {
       throw error;
     }
   }
+
+  async getTopIps(dateFrom, dateTo, skip = 0, take = 50) {
+    try {
+      const topIps = await prisma.visitorSession.groupBy({
+        by: ['ipAddress'],
+        _count: { _all: true },
+        where: { createdAt: { gte: dateFrom, lte: dateTo } },
+        orderBy: { _count: { _all: 'desc' } },
+        take,
+        skip
+      });
+
+      return topIps.map(i => ({ ip: i.ipAddress, count: i._count._all }));
+    } catch (error) {
+      logger.error('Failed to get top IPs', { error: error.message });
+      throw error;
+    }
+  }
+
+  async getBrowserDeviceBreakdown(dateFrom, dateTo) {
+    try {
+      const browsers = await prisma.visitorSession.groupBy({
+        by: ['browser'],
+        _count: { _all: true },
+        where: { createdAt: { gte: dateFrom, lte: dateTo } }
+      });
+
+      const devices = await prisma.visitorSession.groupBy({
+        by: ['device'],
+        _count: { _all: true },
+        where: { createdAt: { gte: dateFrom, lte: dateTo } }
+      });
+
+      return {
+        browsers: browsers.map(b => ({ browser: b.browser || 'Unknown', count: b._count._all })),
+        devices: devices.map(d => ({ device: d.device || 'Unknown', count: d._count._all }))
+      };
+    } catch (error) {
+      logger.error('Failed to get browser/device breakdown', { error: error.message });
+      throw error;
+    }
+  }
+
+  async getReferrers(dateFrom, dateTo, take = 50) {
+    try {
+      const refs = await prisma.visitorSession.groupBy({
+        by: ['referrer'],
+        _count: { _all: true },
+        where: { createdAt: { gte: dateFrom, lte: dateTo } },
+        orderBy: { _count: { _all: 'desc' } },
+        take
+      });
+
+      return refs.map(r => ({ referrer: r.referrer || 'Direct', count: r._count._all }));
+    } catch (error) {
+      logger.error('Failed to get referrers', { error: error.message });
+      throw error;
+    }
+  }
 }
 
 module.exports = new AdminAnalyticsService();
