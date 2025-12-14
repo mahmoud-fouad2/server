@@ -203,6 +203,21 @@ router.post('/knowledge/pgvector-migrate', requirePermission('system:write'), as
   }
 }));
 
+// Admin endpoint to check last async migration status
+router.get('/knowledge/pgvector-migrate/status', requirePermission('system:read'), asyncHandler(async (req, res) => {
+  try {
+    const fs = require('fs');
+    const p = require('path').join(__dirname, '../../tmp/pgvector_migrate_status.json');
+    if (!fs.existsSync(p)) return res.json({ success: true, status: null, message: 'No migration status found' });
+    const raw = fs.readFileSync(p, 'utf8');
+    const status = JSON.parse(raw);
+    res.json({ success: true, status });
+  } catch (err) {
+    console.error('Failed to read migrate status', err);
+    res.status(500).json({ success: false, error: 'Failed to read status' });
+  }
+}));
+
 /**
  * @route   DELETE /api/admin/knowledge/:id
  * @desc    Delete knowledge base entry
