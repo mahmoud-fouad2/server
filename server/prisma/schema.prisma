@@ -79,6 +79,7 @@ model Business {
   conversations Conversation[]
   integrations  Integration[]
   tickets       Ticket[]
+  notifications Notification[]
 
   // Phase 2 Relations
   customAIModels         CustomAIModel[]
