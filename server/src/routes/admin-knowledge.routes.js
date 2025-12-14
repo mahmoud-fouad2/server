@@ -10,6 +10,7 @@ const { authenticateToken } = require('../middleware/auth');
 const { requirePermission } = require('../middleware/authorization');
 const logger = require('../utils/logger');
 const asyncHandler = require('express-async-handler');
+const { requireRole } = require('../middleware/authorization');
 
 // All routes require authentication
 router.use(authenticateToken);
@@ -138,6 +139,28 @@ router.get(
     });
   })
 );
+
+/**
+ * @route POST /api/admin/knowledge/pgvector-migrate
+ * @desc  Create pgvector extension, add embedding_vector column and migrate JSON embeddings
+ * @access SUPERADMIN
+ */
+router.post('/knowledge/pgvector-migrate', requirePermission('system:write'), asyncHandler(async (req, res) => {
+  try {
+    // Require scripts dynamically
+    const { createPgVector } = require('../../scripts/create_pgvector_extension');
+    const { migrate } = require('../../scripts/migrate_embeddings_to_vector');
+
+    // Run in sequence
+    await createPgVector();
+    await migrate();
+
+    res.json({ success: true, message: 'pgvector extension ensured and embeddings migrated (if any).' });
+  } catch (err) {
+    console.error('pgvector migration failed', err);
+    res.status(500).json({ success: false, error: err.message || 'Migration failed' });
+  }
+}));
 
 /**
  * @route   DELETE /api/admin/knowledge/:id

@@ -73,11 +73,12 @@ router.get('/config/:businessId', async (req, res) => {
 
     // Fix: Convert relative icon URLs to full URLs
     if (config.customIconUrl && config.customIconUrl.startsWith('/uploads/')) {
-       let baseUrl = process.env.CLIENT_URL || process.env.API_URL;
+       // Prefer serving uploaded icons from the API host (where uploads are stored)
+       let baseUrl = process.env.API_URL || process.env.CLIENT_URL;
        if (!baseUrl) {
          baseUrl = process.env.NODE_ENV === 'production' 
-           ? 'https://faheemly.com' 
-           : 'http://localhost:3000';
+           ? 'https://fahimo-api.onrender.com' 
+           : 'http://localhost:3001';
        }
        baseUrl = baseUrl.replace(/\/$/, '');
        config.customIconUrl = `${baseUrl}${config.customIconUrl}`;
@@ -187,14 +188,14 @@ router.post('/upload-icon', authenticateToken, upload.single('icon'), async (req
       }
     }
 
-    // If S3 not used or upload failed, use local disk URL
+    // If S3 not used or upload failed, use local disk URL and prefer API host
     if (!finalIconUrl) {
       const relativeIconUrl = `/uploads/icons/${req.file.filename}`;
-      let baseUrl = process.env.CLIENT_URL || process.env.API_URL;
+      let baseUrl = process.env.API_URL || process.env.CLIENT_URL;
       if (!baseUrl) {
         baseUrl = process.env.NODE_ENV === 'production' 
-          ? 'https://faheemly.com' 
-          : 'http://localhost:3000';
+          ? 'https://fahimo-api.onrender.com' 
+          : 'http://localhost:3001';
       }
       baseUrl = baseUrl.replace(/\/$/, '');
       finalIconUrl = `${baseUrl}${relativeIconUrl}`;
@@ -232,6 +233,33 @@ router.post('/upload-icon', authenticateToken, upload.single('icon'), async (req
   } catch (error) {
     logger.error('Upload Icon Error', error);
     res.status(500).json({ error: 'Failed to upload icon' });
+  }
+});
+
+// Upload Widget Icon as Data URL (Authenticated)
+router.post('/upload-icon-data', authenticateToken, async (req, res) => {
+  try {
+    const businessId = req.user.businessId;
+    const { dataUrl } = req.body || {};
+    if (!dataUrl || typeof dataUrl !== 'string' || !dataUrl.startsWith('data:')) {
+      return res.status(400).json({ error: 'Invalid data URL' });
+    }
+
+    const business = await prisma.business.findUnique({ where: { id: businessId } });
+    if (!business) return res.status(404).json({ error: 'Business not found' });
+
+    const config = business.widgetConfig ? JSON.parse(business.widgetConfig) : {};
+    // Store as customIconData so widget can render immediately without external fetch
+    config.customIconData = dataUrl;
+    // Remove any previous customIconUrl to avoid confusion
+    delete config.customIconUrl;
+
+    await prisma.business.update({ where: { id: businessId }, data: { widgetConfig: JSON.stringify(config) } });
+
+    res.json({ success: true, message: 'Icon saved to widget config', widgetConfig: config });
+  } catch (err) {
+    logger.error('Upload Icon Data Error', err);
+    res.status(500).json({ error: 'Failed to save icon data' });
   }
 });
 

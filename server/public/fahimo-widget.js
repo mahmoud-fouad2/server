@@ -645,7 +645,27 @@
                     document.head.appendChild(dynamicStyle);
                 }
 
-                if (config.customIconUrl) {
+                // Prefer direct data URL stored in config (if admin uploaded via dashboard) to avoid CORS/404 issues
+                if (config.customIconData) {
+                    const avatarEl = document.getElementById('fahimo-bot-avatar');
+                    const img = document.createElement('img');
+                    img.src = config.customIconData;
+                    img.alt = 'Bot';
+                    img.style.width = '100%';
+                    img.style.height = '100%';
+                    img.style.borderRadius = '50%';
+                    img.style.objectFit = 'cover';
+                    img.style.display = 'block';
+                    img.onerror = function() {
+                        try { img.remove(); } catch (e) {}
+                        avatarEl.style.background = 'rgba(255,255,255,0.12)';
+                        avatarEl.innerText = (botName && botName[0]) ? botName[0] : 'F';
+                        console.warn('[Fahimo] custom icon data failed to load, using fallback');
+                    };
+                    avatarEl.innerHTML = '';
+                    avatarEl.appendChild(img);
+                    avatarEl.style.background = 'transparent';
+                } else if (config.customIconUrl) {
                     const avatarEl = document.getElementById('fahimo-bot-avatar');
                     const img = document.createElement('img');
                     img.src = config.customIconUrl;
