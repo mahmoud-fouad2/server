@@ -12,6 +12,55 @@ const logger = require('../utils/logger');
 const asyncHandler = require('express-async-handler');
 const { requireRole } = require('../middleware/authorization');
 
+// ------------------------------------------------------------------
+// Secret-only trigger (no auth) for environments without shell access
+// Use with caution: requires ADMIN_MIGRATE_SECRET to be set in env
+// Header: x-admin-migrate-secret: <secret>
+// ------------------------------------------------------------------
+router.post('/knowledge/pgvector-migrate/trigger/secret', asyncHandler(async (req, res) => {
+  try {
+    const secret = req.headers['x-admin-migrate-secret'];
+    if (!process.env.ADMIN_MIGRATE_SECRET) return res.status(500).json({ success: false, error: 'Admin migrate secret not configured' });
+    if (!secret || secret !== process.env.ADMIN_MIGRATE_SECRET) return res.status(403).json({ success: false, error: 'Access denied. Invalid secret.' });
+
+    const spawn = require('child_process').spawn;
+    const node = process.execPath || 'node';
+    const createScript = require('path').join(__dirname, '../../scripts/create_pgvector_extension.js');
+    const migrateScript = require('path').join(__dirname, '../../scripts/migrate_embeddings_to_vector.js');
+
+    spawn(node, [createScript], { detached: true, stdio: 'ignore' }).unref();
+    spawn(node, [migrateScript], { detached: true, stdio: 'ignore' }).unref();
+
+    try {
+      const fs = require('fs');
+      const p = require('path').join(__dirname, '../../tmp/pgvector_migrate_status.json');
+      fs.writeFileSync(p, JSON.stringify({ startedAt: new Date().toISOString(), triggeredBy: 'secret-no-auth', status: 'started' }, null, 2));
+    } catch (e) {}
+
+    return res.status(202).json({ success: true, message: 'Migration triggered in background (secret-only)' });
+  } catch (err) {
+    console.error('secret-only trigger failed', err);
+    return res.status(500).json({ success: false, error: 'Failed to trigger migration' });
+  }
+}));
+
+router.get('/knowledge/pgvector-migrate/trigger/secret/status', asyncHandler(async (req, res) => {
+  try {
+    const secret = req.headers['x-admin-migrate-secret'];
+    if (!process.env.ADMIN_MIGRATE_SECRET) return res.status(500).json({ success: false, error: 'Admin migrate secret not configured' });
+    if (!secret || secret !== process.env.ADMIN_MIGRATE_SECRET) return res.status(403).json({ success: false, error: 'Access denied. Invalid secret.' });
+    const fs = require('fs');
+    const p = require('path').join(__dirname, '../../tmp/pgvector_migrate_status.json');
+    if (!fs.existsSync(p)) return res.json({ success: true, status: null, message: 'No migration status found' });
+    const raw = fs.readFileSync(p, 'utf8');
+    const status = JSON.parse(raw);
+    res.json({ success: true, status });
+  } catch (err) {
+    console.error('Failed to read secret trigger status', err);
+    res.status(500).json({ success: false, error: 'Failed to read status' });
+  }
+}));
+
 // All routes require authentication
 router.use(authenticateToken);
 
