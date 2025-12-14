@@ -144,6 +144,46 @@ describe('Hybrid AI Service', () => {
     });
   });
 
+  describe('generateChatResponse (system prompt and dialect)', () => {
+    test('should include dialect instructions in system prompt and call generateResponse with it', async () => {
+      const aiService = require('../../src/services/ai.service');
+
+      // Mock axios.post to capture payload sent to provider
+      const axios = require('axios');
+      axios.post.mockImplementationOnce(async (url, payload) => {
+        // payload for Groq should include messages array
+        expect(payload).toEqual(expect.objectContaining({ messages: expect.any(Array) }));
+        expect(payload.messages[0].content).toEqual(expect.stringContaining('اكتشف لهجة المستخدم'));
+        return { data: { choices: [{ message: { content: 'تم الرد باللهجة' } }], usage: { total_tokens: 10 } } };
+      });
+
+      const business = { name: 'فهملي', widgetConfig: { personality: 'friendly' } };
+
+      const res = await aiService.generateChatResponse('فين اقرب فرع؟', business, [], [], null);
+
+      expect(res.response).toBe('تم الرد باللهجة');
+    });
+  });
+
+  describe('KB enforcement', () => {
+    test('should return fallback message if response does not reference KB', async () => {
+      const aiService = require('../../src/services/ai.service');
+      const axios = require('axios');
+
+      // First provider response (doesn't reference KB)
+      axios.post.mockResolvedValueOnce({ data: { choices: [{ message: { content: 'I made this up' } }], usage: { total_tokens: 10 } } });
+      // Retry provider response (also doesn't reference KB)
+      axios.post.mockResolvedValueOnce({ data: { choices: [{ message: { content: 'Still not using KB' } }], usage: { total_tokens: 12 } } });
+
+      const business = { name: 'فهملي', widgetConfig: { personality: 'friendly' } };
+      const kb = ['فرعنا الرئيسي في القاهرة', 'ساعات العمل من 9 الى 5'];
+
+      const res = await aiService.generateChatResponse('فين فرعكم؟', business, [], kb, null);
+
+      expect(res.response).toEqual(expect.stringContaining('عذراً، لا أملك هذه المعلومة في قاعدة المعرفة'));
+    });
+  });
+
   describe('Provider Status and Health', () => {
     test('should return correct provider status', () => {
       const status = getProviderStatus();

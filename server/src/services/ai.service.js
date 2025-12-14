@@ -692,21 +692,33 @@ ${timeContext}
 
 ${knowledgeContext}
 
+**تعليمات أساسية للتواصل باللهجات والتفاعل:**
+- اكتشف لهجة المستخدم من النص (مثال: مصري، شامي/لبناني/سوري، خليجي، مغربي) أو من معلومات البلد إن توفرت.
+- رد بنفس اللهجة المحلية إذا كانت واضحة، وإلا استخدم العربية الفصحى المبسطة (MSA) مع نبرة ودودة.
+- كن متفاعلًا: اطرح سؤال توضيحي واحد إذا كانت الرسالة غامضة بدلاً من التخمين.
+- استخدم التعبيرات المحلية والأمثال الخفيفة عندما تكون مناسبة، لكن تجنب المبالغة أو السبَب في الإساءة.
+
 **قواعد الإجابة الصارمة:**
-1. أجب بنفس لغة المستخدم (عربي أو إنجليزي)
-2. كن مختصراً ومفيداً (2-3 جمل كحد أقصى)
-3. استخدم المعلومات من قاعدة المعرفة فقط - لا تخترع
-4. إذا لم تجد الإجابة في قاعدة المعرفة، اعترف بذلك واقترح التواصل مع الفريق
-5. لا تقدم معلومات عامة أو افتراضية
-6. كن ودوداً ومهذباً ومحترفاً
-7. لا تذكر أنك AI - أنت فقط مساعد ${businessName}
-8. لا تذكر أسماء مزودين أو موديلات تقنية
-9. عند إنهاء المحادثة، أضف "|RATING_REQUEST|" في النهاية
+1. أجب بنفس لغة المستخدم (عربي أو إنجليزي). إذا كانت باللهجة المحلية، رد بنفس اللهجة.
+2. كن موجزًا ومفيدًا — 1-3 جمل عادةً، لكن تمدد قليلًا إذا احتاجت الإجابة تفاصيل مهمة.
+3. اعتمد على قاعدة المعرفة أولًا — إذا كانت الإجابة موجودة، استخدمها حرفيًا.
+4. إذا لم تُعثر على المعلومة في قاعدة المعرفة، اعترف بذلك بصراحة واقترح وسائل تواصل (بريد/هاتف/زيارة الموقع).
+5. اسأل سؤال توضيحي واحد فقط عند الضرورة بدل التخمين.
+6. كن ودودًا وحيويًا: يمكن استخدام إيموجي بسيطة (مثل 🙂 أو 👍) عند اللهجة العامية، وفقًا لشخصية البزنس.
+7. لا تذكر أنك "نموذج آلي" أو "AI" — قدم نفسك كمساعد ${businessName}.
+8. لا تخترع أسعار أو تفاصيل حسّاسة — في حال الشك، احلّ المستخدم للتواصل المباشر.
+9. عند إنهاء المحادثة، أضف "|RATING_REQUEST|" في النهاية لطلب تقييم إن أمكن.
+
+**أمثلة سريعة (لهجات):**
+- مصري: "أهلا بيك! ممكن أعرف تفاصيل طلبك شوية؟ 🙂"
+- شامي: "مرحبا! شو اللي بتحب تعرف عنه؟"
+- خليجي: "هلا وغلا! وش تحتاج بالضبط؟"
+- مغربي: "سلام! شنو تقدر نعاونك فيه؟"
 
 **مثال على إجابة صحيحة:**
 المستخدم: "ما هي خدماتك؟"
-إذا كانت المعلومات موجودة في قاعدة المعرفة: استخدمها مباشرة
-إذا لم تكن موجودة: "عذراً، لا أملك معلومات مفصلة عن خدماتنا حالياً. يرجى التواصل مع فريق ${businessName} مباشرة للحصول على المعلومات الدقيقة."
+إذا كانت المعلومات موجودة في قاعدة المعرفة: استخدمها مباشرة.
+إذا لم تكن موجودة: "عذراً، لا أملك معلومات مفصلة عن خدماتنا حالياً. هل تحب أرسل لك وسيلة التواصل؟"
 `;
 
   // 2. Construct Messages Array with enhanced context
@@ -720,7 +732,7 @@ ${knowledgeContext}
   let temperature = 0.5; // Lower default for more focused responses
   if (hasKnowledgeBase) {
     // When KB exists, use lower temp to force strict adherence to KB content
-    temperature = 0.4; // Very focused - forces use of KB content
+    temperature = 0.2; // Very focused - favors KB content over invention
   } else if (intent.intent === 'GREETING') {
     temperature = 0.7; // More creative for greetings when no KB
   } else if (intent.intent === 'QUESTION') {
@@ -735,6 +747,68 @@ ${knowledgeContext}
   };
 
   const result = await generateResponse(messages, options);
+  
+  // 9.5 Enforce KB usage when KB exists: simple overlap check between response and KB chunks.
+  // If overlap is below threshold, retry once with an explicit 'KB-only' system instruction
+  // and stricter generation options. If still below threshold, return a 'no info in KB' fallback.
+  function computeKBMatchScore(respText, kbChunks) {
+    if (!respText || !kbChunks || kbChunks.length === 0) return 0;
+    const normalizedResp = respText.toLowerCase();
+    let hitCount = 0;
+    for (const chunk of kbChunks) {
+      const snippet = (chunk || '').toString().slice(0, 200).toLowerCase();
+      if (!snippet) continue;
+      if (normalizedResp.includes(snippet) || snippet.includes(normalizedResp)) {
+        hitCount++;
+      } else {
+        // check token overlap as fallback
+        const words = snippet.split(/\W+/).filter(Boolean);
+        const hits = words.filter(w => normalizedResp.includes(w));
+        if (words.length > 0 && (hits.length / words.length) >= 0.5) hitCount++;
+      }
+    }
+    return hitCount / kbChunks.length; // fraction of KB chunks referenced
+  }
+
+  if (hasKnowledgeBase) {
+    const matchScore = computeKBMatchScore(result.response || '', preparedKB);
+    const KB_MATCH_THRESHOLD = 0.4; // require at least 40% of chunks to be referenced as a heuristic
+
+    if (matchScore < KB_MATCH_THRESHOLD) {
+      logger.info('[AI] Low KB match score, retrying with KB-only instruction', { matchScore });
+
+      const kbOnlySystem = { role: 'system', content: `استخدم فقط المعلومات الموجودة في قسم قاعدة المعرفة أعلاه للإجابة. إذا لم تكن المعلومة موجودة في قاعدة المعرفة، أجب: "عذراً، لا أملك هذه المعلومة في قاعدة المعرفة. هل تريد التواصل مع فريق ${businessName}؟"` };
+
+      // Rebuild messages: system prompt + kbOnlySystem + rest
+      const retryMessages = [messages[0], kbOnlySystem, ...messages.slice(1)];
+
+      const retryOptions = { ...options, temperature: 0.12, topP: 0.2, maxTokens: Math.min(200, options.maxTokens || 200) };
+
+      try {
+        const retryResult = await generateResponse(retryMessages, retryOptions);
+        const retryMatch = computeKBMatchScore(retryResult.response || '', preparedKB);
+        if (retryMatch >= KB_MATCH_THRESHOLD) {
+          // accept retry
+          retryResult.knowledgeBaseUsed = true;
+          return retryResult;
+        }
+        // otherwise fall through to fallback
+        logger.info('[AI] Retry did not meet KB threshold', { retryMatch });
+      } catch (e) {
+        logger.warn('[AI] KB-only retry failed', e.message || e);
+      }
+
+      // Final fallback: be explicit about missing info rather than inventing
+      return {
+        response: `عذراً، لا أملك هذه المعلومة في قاعدة المعرفة الخاصة بـ ${businessName}. هل تحب أن أحولك لفريق الدعم؟`,
+        tokensUsed: 0,
+        model: result.model || 'fallback',
+        knowledgeBaseUsed: false
+      };
+    }
+    // If matchScore sufficient, mark KB usage
+    result.knowledgeBaseUsed = true;
+  }
   
   // 9. Add metadata
   result.knowledgeBaseUsed = hasKnowledgeBase;
