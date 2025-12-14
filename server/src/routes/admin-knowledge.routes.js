@@ -13,10 +13,20 @@ const asyncHandler = require('express-async-handler');
 const { requireRole } = require('../middleware/authorization');
 
 // ------------------------------------------------------------------
-// Secret-only trigger (no auth) for environments without shell access
-// Use with caution: requires ADMIN_MIGRATE_SECRET to be set in env
-// Header: x-admin-migrate-secret: <secret>
+// TEMPORARY: Run migration without auth (remove after use)
 // ------------------------------------------------------------------
+router.get('/run-migration-temp', asyncHandler(async (req, res) => {
+  try {
+    require('../../scripts/pgvector_migration_runner');
+    return res.json({ success: true, message: 'Migration started' });
+  } catch (err) {
+    console.error('temp migration failed', err);
+    return res.status(500).json({ success: false, error: 'Failed to start migration' });
+  }
+}));
+
+// ------------------------------------------------------------------
+// Secret-only trigger (no auth) for environments without shell access
 router.post('/knowledge/pgvector-migrate/trigger/secret', asyncHandler(async (req, res) => {
   try {
     const secret = req.headers['x-admin-migrate-secret'];
@@ -25,8 +35,9 @@ router.post('/knowledge/pgvector-migrate/trigger/secret', asyncHandler(async (re
 
     // Attempt to start migration runner in-process (safer for managed/free hosts)
     try {
-      setImmediate(() => require('../../scripts/pgvector_migration_runner'));
+      require('../../scripts/pgvector_migration_runner');
     } catch (e) {
+      console.error('Failed to require migration runner', e);
       // Fallback: try spawning child processes (may be blocked on some hosts)
       const spawn = require('child_process').spawn;
       const node = process.execPath || 'node';
