@@ -47,9 +47,9 @@ export const getSoftwareSchema = () => ({
   name: 'Faheemly AI Chatbot',
   applicationCategory: 'BusinessApplication',
   operatingSystem: 'Web',
-  offers: {
+    offers: {
     '@type': 'Offer',
-    price: '99',
+    price: '199',
     priceCurrency: 'SAR',
     priceValidUntil: '2025-12-31'
   },
@@ -92,7 +92,7 @@ export const getFAQSchema = () => ({
       name: 'كم يكلف فهملي؟',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'تبدأ خطط فهملي من 99 ريال سعودي شهرياً للباقة الأساسية، مع فترة تجريبية مجانية لمدة 7 أيام. تتوفر باقات Pro وEnterprise للشركات الكبرى.'
+        text: 'تبدأ خطط فهملي من 199 ريال سعودي شهرياً للباقة الأساسية، مع فترة تجريبية مجانية لمدة 7 أيام. تتوفر باقات Pro وEnterprise للشركات الكبرى.'
       }
     },
     {

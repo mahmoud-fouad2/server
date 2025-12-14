@@ -41,6 +41,8 @@ import {
   Zap,
 } from 'lucide-react';
 import { authApi, widgetApi, knowledgeApi, businessApi } from '@/lib/api';
+import { API_CONFIG } from '@/lib/config';
+import { convertCurrency } from '@/constants';
 const Confetti = dynamic(() => import('react-confetti'), { ssr: false });
 
 // Plans Configuration
@@ -66,19 +68,16 @@ const PLANS = {
     id: 'basic',
     name: 'الباقة الأساسية',
     duration: 'شهرياً',
-    price: 99,
-    priceSAR: 99,
-    priceEGP: 559,
-    priceAED: 99,
-    priceKWD: 8,
+    price: 199,
+    priceSAR: 199,
+    priceEGP: convertCurrency(199, 'EGP'),
+    priceAED: 199,
+    priceKWD: convertCurrency(199, 'KWD'),
     features: [
       '500 محادثة شهرياً',
       '1 قاعدة معرفة',
-      'لا يحتوي على خدمة عملاء',
-      'لا يحتوي على تكامل واتساب',
-      'دعم فني email',
-      'لا يحتوي على تقارير متقدمة',
-      'لا يحتوي على أولوية الرد',
+      'موظف خدمة عملاء',
+      'دعم فني',
     ],
     color: 'blue',
     popular: false,
@@ -87,11 +86,11 @@ const PLANS = {
     id: 'pro',
     name: 'الباقة الاحترافية',
     duration: 'شهرياً',
-    price: 299,
-    priceSAR: 299,
-    priceEGP: 1688,
-    priceAED: 299,
-    priceKWD: 24,
+    price: 399,
+    priceSAR: 399,
+    priceEGP: convertCurrency(399, 'EGP'),
+    priceAED: 399,
+    priceKWD: convertCurrency(399, 'KWD'),
     features: [
       '1,500 محادثة شهرياً',
       '2 قاعدة معرفة',
@@ -326,7 +325,8 @@ export default function Wizard() {
     }
   };
 
-  const widgetCode = `<script src="/fahimo-widget.js" data-business-id="${businessId || formData.email?.split('@')[0] || 'your-business-id'}"></script>`;
+  const widgetSrc = API_CONFIG.WIDGET_SCRIPT || `${API_CONFIG.BASE_URL}/fahimo-widget.js`;
+  const widgetCode = `<script src="${widgetSrc}" data-business-id="${businessId || formData.email?.split('@')[0] || 'your-business-id'}"></script>`;
 
   return (
     <WizardErrorBoundary>

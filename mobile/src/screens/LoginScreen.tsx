@@ -31,7 +31,7 @@ export default function LoginScreen() {
   const openWebLogin = () => navigation.navigate('WebLogin' as any);
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#F3F4F6', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+    <View style={{ flex: 1, backgroundColor: '#F3F4F6', alignItems: 'center', justifyContent: 'center', padding: 20, writingDirection: 'rtl' }}>
       <View style={{ width: '100%', maxWidth: 420, backgroundColor: '#fff', borderRadius: 20, padding: 28, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 20, elevation: 6 }}>
         <View style={{ alignItems: 'center', marginBottom: 12 }}>
           <View style={{ backgroundColor: '#EEF2FF', width: 84, height: 84, borderRadius: 22, alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
@@ -54,7 +54,7 @@ export default function LoginScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity onPress={handleDemoLogin} style={{ marginTop: 12, backgroundColor: '#E5E7EB', padding: 12, borderRadius: 12, alignItems: 'center' }}>
-          <Text style={{ color: '#111827' }}>تجربة</Text>
+          <Text style={{ color: '#111827' }}>بدء المحادثة</Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={openWebLogin} style={{ marginTop: 12, alignItems: 'center' }}>

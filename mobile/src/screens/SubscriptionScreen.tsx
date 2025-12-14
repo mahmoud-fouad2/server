@@ -51,7 +51,8 @@ export default function SubscriptionScreen({ navigation, route }: any) {
   };
 
   return (
-    <View style={{ flex: 1, padding: 20, backgroundColor: '#F8FAFC' }}>
+    <View style={{ flex: 1, padding: 20, backgroundColor: '#F8FAFC', writingDirection: 'rtl' }}>
+      <BackButton onPress={() => navigation.goBack()} label="رجوع" />
       <Text style={{ fontSize: 22, fontWeight: '800', marginBottom: 8 }}>اختر خطتك</Text>
       <Text style={{ color: '#6B7280', marginBottom: 16 }}>ابدأ الآن مع خطة تناسب احتياجاتك. يمكنك الترقية في أي وقت.</Text>
 

@@ -26,7 +26,8 @@ export default function RegisterScreen() {
   };
 
   return (
-    <View style={{ flex: 1, padding: 24, justifyContent: 'center' }}>
+    <View style={{ flex: 1, padding: 24, justifyContent: 'center', writingDirection: 'rtl' }}>
+      <BackButton onPress={() => navigation.goBack()} label="رجوع" />
       <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 12 }}>إنشاء حساب</Text>
       <TextInput placeholder="الاسم الكامل" style={{ borderWidth: 1, padding: 10, borderRadius: 8, marginBottom: 8 }} value={name} onChangeText={setName} />
       <TextInput placeholder="البريد الإلكتروني" style={{ borderWidth: 1, padding: 10, borderRadius: 8, marginBottom: 8 }} value={email} onChangeText={setEmail} autoCapitalize='none' />

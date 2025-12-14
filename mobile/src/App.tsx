@@ -1,4 +1,14 @@
 import './patches/expoUuidPatch';
+import { I18nManager } from 'react-native';
+
+// Ensure the app allows RTL layout for Arabic. This enables RTL layout
+// behavior where supported. Do not force a reload here; allowRTL is enough
+// to ensure components can respect RTL where they check I18nManager.isRTL.
+try {
+  I18nManager.allowRTL(true);
+} catch (e) {
+  // ignore in environments that don't support this API
+}
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';

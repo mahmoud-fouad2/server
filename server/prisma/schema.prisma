@@ -32,10 +32,12 @@ model User {
   // Tickets
   tickets        Ticket[]        @relation("TicketCreator")
   ticketMessages TicketMessage[]
-  
+
   // Payment Relations
-  payments       Payment[]
-  subscriptions  Subscription[]
+  payments      Payment[]
+  subscriptions Subscription[]
+  // Audit Logs created by or referencing this user
+  auditLogs     AuditLog[]
 }
 
 enum Role {
@@ -58,9 +60,9 @@ model Business {
   botTone      String  @default("friendly") // friendly, formal, advisory
   primaryColor String  @default("#6366F1")
   widgetConfig String? @db.Text // JSON: { welcomeMessage, personality, showBranding, ... }
-  
+
   // CRM Settings
-  preChatFormEnabled      Boolean @default(false) // Enable pre-chat form collection
+  preChatFormEnabled       Boolean @default(false) // Enable pre-chat form collection
   crmLeadCollectionEnabled Boolean @default(false) // Enable CRM lead collection (Super Admin only)
 
   // الحصص
@@ -90,10 +92,10 @@ model Business {
   improvementSuggestions ImprovementSuggestion[]
   improvementGoals       ImprovementGoal[]
   crmLeads               CrmLead[]
-  
+
   // Payment Relations
-  payments               Payment[]
-  subscriptions          Subscription[]
+  payments      Payment[]
+  subscriptions Subscription[]
 
   @@index([userId])
   @@index([status])
@@ -278,7 +280,7 @@ model Conversation {
 
   // Session tracking (ربط مع جلسة الزائر)
   visitorSessionId String?
-  
+
   // Pre-chat form data
   preChatData String? @db.Text // JSON: { name, email, phone, requestSummary }
 
@@ -337,7 +339,7 @@ model AuditLog {
   action    String
   entity    String?
   entityId  String?
-  changes   Json?    // { before: {...}, after: {...} }
+  changes   Json? // { before: {...}, after: {...} }
   meta      Json?
   ipAddress String?
   userAgent String?
@@ -1064,26 +1066,26 @@ enum GoalStatus {
 
 // CRM Leads - Customer Relationship Management
 model CrmLead {
-  id          String   @id @default(cuid())
-  businessId  String
-  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
   // Customer Information
-  name        String
-  email       String?
-  phone       String?
-  
+  name  String
+  email String?
+  phone String?
+
   // Request Details
   requestSummary String // Dynamic summary based on business type
-  
+
   // Metadata
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   // Source tracking
-  source      LeadSource @default(PRE_CHAT_FORM)
+  source         LeadSource @default(PRE_CHAT_FORM)
   conversationId String? // Link to conversation if available
-  
+
   @@map("crm_leads")
 }
 
@@ -1099,32 +1101,32 @@ enum LeadSource {
 
 // Payment Gateway Configuration (Managed by SUPERADMIN)
 model PaymentGateway {
-  id          String          @id @default(cuid())
-  provider    PaymentProvider
-  name        String // Display name
-  isEnabled   Boolean         @default(false)
-  isActive    Boolean         @default(true) // Available for customers
-  
+  id        String          @id @default(cuid())
+  provider  PaymentProvider
+  name      String // Display name
+  isEnabled Boolean         @default(false)
+  isActive  Boolean         @default(true) // Available for customers
+
   // API Credentials (Encrypted)
-  apiKey      String?         @db.Text
-  secretKey   String?         @db.Text
-  merchantId  String?
-  webhookSecret String?       @db.Text
-  
+  apiKey        String? @db.Text
+  secretKey     String? @db.Text
+  merchantId    String?
+  webhookSecret String? @db.Text
+
   // Configuration
-  config      Json? // Provider-specific config (currency, test mode, etc.)
-  metadata    Json? // Additional metadata
-  
+  config   Json? // Provider-specific config (currency, test mode, etc.)
+  metadata Json? // Additional metadata
+
   // Display settings
   displayName String? // Custom display name
   icon        String? // Icon URL or emoji
-  description String?         @db.Text
-  
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-  
-  payments    Payment[]
-  
+  description String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  payments Payment[]
+
   @@unique([provider])
   @@index([isEnabled])
   @@index([isActive])
@@ -1139,46 +1141,46 @@ enum PaymentProvider {
 
 // Payment Transactions
 model Payment {
-  id              String          @id @default(cuid())
-  businessId      String
-  userId          String
-  
+  id         String @id @default(cuid())
+  businessId String
+  userId     String
+
   // Payment Details
-  amount          Float
-  currency        String          @default("SAR")
-  status          PaymentStatus   @default(PENDING)
-  
+  amount   Float
+  currency String        @default("SAR")
+  status   PaymentStatus @default(PENDING)
+
   // Gateway Info
-  gatewayId       String
-  gateway         PaymentGateway  @relation(fields: [gatewayId], references: [id])
-  provider        PaymentProvider
-  transactionId   String? // Gateway transaction ID
-  paymentMethod   String? // card, bank_transfer, etc.
-  
+  gatewayId     String
+  gateway       PaymentGateway  @relation(fields: [gatewayId], references: [id])
+  provider      PaymentProvider
+  transactionId String? // Gateway transaction ID
+  paymentMethod String? // card, bank_transfer, etc.
+
   // Plan/Quota Info
-  planType        PlanType?
-  messageQuota    Int? // Quota to add
-  customAmount    Boolean         @default(false) // Admin-created custom payment
-  customDescription String?       @db.Text // Description for custom payments
-  
+  planType          PlanType?
+  messageQuota      Int? // Quota to add
+  customAmount      Boolean   @default(false) // Admin-created custom payment
+  customDescription String?   @db.Text // Description for custom payments
+
   // Webhook Data
   webhookData     Json? // Raw webhook payload
-  webhookVerified Boolean         @default(false)
-  
+  webhookVerified Boolean @default(false)
+
   // Metadata
-  metadata        Json? // Additional data
-  failureReason   String?         @db.Text
-  
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  paidAt          DateTime?
-  
-  business        Business        @relation(fields: [businessId], references: [id])
-  user            User            @relation(fields: [userId], references: [id])
+  metadata      Json? // Additional data
+  failureReason String? @db.Text
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  paidAt    DateTime?
+
+  business Business @relation(fields: [businessId], references: [id])
+  user     User     @relation(fields: [userId], references: [id])
 
   // Optional link back to Subscription if this payment belongs to a subscription
-  subscription    Subscription?
-  
+  subscription Subscription?
+
   @@index([businessId])
   @@index([userId])
   @@index([status])
@@ -1199,31 +1201,31 @@ enum PaymentStatus {
 
 // Subscription History
 model Subscription {
-  id              String          @id @default(cuid())
-  businessId      String
-  userId          String
-  
+  id         String @id @default(cuid())
+  businessId String
+  userId     String
+
   // Subscription Details
-  planType        PlanType
-  messageQuota    Int
-  startDate       DateTime        @default(now())
-  endDate         DateTime?
-  isActive         Boolean         @default(true)
-  autoRenew       Boolean         @default(false)
-  
+  planType     PlanType
+  messageQuota Int
+  startDate    DateTime  @default(now())
+  endDate      DateTime?
+  isActive     Boolean   @default(true)
+  autoRenew    Boolean   @default(false)
+
   // Payment Link
-  paymentId       String?         @unique
-  payment         Payment?        @relation(fields: [paymentId], references: [id])
-  
+  paymentId String?  @unique
+  payment   Payment? @relation(fields: [paymentId], references: [id])
+
   // Metadata
-  metadata        Json?
-  
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  
-  business        Business        @relation(fields: [businessId], references: [id])
-  user            User            @relation(fields: [userId], references: [id])
-  
+  metadata Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id])
+  user     User     @relation(fields: [userId], references: [id])
+
   @@index([businessId])
   @@index([userId])
   @@index([isActive])

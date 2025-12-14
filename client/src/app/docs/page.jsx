@@ -16,7 +16,10 @@ import {
 } from 'react-icons/fa';
 import Navigation from '@/components/landing/Navigation';
 import useTheme from '@/lib/theme';
+import { API_CONFIG } from '@/lib/config';
 import { TRANSLATIONS } from '@/constants';
+// Widget source (always resolved from config)
+const widgetSrc = API_CONFIG.WIDGET_SCRIPT || `${API_CONFIG.BASE_URL}/fahimo-widget.js`;
 
 const ApiSection = dynamic(() => import('./components/ApiSection').catch(() => () => <div>API section not available</div>), { ssr: false });
 const TroubleshootingSection = dynamic(() => import('./components/TroubleshootingSection').catch(() => () => <div>Troubleshooting not available</div>), { ssr: false });
@@ -60,7 +63,7 @@ const sections = [
         <h3 className="text-2xl font-bold mb-4">تثبيت الويدجت</h3>
         <p>أبسط طريقة لتثبيت الويدجت هي لصق سطر واحد داخل تذييل الموقع (footer):</p>
         <div className="bg-gray-900 text-gray-100 p-4 rounded-lg font-mono text-sm overflow-auto" dir="ltr">
-          &lt;script src="/fahimo-widget.js" data-business-id="YOUR_BUSINESS_ID"&gt;&lt;/script&gt;
+          {`<script src="${widgetSrc}" data-business-id="YOUR_BUSINESS_ID"></script>`}
         </div>
 
         <h4 className="font-semibold">خطوات التثبيت (تفصيلي)</h4>
@@ -137,6 +140,7 @@ export default function DocsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const { theme, toggleTheme } = useTheme();
   const [isDark, setIsDark] = useState(false);
+  const widgetSrc = API_CONFIG.WIDGET_SCRIPT || `${API_CONFIG.BASE_URL}/fahimo-widget.js`;
 
   useEffect(() => {
     setIsDark(document.documentElement.classList.contains('dark'));

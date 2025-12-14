@@ -1,10 +1,13 @@
-import React, { useEffect } from 'react';
-import { View, Image, Text } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Image, Animated } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { getToken } from '../services/secureStorage';
 
 export default function SplashScreen() {
   const navigation = useNavigation();
+
+  const opacity = useRef(new Animated.Value(0)).current;
+  const scale = useRef(new Animated.Value(0.9)).current;
 
   useEffect(() => {
     (async () => {
@@ -18,6 +21,11 @@ export default function SplashScreen() {
         // ignore
       }
 
+      Animated.parallel([
+        Animated.timing(opacity, { toValue: 1, duration: 700, useNativeDriver: true }),
+        Animated.spring(scale, { toValue: 1, friction: 6, useNativeDriver: true }),
+      ]).start();
+
       const timer = setTimeout(() => {
         navigation.navigate('Login' as any);
       }, 1200);
@@ -27,10 +35,12 @@ export default function SplashScreen() {
   }, []);
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#011841', alignItems: 'center', justifyContent: 'center' }}>
-      <Image source={require('../../assets/logo2.png')} style={{ width: 180, height: 180, resizeMode: 'contain' }} />
-      <Text style={{ color: '#fff', marginTop: 10, fontSize: 22, fontWeight: '700' }}>فهمي</Text>
-      <Text style={{ color: '#c6d3e8', marginTop: 6, fontSize: 12 }}>Smart Customer Assistant</Text>
+    <View style={{ flex: 1, backgroundColor: '#6D28D9', alignItems: 'center', justifyContent: 'center' }}>
+      <Animated.Image
+        source={require('../../assets/logo2.png')}
+        style={{ width: 160, height: 160, opacity, transform: [{ scale }] }}
+        resizeMode="contain"
+      />
     </View>
   );
 }

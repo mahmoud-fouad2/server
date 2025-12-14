@@ -23,9 +23,10 @@ export default function WidgetLoader() {
 
       // Prefer Render-hosted widget (same backend) to avoid broken static hosting on faheemly.com
       const externalWidget = process.env.NEXT_PUBLIC_WIDGET_URL || 'https://fahimo-api.onrender.com/fahimo-widget.js';
-      const localWidget = `${window.location.origin}/fahimo-widget.js`;
 
-      // Try external (Render) first, then fall back to local if external fails
+      // Load only the production/external widget by default. Local fallbacks are
+      // disabled to prevent accidental loading from localhost in production.
+      // To allow a local fallback for development, set NEXT_PUBLIC_ALLOW_LOCAL_WIDGET=true.
       function loadScript(src) {
         const s = document.createElement('script');
         s.id = 'fahimo-widget-script';
@@ -39,19 +40,9 @@ export default function WidgetLoader() {
         document.body.appendChild(s);
       }
 
-      // Attempt external first
-      loadScript(externalWidget);
-
-      // Also schedule a fallback check: if after 2s global not loaded, try local
-      setTimeout(() => {
-        if (!window.__FAHIMO_WIDGET_LOADED) {
-          console.debug('WidgetLoader: external widget failed, attempting local fallback');
-          // remove existing failed script tag
-          const failed = document.getElementById('fahimo-widget-script');
-          if (failed && failed.src && failed.src.indexOf(externalWidget) !== -1) failed.remove();
-          loadScript(localWidget);
-        }
-      }, 2000);
+      // Always attempt to load the external (production) widget first.
+        // Attempt external widget only (no local/localhost fallback in production)
+        loadScript(externalWidget);
     } catch (e) {
       console.error('WidgetLoader error', e);
     }

@@ -8,6 +8,7 @@ import Step5 from './Step5_Channels';
 import Step6 from './Step6_Review';
 import { getOnboarding } from '../../services/onboardingService';
 import BackButton from '../../components/BackButton';
+import StepIndicator from '../../components/StepIndicator';
 import { useNavigation } from '@react-navigation/native';
 
 export default function WizardHome({ navigation }: any) {
@@ -25,17 +26,17 @@ export default function WizardHome({ navigation }: any) {
   const back = () => setStep(s => s-1);
 
   return (
-    <View style={{ flex: 1, padding: 16 }}>
+    <View style={{ flex: 1, padding: 16, writingDirection: 'rtl' }}>
       <BackButton onPress={() => (step === 1 ? nav.goBack() : back())} label={step === 1 ? 'العودة' : 'السابق'} />
-      <View style={{ marginBottom: 8 }}>
-        <Text style={{ fontWeight: '700' }}>خطوة {step} من 6</Text>
+      <StepIndicator total={6} current={step} />
+      <View style={{ backgroundColor: '#fff', borderRadius: 12, padding: 16, shadowColor: '#000', shadowOpacity: 0.05, elevation: 3 }}>
+        {step === 1 && <Step1 onboarding={onboarding} setOnboarding={setOnboarding} onNext={next} />}
+        {step === 2 && <Step2 onboarding={onboarding} setOnboarding={setOnboarding} onNext={next} onBack={back} />}
+        {step === 3 && <Step3 onboarding={onboarding} setOnboarding={setOnboarding} onNext={next} onBack={back} />}
+        {step === 4 && <Step4 onboarding={onboarding} setOnboarding={setOnboarding} onNext={next} onBack={back} />}
+        {step === 5 && <Step5 onboarding={onboarding} setOnboarding={setOnboarding} onNext={next} onBack={back} />}
+        {step === 6 && <Step6 onboarding={onboarding} setOnboarding={setOnboarding} onBack={back} navigation={navigation} />}
       </View>
-      {step === 1 && <Step1 onboarding={onboarding} setOnboarding={setOnboarding} onNext={next} />}
-      {step === 2 && <Step2 onboarding={onboarding} setOnboarding={setOnboarding} onNext={next} onBack={back} />}
-      {step === 3 && <Step3 onboarding={onboarding} setOnboarding={setOnboarding} onNext={next} onBack={back} />}
-      {step === 4 && <Step4 onboarding={onboarding} setOnboarding={setOnboarding} onNext={next} onBack={back} />}
-      {step === 5 && <Step5 onboarding={onboarding} setOnboarding={setOnboarding} onNext={next} onBack={back} />}
-      {step === 6 && <Step6 onboarding={onboarding} setOnboarding={setOnboarding} onBack={back} navigation={navigation} />}
     </View>
   );
 }

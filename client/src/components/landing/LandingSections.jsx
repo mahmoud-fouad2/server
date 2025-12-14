@@ -668,10 +668,10 @@ const LimitedTimeOffer = ({ t, activeCountry, isDark }) => (
             </div>
 
             <h3 className={`text-3xl md:text-4xl font-black ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              {activeCountry === 'eg' && `${t.offerTitle} 372 جنيه فقط`}
-              {activeCountry === 'ae' && `${t.offerTitle} 99 درهم فقط`}
-              {activeCountry === 'kw' && `${t.offerTitle} 8 دينار فقط`}
-              {activeCountry === 'sa' && `${t.offerTitle} 99 ريال فقط`}
+              {activeCountry === 'eg' && `${t.offerTitle} 1122 جنيه فقط`}
+              {activeCountry === 'ae' && `${t.offerTitle} 199 درهم فقط`}
+              {activeCountry === 'kw' && `${t.offerTitle} 16 دينار فقط`}
+              {activeCountry === 'sa' && `${t.offerTitle} 199 ريال فقط`}
             </h3>
 
             <p className={`text-lg font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>

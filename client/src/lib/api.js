@@ -79,8 +79,8 @@ export const apiCall = async (endpoint, options = {}) => {
 
       const response = await fetch(url, config).finally(() => clearTimeout(timeoutHandle));
 
-      // Handle 401 Unauthorized globally: clear local session and redirect to login
-      if (response.status === 401) {
+      // Handle 401 Unauthorized and 403 Forbidden globally: clear local session and redirect to login
+      if (response.status === 401 || response.status === 403) {
         if (typeof window !== 'undefined') {
           try {
             localStorage.removeItem('token');
@@ -88,7 +88,8 @@ export const apiCall = async (endpoint, options = {}) => {
             // Flag session expiration so login page can show a friendly message
             localStorage.setItem('sessionExpired', 'true');
             // Redirect to login with a query param for clarity
-            window.location.href = '/login?reason=session_expired';
+            // Use location.replace to avoid polluting history
+            window.location.replace('/login?reason=session_expired');
           } catch (e) {
             // ignore
           }
@@ -114,12 +115,26 @@ export const apiCall = async (endpoint, options = {}) => {
       }
 
       if (!response.ok) {
-        // Don't retry on 4xx client errors (except 429 Too Many Requests)
-        if (
-          response.status >= 400 &&
-          response.status < 500 &&
-          response.status !== 429
-        ) {
+        // Special-case: Some endpoints return 403 with body { error: 'Invalid token' }
+        // Treat that as a session expiration (clear session and redirect to login)
+        const tokenInvalid = response.status === 403 && data && ((data.error && data.error === 'Invalid token') || (data.message && data.message === 'Invalid token'));
+        if (tokenInvalid) {
+          if (typeof window !== 'undefined') {
+            try {
+              localStorage.removeItem('token');
+              localStorage.removeItem('user');
+              localStorage.setItem('sessionExpired', 'true');
+              window.location.href = '/login?reason=invalid_token';
+            } catch (e) { /* ignore */ }
+          }
+          const err = new Error('Invalid token');
+          err.status = 403;
+          err.data = data;
+          throw err;
+        }
+
+        // Don't retry on other 4xx client errors (except 429 Too Many Requests)
+        if (response.status >= 400 && response.status < 500 && response.status !== 429) {
           const err = new Error((data && (data.error || data.message)) || 'Something went wrong');
           err.status = response.status;
           err.data = data;

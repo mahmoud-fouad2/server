@@ -259,14 +259,14 @@ export default function PricingPage() {
                   <li className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
                     <Check size={18} className="text-green-500" /> 1 قاعدة معرفة
                   </li>
-                  <li className="flex items-center gap-3 text-gray-400 dark:text-gray-600">
-                    <X size={18} /> موظف خدمة عملاء
+                  <li className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
+                    <Check size={18} className="text-green-500" /> موظف خدمة عملاء
                   </li>
                   <li className="flex items-center gap-3 text-gray-400 dark:text-gray-600">
                     <X size={18} /> تكامل واتساب
                   </li>
                   <li className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
-                    <Check size={18} className="text-green-500" /> دعم فني email
+                    <Check size={18} className="text-green-500" /> دعم فني
                   </li>
                   <li className="flex items-center gap-3 text-gray-400 dark:text-gray-600">
                     <X size={18} /> تقارير متقدمة

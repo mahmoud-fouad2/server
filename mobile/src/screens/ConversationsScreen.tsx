@@ -24,6 +24,7 @@ export default function ConversationsScreen({ navigation }: any) {
           { id: 'conv-1', name: 'Welcome', lastMessage: 'مرحباً! ابدأ محادثة جديدة الآن', unread: 0 },
           { id: 'conv-2', name: 'Billing', lastMessage: 'اشترك في الخطة Pro للحصول على 1000 رسالة', unread: 2 },
         ]);
+      }
     })();
   }, []);
 
@@ -61,8 +62,8 @@ export default function ConversationsScreen({ navigation }: any) {
 
       <FlatList data={convos} renderItem={renderItem} keyExtractor={(i:any) => i.id} />
 
-      <TouchableOpacity onPress={() => navigation.navigate('Chat' as any)} style={{ position: 'absolute', right: 20, bottom: 30, backgroundColor: '#6D28D9', width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOpacity: 0.12, elevation: 6 }}>
-        <Text style={{ color: '#fff', fontWeight: '700' }}>＋</Text>
+      <TouchableOpacity onPress={() => navigation.navigate('Chat' as any)} style={{ position: 'absolute', right: 20, bottom: 30, backgroundColor: '#6D28D9', paddingHorizontal: 16, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOpacity: 0.12, elevation: 6 }}>
+        <Text style={{ color: '#fff', fontWeight: '700' }}>بدء المحادثة</Text>
       </TouchableOpacity>
       <BottomNav
         current={tab}

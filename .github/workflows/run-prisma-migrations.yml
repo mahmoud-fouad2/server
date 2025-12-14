@@ -7,6 +7,10 @@ on:
         description: 'Target environment (staging/production)'
         required: true
         default: 'staging'
+      run_playwright:
+        description: 'Whether to run Playwright E2E after migrations (true/false)'
+        required: false
+        default: 'false'
 
 jobs:
   prisma-deploy:
@@ -30,3 +34,18 @@ jobs:
           # If running for production, make sure to set the secret appropriately in the workflow UI
         run: npx prisma migrate deploy
         working-directory: ./server
+
+      - name: Run server tests (unit & integration smoke)
+        run: npm test --silent
+        working-directory: ./server
+
+      - name: Run Playwright E2E (optional)
+        if: ${{ github.event.inputs.run_playwright == 'true' }}
+        env:
+          PLAYWRIGHT_BASE_URL: ${{ secrets.PLAYWRIGHT_BASE_URL }}
+          PLAYWRIGHT_ADMIN_TOKEN: ${{ secrets.PLAYWRIGHT_ADMIN_TOKEN }}
+        run: |
+          cd client
+          npm ci
+          npx playwright install --with-deps
+          npx playwright test --reporter=html

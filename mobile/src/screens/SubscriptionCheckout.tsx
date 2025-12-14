@@ -20,7 +20,8 @@ export default function SubscriptionCheckout({ navigation, route }: any) {
   };
 
   return (
-    <View style={{ flex: 1, padding: 20, backgroundColor: '#fff' }}>
+    <View style={{ flex: 1, padding: 20, backgroundColor: '#fff', writingDirection: 'rtl' }}>
+      <BackButton onPress={() => navigation.goBack()} label="رجوع" />
       <Text style={{ fontSize: 22, fontWeight: '800', marginBottom: 12 }}>الاشتراك - {plan}</Text>
       <Text style={{ color: '#6B7280', marginBottom: 18 }}>ستتم محاكاة الدفع الآن. هذه نسخة اختبارية فقط.</Text>
 

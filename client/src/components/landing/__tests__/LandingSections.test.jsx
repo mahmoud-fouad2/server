@@ -246,7 +246,7 @@ describe('LandingSections Components', () => {
       render(<LimitedTimeOffer {...mockProps} />);
 
       expect(screen.getByText('⏰ عرض محدود')).toBeInTheDocument();
-      expect(screen.getByText(/خصم 50% 99 ريال فقط/)).toBeInTheDocument();
+      expect(screen.getByText(/خصم 50% 199 ريال فقط/)).toBeInTheDocument();
       expect(screen.getByText('استفد من العرض')).toBeInTheDocument();
     });
 
@@ -254,11 +254,11 @@ describe('LandingSections Components', () => {
       const egyptProps = { ...mockProps, activeCountry: 'eg' };
       const { rerender } = render(<LimitedTimeOffer {...egyptProps} />);
 
-      expect(screen.getByText(/خصم 50% 372 جنيه فقط/)).toBeInTheDocument();
+      expect(screen.getByText(/خصم 50% 1122 جنيه فقط/)).toBeInTheDocument();
 
       const uaeProps = { ...mockProps, activeCountry: 'ae' };
       rerender(<LimitedTimeOffer {...uaeProps} />);
-      expect(screen.getByText(/خصم 50% 99 درهم فقط/)).toBeInTheDocument();
+      expect(screen.getByText(/خصم 50% 199 درهم فقط/)).toBeInTheDocument();
     });
   });
 

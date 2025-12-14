@@ -81,9 +81,20 @@ function DashboardContent() {
         setChartData(chartDataRes);
       } catch (error) {
         console.error('Failed to fetch dashboard data', error);
-        // AuthGuard handles redirect, but if API returns 401, we might need to handle it too
-        if (error.message && error.message.includes('401')) {
-          router.push('/login');
+        // If API returns 401 or 403 (Invalid token), treat as session expiration
+        const isAuthError =
+          (error && (error.status === 401 || error.status === 403)) ||
+          (error && error.message && (error.message.includes('401') || error.message.includes('403') || error.message.includes('Invalid token')));
+
+        if (isAuthError) {
+          try {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            localStorage.setItem('sessionExpired', 'true');
+          } catch (e) {
+            // ignore
+          }
+          router.push('/login?reason=session_expired');
         }
       } finally {
         if (mounted) setLoading(false);

@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { apiCall } from '@/lib/api';
+import { API_CONFIG } from '@/lib/config';
 import {
   LineChart,
   Line,
@@ -297,9 +298,12 @@ export default function StatsOverview({
   };
 
   const copyWidgetCode = () => {
-    const code = `<script src="/fahimo-widget.js" data-business-id="${user?.businessId}"></script>`;
+    const widgetSrc = API_CONFIG.WIDGET_SCRIPT || `${API_CONFIG.BASE_URL}/fahimo-widget.js`;
+    const code = `<script src="${widgetSrc}" data-business-id="${user?.businessId}"></script>`;
     copyToClipboard(code);
   };
+
+  const widgetSrc = API_CONFIG.WIDGET_SCRIPT || `${API_CONFIG.BASE_URL}/fahimo-widget.js`;
 
   // Client-side CSV export of visible chart data
   const exportVisibleDataCSV = () => {
@@ -868,12 +872,10 @@ export default function StatsOverview({
                 <h4 className="text-sm font-semibold mb-2 text-right" dir="rtl">HTML / عام</h4>
                 <div className="relative group">
                   <div className="bg-muted p-4 rounded-lg font-mono text-xs break-all border border-border">
-                    &lt;script
-                    src=&quot;/fahimo-widget.js&quot;
-                    data-business-id=&quot;{user?.businessId}&quot;&gt;&lt;/script&gt;
+                    {`<script src="${widgetSrc}" data-business-id="${user?.businessId}"></script>`}
                   </div>
                   <div className="absolute top-2 right-2 flex gap-2">
-                    <Button size="sm" variant="ghost" onClick={() => copyToClipboard(`<script src="/fahimo-widget.js" data-business-id="${user?.businessId}"></script>`)}>
+                    <Button size="sm" variant="ghost" onClick={() => copyToClipboard(`<script src="${widgetSrc}" data-business-id="${user?.businessId}"></script>`)}>
                       <Copy className="w-4 h-4" />
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => exportVisibleDataCSV()}>
@@ -892,12 +894,12 @@ export default function StatsOverview({
                 <div className="relative group">
                   <div className="bg-muted p-4 rounded-lg font-mono text-xs break-all border border-border">
                     {`function add_fahimo_widget() {
-    echo '<script src="/fahimo-widget.js" data-business-id="${user?.businessId}"></script>';
-}
-add_action('wp_footer', 'add_fahimo_widget');`}
+            echo '<script src="${widgetSrc}" data-business-id="${user?.businessId}"></script>';
+          }
+          add_action('wp_footer', 'add_fahimo_widget');`}
                   </div>
                   <div className="absolute top-2 right-2">
-                    <Button size="sm" variant="ghost" onClick={() => copyToClipboard(`function add_fahimo_widget() { echo '<script src="/fahimo-widget.js" data-business-id="${user?.businessId}"></script>'; } add_action('wp_footer', 'add_fahimo_widget');`)}>
+                    <Button size="sm" variant="ghost" onClick={() => copyToClipboard(`function add_fahimo_widget() { echo '<script src="${widgetSrc}" data-business-id="${user?.businessId}"></script>'; } add_action('wp_footer', 'add_fahimo_widget');`)}>
                       <Copy className="w-4 h-4" />
                     </Button>
                   </div>
