@@ -25,14 +25,17 @@ async function createPgVector() {
     console.log('Done.');
   } catch (err) {
     console.error('Migration failed:', err);
-    process.exit(1);
+    throw err;
   } finally {
     await prisma.$disconnect();
   }
 }
 
 if (require.main === module) {
-  createPgVector();
+  createPgVector().catch(err => {
+    console.error('create_pgvector_extension failed:', err);
+    process.exit(1);
+  });
 }
 
 module.exports = { createPgVector };
