@@ -1,47 +1,86 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Button, TextInput, Alert } from 'react-native';
-import { getProfile, updateProfile, logout } from '../services/profileService';
+import { View, Text, TouchableOpacity, TextInput, Alert, Image } from 'react-native';
+import { getProfile, updateProfile, logout as apiLogout } from '../services/profileService';
+import { useNavigation } from '@react-navigation/native';
 
-export default function ProfileScreen({ navigation }: any) {
-  const [user, setUser] = useState<any>(null);
+export default function ProfileScreen() {
+  const navigation = useNavigation();
+  const [user, setUser] = useState<any>({ name: '', email: '', subscription: 'مجاني' });
+  const [editing, setEditing] = useState(false);
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
 
   useEffect(() => {
     (async () => {
       const res = await getProfile();
-      if (res?.user) {
-        setUser(res.user);
-        setName(res.user.name);
-        setEmail(res.user.email);
+      if (res && !res.error) {
+        const u = res.user || res;
+        setUser(u);
+        setName(u.name || '');
       }
     })();
   }, []);
 
   const handleSave = async () => {
-    const res = await updateProfile({ name, email });
-    if (res?.user) {
+    const res = await updateProfile({ name });
+    if (res && !res.error) {
       Alert.alert('تم', 'تحديث الملف الشخصي');
-      setUser(res.user);
+      setUser(res.user || res);
+      setEditing(false);
     } else {
-      Alert.alert('Error', res?.error || 'Failed to update');
+      Alert.alert('خطأ', res?.error || 'فشل التحديث');
     }
   };
 
   const handleLogout = async () => {
-    await logout();
-    navigation.navigate('Login' as any);
+    await apiLogout();
+    navigation.reset({ index: 0, routes: [{ name: 'Login' as any }] });
   };
 
   return (
-    <View style={{ flex: 1, padding: 24 }}>
-      <Text style={{ fontSize: 20, fontWeight: 'bold' }}>الحساب</Text>
-      <TextInput value={name} onChangeText={setName} style={{ borderWidth: 1, padding: 12, borderRadius: 8, marginTop: 8 }} />
-      <TextInput value={email} onChangeText={setEmail} style={{ borderWidth: 1, padding: 12, borderRadius: 8, marginTop: 8 }} />
-      <Button title="حفظ" onPress={handleSave} />
-      <View style={{ marginTop: 12 }}>
-        <Button title="تسجيل خروج" color="#c00" onPress={handleLogout} />
+    <View style={{ flex: 1, padding: 20, backgroundColor: '#F8FAFC' }}>
+      <View style={{ alignItems: 'center', marginBottom: 18 }}>
+        <View style={{ backgroundColor: '#EEF2FF', width: 96, height: 96, borderRadius: 22, alignItems: 'center', justifyContent: 'center' }}>
+          <Image source={require('../../assets/logo2.png')} style={{ width: 72, height: 72, resizeMode: 'contain' }} />
+        </View>
+        <Text style={{ fontSize: 20, fontWeight: '800', marginTop: 12 }}>{user.name || 'مستخدم'}</Text>
+        <Text style={{ color: '#6B7280', marginTop: 6 }}>{user.email || ''}</Text>
       </View>
+
+      <View style={{ marginBottom: 12 }}>
+        <Text style={{ fontWeight: '700', marginBottom: 6 }}>التفاصيل</Text>
+        {editing ? (
+          <>
+            <TextInput value={name} onChangeText={setName} style={{ borderWidth: 1, padding: 12, borderRadius: 8, backgroundColor: '#fff' }} />
+            <View style={{ flexDirection: 'row', marginTop: 8 }}>
+              <TouchableOpacity onPress={handleSave} style={{ backgroundColor: '#6D28D9', padding: 12, borderRadius: 8, marginRight: 8 }}>
+                <Text style={{ color: '#fff' }}>حفظ</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setEditing(false)} style={{ padding: 12, borderRadius: 8, backgroundColor: '#E5E7EB' }}>
+                <Text>إلغاء</Text>
+              </TouchableOpacity>
+            </View>
+          </>
+        ) : (
+          <>
+            <Text style={{ marginBottom: 6 }}>{user.name}</Text>
+            <TouchableOpacity onPress={() => setEditing(true)} style={{ padding: 8 }}>
+              <Text style={{ color: '#6D28D9' }}>تعديل الملف</Text>
+            </TouchableOpacity>
+          </>
+        )}
+      </View>
+
+      <View style={{ marginBottom: 20 }}>
+        <Text style={{ fontWeight: '700', marginBottom: 6 }}>الاشتراك</Text>
+        <Text style={{ color: '#6B7280' }}>{user.subscription || 'مجاني'}</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('Subscription' as any)} style={{ marginTop: 8 }}>
+          <Text style={{ color: '#6D28D9' }}>الترقية إلى خطة مدفوعة</Text>
+        </TouchableOpacity>
+      </View>
+
+      <TouchableOpacity onPress={handleLogout} style={{ backgroundColor: '#EF4444', padding: 12, borderRadius: 8, alignItems: 'center' }}>
+        <Text style={{ color: '#fff' }}>تسجيل خروج</Text>
+      </TouchableOpacity>
     </View>
   );
 }

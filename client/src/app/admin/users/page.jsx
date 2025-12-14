@@ -104,7 +104,7 @@ export default function AdminUsersPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8" data-tour="users">
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8" data-tour="users">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -171,22 +171,22 @@ export default function AdminUsersPage() {
               <table className="w-full">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 md:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                       المستخدم
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 md:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                       البريد الإلكتروني
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 md:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                       الدور
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 md:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                       الحالة
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 md:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                       تاريخ التسجيل
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 md:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                       إجراءات
                     </th>
                   </tr>
@@ -194,7 +194,7 @@ export default function AdminUsersPage() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {users.map((user) => (
                     <tr key={user.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="flex-shrink-0 h-10 w-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
                             {user.name?.charAt(0) || 'U'}
@@ -206,10 +206,10 @@ export default function AdminUsersPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      <td className="px-4 md:px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                         {user.email}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                         <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
                           user.role === 'SUPERADMIN' ? 'bg-purple-100 text-purple-800' :
                           user.role === 'ADMIN' ? 'bg-blue-100 text-blue-800' :
@@ -220,17 +220,17 @@ export default function AdminUsersPage() {
                            '👤 مستخدم'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                         <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
                           user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                         }`}>
                           {user.isActive ? '✅ نشط' : '🚫 معطل'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      <td className="px-4 md:px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                         {new Date(user.createdAt).toLocaleDateString('ar-EG')}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <td className="px-4 md:px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex gap-2">
                           <button
                             onClick={() => router.push(`/admin/users/${user.id}`)}

@@ -16,7 +16,7 @@ describe('Embedding Service', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     // Reset environment variables
-    delete process.env.GROQ_API_KEY;
+      delete process.env.DEEPSEEK_API_KEY;
     delete process.env.GEMINI_API_KEY;
     delete process.env.SKIP_GEMINI_EMBEDDING;
     delete process.env.NODE_ENV;
@@ -31,83 +31,83 @@ describe('Embedding Service', () => {
       expect(await generateEmbedding({})).toBeNull();
     });
 
-    test('should generate embedding using Groq successfully', async () => {
-      process.env.GROQ_API_KEY = 'test-groq-key';
-      process.env.GROQ_EMBED_MODEL = 'groq-embedder';
+    test('should generate embedding using Gemini successfully', async () => {
+      process.env.GEMINI_API_KEY = 'test-gemini-key';
+      process.env.GEMINI_EMBED_MODEL = 'text-embedding-004';
 
       const mockEmbedding = [0.1, 0.2, 0.3, 0.4, 0.5];
-      const mockResponse = {
-        data: {
-          data: [{ embedding: mockEmbedding }]
-        }
-      };
-
-      axios.post.mockResolvedValue(mockResponse);
-
-      const result = await generateEmbedding('test text');
-
-      expect(axios.post).toHaveBeenCalledWith(
-        'https://api.groq.com/openai/v1/embeddings',
-        {
-          input: 'test text',
-          model: 'groq-embedder'
-        },
-        {
-          headers: {
-            'Authorization': 'Bearer test-groq-key',
-            'Content-Type': 'application/json'
-          },
-          timeout: 15000
-        }
-      );
-
-      expect(result).toEqual(mockEmbedding);
-    });
-
-    test('should use default Groq model when not specified', async () => {
-      process.env.GROQ_API_KEY = 'test-groq-key';
-
-      const mockEmbedding = [0.1, 0.2, 0.3];
-      axios.post.mockResolvedValue({
-        data: { data: [{ embedding: mockEmbedding }] }
-      });
-
-      await generateEmbedding('test text');
-
-      expect(axios.post).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({ model: 'groq-embedder' }),
-        expect.any(Object)
-      );
-    });
-
-    test('should fallback to Gemini when Groq fails', async () => {
-      process.env.GROQ_API_KEY = 'test-groq-key';
-      process.env.GEMINI_API_KEY = 'test-gemini-key';
-
-      // Groq fails
-      axios.post.mockRejectedValue(new Error('Groq API error'));
-
-      // Gemini succeeds
-      const mockGeminiEmbedding = [0.2, 0.3, 0.4, 0.5, 0.6];
       const mockGeminiModel = {
-        embedContent: jest.fn().mockResolvedValue({
-          embedding: { values: mockGeminiEmbedding }
-        })
+        embedContent: jest.fn().mockResolvedValue({ embedding: { values: mockEmbedding } })
       };
-
-      const mockGenAI = {
-        getGenerativeModel: jest.fn().mockReturnValue(mockGeminiModel)
-      };
-
+      const mockGenAI = { getGenerativeModel: jest.fn().mockReturnValue(mockGeminiModel) };
       GoogleGenerativeAI.mockImplementation(() => mockGenAI);
 
       const result = await generateEmbedding('test text');
 
-      expect(axios.post).toHaveBeenCalled();
       expect(GoogleGenerativeAI).toHaveBeenCalledWith('test-gemini-key');
       expect(mockGeminiModel.embedContent).toHaveBeenCalledWith('test text');
-      expect(result).toEqual(mockGeminiEmbedding);
+      expect(result).toEqual(mockEmbedding);
+    });
+
+    test('should return diagnostic object when diagnostic option is set', async () => {
+      process.env.GEMINI_API_KEY = 'test-gemini-key';
+      process.env.GEMINI_EMBED_MODEL = 'text-embedding-004';
+
+      const mockEmbedding = [0.1, 0.2, 0.3];
+      const mockGeminiModel = { embedContent: jest.fn().mockResolvedValue({ embedding: { values: mockEmbedding } }) };
+      const mockGenAI = { getGenerativeModel: jest.fn().mockReturnValue(mockGeminiModel) };
+      GoogleGenerativeAI.mockImplementation(() => mockGenAI);
+
+      const result = await generateEmbedding('test text', { diagnostic: true });
+
+      expect(result).toHaveProperty('provider', 'gemini');
+      expect(result).toHaveProperty('model', 'text-embedding-004');
+      expect(result).toHaveProperty('embedding');
+      expect(result.embedding).toEqual(mockEmbedding);
+    });
+
+    test('should use Gemini in production when available', async () => {
+      process.env.NODE_ENV = 'production';
+      process.env.GEMINI_API_KEY = 'test-gemini-key';
+
+      const mockEmbedding = [0.11, 0.22, 0.33];
+      const mockGeminiModel = { embedContent: jest.fn().mockResolvedValue({ embedding: { values: mockEmbedding } }) };
+      const mockGenAI = { getGenerativeModel: jest.fn().mockReturnValue(mockGeminiModel) };
+      GoogleGenerativeAI.mockImplementation(() => mockGenAI);
+
+      const result = await generateEmbedding('test text');
+
+      expect(result).toEqual(mockEmbedding);
+    });
+
+    test('should use default Gemini model when not specified', async () => {
+      process.env.GEMINI_API_KEY = 'test-gemini-key';
+
+      const mockEmbedding = [0.1, 0.2, 0.3];
+      const mockGeminiModel = { embedContent: jest.fn().mockResolvedValue({ embedding: { values: mockEmbedding } }) };
+      const mockGenAI = { getGenerativeModel: jest.fn().mockReturnValue(mockGeminiModel) };
+      GoogleGenerativeAI.mockImplementation(() => mockGenAI);
+
+      await generateEmbedding('test text');
+
+      expect(mockGenAI.getGenerativeModel).toHaveBeenCalledWith({ model: 'text-embedding-004' });
+    });
+
+    test('should return null when Gemini fails and no other providers are configured', async () => {
+      process.env.GEMINI_API_KEY = 'test-gemini-key';
+
+      const mockGeminiModel = {
+        embedContent: jest.fn().mockRejectedValue(new Error('Gemini API error'))
+      };
+
+      const mockGenAI = { getGenerativeModel: jest.fn().mockReturnValue(mockGeminiModel) };
+      GoogleGenerativeAI.mockImplementation(() => mockGenAI);
+
+      const result = await generateEmbedding('test text');
+
+      expect(GoogleGenerativeAI).toHaveBeenCalledWith('test-gemini-key');
+      expect(mockGeminiModel.embedContent).toHaveBeenCalledWith('test text');
+      expect(result).toBeNull();
     });
 
     test('should skip Gemini when SKIP_GEMINI_EMBEDDING is set', async () => {
@@ -123,12 +123,12 @@ describe('Embedding Service', () => {
       expect(result.length).toBe(768);
     });
 
-    test('should handle Groq API error gracefully', async () => {
-      process.env.GROQ_API_KEY = 'test-groq-key';
+    test('should handle Gemini API error gracefully', async () => {
+      process.env.GEMINI_API_KEY = 'test-gemini-key';
 
-      axios.post.mockRejectedValue({
-        response: { data: { error: { message: 'Invalid API key' } } }
-      });
+      const mockGeminiModel = { embedContent: jest.fn().mockRejectedValue(new Error('Gemini API error')) };
+      const mockGenAI = { getGenerativeModel: jest.fn().mockReturnValue(mockGeminiModel) };
+      GoogleGenerativeAI.mockImplementation(() => mockGenAI);
 
       const result = await generateEmbedding('test text');
 
@@ -151,6 +151,29 @@ describe('Embedding Service', () => {
       const result = await generateEmbedding('test text');
 
       expect(result).toBeNull();
+    });
+
+    test('should fallback to embedText when embedContent is not supported', async () => {
+      process.env.GEMINI_API_KEY = 'test-gemini-key';
+      process.env.GEMINI_EMBED_MODEL = 'textembedding-gecko-001';
+
+      const mockGeminiModel = {
+        embedContent: jest.fn().mockRejectedValue({ response: { status: 404, data: 'models/textembedding-gecko-001 is not found for API version v1beta, or is not supported for embedContent' } }),
+        embedText: jest.fn().mockResolvedValue({ embedding: { values: [0.12, 0.34, 0.56] } })
+      };
+
+      const mockGenAI = {
+        getGenerativeModel: jest.fn().mockReturnValue(mockGeminiModel)
+      };
+
+      GoogleGenerativeAI.mockImplementation(() => mockGenAI);
+
+      const result = await generateEmbedding('test text');
+
+      expect(GoogleGenerativeAI).toHaveBeenCalledWith('test-gemini-key');
+      expect(mockGeminiModel.embedContent).toHaveBeenCalledWith('test text');
+      expect(mockGeminiModel.embedText).toHaveBeenCalledWith('test text');
+      expect(result).toEqual([0.12, 0.34, 0.56]);
     });
 
     test('should handle leaked Gemini API key gracefully', async () => {
@@ -188,7 +211,7 @@ describe('Embedding Service', () => {
       process.env.NODE_ENV = 'production';
 
       await expect(generateEmbedding('test text')).rejects.toThrow(
-        'No embedding provider configured. Set GEMINI_API_KEY or GROQ_API_KEY/GROQ_EMBED_URL.'
+        'No embedding provider configured. Set GEMINI_API_KEY.'
       );
     });
 

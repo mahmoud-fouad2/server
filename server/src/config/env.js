@@ -6,14 +6,12 @@
 const requiredEnvVars = [
   'DATABASE_URL',
   'JWT_SECRET',
-  'GROQ_API_KEY'
+  'GEMINI_API_KEY'
 ];
 
 const optionalEnvVars = [
   'REDIS_URL',
-  'GEMINI_API_KEY',
-  'DEEPSEEK_API_KEY',
-  'CEREBRAS_API_KEY',
+  'GROQ_API_KEY',
   'PORT',
   'NODE_ENV',
   'SMTP_EMAIL',

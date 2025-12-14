@@ -1,0 +1,43 @@
+import { test, expect } from '@playwright/test';
+
+const logsMock = [
+  { id: 'l1', action: 'USER_CREATE', createdAt: new Date().toISOString(), user: { name: 'Ali', email: 'ali@example.com' }, meta: { target: 'user', id: 'u1' } },
+];
+
+test.describe('Admin Audit Logs E2E', () => {
+  test.beforeEach(async ({ page }) => {
+    const isLive = !!process.env.PLAYWRIGHT_LIVE;
+    if (!isLive) {
+      await page.route('**/api/admin/system/audit-log*', route => route.fulfill({ status: 200, body: JSON.stringify({ data: logsMock, pagination: { total: 1, totalPages: 1, page: 1 } }) }));
+    }
+
+    if (process.env.PLAYWRIGHT_ADMIN_TOKEN) {
+      const token = process.env.PLAYWRIGHT_ADMIN_TOKEN;
+      const user = process.env.PLAYWRIGHT_ADMIN_USER || '';
+      await page.addInitScript((t, u) => {
+        try {
+          localStorage.setItem('token', t);
+          if (u) localStorage.setItem('user', u);
+        } catch (e) {}
+      }, token, user);
+    }
+  });
+
+  test('shows audit logs and supports filters', async ({ page }) => {
+    await page.goto('http://localhost:3000/admin');
+
+    // Open Audit tab in sidebar
+    await page.getByRole('button', { name: /سجل التدقيق|Audit/ }).click();
+
+    // Expect the log entry to be visible
+    await expect(page.getByText('USER_CREATE')).toBeVisible();
+    await expect(page.getByText(/Ali/)).toBeVisible();
+
+    // Apply action filter and ensure fetch is triggered with filter
+    await page.getByLabel('action-filter').fill('USER_CREATE');
+    await page.getByRole('button', { name: /تطبيق|Apply/ }).click();
+
+    // The UI should still show our mocked row
+    await expect(page.getByText('USER_CREATE')).toBeVisible();
+  });
+});

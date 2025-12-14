@@ -7,7 +7,6 @@ const express = require('express');
 const router = express.Router();
 const { authenticateToken } = require('../middleware/auth');
 const { requirePermission } = require('../middleware/authorization');
-const crmService = require('../services/crm.service');
 const prisma = require('../config/database');
 const logger = require('../utils/logger');
 const asyncHandler = require('express-async-handler');

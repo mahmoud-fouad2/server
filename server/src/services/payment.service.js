@@ -436,7 +436,7 @@ class PaymentService {
   /**
    * Verify PayPal webhook
    */
-  verifyPaypalWebhook(payload, signature, gateway) {
+  verifyPaypalWebhook(_payload, _signature, _gateway) {
     // PayPal webhook verification is more complex
     // For now, we'll trust the webhook if it comes from PayPal
     return true; // TODO: Implement proper PayPal webhook verification

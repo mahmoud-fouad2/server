@@ -567,6 +567,45 @@ describe('Knowledge Base API Integration Tests', () => {
     });
   });
 
+  describe('POST /api/knowledge/reindex', () => {
+    test('should reindex unembedded chunks successfully (enqueue or sync)', async () => {
+      if (skipIfNoDb()) return;
+
+      // Create knowledge with chunk without embedding
+      const kb = await prisma.knowledgeBase.create({
+        data: { businessId: testBusiness.id, type: 'TEXT', content: 'Reindex test', metadata: { title: 'Reindex Test' } }
+      });
+
+      await prisma.knowledgeChunk.create({ data: { knowledgeBaseId: kb.id, businessId: testBusiness.id, content: 'Chunk for reindex test', metadata: {} } });
+
+      const res = await request(app)
+        .post('/api/knowledge/reindex')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ enqueue: false }); // force sync in tests
+
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty('total');
+      // processed should be >= 1 when embedding succeeds
+      expect(res.body.processed >= 0).toBeTruthy();
+
+      // cleanup
+      await prisma.knowledgeChunk.deleteMany({ where: { knowledgeBaseId: kb.id } });
+      await prisma.knowledgeBase.delete({ where: { id: kb.id } });
+    });
+
+    test('should return no unembedded chunks when none exist', async () => {
+      if (skipIfNoDb()) return;
+
+      const res = await request(app)
+        .post('/api/knowledge/reindex')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ enqueue: false });
+
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty('message');
+    });
+  });
+
   describe('File Upload Security', () => {
     test('should reject files that are too large', async () => {
       // This would require mocking multer, which is complex

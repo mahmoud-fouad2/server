@@ -283,8 +283,26 @@ export default function KnowledgeBaseView({ addNotification }) {
             <CardTitle className="text-lg">
               المصادر النشطة ({kbList.length})
             </CardTitle>
-            <div className="p-2 bg-muted rounded-lg">
-              <FileText className="w-4 h-4" />
+            <div className="flex items-center gap-2">
+              <div className="p-2 bg-muted rounded-lg">
+                <FileText className="w-4 h-4" />
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  if (!confirm('هل أنت متأكد من إعادة فهرسة جميع التضمينات؟ قد تستغرق العملية بعض الوقت.')) return;
+                  try {
+                    const resp = await knowledgeApi.reindex({ enqueue: true });
+                    addNotification(resp && resp.message ? resp.message : 'تم بدء إعادة الفهرسة');
+                  } catch (err) {
+                    console.error('Reindex error', err);
+                    addNotification(`فشل إعادة الفهرسة: ${err.message || err}`, 'error');
+                  }
+                }}
+              >
+                إعادة فهرسة التضمينات
+              </Button>
             </div>
           </CardHeader>
           <CardContent className="flex-1 overflow-y-auto pr-2">

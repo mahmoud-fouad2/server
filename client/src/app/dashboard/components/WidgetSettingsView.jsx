@@ -127,7 +127,7 @@ export default function WidgetSettingsView({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
-      className="grid grid-cols-1 md:grid-cols-2 gap-8"
+      className="grid grid-cols-1 lg:grid-cols-2 gap-6"
     >
       <Card>
         <CardHeader>
@@ -201,12 +201,16 @@ export default function WidgetSettingsView({
 
               {/* Custom Upload */}
               <div className="aspect-square rounded-xl border-2 border-dashed border-border hover:border-brand-500 hover:bg-muted flex items-center justify-center cursor-pointer transition-all group overflow-hidden relative">
-                <input
-                  type="file"
-                  className="absolute inset-0 opacity-0 cursor-pointer z-10"
-                  onChange={handleIconUpload}
-                  accept="image/*"
-                />
+                  <input
+                    type="file"
+                    className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                    onChange={handleIconUpload}
+                    accept="image/*"
+                    aria-label="Upload widget icon"
+                  />
+                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-xs text-muted-foreground md:hidden">
+                    اضغط لرفع أيقونة
+                  </div>
                 {widgetConfig.avatar === 'custom' &&
                 widgetConfig.customIconUrl ? (
                   <Image
@@ -323,9 +327,9 @@ export default function WidgetSettingsView({
             معاينة حية
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-0 h-[500px] relative bg-white dark:bg-gray-900 flex items-end justify-end p-6">
+        <CardContent className="p-4 md:p-6 h-auto md:h-[500px] relative bg-white dark:bg-gray-900 flex items-end justify-center">
           {/* Mock Widget */}
-          <div className="w-[350px] h-[450px] bg-background rounded-2xl shadow-2xl border border-border flex flex-col overflow-hidden">
+          <div className="w-full md:w-[350px] h-auto md:h-[450px] bg-background rounded-2xl shadow-2xl border border-border flex flex-col overflow-hidden">
             {/* Header */}
             <div
               className="p-4 text-white flex items-center gap-3"

@@ -15,7 +15,19 @@
     }
 
     // Session Management (from enhanced version)
-    let sessionId = localStorage.getItem('fahimo_session_id');
+    // Use safe storage helpers to gracefully handle Tracking Prevention (which may block localStorage)
+    const _inMemoryStorage = new Map();
+    function safeGetItem(key) {
+        try { return localStorage.getItem(key); } catch (e) { return _inMemoryStorage.get(key) || null; }
+    }
+    function safeSetItem(key, value) {
+        try { localStorage.setItem(key, value); } catch (e) { _inMemoryStorage.set(key, value); }
+    }
+    function safeRemoveItem(key) {
+        try { localStorage.removeItem(key); } catch (e) { _inMemoryStorage.delete(key); }
+    }
+
+    let sessionId = safeGetItem('fahimo_session_id');
     let currentVisitId = null;
     let pageEnteredAt = Date.now();
     let scrollDepth = 0;
@@ -59,7 +71,7 @@
             const data = await response.json();
             if (data.success) {
                 sessionId = data.session.id;
-                localStorage.setItem('fahimo_session_id', sessionId);
+                safeSetItem('fahimo_session_id', sessionId);
                 await trackPageVisit();
             }
         } catch (error) {
@@ -559,7 +571,7 @@
         const endSessionBtn = document.getElementById('fahimo-end-session');
         const inputArea = document.getElementById('fahimo-input-area');
         let isOpen = false;
-        let conversationId = localStorage.getItem('fahimo_conversation_id');
+        let conversationId = safeGetItem('fahimo_conversation_id');
         let selectedRating = 0;
         // persisted messages for this business (visitor persistence)
         let storedMessages = [];
@@ -584,7 +596,7 @@
 
         function loadStoredMessages() {
             try {
-                const raw = localStorage.getItem(storageKey());
+                    const raw = safeGetItem(storageKey());
                 if (!raw) return;
                 const arr = JSON.parse(raw);
                 if (!Array.isArray(arr) || !arr.length) return;
@@ -693,7 +705,7 @@
 
                 if (data.conversationId) {
                     conversationId = data.conversationId;
-                    localStorage.setItem('fahimo_conversation_id', conversationId);
+                    safeSetItem('fahimo_conversation_id', conversationId);
                 }
 
                 if (data.response) {
@@ -850,7 +862,7 @@
                 }
 
                 // Mark pre-chat as submitted for this session
-                localStorage.setItem(`fahimo_prechat_${businessId}_${sessionId}`, 'true');
+                safeSetItem(`fahimo_prechat_${businessId}_${sessionId}`, 'true');
 
                 hidePrechatForm();
                 openChat();
@@ -905,7 +917,7 @@
                     
                     // Clear conversation and close chat
                     conversationId = null;
-                    localStorage.removeItem('fahimo_conversation_id');
+                    safeRemoveItem('fahimo_conversation_id');
                     storedMessages = [];
                     saveStoredMessages();
                     
@@ -950,7 +962,7 @@
 
             // If prechat is enabled and there's no conversation yet, show the form if not submitted
             if (prechatEnabled && !conversationId) {
-                const prechatSubmitted = localStorage.getItem(`fahimo_prechat_${businessId}_${sessionId}`);
+                const prechatSubmitted = safeGetItem(`fahimo_prechat_${businessId}_${sessionId}`);
                 if (!prechatSubmitted) {
                     showPrechatForm();
                     return;
@@ -963,27 +975,6 @@
 
         launcher.onclick = toggleLauncher;
         launcher.ontouchstart = toggleLauncher;
-            // If the chat is already open, clicking the launcher should close it
-            if (isOpen) {
-                isOpen = false;
-                chatWindow.classList.remove('fahimo-open');
-                // hide prechat form if visible
-                if (prechatFormVisible) hidePrechatForm();
-                return;
-            }
-
-            // If prechat is enabled and there's no conversation yet, show the form if not submitted
-            if (prechatEnabled && !conversationId) {
-                const prechatSubmitted = localStorage.getItem(`fahimo_prechat_${businessId}_${sessionId}`);
-                if (!prechatSubmitted) {
-                    showPrechatForm();
-                    return;
-                }
-            }
-
-            // Otherwise, open the chat window
-            openChat();
-        };
         // close handler: support touchstart and click
         function closeHandler(e) {
             if (e && e.type === 'touchstart') touchHandled = true;
@@ -993,10 +984,6 @@
         }
         closeBtn.onclick = closeHandler;
         closeBtn.ontouchstart = closeHandler;
-            isOpen = false;
-            chatWindow.classList.remove('fahimo-open');
-            if (prechatFormVisible) hidePrechatForm();
-        };
     } catch (e) {
         console.error('Fahimo widget init error', e);
     }

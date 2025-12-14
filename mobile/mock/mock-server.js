@@ -9,12 +9,15 @@ app.use(bodyParser.json());
 
 const PORT = process.env.PORT || 3002;
 
+// In-memory mock user state
+let mockUser = { id: 'user-1', email: 'hello@faheemly.com', name: 'Demo User', subscription: 'free' };
+
 app.post('/api/auth/demo-login', (req, res) => {
   const { email } = req.body || {};
   return res.json({
     success: true,
     token: 'mock-token-12345',
-    user: { id: 'user-1', email: email || 'demo@faheemly.com', name: 'Demo User' }
+    user: mockUser
   });
 });
 
@@ -35,6 +38,32 @@ app.get('/api/chat/conversations', (req, res) => {
       { id: 'conv-2', title: 'Billing', lastMessage: 'Your subscription is expiring', unread: 2 },
     ]
   });
+});
+
+// Profile endpoint
+app.get('/api/auth/profile', (req, res) => {
+  return res.json({ success: true, user: mockUser });
+});
+
+// Subscription endpoint - simulate subscribing the user
+app.post('/api/subscription/subscribe', (req, res) => {
+  const { plan } = req.body || {};
+  if (!plan) return res.status(400).json({ success: false, error: 'plan is required' });
+  // Update in-memory user
+  mockUser.subscription = plan;
+  return res.json({ success: true, user: mockUser, message: `subscribed to ${plan}` });
+});
+
+// Onboarding endpoints - save/get wizard progress
+app.post('/api/onboarding', (req, res) => {
+  const { data } = req.body || {};
+  if (!data) return res.status(400).json({ success: false, error: 'data required' });
+  mockUser.onboarding = data;
+  return res.json({ success: true, data: mockUser.onboarding });
+});
+
+app.get('/api/onboarding', (req, res) => {
+  return res.json({ success: true, data: mockUser.onboarding || null });
 });
 
 app.get('/api/chat/messages', (req, res) => {

@@ -8,7 +8,6 @@ const chalk = require('chalk');
 const REQUIRED_VARS = [
   'DATABASE_URL',
   'JWT_SECRET',
-  'GROQ_API_KEY',
   'FRONTEND_URL'
 ];
 
@@ -16,8 +15,8 @@ const OPTIONAL_VARS = [
   'GEMINI_API_KEY',
   'DEEPSEEK_API_KEY',
   'CEREBRAS_API_KEY',
-  'GROQ_API_URL',
-  'GROQ_EMBED_URL'
+  'GROQ_API_KEY',
+  'GROQ_API_URL'
 ];
 
 console.log('\n═══════════════════════════════════════════════════');

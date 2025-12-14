@@ -38,11 +38,11 @@ const PROVIDER_DEFINITIONS = {
   },
   GEMINI: {
     name: 'Gemini',
-    endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent',
+    endpoint: 'https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent',
     envVar: 'GEMINI_API_KEY',
-    model: 'gemini-1.5-flash',
+    model: 'gemini-2.0-flash',
     rateLimit: { requestsPerMinute: 15, tokensPerDay: 1000000 },
-    priority: 4,
+    priority: 2,
     enabled: true,
     isGemini: true
   },
@@ -52,7 +52,7 @@ const PROVIDER_DEFINITIONS = {
     envVar: 'DEEPSEEK_API_KEY',
     model: 'deepseek-chat',
     rateLimit: { requestsPerMinute: 60, tokensPerMinute: 50000 },
-    priority: 2, // SECONDARY - Balance restored, fast and reliable
+    priority: 3, // TERTIARY
     enabled: true // Re-enabled after balance added
   }
   ,
@@ -197,7 +197,7 @@ function getNextProvider() {
 /**
  * Convert OpenAI format to Gemini format
  */
-function convertToGeminiFormat(messages) {
+function convertToGeminiFormat(messages, options = {}) {
   const contents = [];
   let systemInstruction = '';
 
@@ -216,9 +216,9 @@ function convertToGeminiFormat(messages) {
     contents,
     systemInstruction: systemInstruction || undefined,
     generationConfig: {
-      temperature: 0.7,
-      maxOutputTokens: 1024,
-      topP: 0.9
+      temperature: typeof options.temperature === 'number' ? options.temperature : 0.7,
+      maxOutputTokens: options.maxTokens || 1024,
+      topP: typeof options.topP === 'number' ? options.topP : 0.9
     }
   };
 }
@@ -226,7 +226,7 @@ function convertToGeminiFormat(messages) {
 /**
  * Convert Gemini response to OpenAI format
  */
-function convertGeminiResponse(geminiResponse) {
+function convertGeminiResponse(geminiResponse, modelName) {
   const candidate = geminiResponse.candidates?.[0];
   if (!candidate) {
     throw new Error('No response from Gemini');
@@ -235,7 +235,7 @@ function convertGeminiResponse(geminiResponse) {
   return {
     response: candidate.content.parts[0].text,
     tokensUsed: geminiResponse.usageMetadata?.totalTokenCount || 0,
-    model: 'gemini-1.5-flash'
+    model: modelName || 'gemini-1.5-flash'
   };
 }
 
@@ -261,7 +261,7 @@ async function callProvider(providerKey, providerConfig, messages, options = {})
         }
       );
 
-      const result = convertGeminiResponse(response.data);
+      const result = convertGeminiResponse(response.data, providerConfig.model);
       recordUsage(providerKey, result.tokensUsed);
       
       logger.info('AI provider success', { provider: providerConfig.name, duration: Date.now() - startTime, tokens: result.tokensUsed });

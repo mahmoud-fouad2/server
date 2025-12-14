@@ -88,21 +88,12 @@
 #### Admin Routes (`server/src/routes/admin.routes.js`):
 
 **تحسين `/api/admin/stats`**:
-- إحصائيات متقدمة مع فترة زمنية قابلة للتخصيص
-- إحصائيات المستخدمين (نشط/غير نشط)
-- إحصائيات الأعمال حسب الخطة
-- إحصائيات الحصص (Quota Usage)
-- إحصائيات المحادثات والرسائل
 
 **تحسين `/api/admin/users`**:
-- إضافة pagination وfiltering
-- البحث حسب البريد الإلكتروني أو الاسم
-- التصفية حسب الدور (Role) والحالة (Status)
-- ترتيب قابل للتخصيص
-
-**تحسين `/api/admin/logs`**:
-- إضافة pagination
-- التصفية حسب المستوى (Level)
+ - Added Playwright E2E scaffolding and an initial E2E test (admin payments flows: edit gateway, create custom payment).
+ - Updated CI to run Playwright E2E tests after building the client.
+- Added confirmation modal and UX improvements for gateway key updates (admins must confirm replacing API/Secret keys). Unit tests cover this flow; E2E test added and will be stabilized to run reliably in CI.
+- Added a manual production deployment workflow (`.github/workflows/deploy-prod.yml`) that can trigger Render deploys and optionally run Playwright against https://faheemly.com. See `DEPLOYMENT_TO_PROD.md` for the checklist and secrets required.
 - البحث في الرسائل
 
 ---
@@ -193,6 +184,7 @@
   - الكيان المتأثر
   - التغييرات (Before/After)
   - IP Address و User Agent
+   - **ملاحظة:** تم إضافة نموذج `AuditLog` في `prisma/schema.prisma` ويجب إنشاء وتشغيل migration قبل تفعيل الميزة في الإنتاج (انظر `DEPLOYMENT_TO_PROD.md`).
 
 ### Error Handling:
 - معالجة أخطاء شاملة

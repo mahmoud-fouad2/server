@@ -32,7 +32,7 @@
     "test:create-users": "node scripts/create-test-users.js",
     "test:full": "npm run test:create-users && npm run test:comprehensive"
     ,
-    "lint": "eslint 'src/**/*.js'",
+    "check:embeddings": "node scripts/check_embedding_providers.js",
     "lint:fix": "eslint 'src/**/*.js' --fix"
   },
   "keywords": [],

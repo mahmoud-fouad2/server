@@ -56,5 +56,6 @@ router.delete('/:id', authenticateToken, knowledgeController.deleteKnowledge);
 
 // Embed unembedded chunks for a business or specific knowledgeBase
 router.post('/chunks/embed', authenticateToken, knowledgeController.embedChunks);
+router.post('/reindex', authenticateToken, knowledgeController.reindexEmbeddings);
 
 module.exports = router;

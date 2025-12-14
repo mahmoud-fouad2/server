@@ -14,6 +14,7 @@ import ConversationsScreen from './screens/ConversationsScreen';
 import WidgetWebView from './screens/WidgetWebView';
 import WizardHome from './screens/Wizard/WizardHome';
 import Profile from './screens/ProfileScreen';
+import WebLoginScreen from './screens/WebLoginScreen';
 
 export type RootStackParamList = {
   Splash: undefined;
@@ -26,6 +27,9 @@ export type RootStackParamList = {
   Forgot: undefined;
   Reset: { token?: string } | undefined;
   Conversations: undefined;
+  WebLogin: undefined;
+  Subscription: undefined;
+  SubscriptionCheckout: { plan?: string } | undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -45,6 +49,9 @@ export default function App() {
         <Stack.Screen name="Register" component={RegisterScreen} />
         <Stack.Screen name="Forgot" component={ForgotPasswordScreen} />
         <Stack.Screen name="Reset" component={ResetPasswordScreen} />
+        <Stack.Screen name="WebLogin" component={WebLoginScreen} />
+        <Stack.Screen name="Subscription" component={require('./screens/SubscriptionScreen').default} />
+        <Stack.Screen name="SubscriptionCheckout" component={require('./screens/SubscriptionCheckout').default} />
       </Stack.Navigator>
     </NavigationContainer>
   );

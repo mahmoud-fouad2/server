@@ -198,7 +198,10 @@ router.put(
         ipAddress: req.ip,
         userAgent: req.get('user-agent')
       }
-    }).catch(() => {}); // Ignore if auditLog table doesn't exist
+    }).catch((err) => { // Log but don't fail request if audits are not available
+      const logger = require('../utils/logger');
+      logger.warn('Failed to create audit log for business update', { error: err && err.message });
+    });
 
     logger.info(`Admin ${req.user.email} updated business ${id}`, updateData);
 

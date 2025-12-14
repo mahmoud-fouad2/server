@@ -330,6 +330,27 @@ model SystemLog {
   @@index([createdAt])
 }
 
+// Audit logs for admin actions and critical events
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  entity    String?
+  entityId  String?
+  changes   Json?    // { before: {...}, after: {...} }
+  meta      Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([entity])
+  @@index([action])
+}
+
 // الرسائل
 model Message {
   id             String      @id @default(cuid())

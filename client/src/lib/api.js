@@ -212,6 +212,32 @@ export const adminApi = {
       body: { planType },
     }),
   getMonitoring: () => apiCall('/api/admin/monitoring'),
+  // Payments & billing
+  getInvoices: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return apiCall(`/api/admin/payments/invoices${qs ? `?${qs}` : ''}`);
+  },
+  getInvoice: id => apiCall(`/api/admin/payments/invoices/${id}`),
+  getSubscriptions: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return apiCall(`/api/admin/payments/subscriptions${qs ? `?${qs}` : ''}`);
+  },
+  getPaymentGateways: () => apiCall('/api/admin/payments/gateways'),
+  updatePaymentGateway: (id, data) => apiCall(`/api/admin/payments/gateways/${id}`, { method: 'PUT', body: data }),
+  createCustomPayment: (data) => apiCall('/api/admin/payments/create-custom', { method: 'POST', body: data }),
+  getAuditLogs: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return apiCall(`/api/admin/system/audit-log${qs ? `?${qs}` : ''}`);
+  },
+  // Businesses management (Admin)
+  getBusinesses: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return apiCall(`/api/admin/businesses${qs ? `?${qs}` : ''}`);
+  },
+  getBusiness: id => apiCall(`/api/admin/businesses/${id}`),
+  updateBusiness: (id, data) => apiCall(`/api/admin/businesses/${id}`, { method: 'PUT', body: data }),
+  deleteBusiness: id => apiCall(`/api/admin/businesses/${id}`, { method: 'DELETE' }),
+  activateBusiness: id => apiCall(`/api/admin/businesses/${id}/activate`, { method: 'POST' }),
 };
 
 export const widgetApi = {
@@ -268,6 +294,7 @@ export const knowledgeApi = {
   update: (id, data) =>
     apiCall(`/api/knowledge/${id}`, { method: 'PUT', body: data }),
   delete: id => apiCall(`/api/knowledge/${id}`, { method: 'DELETE' }),
+  reindex: opts => apiCall('/api/knowledge/reindex', { method: 'POST', body: opts })
 };
 
 export const ticketApi = {

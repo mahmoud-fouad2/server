@@ -15,7 +15,8 @@ export default function RegisterScreen() {
       const res = await register({ name, email, password, businessName });
       if (res?.token) {
         Alert.alert('نجاح', 'تم إنشاء الحساب');
-        navigation.navigate('Chat' as any);
+        // After registration, move to subscription selection
+        navigation.navigate('Subscription' as any);
       } else {
         Alert.alert('Error', res?.error || 'Registration failed');
       }

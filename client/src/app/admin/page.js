@@ -3,10 +3,15 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import BusinessesView from './components/BusinessesView';
+import PaymentsView from './components/PaymentsView';
+import AuditLogsView from './components/AuditLogsView';
 import {
   LayoutDashboard,
   Users,
   Bot,
+  Briefcase,
+  CreditCard,
   Settings,
   Database,
   Activity,
@@ -21,6 +26,7 @@ import {
   Globe,
   MessageSquare,
   Image as ImageIcon,
+  Menu,
   Sun,
   Moon,
   Bell,
@@ -52,6 +58,7 @@ export default function AdminDashboard() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [authorized, setAuthorized] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(false);
 
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -306,7 +313,10 @@ export default function AdminDashboard() {
 
   const SidebarItem = ({ id, icon: Icon, label, badge }) => (
     <button
-      onClick={() => setActiveTab(id)}
+      onClick={() => {
+        setActiveTab(id);
+        setShowSidebar(false);
+      }}
       className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
         activeTab === id
           ? 'bg-brand-600 text-white shadow-md'
@@ -337,7 +347,8 @@ export default function AdminDashboard() {
       dir="rtl"
     >
       {/* Sidebar */}
-      <aside className="w-64 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 flex flex-col h-screen sticky top-0 shadow-lg z-10">
+      {/* Desktop sidebar */}
+      <aside className="hidden md:flex w-64 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 flex-col h-screen sticky top-0 shadow-lg z-10">
         <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center gap-3">
           <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center text-white font-bold">
             A
@@ -363,6 +374,9 @@ export default function AdminDashboard() {
             badge={ticketCount}
           />
           <SidebarItem id="users" icon={Users} label="المستخدمين" />
+          <SidebarItem id="businesses" icon={Briefcase} label="الشركات" />
+          <SidebarItem id="payments" icon={CreditCard} label="المدفوعات" />
+          <SidebarItem id="audit" icon={Activity} label="سجل التدقيق" />
           <SidebarItem id="bots" icon={Bot} label="البوتات والذكاء" />
           <SidebarItem id="design" icon={Palette} label="التصميم والألوان" />
           <SidebarItem id="seo" icon={Globe} label="SEO وإعدادات الموقع" />
@@ -384,6 +398,7 @@ export default function AdminDashboard() {
             label="مراقبة النظام"
           />
           <SidebarItem id="settings" icon={Settings} label="إعدادات النظام" />
+            <SidebarItem id="audit" icon={Activity} label="سجل التدقيق" />
         </nav>
 
         <div className="p-4 border-t border-gray-200 dark:border-gray-700">
@@ -397,19 +412,59 @@ export default function AdminDashboard() {
         </div>
       </aside>
 
+      {/* Mobile sidebar (drawer) */}
+      <div
+        className={`fixed inset-0 z-40 md:hidden ${showSidebar ? '' : 'pointer-events-none'}`}
+        aria-hidden={!showSidebar}
+      >
+        <div
+          className={`absolute inset-0 bg-black/40 transition-opacity ${showSidebar ? 'opacity-100' : 'opacity-0'}`}
+          onClick={() => setShowSidebar(false)}
+        />
+        <aside className={`absolute top-0 right-0 h-full w-72 bg-white dark:bg-gray-800 shadow-lg transform transition-transform ${showSidebar ? 'translate-x-0' : 'translate-x-full'}`}>
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center text-white font-bold">A</div>
+              <div>
+                <h1 className="text-lg font-bold text-brand-600 dark:text-brand-400">Super Admin</h1>
+                <p className="text-xs text-muted-foreground">Control Panel</p>
+              </div>
+            </div>
+            <button onClick={() => setShowSidebar(false)} className="p-2 rounded-md">✕</button>
+          </div>
+          <nav className="p-4 space-y-2 overflow-y-auto">
+            <SidebarItem id="overview" icon={LayoutDashboard} label="لوحة القيادة" />
+            <SidebarItem id="tickets" icon={LifeBuoy} label="الدعم الفني" badge={ticketCount} />
+            <SidebarItem id="users" icon={Users} label="المستخدمين" />
+            <SidebarItem id="bots" icon={Bot} label="البوتات والذكاء" />
+            <SidebarItem id="design" icon={Palette} label="التصميم والألوان" />
+            <SidebarItem id="seo" icon={Globe} label="SEO وإعدادات الموقع" />
+            <SidebarItem id="content" icon={MessageSquare} label="النصوص والمحتوى" />
+            <SidebarItem id="media" icon={ImageIcon} label="الصور والوسائط" />
+            <SidebarItem id="performance" icon={Zap} label="الأداء والتخزين المؤقت" />
+            <SidebarItem id="logs" icon={Activity} label="سجلات النظام" />
+            <SidebarItem id="monitoring" icon={LifeBuoy} label="مراقبة النظام" />
+            <SidebarItem id="settings" icon={Settings} label="إعدادات النظام" />
+          </nav>
+        </aside>
+      </div>
+
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto p-8 h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+      <main className="flex-1 overflow-y-auto p-4 md:p-8 h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
         <header className="flex justify-between items-center mb-8 bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
           <div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
               {activeTab === 'overview' && 'نظرة عامة'}
               {activeTab === 'tickets' && 'الدعم الفني'}
               {activeTab === 'users' && 'إدارة المستخدمين'}
+                  {activeTab === 'businesses' && 'إدارة الشركات'}
+              {activeTab === 'payments' && 'المدفوعات والفواتير'}
               {activeTab === 'bots' && 'إعدادات البوتات'}
               {activeTab === 'design' && 'التصميم والألوان'}
               {activeTab === 'seo' && 'SEO وإعدادات الموقع'}
               {activeTab === 'monitoring' && 'مراقبة النظام'}
               {activeTab === 'settings' && 'إعدادات النظام'}
+              {activeTab === 'audit' && 'سجل التدقيق'}
             </h2>
             <p className="text-sm text-muted-foreground">
               مرحباً بك في لوحة التحكم المركزية
@@ -417,6 +472,14 @@ export default function AdminDashboard() {
           </div>
 
           <div className="flex items-center gap-4">
+            {/* Mobile menu button */}
+            <button
+              onClick={() => setShowSidebar(true)}
+              className="md:hidden p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
+              aria-label="فتح القائمة"
+            >
+              <Menu className="w-6 h-6 text-gray-700 dark:text-gray-300" />
+            </button>
             {/* Theme Toggle */}
             <button
               onClick={() => setIsDark(!isDark)}
@@ -608,6 +671,32 @@ export default function AdminDashboard() {
           </div>
         )}
 
+        {activeTab === 'businesses' && (
+          <div>
+            <div className="space-y-6">
+              {/* Businesses view component */}
+              <div className="grid grid-cols-1">
+                <div className="col-span-1">
+                  {/* Dynamic import to keep admin bundle small could be used, but simple inline import works */}
+                  <BusinessesView />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'payments' && (
+          <div>
+            <div className="space-y-6">
+              <div className="grid grid-cols-1">
+                <div className="col-span-1">
+                  <PaymentsView />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {activeTab === 'tickets' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-[calc(100vh-140px)]">
             {/* Tickets List */}
@@ -754,6 +843,18 @@ export default function AdminDashboard() {
                   </CardFooter>
                 </>
               )}
+
+        {activeTab === 'audit' && (
+          <div>
+            <div className="space-y-6">
+              <div className="grid grid-cols-1">
+                <div className="col-span-1">
+                  <AuditLogsView />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
             </Card>
           </div>
         )}
@@ -767,7 +868,7 @@ export default function AdminDashboard() {
                   <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <Input
                     placeholder="بحث عن مستخدم..."
-                    className="w-64 pr-10 bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600"
+                    className="w-full md:w-64 pr-10 bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600"
                   />
                 </div>
                 <Button className="bg-brand-600 hover:bg-brand-700">

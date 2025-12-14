@@ -73,6 +73,9 @@ describe('Hybrid AI Service', () => {
         { role: 'user', content: 'Hello' }
       ];
 
+      // Ensure Gemini is not considered in this test so fallback goes to DeepSeek
+      delete process.env.GEMINI_API_KEY;
+
       const result = await generateResponse(messages);
 
       expect(result.response).toBe('Test response from DeepSeek');
@@ -107,6 +110,9 @@ describe('Hybrid AI Service', () => {
       });
 
       const messages = [{ role: 'user', content: 'Hello' }];
+      // Ensure Gemini is not considered so the next non-Gemini provider succeeds as expected
+      delete process.env.GEMINI_API_KEY;
+
       const result = await generateResponse(messages);
 
       expect(result.response).toBe('Success after timeout');
@@ -216,6 +222,9 @@ describe('Hybrid AI Service', () => {
           }
         });
 
+      // Ensure Gemini is not considered so fallback goes to expected backup provider
+      delete process.env.GEMINI_API_KEY;
+
       const fallbackResult = await generateResponse([{ role: 'user', content: 'Should use backup' }]);
       const postStatus = getProviderStatus();
 
@@ -251,7 +260,7 @@ describe('Hybrid AI Service', () => {
 
       expect(result.response).toBe('Gemini response');
       expect(result.tokensUsed).toBe(80);
-      expect(result.model).toBe('gemini-1.5-flash');
+      expect(result.model).toBe('gemini-2.0-flash');
     });
 
     test('should convert messages to Gemini format', async () => {

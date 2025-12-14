@@ -7,7 +7,6 @@ const express = require('express');
 const router = express.Router();
 const paymentService = require('../services/payment.service');
 const prisma = require('../config/database');
-const logger = require('../utils/logger');
 const asyncHandler = require('express-async-handler');
 
 // Middleware to capture raw body for webhook verification
@@ -146,7 +145,6 @@ router.post(
   '/paypal',
   asyncHandler(async (req, res) => {
     const payload = req.body;
-    const signature = req.headers['paypal-transmission-sig'];
     const gateway = await prisma.paymentGateway.findFirst({
       where: { provider: 'PAYPAL', isEnabled: true }
     });

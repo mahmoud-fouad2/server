@@ -1,0 +1,73 @@
+name: Deploy to Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_playwright:
+        description: 'Run Playwright E2E against production after deploy?'
+        required: false
+        default: 'true'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      RENDER_API_BASE: https://api.render.com
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Trigger Server Deploy
+        if: ${{ secrets.RENDER_API_KEY && secrets.RENDER_SERVICE_ID_SERVER }}
+        run: |
+          echo 'Triggering server deploy...'
+          curl -s -X POST "$RENDER_API_BASE/v1/services/${{ secrets.RENDER_SERVICE_ID_SERVER }}/deploys" \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            -H 'Content-Type: application/json' \
+            -d '{}' > /tmp/server-deploy.json
+          echo "Server deploy triggered:"
+          cat /tmp/server-deploy.json
+
+      - name: Trigger Client Deploy
+        if: ${{ secrets.RENDER_API_KEY && secrets.RENDER_SERVICE_ID_CLIENT }}
+        run: |
+          echo 'Triggering client deploy...'
+          curl -s -X POST "$RENDER_API_BASE/v1/services/${{ secrets.RENDER_SERVICE_ID_CLIENT }}/deploys" \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            -H 'Content-Type: application/json' \
+            -d '{}' > /tmp/client-deploy.json
+          echo "Client deploy triggered:"
+          cat /tmp/client-deploy.json
+
+      - name: Wait for deploys to finish (poll)
+        if: ${{ secrets.RENDER_API_KEY }}
+        run: |
+          set -euo pipefail
+          echo "Polling for deploy status..."
+          for svc in "${{ secrets.RENDER_SERVICE_ID_SERVER }}" "${{ secrets.RENDER_SERVICE_ID_CLIENT }}"; do
+            if [ -z "$svc" ]; then continue; fi
+            echo "Checking service: $svc"
+            attempt=0
+            while [ $attempt -lt 60 ]; do
+              latest=$(curl -s -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" "$RENDER_API_BASE/v1/services/$svc/deploys/latest")
+              status=$(echo "$latest" | jq -r .state // empty)
+              echo "Status: $status"
+              if [ "$status" = "successful" ]; then echo "$svc deployed"; break; fi
+              if [ "$status" = "failed" ]; then echo "Deploy failed for $svc"; echo "$latest"; exit 1; fi
+              sleep 5
+              attempt=$((attempt+1))
+            done
+          done
+
+      - name: Run Playwright E2E against production
+        if: ${{ github.event.inputs.run_playwright == 'true' }}
+        env:
+          PLAYWRIGHT_BASE_URL: https://faheemly.com
+        run: |
+          cd client
+          npm ci
+          npx playwright install --with-deps
+          npx playwright test --reporter=github
+
+      - name: Post-deploy note
+        run: echo "Deploy and (optional) E2E run completed. Check Render dashboard & Playwright report for details."

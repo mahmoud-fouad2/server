@@ -1,0 +1,34 @@
+name: Run E2E against Production
+
+on:
+  workflow_dispatch:
+
+jobs:
+  e2e-production:
+    runs-on: ubuntu-latest
+    env:
+      PLAYWRIGHT_BASE_URL: ${{ secrets.PLAYWRIGHT_BASE_URL || 'https://faheemly.com' }}
+      PLAYWRIGHT_LIVE: '1'
+      PLAYWRIGHT_ADMIN_TOKEN: ${{ secrets.PLAYWRIGHT_ADMIN_TOKEN }}
+      PLAYWRIGHT_ADMIN_USER: ${{ secrets.PLAYWRIGHT_ADMIN_USER }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: ./client
+        run: npm ci
+
+      - name: Install Playwright browsers
+        working-directory: ./client
+        run: npx playwright install --with-deps
+
+      - name: Run Playwright E2E (against production)
+        working-directory: ./client
+        run: npx playwright test --config=playwright.config.js --reporter=html
+        # The environment variables above will be available to Playwright and tests

@@ -546,3 +546,93 @@ exports.embedChunks = async (req, res) => {
     res.status(500).json({ error: 'Failed to embed chunks', details: error.message });
   }
 };
+
+exports.reindexEmbeddings = async (req, res) => {
+  let businessId = null;
+  let lockKey = null;
+
+  try {
+    businessId = await resolveBusinessId(req);
+    if (!businessId) return res.status(400).json({ error: 'Business ID missing or invalid.' });
+
+    const { knowledgeBaseId, enqueue = true } = req.body || {};
+    const where = { businessId, embedding: null };
+    if (knowledgeBaseId) where.knowledgeBaseId = knowledgeBaseId;
+
+    // Acquire a distributed lock via Redis if available, else use an in-memory guard
+    lockKey = `reindex_lock:${businessId}`;
+    try {
+      if (redisCache.isEnabled && redisCache.isConnected && redisCache.client) {
+        const ok = await redisCache.client.set(lockKey, JSON.stringify({ startedAt: new Date().toISOString(), by: req.user && req.user.email || 'unknown' }), { NX: true, EX: 60 * 30 }); // 30m TTL
+        if (!ok) return res.status(409).json({ message: 'Reindex already in progress for this business' });
+      } else {
+        if (!global.__reindexLocks) global.__reindexLocks = {};
+        if (global.__reindexLocks[businessId]) return res.status(409).json({ message: 'Reindex already in progress for this business' });
+        global.__reindexLocks[businessId] = { startedAt: Date.now(), by: req.user && req.user.email };
+      }
+    } catch (err) {
+      logger.warn('Failed to acquire reindex lock, proceeding without distributed lock', err.message || err);
+    }
+
+    // Find unembedded chunks (limit to sane maximum to avoid huge responses)
+    const chunks = await prisma.knowledgeChunk.findMany({ where, select: { id: true }, take: 10000 });
+    if (!chunks || chunks.length === 0) {
+      return res.json({ message: 'No unembedded chunks found', total: 0 });
+    }
+
+    // If a queue is available and enqueue requested, enqueue all chunks for background processing
+    let chunkQueue = null;
+    if (process.env.REDIS_URL) {
+      try {
+        const queueService = require('../queue/queue');
+        chunkQueue = (queueService.getChunkQueue && queueService.getChunkQueue()) || queueService.chunkQueue || null;
+      } catch (e) {
+        chunkQueue = null;
+      }
+    }
+
+    if (chunkQueue && enqueue) {
+      let enqueued = 0;
+      for (const c of chunks) {
+        await chunkQueue.add('process', { chunkId: c.id }, { attempts: 3, backoff: { type: 'exponential', delay: 200 } });
+        enqueued++;
+      }
+      return res.json({ message: 'Chunks enqueued for processing', total: chunks.length, enqueued });
+    }
+
+    // Otherwise, process synchronously in batches (may be slow) — do not block excessively
+    let processed = 0;
+    for (const c of chunks) {
+      try {
+        const chunk = await prisma.knowledgeChunk.findUnique({ where: { id: c.id } });
+        if (!chunk) continue;
+        const emb = await generateEmbedding(chunk.content);
+        if (emb && Array.isArray(emb)) {
+          await prisma.knowledgeChunk.update({ where: { id: c.id }, data: { embedding: emb } });
+          processed++;
+        }
+        // gentle throttle to avoid hitting provider rate limits
+        await new Promise(r => setTimeout(r, 150));
+      } catch (err) {
+        logger.error('Reindex chunk processing failed', err?.message || err);
+      }
+    }
+
+    return res.json({ message: 'Reindex completed', total: chunks.length, processed });
+  } catch (error) {
+    logger.error('Reindex embeddings error:', error);
+    res.status(500).json({ error: 'Failed to reindex embeddings', details: error.message });
+  } finally {
+    // release lock (best-effort cleanup)
+    try {
+      if (redisCache.isEnabled && redisCache.isConnected && redisCache.client) {
+        await redisCache.client.del(lockKey);
+      }
+      if (global.__reindexLocks && businessId) {
+        delete global.__reindexLocks[businessId];
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+};

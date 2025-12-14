@@ -49,16 +49,14 @@ function isValidEmbedding(arr) {
 }
 
 /**
- * Embedding service using Google Gemini (primary) or Groq (if configured).
- * Requires GEMINI_API_KEY or (GROQ_API_KEY + GROQ_EMBED_URL).
+ * Embedding service preferring DeepSeek (if configured) and falling back to
+ * Gemini when available. Configure DEEPSEEK_API_KEY/DEEPSEEK_EMBED_MODEL or
+ * GEMINI_API_KEY depending on your provider.
  */
-async function generateEmbedding(text) {
+async function generateEmbedding(text, options = {}) {
   if (!text || typeof text !== 'string') return null;
 
-  // Configs
-  const GROQ_KEY = process.env.GROQ_API_KEY;
-  const GROQ_EMBED_URL = process.env.GROQ_EMBED_URL || 'https://api.groq.com/openai/v1/embeddings';
-  const GROQ_EMBED_MODEL = process.env.GROQ_EMBED_MODEL || 'text-embedding-ada-002';
+  // Optional: allow skipping Gemini via env
   const skipGeminiEnv = process.env.SKIP_GEMINI_EMBEDDING === 'true';
 
   // Determine provider priority. Can be overridden with EMBEDDING_PROVIDER_ORDER
@@ -68,41 +66,12 @@ async function generateEmbedding(text) {
   // Cerebras deployments do not expose an embeddings endpoint. If you do have
   // a Cerebras embeddings endpoint, either add it explicitly to
   // EMBEDDING_PROVIDER_ORDER or set CEREBRAS_SUPPORTS_EMBEDDINGS=true in env.
-  const defaultPriority = ['deepseek', 'voyage', 'groq', 'gemini'];
+  // Prefer Gemini for embeddings by default (only Gemini will be attempted
+  // unless EMBEDDING_PROVIDER_ORDER is explicitly set).
+  const defaultPriority = ['gemini'];
   const priority = envPriority.length ? envPriority : defaultPriority;
 
-  // Helper to attempt Groq with candidate models
-  async function tryGroq() {
-    if (!GROQ_KEY) return null;
-    const candidates = [GROQ_EMBED_MODEL, 'text-embedding-ada-002', 'text-embedding-3-small'].filter(Boolean);
-    for (const modelName of candidates) {
-      try {
-        const resp = await postWithRetry(
-          GROQ_EMBED_URL,
-          { input: text, model: modelName },
-          { headers: { Authorization: `Bearer ${GROQ_KEY}`, 'Content-Type': 'application/json' }, timeout: 15000 },
-          2
-        );
 
-        const emb = normalizeEmbeddingResponse(resp);
-        if (isValidEmbedding(emb)) {
-          logger.info('[Embedding] ✅ Groq embedding generated', { provider: 'Groq', model: modelName, dims: emb.length });
-          return emb.map(Number);
-        }
-        logger.warn('[Embedding] Groq returned no valid embedding for model', { provider: 'Groq', model: modelName });
-      } catch (err) {
-        const status = err?.response?.status;
-        const msg = err?.response?.data?.error?.message || err?.response?.data || err?.message || String(err);
-        logger.error('[Embedding] Groq embedding request failed', { provider: 'Groq', model: modelName, status, message: msg });
-        // If model not found, try next candidate. For other errors, continue to next provider.
-        if (msg && /does not exist|model not found|Unknown model|nomic-embed-text/i.test(String(msg))) {
-          continue;
-        }
-        break;
-      }
-    }
-    return null;
-  }
 
   // 2) Try DeepSeek if configured
   const DEEPSEEK_KEY = process.env.DEEPSEEK_API_KEY;
@@ -114,12 +83,17 @@ async function generateEmbedding(text) {
       const resp = await postWithRetry(DEEPSEEK_EMBED_URL, { input: text, model: DEEPSEEK_EMBED_MODEL }, { headers: { Authorization: `Bearer ${DEEPSEEK_KEY}`, 'Content-Type': 'application/json' }, timeout: 15000 }, 2);
       const emb = normalizeEmbeddingResponse(resp);
       if (isValidEmbedding(emb)) {
-        logger.info('[Embedding] ✅ DeepSeek embedding generated', { dims: emb.length });
-        return emb.map(Number);
+        logger.info('[Embedding] ✅ DeepSeek embedding generated', { provider: 'DeepSeek', model: DEEPSEEK_EMBED_MODEL, dims: emb.length });
+        return { provider: 'deepseek', model: DEEPSEEK_EMBED_MODEL, embedding: emb.map(Number) };
       }
       logger.warn('[Embedding] DeepSeek returned no valid embedding');
     } catch (err) {
-      logger.error('[Embedding] DeepSeek embedding failed:', err?.response?.data || err?.message || String(err));
+      const status = err?.response?.status;
+      const msg = err?.response?.data || err?.message || String(err);
+        logger.error('[Embedding] DeepSeek embedding failed', { provider: 'DeepSeek', status, message: msg });
+        if (options && options.diagnostic) {
+          return { provider: 'deepseek', status: 'fail', message: msg, statusCode: status };
+        }
     }
     return null;
   }
@@ -134,12 +108,14 @@ async function generateEmbedding(text) {
       const resp = await postWithRetry(VOYAGE_EMBED_URL, { input: text, model: VOYAGE_EMBED_MODEL }, { headers: { Authorization: `Bearer ${VOYAGE_KEY}`, 'Content-Type': 'application/json' }, timeout: 15000 }, 2);
       const emb = normalizeEmbeddingResponse(resp);
       if (isValidEmbedding(emb)) {
-        logger.info('[Embedding] ✅ Voyage embedding generated', { dims: emb.length });
-        return emb.map(Number);
+        logger.info('[Embedding] ✅ Voyage embedding generated', { provider: 'Voyage', model: VOYAGE_EMBED_MODEL, dims: emb.length });
+        return { provider: 'voyage', model: VOYAGE_EMBED_MODEL, embedding: emb.map(Number) };
       }
       logger.warn('[Embedding] Voyage returned no valid embedding');
     } catch (err) {
-      logger.error('[Embedding] Voyage embedding failed:', err?.response?.data || err?.message || String(err));
+      const status = err?.response?.status;
+      const msg = err?.response?.data || err?.message || String(err);
+      logger.error('[Embedding] Voyage embedding failed', { provider: 'Voyage', status, message: msg });
     }
     return null;
   }
@@ -172,59 +148,120 @@ async function generateEmbedding(text) {
 
   // 4) Try Gemini embeddings last (unless explicitly skipped or in cooldown)
   const geminiAvailable = !!process.env.GEMINI_API_KEY && !skipGeminiEnv && Date.now() > geminiDisabledUntil;
+  // Default to the cost-effective embedding model that's broadly available
+  const GEMINI_EMBED_MODEL = process.env.GEMINI_EMBED_MODEL || 'text-embedding-004';
   async function tryGemini() {
     if (!geminiAvailable) return null;
+    let genAI = null;
+    let model = null;
+    let result = null;
+    let status = null;
+    let msg = null;
+
     try {
-      const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: 'embedding-001' });
-      const result = await model.embedContent(text);
+      genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+      model = genAI.getGenerativeModel({ model: GEMINI_EMBED_MODEL });
+      result = await model.embedContent(text);
       const embedding = result?.embedding?.values || result?.embedding || null;
       if (isValidEmbedding(embedding)) {
-        logger.info(`[Embedding] ✅ Gemini embedding generated (${embedding.length} dims)`);
-        return embedding.map(Number);
+        logger.info(`[Embedding] ✅ Gemini embedding generated (${embedding.length} dims)`, { provider: 'Gemini', model: GEMINI_EMBED_MODEL });
+        return { provider: 'gemini', model: GEMINI_EMBED_MODEL, embedding: embedding.map(Number) };
       }
       logger.warn('[Embedding] Gemini returned invalid embedding payload');
+      if (options && options.diagnostic) return { provider: 'gemini', status: 'fail', message: 'Invalid embedding payload' };
     } catch (error) {
-      const msg = error?.response?.data?.error?.message || error?.message || String(error);
+      status = error?.response?.status;
+      msg = error?.response?.data || error?.message || String(error);
       if (error.response?.status === 429 || /quota|rate limit|Too Many Requests/i.test(msg)) {
-        // disable Gemini for a longer cooldown depending on quota severity to avoid repeated 429 storms
-        const longer = /limit: 0|quota exceeded/i.test(msg) ? (60 * 60 * 1000) : (5 * 60 * 1000); // 1 hour if free-tier disabled, else 5 minutes
+        const longer = /limit: 0|quota exceeded/i.test(msg) ? (60 * 60 * 1000) : (5 * 60 * 1000);
         geminiDisabledUntil = Date.now() + longer;
         logger.error('[Embedding] Gemini quota/rate-limit error:', msg, `— disabling for ${Math.round(longer/60000)}m`);
-      } else if (msg && msg.toLowerCase().includes('leak')) {
+      } else if (msg && String(msg).toLowerCase().includes('leak')) {
         logger.error('[Embedding] ❌ Gemini API key may be compromised. Rotate the key immediately and update configuration.');
-        geminiDisabledUntil = Date.now() + (60 * 60 * 1000); // 1 hour safer window
+        geminiDisabledUntil = Date.now() + (60 * 60 * 1000);
       } else {
         logger.error('[Embedding] Gemini failed:', msg);
       }
-      // continue to fallback rather than returning early
+      if (options && options.diagnostic) {
+        return { provider: 'gemini', status: 'fail', message: msg, statusCode: status };
+      }
     }
+    const msgStr = String(msg).toLowerCase();
+      // Heuristic fallbacks for v1/v1beta differences: some models use `embedText` or have
+      // names like `embedding-gecko-001` while users may have `textembedding-gecko-001`.
+      try {
+        if (msgStr.includes('embedcontent') || status === 404 || /not found/.test(msgStr)) {
+          // If the model object supports embedText, try that
+          if (typeof model?.embedText === 'function') {
+            const tresp = await model.embedText(text);
+            const emb = tresp?.embedding?.values || tresp?.embedding || null;
+            if (isValidEmbedding(emb)) {
+              logger.info(`[Embedding] ✅ Gemini embedText fallback succeeded (${emb.length} dims)`, { model: GEMINI_EMBED_MODEL });
+              return { provider: 'gemini', model: GEMINI_EMBED_MODEL, embedding: emb.map(Number) };
+            }
+          }
+
+          // Try common name variants if the model wasn't found
+          if (GEMINI_EMBED_MODEL && /text-?embedding/i.test(GEMINI_EMBED_MODEL)) {
+            const alt = GEMINI_EMBED_MODEL.replace(/text-?embedding/i, 'embedding');
+            const altModel = genAI.getGenerativeModel({ model: alt });
+            if (altModel) {
+              // try embedText first, then embedContent
+              if (typeof altModel.embedText === 'function') {
+                const altResp = await altModel.embedText(text);
+                const emb = altResp?.embedding?.values || altResp?.embedding || null;
+                if (isValidEmbedding(emb)) return { provider: 'gemini', model: alt, embedding: emb.map(Number) };
+              }
+              if (typeof altModel.embedContent === 'function') {
+                const altResp = await altModel.embedContent(text);
+                const emb = altResp?.embedding?.values || altResp?.embedding || null;
+                if (isValidEmbedding(emb)) return { provider: 'gemini', model: alt, embedding: emb.map(Number) };
+              }
+            }
+          }
+        }
+      } catch (fallbackErr) {
+        logger.debug('[Embedding] Gemini fallback attempt failed', fallbackErr?.message || String(fallbackErr));
+      }
     return null;
   }
 
   // Execute providers in preferred order
   for (const p of priority) {
+    let out = null;
     if (p === 'deepseek') {
-      const out = await tryDeepseek();
-      if (isValidEmbedding(out)) return out;
+      out = await tryDeepseek();
     } else if (p === 'voyage' || p === 'voyageai') {
-      const out = await tryVoyage();
-      if (isValidEmbedding(out)) return out;
+      out = await tryVoyage();
     } else if (p === 'cerebras' || p === 'cebrus' || p === 'cebras') {
-      const out = await tryCerebras();
-      if (isValidEmbedding(out)) return out;
-    } else if (p === 'groq') {
-      const out = await tryGroq();
-      if (isValidEmbedding(out)) return out;
+      out = await tryCerebras();
+    // Note: Groq embeddings are intentionally not attempted by default.
     } else if (p === 'gemini' && geminiAvailable) {
-      const out = await tryGemini();
-      if (isValidEmbedding(out)) return out;
+      out = await tryGemini();
+    }
+
+    if (!out) continue;
+
+      // If a provider returned a diagnostic-style failure object, surface it to caller
+      if (options && options.diagnostic && out && out.status === 'fail') {
+        return out;
+      }
+
+    // out may be either an object { provider, model, embedding } or a raw embedding array
+    if (Array.isArray(out) && isValidEmbedding(out)) {
+      if (options && options.diagnostic) return { provider: p, model: null, embedding: out };
+      return out;
+    }
+
+    if (out.embedding && isValidEmbedding(out.embedding)) {
+      if (options && options.diagnostic) return out;
+      return out.embedding;
     }
   }
 
   // 5) Development / forced fake fallback — only if explicitly allowed or in dev without providers
   const FORCE_FAKE = process.env.FORCE_FAKE_EMBEDDINGS === 'true';
-  const providersAvailable = !!(GROQ_KEY || DEEPSEEK_KEY || CEREBRAS_KEY || (process.env.GEMINI_API_KEY && !skipGeminiEnv) || VOYAGE_KEY);
+  const providersAvailable = !!((process.env.DEEPSEEK_API_KEY) || CEREBRAS_KEY || (process.env.GEMINI_API_KEY && !skipGeminiEnv) || VOYAGE_KEY);
 
   if (FORCE_FAKE || (process.env.NODE_ENV === 'development' && !providersAvailable)) {
     logger.warn('⚠️ WARNING: Using FAKE embeddings. Vector search will NOT work correctly.', { forceFake: FORCE_FAKE, providersAvailable });
@@ -241,29 +278,36 @@ async function generateEmbedding(text) {
   if (process.env.NODE_ENV === 'production') {
     // In test environment (JEST_WORKER_ID), throw error as expected by tests
     if (process.env.JEST_WORKER_ID) {
-      throw new Error('No embedding provider configured. Set GEMINI_API_KEY or GROQ_API_KEY/GROQ_EMBED_URL.');
+      throw new Error('No embedding provider configured. Set GEMINI_API_KEY.');
     }
     
     logger.warn('[Embedding] Production mode: attempting real embeddings but may fallback to fake if APIs fail');
     // Try one more time with any available provider
     for (const p of priority) {
-      try {
-        if (p === 'deepseek' && DEEPSEEK_KEY) {
-          const out = await tryDeepseek();
-          if (isValidEmbedding(out)) return out;
-        } else if (p === 'voyage' && VOYAGE_KEY) {
-          const out = await tryVoyage();
-          if (isValidEmbedding(out)) return out;
-        } else if (p === 'groq' && GROQ_KEY) {
-          const out = await tryGroq();
-          if (isValidEmbedding(out)) return out;
-        } else if (p === 'gemini' && process.env.GEMINI_API_KEY) {
-          const out = await tryGemini();
-          if (isValidEmbedding(out)) return out;
+        try {
+          let out = null;
+          if (p === 'deepseek' && DEEPSEEK_KEY) {
+            out = await tryDeepseek();
+          } else if (p === 'voyage' && VOYAGE_KEY) {
+            out = await tryVoyage();
+          } else if (p === 'gemini' && process.env.GEMINI_API_KEY) {
+            out = await tryGemini();
+          }
+
+          if (!out) continue;
+
+          if (Array.isArray(out) && isValidEmbedding(out)) {
+            logger.info(`[Embedding] Production provider ${p} produced valid embedding (${out.length} dims)`);
+            return out;
+          }
+
+          if (out.embedding && isValidEmbedding(out.embedding)) {
+            logger.info(`[Embedding] Production provider ${out.provider || p} produced valid embedding (${out.embedding.length} dims)`);
+            return out.embedding;
+          }
+        } catch (e) {
+          logger.warn(`[Embedding] Provider ${p} failed in production fallback:`, e.message);
         }
-      } catch (e) {
-        logger.warn(`[Embedding] Provider ${p} failed in production fallback:`, e.message);
-      }
     }
     
     // If all providers failed, use fake embeddings as last resort

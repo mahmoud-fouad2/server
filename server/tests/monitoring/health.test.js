@@ -69,9 +69,9 @@ describe('System Health Monitoring', () => {
       expect(process.env.DATABASE_URL).toContain('postgresql://');
     });
 
-    test('GROQ_API_KEY should be set', () => {
-      expect(process.env.GROQ_API_KEY).toBeDefined();
-      expect(process.env.GROQ_API_KEY.startsWith('gsk_')).toBe(true);
+    test('At least one embedding provider key should be present (DeepSeek/Gemini/Cerebras/Groq)', () => {
+      const hasProvider = process.env.DEEPSEEK_API_KEY || process.env.GEMINI_API_KEY || process.env.CEREBRAS_API_KEY || process.env.GROQ_API_KEY;
+      expect(hasProvider).toBeTruthy();
     });
   });
 
