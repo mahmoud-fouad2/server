@@ -47,6 +47,7 @@ function DashboardContent() {
   const [activeTab, setActiveTab] = useState('overview');
   const [isDark, setIsDark] = useTheme(false);
   const [showProAlert, setShowProAlert] = useState(false);
+  const [cacheLoadingState, setCacheLoadingState] = useState({ clearing: false, reindexing: false });
   const [notifications, setNotifications] = useState([]);
 
   // Dashboard Tour
@@ -260,6 +261,47 @@ function DashboardContent() {
                 مرحباً، {user?.name}. إليك ملخص نشاط بوتك الذكي.
               </p>
             </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={async () => {
+                if (!confirm('هل أنت متأكد أنك تريد مسح الكاش؟ قد يستغرق هذا تأثيراً على الجلسات الحالية.')) return;
+                try {
+                  setCacheLoadingState(s => ({ ...s, clearing: true }));
+                  const data = await businessApi.invalidateCache();
+                  addNotification(`تم مسح الكاش (${data && data.deleted ? data.deleted : 0})`,'success');
+                } catch (err) {
+                  console.error('مسح الكاش فشل', err);
+                  addNotification('فشل مسح الكاش', 'error');
+                } finally {
+                  setCacheLoadingState(s => ({ ...s, clearing: false }));
+                }
+              }}
+            >
+              {cacheLoadingState.clearing ? <Loader2 className="w-4 h-4 animate-spin" /> : 'مسح الكاش'}
+            </Button>
+
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={async () => {
+                if (!confirm('ابدأ عملية إعادة الفهرسة لتوليد embeddings للعناصر المفقودة. هل تريد المتابعة (سيتم إرسال العملية إلى الخلفية إن أمكن)؟')) return;
+                try {
+                  setCacheLoadingState(s => ({ ...s, reindexing: true }));
+                  const res = await knowledgeApi.reindex({ enqueue: true });
+                  addNotification(res && (res.message || res.enqueued) ? 'تم بدء إعادة الفهرسة' : 'عملية إعادة الفهرسة تمت', 'success');
+                } catch (err) {
+                  console.error('إعادة الفهرسة فشلت', err);
+                  addNotification('فشل بدء إعادة الفهرسة', 'error');
+                } finally {
+                  setCacheLoadingState(s => ({ ...s, reindexing: false }));
+                }
+              }}
+            >
+              {cacheLoadingState.reindexing ? <Loader2 className="w-4 h-4 animate-spin" /> : 'إعادة الفهرسة'}
+            </Button>
           </div>
           <div className="flex items-center gap-4">
             <button

@@ -200,6 +200,8 @@ export const businessApi = {
   getChartData: () => apiCall('/api/business/chart-data'),
   getConversations: () => apiCall('/api/business/conversations'),
   updatePreChatSettings: data => apiCall('/api/business/pre-chat-settings', { method: 'PUT', body: data }),
+  // Invalidate cached chat responses for this business
+  invalidateCache: () => apiCall('/api/business/cache/invalidate', { method: 'POST' }),
 };
 
 export const contactApi = {
