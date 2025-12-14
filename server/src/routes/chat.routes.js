@@ -4,6 +4,7 @@ const rateLimit = require('express-rate-limit');
 const { authenticateToken } = require('../middleware/auth');
 const { validateChatMessage } = require('../middleware/validation');
 const chatController = require('../controllers/chat.controller');
+const asyncHandler = require('express-async-handler');
 const prisma = require('../config/database');
 const aiService = require('../services/ai.service');
 const responseValidator = require('../services/response-validator.service');
@@ -39,6 +40,14 @@ router.post('/message', chatLimiter, validateChatMessage, chatController.sendMes
 router.get('/conversations', authenticateToken, chatController.getConversations);
 router.get('/:conversationId/messages', authenticateToken, chatController.getMessages);
 router.get('/handover-requests', authenticateToken, chatController.getHandoverRequests);
+// Mark conversation messages as read by business
+router.post('/:conversationId/mark-read', authenticateToken, asyncHandler(async (req, res) => {
+  const conversationId = req.params.conversationId;
+  const { businessId } = req.user;
+  if (!businessId) return res.status(400).json({ error: 'Business ID required' });
+  await prisma.message.updateMany({ where: { conversationId, role: 'USER', isReadByBusiness: false }, data: { isReadByBusiness: true } });
+  res.json({ success: true });
+}));
 router.post('/agent/reply', authenticateToken, chatController.agentReply);
 router.post('/reply', authenticateToken, chatController.agentReply); // Alias for /api/chat/reply
 router.post('/:conversationId/rate', authenticateToken, chatController.submitRating);

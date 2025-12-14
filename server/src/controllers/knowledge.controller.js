@@ -9,6 +9,7 @@ const { generateEmbedding } = require('../services/embedding.service');
 const { WebCrawler } = require('../services/crawler.service');
 const redisCache = require('../services/cache.service');
 const { summarizeText } = require('../services/summarizer.service');
+const storageService = require('../services/storage.service');
 
 // --- Helper Functions ---
 
@@ -186,9 +187,21 @@ exports.uploadKnowledge = async (req, res) => {
       }
     });
 
+    // If S3 is enabled, upload the original file to S3 for persistent storage and add to metadata
+    try {
+      if (storageService.isS3Enabled()) {
+        const s3Url = await storageService.uploadIcon(req.file.path, req.file.filename, req.file.mimetype);
+        if (s3Url) {
+          await prisma.knowledgeBase.update({ where: { id: kb.id }, data: { metadata: { ...(kb.metadata || {}), originalFileUrl: s3Url } } });
+        }
+      }
+    } catch (e) {
+      logger.warn('Could not upload KB original file to S3', e.message || e);
+    }
+
     try { await createChunksForKB(kb); } catch (e) { logger.error('createChunksForKB failed:', e); }
     await redisCache.invalidate(businessId);
-    fs.unlinkSync(req.file.path);
+    try { if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path); } catch (e) { logger.warn('Failed to remove temp file', e.message || e); }
 
     res.json({ message: 'Knowledge base updated', id: kb.id });
 
@@ -500,7 +513,8 @@ exports.embedChunks = async (req, res) => {
 
     if (!tokenBusinessId) return res.status(400).json({ error: 'Business ID missing from token.' });
 
-    const where = { businessId: tokenBusinessId, embedding: null };
+    // Find chunks where embedding is null (not yet embedded)
+    const where = { businessId: tokenBusinessId, embedding: { equals: null } };
     if (knowledgeBaseId) where.knowledgeBaseId = knowledgeBaseId;
 
     const chunks = await prisma.knowledgeChunk.findMany({ where, take: Number(limit) });
@@ -556,7 +570,8 @@ exports.reindexEmbeddings = async (req, res) => {
     if (!businessId) return res.status(400).json({ error: 'Business ID missing or invalid.' });
 
     const { knowledgeBaseId, enqueue = true } = req.body || {};
-    const where = { businessId, embedding: null };
+    // Find chunks where embedding is null (not yet embedded)
+    const where = { businessId, embedding: { equals: null } };
     if (knowledgeBaseId) where.knowledgeBaseId = knowledgeBaseId;
 
     // Acquire a distributed lock via Redis if available, else use an in-memory guard

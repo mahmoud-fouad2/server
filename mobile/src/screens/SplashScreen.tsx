@@ -8,6 +8,7 @@ export default function SplashScreen() {
 
   const opacity = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(0.9)).current;
+  const [logoSrc, setLogoSrc] = React.useState<any>(require('../../assets/logo2.png'));
 
   useEffect(() => {
     (async () => {
@@ -25,6 +26,19 @@ export default function SplashScreen() {
         Animated.timing(opacity, { toValue: 1, duration: 700, useNativeDriver: true }),
         Animated.spring(scale, { toValue: 1, friction: 6, useNativeDriver: true }),
       ]).start();
+
+      // Try to use transparent logo if copied into assets
+      try {
+        // eslint-disable-next-line global-require, import/no-dynamic-require
+        const t = require('../../assets/logo-transparent.png');
+        setLogoSrc(t);
+        // eslint-disable-next-line no-console
+        console.log('Splash: Using transparent logo from assets/logo-transparent.png');
+      } catch (e) {
+        // fallback to existing logo2.png
+        // eslint-disable-next-line no-console
+        console.warn('Splash: transparent logo not found, using default logo2.png');
+      }
 
       const timer = setTimeout(() => {
         navigation.navigate('Login' as any);

@@ -325,6 +325,7 @@ export const ticketApi = {
     apiCall(`/api/tickets/${id}/reply`, { method: 'POST', body: { message } }),
   updateStatus: (id, status) =>
     apiCall(`/api/tickets/${id}/status`, { method: 'PUT', body: { status } }),
+  markRead: (id) => apiCall(`/api/tickets/${id}/mark-read`, { method: 'POST' })
 };
 
 export const chatApi = {
@@ -336,6 +337,7 @@ export const chatApi = {
       body: { conversationId, message },
     }),
   getHandoverRequests: () => apiCall('/api/chat/handover-requests'),
+  markRead: (conversationId) => apiCall(`/api/chat/${conversationId}/mark-read`, { method: 'POST' }),
   sendMessage: data =>
     apiCall('/api/chat/message', { method: 'POST', body: data }),
   demoChat: message =>
@@ -378,4 +380,11 @@ export const paymentApi = {
     const queryString = new URLSearchParams(params).toString();
     return apiCall(`/api/payments${queryString ? `?${queryString}` : ''}`);
   }
+};
+
+export const notificationsApi = {
+  getUnreadCounts: () => apiCall('/api/notifications/unread-count'),
+  list: () => apiCall('/api/notifications'),
+  markRead: (id) => apiCall(`/api/notifications/${id}/mark-read`, { method: 'POST' }),
+  markAllRead: () => apiCall('/api/notifications/mark-all-read', { method: 'POST' })
 };

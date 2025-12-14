@@ -34,6 +34,13 @@ router.post('/', authenticateToken, async (req, res) => {
     });
 
     res.status(201).json(ticket);
+    // Create a notification for admins/business
+    try {
+      await prisma.notification.create({ data: { businessId: ticket.businessId, title: 'New support ticket', message: ticket.subject.substring(0,200), link: `/tickets/${ticket.id}`, meta: { ticketId: ticket.id } } });
+      try { const io = require('../socket').getIO(); io.to(`business_${ticket.businessId}`).emit('notification:new', { type: 'ticket', ticketId: ticket.id, message: ticket.subject.substring(0,200) }); } catch (e) {}
+    } catch (e) {
+      // Non-fatal
+    }
   } catch (error) {
     logger.error('Create Ticket Error:', error);
     res.status(500).json({ error: 'Failed to create ticket' });
@@ -135,7 +142,10 @@ router.post('/:id/reply', authenticateToken, async (req, res) => {
         ticketId: id,
         senderId: userId,
         message,
-        isAdmin
+        isAdmin,
+        // When admin sends a message, mark it as unread for the creator. When client sends, mark unread for business
+        isReadByBusiness: isAdmin ? true : false,
+        isReadByCreator: isAdmin ? false : true
       },
       include: { sender: { select: { name: true } } }
     });
@@ -151,6 +161,24 @@ router.post('/:id/reply', authenticateToken, async (req, res) => {
     await prisma.ticket.update({ where: { id }, data: { updatedAt: new Date() } });
 
     res.json(newMessage);
+    // Create a notification for the other party (business or creator)
+    try {
+      const ticketInfo = await prisma.ticket.findUnique({ where: { id }, include: { business: true, creator: true } });
+      if (ticketInfo) {
+        const businessId = ticketInfo.businessId;
+        // If admin wrote the message, notify creator (client)
+        if (isAdmin) {
+          await prisma.notification.create({ data: { businessId, title: 'New reply on your ticket', message: message.substring(0, 200), link: `/tickets/${id}`, meta: { ticketId: id } } });
+          try { const io = require('../socket').getIO(); io.to(`business_${businessId}`).emit('notification:new', { type: 'ticket', ticketId: id, message: message.substring(0,200) }); } catch (e) {}
+        } else {
+          // client replied - notify business admins
+          await prisma.notification.create({ data: { businessId, title: 'Customer replied to ticket', message: message.substring(0, 200), link: `/admin/tickets/${id}`, meta: { ticketId: id } } });
+          try { const io = require('../socket').getIO(); io.to(`business_${businessId}`).emit('notification:new', { type: 'ticket', ticketId: id, message: message.substring(0,200) }); } catch (e) {}
+        }
+      }
+    } catch (e) {
+      // Non-fatal
+    }
   } catch (error) {
     logger.error('Reply Ticket Error:', error);
     res.status(500).json({ error: 'Failed to send reply' });
@@ -182,6 +210,33 @@ router.put('/:id/status', authenticateToken, async (req, res) => {
   } catch (error) {
     logger.error('Update Status Error:', error);
     res.status(500).json({ error: 'Failed to update status' });
+  }
+});
+
+// Mark ticket messages as read for current user/business
+router.post('/:id/mark-read', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { userId, role, businessId } = req.user;
+    const ticket = await prisma.ticket.findUnique({ where: { id } });
+    if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
+
+    if (role === 'SUPERADMIN' || ticket.businessId === businessId) {
+      // Mark unread messages as read by business
+      await prisma.ticketMessage.updateMany({ where: { ticketId: id, isReadByBusiness: false, NOT: { senderId: userId } }, data: { isReadByBusiness: true } });
+      return res.json({ success: true });
+    }
+
+    // If the ticket creator is marking read
+    if (ticket.creatorId === userId) {
+      await prisma.ticketMessage.updateMany({ where: { ticketId: id, isReadByCreator: false, NOT: { senderId: userId } }, data: { isReadByCreator: true } });
+      return res.json({ success: true });
+    }
+
+    return res.status(403).json({ error: 'Access denied' });
+  } catch (error) {
+    logger.error('Mark ticket read error:', error);
+    res.status(500).json({ error: 'Failed to mark messages as read' });
   }
 });
 

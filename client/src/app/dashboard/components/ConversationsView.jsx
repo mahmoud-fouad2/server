@@ -190,6 +190,9 @@ export default function ConversationsView() {
       // Handle both array and paginated response format
       const messagesList = Array.isArray(response) ? response : (response.data || []);
       setConversationMessages(messagesList);
+      // Mark messages as read for business
+      try { await chatApi.markRead(conv.id); } catch (e) {}
+      try { window.dispatchEvent(new CustomEvent('unread:changed')); } catch (e) {}
     } catch (err) {
       console.error(err);
       setConversationMessages([]);

@@ -25,7 +25,8 @@ import useTheme from '@/lib/theme';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import FaheemAnimatedLogo from './FaheemAnimatedLogo';
-import { ticketApi } from '@/lib/api';
+import { ticketApi, notificationsApi } from '@/lib/api';
+import { io } from 'socket.io-client';
 
 const SidebarItem = ({
   icon: Icon,
@@ -65,6 +66,7 @@ export default function Sidebar({ activeTab, setActiveTab, userRole }) {
   const router = useRouter();
   const [isDark, setIsDark] = useState(false);
   const [ticketCount, setTicketCount] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(0);
   const isAgent = userRole === 'AGENT';
 
   useEffect(() => {
@@ -92,7 +94,38 @@ export default function Sidebar({ activeTab, setActiveTab, userRole }) {
         // Error handled silently in production
       }
     };
+    // Fetch unread counts
+    const fetchUnread = async () => {
+      try {
+        const data = await notificationsApi.getUnreadCounts();
+        const total = (data.ticketsUnread || 0) + (data.messagesUnread || 0) + (data.notificationsUnread || 0);
+        setUnreadCount(total);
+      } catch (err) {
+        // ignore
+      }
+    };
     fetchTicketCount();
+    fetchUnread();
+
+    // Setup socket to get real-time notification increments
+    try {
+      const rawUser = localStorage.getItem('user');
+      const profile = rawUser ? JSON.parse(rawUser) : null;
+      if (profile && profile.businessId) {
+        const socket = io(API_CONFIG.BASE_URL.replace('/api', ''), { transports: ['websocket'] });
+        socket.on('connect', () => {
+          socket.emit('join_room', `business_${profile.businessId}`);
+        });
+        socket.on('notification:new', () => fetchUnread());
+        // Update on explicit events too
+        const onUnreadChanged = () => fetchUnread();
+        window.addEventListener('unread:changed', onUnreadChanged);
+
+        // clean up on unmount
+        const cleanup = () => { try { socket.disconnect(); } catch (e) {} window.removeEventListener('unread:changed', onUnreadChanged); };
+        window.addEventListener('beforeunload', cleanup);
+      }
+    } catch (e) {}
 
     return () => observer.disconnect();
   }, []);
@@ -210,7 +243,7 @@ export default function Sidebar({ activeTab, setActiveTab, userRole }) {
             id="tickets"
             activeTab={activeTab}
             setActiveTab={setActiveTab}
-            badge={ticketCount}
+            badge={unreadCount > 0 ? unreadCount : ticketCount}
           />
           {!isAgent && (
             <SidebarItem

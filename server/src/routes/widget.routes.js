@@ -7,6 +7,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const rateLimit = require('express-rate-limit');
+const fetch = require('node-fetch');
 
 // Configure Multer for Icon Uploads
 const storage = multer.diskStorage({
@@ -82,6 +83,22 @@ router.get('/config/:businessId', async (req, res) => {
        config.customIconUrl = `${baseUrl}${config.customIconUrl}`;
     }
 
+      // Verify the icon actually exists (avoid serving stale/missing uploads)
+      if (config.customIconUrl && config.customIconUrl.startsWith('http')) {
+        try {
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 2000);
+          const resp = await fetch(config.customIconUrl, { method: 'HEAD', signal: controller.signal });
+          clearTimeout(timeout);
+          if (!resp.ok) {
+            // Clear invalid URL to fall back to default avatar at client
+            config.customIconUrl = null;
+          }
+        } catch (e) {
+          config.customIconUrl = null;
+        }
+      }
+
     // Legacy: Replace localhost URLs with current API URL to prevent CSP errors
     if (config.customIconUrl && config.customIconUrl.includes('localhost')) {
        let baseUrl = process.env.API_URL;
@@ -150,6 +167,8 @@ router.post('/config', authenticateToken, async (req, res) => {
 });
 
 // Upload Widget Icon (Authenticated)
+const storageService = require('../services/storage.service');
+
 router.post('/upload-icon', authenticateToken, upload.single('icon'), async (req, res) => {
   try {
     if (!req.file) {
@@ -157,17 +176,29 @@ router.post('/upload-icon', authenticateToken, upload.single('icon'), async (req
     }
 
     const businessId = req.user.businessId;
-    const relativeIconUrl = `/uploads/icons/${req.file.filename}`;
-    
-    // Build full URL for the icon
-    let baseUrl = process.env.CLIENT_URL || process.env.API_URL;
-    if (!baseUrl) {
-      baseUrl = process.env.NODE_ENV === 'production' 
-        ? 'https://faheemly.com' 
-        : 'http://localhost:3000';
+
+    // If S3 is enabled, upload the saved local file to S3 and remove local copy
+    let finalIconUrl = null;
+    if (storageService.isS3Enabled()) {
+      try {
+        finalIconUrl = await storageService.uploadIcon(req.file.path, req.file.filename, req.file.mimetype);
+      } catch (e) {
+        logger.error('S3 upload failed, falling back to local disk URL', e);
+      }
     }
-    baseUrl = baseUrl.replace(/\/$/, '');
-    const iconUrl = `${baseUrl}${relativeIconUrl}`;
+
+    // If S3 not used or upload failed, use local disk URL
+    if (!finalIconUrl) {
+      const relativeIconUrl = `/uploads/icons/${req.file.filename}`;
+      let baseUrl = process.env.CLIENT_URL || process.env.API_URL;
+      if (!baseUrl) {
+        baseUrl = process.env.NODE_ENV === 'production' 
+          ? 'https://faheemly.com' 
+          : 'http://localhost:3000';
+      }
+      baseUrl = baseUrl.replace(/\/$/, '');
+      finalIconUrl = `${baseUrl}${relativeIconUrl}`;
+    }
 
     // Update business widget config with new icon URL
     const business = await prisma.business.findUnique({
@@ -179,7 +210,7 @@ router.post('/upload-icon', authenticateToken, upload.single('icon'), async (req
     }
 
     const currentConfig = business.widgetConfig ? JSON.parse(business.widgetConfig) : {};
-    currentConfig.customIconUrl = iconUrl;
+    currentConfig.customIconUrl = finalIconUrl;
 
     await prisma.business.update({
       where: { id: businessId },
@@ -195,7 +226,7 @@ router.post('/upload-icon', authenticateToken, upload.single('icon'), async (req
     res.json({ 
       success: true,
       message: 'Icon uploaded successfully',
-      iconUrl: iconUrl,
+      iconUrl: finalIconUrl,
       widgetConfig: updatedBusiness?.widgetConfig ? JSON.parse(updatedBusiness.widgetConfig) : currentConfig
     });
   } catch (error) {

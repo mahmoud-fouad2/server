@@ -166,6 +166,22 @@ function validateEnv() {
     if (clientUrlToCheck && !clientUrlToCheck.startsWith('https://')) {
       warnings.push('⚠️  FRONTEND_URL/CLIENT_URL should use HTTPS in production');
     }
+
+    // Disallow localhost references in critical production settings
+    const forbiddenHostPatterns = [/localhost/i, /127\.0\.0\.1/];
+
+    if (process.env.DATABASE_URL && forbiddenHostPatterns.some(rx => rx.test(process.env.DATABASE_URL))) {
+      errors.push('❌ DATABASE_URL must not point to localhost (127.0.0.1) in production');
+    }
+
+    const corsOrigins = process.env.CORS_ORIGINS || '';
+    if (corsOrigins && forbiddenHostPatterns.some(rx => rx.test(corsOrigins))) {
+      errors.push('❌ CORS_ORIGINS must not include localhost or 127.0.0.1 in production');
+    }
+
+    if (clientUrlToCheck && forbiddenHostPatterns.some(rx => rx.test(clientUrlToCheck))) {
+      errors.push('❌ FRONTEND_URL/CLIENT_URL must not point to localhost (127.0.0.1) in production');
+    }
   }
 
   // Check recommended variables

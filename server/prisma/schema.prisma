@@ -196,6 +196,9 @@ model TicketMessage {
   senderId  String // User ID (Client or Admin)
   message   String   @db.Text
   isAdmin   Boolean  @default(false)
+  // Unread tracking: whether business or creator have read this message
+  isReadByBusiness Boolean @default(false)
+  isReadByCreator  Boolean @default(false)
   createdAt DateTime @default(now())
 
   ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
@@ -353,6 +356,25 @@ model AuditLog {
   @@index([action])
 }
 
+// General notifications for businesses / admins
+model Notification {
+  id         String   @id @default(cuid())
+  businessId String
+  title      String
+  message    String   @db.Text
+  link       String?  // Optional link to related resource (ticket, conversation, admin page)
+  meta       Json?
+  isRead     Boolean  @default(false)
+  level      String   @default("info") // info, warning, critical
+  createdAt  DateTime @default(now())
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([isRead])
+  @@index([createdAt])
+}
+
 // الرسائل
 model Message {
   id             String      @id @default(cuid())
@@ -362,6 +384,10 @@ model Message {
   tokensUsed     Int         @default(0)
   wasFromCache   Boolean     @default(false)
   aiModel        String? // grok, gpt-4, etc
+
+  // Read tracking
+  isReadByBusiness Boolean @default(false)
+  isReadByVisitor  Boolean @default(false)
 
   createdAt DateTime @default(now())
 

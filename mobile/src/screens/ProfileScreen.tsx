@@ -80,6 +80,9 @@ export default function ProfileScreen({ navigation }: any) {
         <TouchableOpacity onPress={() => navigation.navigate('Subscription' as any)} style={{ marginTop: 8 }}>
           <Text style={{ color: '#6D28D9' }}>الترقية إلى خطة مدفوعة</Text>
         </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('Resources' as any)} style={{ marginTop: 8 }}>
+          <Text style={{ color: '#6D28D9' }}>الموارد والمستندات</Text>
+        </TouchableOpacity>
       </View>
 
       <TouchableOpacity onPress={handleLogout} style={{ backgroundColor: '#EF4444', padding: 12, borderRadius: 8, alignItems: 'center' }}>

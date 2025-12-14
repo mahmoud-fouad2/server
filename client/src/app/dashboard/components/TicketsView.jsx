@@ -61,7 +61,10 @@ export default function TicketsView({ addNotification }) {
     setSelectedTicket(ticket);
     try {
       const data = await ticketApi.get(ticket.id);
+      // Mark messages as read for this ticket for current user/business
+      try { await ticketApi.markRead(ticket.id); } catch (e) {}
       setTicketMessages(data.messages);
+      try { window.dispatchEvent(new CustomEvent('unread:changed')); } catch (e) {}
     } catch (err) {
       console.error(err);
     }

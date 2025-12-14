@@ -31,6 +31,11 @@ if (!configuredFrontendUrl) {
   process.env.FRONTEND_URL = configuredFrontendUrl;
 }
 
+// Warn about ephemeral local uploads in production if S3 is not configured
+if (process.env.NODE_ENV === 'production' && !process.env.AWS_S3_BUCKET) {
+  logger.warn('No persistent object storage configured (AWS_S3_BUCKET not set). Uploaded widget icons stored on local disk may not persist across deploys.');
+}
+
 const isTestEnvironment = process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID !== undefined;
 
 // Validate environment configuration
@@ -129,6 +134,16 @@ if (allowedOrigins.length === 0) {
     // Development only: Allow localhost
     logger.warn('⚠️  CORS_ORIGINS not set. Development mode: allowing localhost only');
     allowedOrigins.push('http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002');
+  }
+}
+
+// Extra runtime guard: ensure no localhost is accidentally allowed in production CORS
+if (process.env.NODE_ENV === 'production') {
+  const localhostPattern = /localhost|127\.0\.0\.1/i;
+  const hasLocalhost = allowedOrigins.some(o => localhostPattern.test(o));
+  if (hasLocalhost) {
+    logger.error('🚨 SECURITY: Detected localhost/127.0.0.1 in CORS origins while in production - aborting startup');
+    process.exit(1);
   }
 }
 
@@ -247,6 +262,10 @@ app.use('/api/chat', chatRoutes);
 // Business routes
 const businessRoutes = require('./routes/business.routes');
 app.use('/api/business', businessRoutes);
+
+// Notifications
+const notificationsRoutes = require('./routes/notifications.routes');
+app.use('/api/notifications', notificationsRoutes);
 
 // Contact routes
 const contactRoutes = require('./routes/contact.routes');

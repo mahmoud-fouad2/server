@@ -40,9 +40,9 @@ const authenticateToken = async (req, res, next) => {
 
     // Distinguish JWT errors to avoid noisy stack traces for client-side token issues
     if (error && error.name === 'JsonWebTokenError') {
-      // invalid signature, malformed token, etc. Treat as unauthorized
+      // invalid signature, malformed token, etc. Treat as forbidden
       logger.warn('Token verification failed (JWT error)', { message: error.message });
-      return res.status(401).json({ error: 'Invalid token' });
+      return res.status(403).json({ error: 'Invalid token' });
     }
 
     // Other unexpected errors should still be logged as errors

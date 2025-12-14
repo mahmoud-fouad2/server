@@ -744,8 +744,19 @@ ${knowledgeContext}
   result.conversationStage = updatedState.stage;
   
   // 10. Add rating request if closing
-  if (intent.intent === 'CLOSING' && !result.response.includes('|RATING_REQUEST|')) {
-    result.response += ' |RATING_REQUEST|';
+  // Only append rating when intent strongly indicates closing and conversation state matches
+  try {
+    if (
+      intent.intent === 'CLOSING' &&
+      (intent.confidence || 0) >= 0.8 &&
+      updatedState && updatedState.stage === 'CLOSING' &&
+      !result.response.includes('|RATING_REQUEST|')
+    ) {
+      result.response += ' |RATING_REQUEST|';
+    }
+  } catch (e) {
+    // defensive - don't fail response formatting
+    logger.warn('Failed to append rating request flag', e.message || e);
   }
   
   return result;

@@ -109,7 +109,10 @@ exports.agentReply = asyncHandler(async (req, res) => {
       role: 'ASSISTANT',
       content: message,
       wasFromCache: false,
-      tokensUsed: 0
+      tokensUsed: 0,
+      // mark unread for visitor
+      isReadByBusiness: true,
+      isReadByVisitor: false
     }
   });
   
@@ -120,6 +123,9 @@ exports.agentReply = asyncHandler(async (req, res) => {
       status: 'AGENT_ACTIVE'
     }
   });
+
+  // Emit socket event to conversation (visitor) and return
+  try { const io = getIO(); io.to(`conversation_${conversationId}`).emit('message:new', { conversationId, message: message.substring(0,200) }); } catch (e) {}
 
   res.json(newMessage);
 });
@@ -239,13 +245,27 @@ exports.sendMessage = asyncHandler(async (req, res) => {
   }
 
   // Save User Message
-  await prisma.message.create({
+  const userMessage = await prisma.message.create({
     data: {
       conversationId: conversation.id,
       role: 'USER',
-      content: message
+      content: message,
+      // mark unread for business, visitor has read their own message
+      isReadByBusiness: false,
+      isReadByVisitor: true
     }
   });
+
+  // Create a notification for business and emit socket event
+  try {
+    await prisma.notification.create({ data: { businessId: resolvedBusinessId, title: 'New chat message', message: message.substring(0,200), link: `/conversations/${conversation.id}`, meta: { conversationId: conversation.id } } });
+    try {
+      const io = getIO();
+      io.to(`business_${resolvedBusinessId}`).emit('notification:new', { type: 'chat', conversationId: conversation.id, message: message.substring(0,200) });
+    } catch (e) {}
+  } catch (e) {
+    // non-fatal
+  }
 
   // Check if conversation is in handover mode
   if (conversation.status === 'HANDOVER_REQUESTED' || conversation.status === 'AGENT_ACTIVE') {

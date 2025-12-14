@@ -55,8 +55,9 @@ const errorHandler = (err, req, res, _next) => {
 
   // JWT errors
   if (err.name === 'JsonWebTokenError') {
+    // Treat invalid/malformed tokens as forbidden to match middleware behavior and tests
     const message = 'Invalid token';
-    error = new AppError(message, 401);
+    error = new AppError(message, 403);
   }
 
   if (err.name === 'TokenExpiredError') {

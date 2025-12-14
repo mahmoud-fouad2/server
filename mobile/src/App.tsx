@@ -63,6 +63,7 @@ export default function App() {
         <Stack.Screen name="Reset" component={ResetPasswordScreen} />
         <Stack.Screen name="WebLogin" component={WebLoginScreen} />
         <Stack.Screen name="Support" component={SupportScreen} />
+        <Stack.Screen name="Resources" component={require('./screens/ResourcesScreen').default} />
         <Stack.Screen name="Knowledge" component={KnowledgeScreen} />
         <Stack.Screen name="Subscription" component={require('./screens/SubscriptionScreen').default} />
         <Stack.Screen name="SubscriptionCheckout" component={require('./screens/SubscriptionCheckout').default} />

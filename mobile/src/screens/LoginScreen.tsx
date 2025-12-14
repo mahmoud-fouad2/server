@@ -22,10 +22,16 @@ export default function LoginScreen() {
   };
 
   const handleDemoLogin = async () => {
+    // Start a conversation directly with the Faheemly business bot
     try {
-      const resp = await login('demo', 'demo');
-      if (resp?.token) navigation.navigate('Chat' as any);
-    } catch (e) { Alert.alert('فشل تسجيل الدخول التجريبي'); }
+      const bizId = 'cmir2oyaz00013ltwis4xc4tp';
+      // sendMessage returns an object with conversationId and response
+      const { conversationId } = await (await import('../services/chatService')).sendMessage('مرحباً', bizId);
+      if (conversationId) navigation.navigate('Chat' as any, { conversationId });
+      else navigation.navigate('Chat' as any);
+    } catch (e) {
+      Alert.alert('فشل بدء المحادثة', String(e?.message || e));
+    }
   }
 
   const openWebLogin = () => navigation.navigate('WebLogin' as any);

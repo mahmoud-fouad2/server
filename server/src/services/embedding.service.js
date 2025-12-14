@@ -280,8 +280,16 @@ async function generateEmbedding(text, options = {}) {
     if (process.env.JEST_WORKER_ID) {
       throw new Error('No embedding provider configured. Set GEMINI_API_KEY.');
     }
-    
-    logger.warn('[Embedding] Production mode: attempting real embeddings but may fallback to fake if APIs fail');
+
+    // Avoid silently using fake embeddings in production. If no provider is
+    // configured and FORCE_FAKE_EMBEDDINGS is not explicitly set, throw an
+    // error to surface the misconfiguration instead of producing invalid
+    // vector search results.
+    if (!providersAvailable && !FORCE_FAKE) {
+      throw new Error('No embedding provider configured for production. Set GEMINI_API_KEY or another provider (DEEPSEEK_API_KEY, VOYAGE_API_KEY, etc.) to enable embeddings.');
+    }
+
+    logger.warn('[Embedding] Production mode: attempting real embeddings');
     // Try one more time with any available provider
     for (const p of priority) {
         try {
@@ -310,15 +318,21 @@ async function generateEmbedding(text, options = {}) {
         }
     }
     
-    // If all providers failed, use fake embeddings as last resort
-    logger.error('[Embedding] All providers failed in production, using fake embeddings as fallback');
-    const seed = Array.from(text).reduce((s, c) => (s * 31 + c.charCodeAt(0)) >>> 0, 17);
-    const dims = 768;
-    const vec = new Array(dims).fill(0).map((_, i) => {
-      const v = Math.sin(seed + i * 9973) * 0.5;
-      return Number((v).toFixed(6));
-    });
-    return vec;
+    // If all providers failed, surface an error instead of falling back to
+    // fake embeddings, unless FORCE_FAKE_EMBEDDINGS is explicitly enabled.
+    logger.error('[Embedding] All providers failed in production');
+    if (FORCE_FAKE) {
+      logger.warn('FORCE_FAKE_EMBEDDINGS is enabled — returning deterministic fake embedding (explicit override)');
+      const seed = Array.from(text).reduce((s, c) => (s * 31 + c.charCodeAt(0)) >>> 0, 17);
+      const dims = 768;
+      const vec = new Array(dims).fill(0).map((_, i) => {
+        const v = Math.sin(seed + i * 9973) * 0.5;
+        return Number((v).toFixed(6));
+      });
+      return vec;
+    }
+
+    throw new Error('Embedding providers are configured but failed to produce embeddings in production');
   }
 
   return null;

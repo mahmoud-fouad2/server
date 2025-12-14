@@ -41,8 +41,15 @@ export default function ChatScreen({ route, navigation }: any) {
 
     try {
       const res = await sendMessage(input, undefined, conversationId);
-      const newBotMessage = { id: (Date.now()+1).toString(), role: 'assistant', content: res };
+      // res may be a string or an object { response, conversationId, ... }
+      const botText = typeof res === 'string' ? res : (res.response || res);
+      const newBotMessage = { id: (Date.now()+1).toString(), role: 'assistant', content: botText };
       const updated = [...messages, newBotMessage];
+      // If backend returned a conversationId for this session, ensure it's saved for future fetches
+      if (!conversationId && typeof res === 'object' && res.conversationId) {
+        // replace route params to include conversationId
+        navigation.setParams({ conversationId: res.conversationId });
+      }
       setMessages(updated);
       if (conversationId) await saveMessages(conversationId, updated);
     } catch (e) {

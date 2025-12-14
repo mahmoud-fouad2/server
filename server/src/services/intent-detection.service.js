@@ -16,13 +16,15 @@ class IntentDetectionService {
     this.questionPatterns = [
       /[؟?]/, // Ends with question mark
       /^(ما|ماذا|من|أين|متى|كيف|لماذا|هل|what|where|when|how|why|who|which|can|do|does|is|are|will)/i,
+      /^(من\s+أنت|أنت\s+من|مين\s+أنت|انت\s+مين|who\s+are\s+you)/i,
       /(؟|\?)$/ // Ends with question mark
     ];
 
     // Closing patterns
+    // Keep closing patterns focused on clear goodbyes or thanks; avoid generic words like 'تمام' which are ambiguous
     this.closingPatterns = [
-      /^(شكراً|شكرا|مشكور|مشكورة|thanks|thank you|thank|bye|goodbye|مع السلامة|وداعاً|وداعا|to be continued|يتبع)/i,
-      /^(تمام|ok|okay|حسناً|حسنا|تمام|ماشي|تمام|تمام|تمام)/i
+      /^(شكراً|شكرا|مشكور|mشكور|thanks|thank you|thank|bye|goodbye|مع السلامة|وداعاً|وداعا|to be continued|يتبع)/i,
+      /^(bye|goodbye|see you|see ya|catch you)/i
     ];
 
     // Profanity/insult patterns (Arabic and English)
@@ -34,8 +36,7 @@ class IntentDetectionService {
     // Off-topic patterns (weather, time, general questions not related to business)
     this.offTopicPatterns = [
       /(الطقس|المناخ|weather|temperature|الوقت|time|الساعة|what time)/i,
-      /(كيف حالك|how are you|كيفك|أخبارك)/i,
-      /(من أنت|who are you|ما أنت|what are you)/i
+      /(كيف حالك|how are you|كيفك|أخبارك)/i
     ];
 
     // Pricing patterns
