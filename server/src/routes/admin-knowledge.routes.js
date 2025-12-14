@@ -23,13 +23,22 @@ router.post('/knowledge/pgvector-migrate/trigger/secret', asyncHandler(async (re
     if (!process.env.ADMIN_MIGRATE_SECRET) return res.status(500).json({ success: false, error: 'Admin migrate secret not configured' });
     if (!secret || secret !== process.env.ADMIN_MIGRATE_SECRET) return res.status(403).json({ success: false, error: 'Access denied. Invalid secret.' });
 
-    const spawn = require('child_process').spawn;
-    const node = process.execPath || 'node';
-    const createScript = require('path').join(__dirname, '../../scripts/create_pgvector_extension.js');
-    const migrateScript = require('path').join(__dirname, '../../scripts/migrate_embeddings_to_vector.js');
-
-    spawn(node, [createScript], { detached: true, stdio: 'ignore' }).unref();
-    spawn(node, [migrateScript], { detached: true, stdio: 'ignore' }).unref();
+    // Attempt to start migration runner in-process (safer for managed/free hosts)
+    try {
+      setImmediate(() => require('../../scripts/pgvector_migration_runner'));
+    } catch (e) {
+      // Fallback: try spawning child processes (may be blocked on some hosts)
+      const spawn = require('child_process').spawn;
+      const node = process.execPath || 'node';
+      const createScript = require('path').join(__dirname, '../../scripts/create_pgvector_extension.js');
+      const migrateScript = require('path').join(__dirname, '../../scripts/migrate_embeddings_to_vector.js');
+      try {
+        spawn(node, [createScript], { detached: true, stdio: 'ignore' }).unref();
+        spawn(node, [migrateScript], { detached: true, stdio: 'ignore' }).unref();
+      } catch (err) {
+        console.error('Failed to spawn migration scripts in fallback', err);
+      }
+    }
 
     try {
       const fs = require('fs');
