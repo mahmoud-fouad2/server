@@ -7,6 +7,10 @@ import BusinessesView from './components/BusinessesView';
 import PaymentsView from './components/PaymentsView';
 import AuditLogsView from './components/AuditLogsView';
 import IntegrationsView from './components/IntegrationsView';
+import AnalyticsView from './components/AnalyticsView';
+import ContentView from './components/ContentView';
+import SEOView from './components/SEOView';
+import MediaView from './components/MediaView';
 import {
   LayoutDashboard,
   Users,
@@ -376,6 +380,7 @@ export default function AdminDashboard() {
           />
           <SidebarItem id="users" icon={Users} label="المستخدمين" />
           <SidebarItem id="businesses" icon={Briefcase} label="الشركات" />
+          <SidebarItem id="analytics" icon={Database} label="التحليلات" />
           <SidebarItem id="payments" icon={CreditCard} label="المدفوعات" />
           <SidebarItem id="integrations" icon={Share2} label="التكاملات" />
           <SidebarItem id="audit" icon={Activity} label="سجل التدقيق" />
@@ -707,6 +712,38 @@ export default function AdminDashboard() {
                   <IntegrationsView />
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'analytics' && (
+          <div>
+            <div className="space-y-6">
+              <AnalyticsView />
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'content' && (
+          <div>
+            <div className="space-y-6">
+              <ContentView />
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'seo' && (
+          <div>
+            <div className="space-y-6">
+              <SEOView />
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'media' && (
+          <div>
+            <div className="space-y-6">
+              <MediaView />
             </div>
           </div>
         )}

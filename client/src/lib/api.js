@@ -214,6 +214,10 @@ export const adminApi = {
   getSettings: () => apiCall('/api/admin/settings'),
   updateSettings: data =>
     apiCall('/api/admin/settings', { method: 'PUT', body: data }),
+
+  // System settings (explicit system namespace)
+  getSystemSettings: () => apiCall('/api/admin/system/settings'),
+  updateSystemSetting: (key, value, description) => apiCall(`/api/admin/system/settings/${encodeURIComponent(key)}`, { method: 'PUT', body: { value, description } }),
   getAIModels: () => apiCall('/api/admin/ai-models'),
   addAIModel: data =>
     apiCall('/api/admin/ai-models', { method: 'POST', body: data }),
@@ -269,6 +273,16 @@ export const adminApi = {
   updateBusiness: (id, data) => apiCall(`/api/admin/businesses/${id}`, { method: 'PUT', body: data }),
   deleteBusiness: id => apiCall(`/api/admin/businesses/${id}`, { method: 'DELETE' }),
   activateBusiness: id => apiCall(`/api/admin/businesses/${id}/activate`, { method: 'POST' }),
+  // Knowledge / Content (Admin)
+  getKnowledgeList: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return apiCall(`/api/admin/knowledge${qs ? `?${qs}` : ''}`);
+  },
+  getKnowledgeStats: () => apiCall('/api/admin/knowledge/stats'),
+  deleteKnowledge: (id) => apiCall(`/api/admin/knowledge/${id}`, { method: 'DELETE' }),
+  // Media management
+  getMedia: () => apiCall('/api/admin/media'),
+  deleteMedia: (url) => apiCall('/api/admin/media', { method: 'DELETE', body: { url } }),
 };
 
 export const widgetApi = {

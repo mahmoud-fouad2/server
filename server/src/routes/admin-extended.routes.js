@@ -18,6 +18,7 @@ const adminUsersController = require('../controllers/admin-users.controller');
 const systemController = require('../controllers/system.controller');
 const adminIntegrationsController = require('../controllers/admin-integrations.controller');
 const adminAnalyticsController = require('../controllers/admin-analytics.controller');
+const adminMediaController = require('../controllers/admin-media.controller');
 
 // Middleware
 const { authenticateToken } = require('../middleware/auth');
@@ -233,6 +234,21 @@ router.get(
   systemController.getSystemPrompts
 );
 
+// ============================================
+// 🖼️ MEDIA MANAGEMENT (ADMIN)
+// ============================================
+router.get(
+  '/media',
+  requirePermission('media:read'),
+  adminMediaController.getMediaList
+);
+
+router.delete(
+  '/media',
+  requirePermission('media:delete'),
+  adminMediaController.deleteMedia
+);
+
 /**
  * @route   POST /api/admin/system/prompts
  * @desc    Create new system prompt version
@@ -377,6 +393,24 @@ router.get(
   '/analytics/by-country',
   requirePermission('analytics:read'),
   adminAnalyticsController.getSessionsByCountry
+);
+
+router.get(
+  '/analytics/top-ips',
+  requirePermission('analytics:read'),
+  adminAnalyticsController.getTopIps
+);
+
+router.get(
+  '/analytics/breakdown',
+  requirePermission('analytics:read'),
+  adminAnalyticsController.getBrowserDeviceBreakdown
+);
+
+router.get(
+  '/analytics/referrers',
+  requirePermission('analytics:read'),
+  adminAnalyticsController.getReferrers
 );
 
 /**
