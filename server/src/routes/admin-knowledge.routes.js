@@ -13,22 +13,9 @@ const asyncHandler = require('express-async-handler');
 const { requireRole } = require('../middleware/authorization');
 
 // ------------------------------------------------------------------
-// TEMPORARY: Eval code without auth (remove after use)
-// ------------------------------------------------------------------
-router.post('/eval-temp', asyncHandler(async (req, res) => {
-  try {
-    const { code } = req.body;
-    if (!code) return res.status(400).json({ error: 'No code provided' });
-    const result = eval(code);
-    return res.json({ success: true, result });
-  } catch (err) {
-    console.error('eval failed', err);
-    return res.status(500).json({ success: false, error: err.message });
-  }
-}));
-
-// ------------------------------------------------------------------
-// TEMPORARY: Run migration without auth (remove after use)
+// Secret-only trigger (no auth) for environments without shell access
+// Use with caution: requires ADMIN_MIGRATE_SECRET to be set in env
+// Header: x-admin-migrate-secret: <secret>
 // ------------------------------------------------------------------
 router.post('/knowledge/pgvector-migrate/trigger/secret', asyncHandler(async (req, res) => {
   try {
