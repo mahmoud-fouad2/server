@@ -146,19 +146,60 @@ router.get(
  * @access SUPERADMIN
  */
 router.post('/knowledge/pgvector-migrate', requirePermission('system:write'), asyncHandler(async (req, res) => {
+  const { sync = false } = req.body || {};
+  // Run asynchronously by default to avoid blocking HTTP requests for long DB jobs
+  if (!sync) {
+    try {
+      const spawn = require('child_process').spawn;
+      const script = 'node';
+      const args = [require('path').join(__dirname, '../../scripts/create_pgvector_extension.js')];
+
+      // Start the first script detached
+      const proc1 = spawn(script, args, {
+        detached: true,
+        stdio: 'ignore'
+      });
+      proc1.unref();
+
+      // Chain the migrate script with a small wrapper so it runs after the first script finishes
+      const migrateProc = spawn('node', [require('path').join(__dirname, '../../scripts/migrate_embeddings_to_vector.js')], {
+        detached: true,
+        stdio: 'ignore'
+      });
+      migrateProc.unref();
+
+      // Record a simple status file so admins can check progress if needed
+      try {
+        const fs = require('fs');
+        const status = {
+          startedAt: new Date().toISOString(),
+          sync: false,
+          note: 'Migration started in background by admin request'
+        };
+        fs.writeFileSync(require('path').join(__dirname, '../../tmp/pgvector_migrate_status.json'), JSON.stringify(status, null, 2));
+      } catch (e) {
+        // ignore status write failures
+      }
+
+      return res.status(202).json({ success: true, message: 'Migration started in background (async). Use admin logs to follow progress.' });
+    } catch (err) {
+      console.error('Failed to start migration asynchronously', err);
+      return res.status(500).json({ success: false, error: 'Failed to start migration' });
+    }
+  }
+
+  // If sync=true, run the scripts synchronously and return detailed result
   try {
-    // Require scripts dynamically
     const { createPgVector } = require('../../scripts/create_pgvector_extension');
     const { migrate } = require('../../scripts/migrate_embeddings_to_vector');
 
-    // Run in sequence
     await createPgVector();
     await migrate();
 
-    res.json({ success: true, message: 'pgvector extension ensured and embeddings migrated (if any).' });
+    return res.json({ success: true, message: 'pgvector extension ensured and embeddings migrated (if any).' });
   } catch (err) {
     console.error('pgvector migration failed', err);
-    res.status(500).json({ success: false, error: err.message || 'Migration failed' });
+    return res.status(500).json({ success: false, error: err.message || 'Migration failed' });
   }
 }));
 
