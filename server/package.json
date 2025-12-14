@@ -17,8 +17,7 @@
    
     "prisma:studio": "prisma studio",
     "install:pgvector": "node scripts/install-pgvector.js && npm run prisma:push",
-    "db:enable-pgvector": "node scripts/create_pgvector_extension.js",
-    "db:migrate-embeddings": "node scripts/migrate_embeddings_to_vector.js",
+    
     "db:seed": "node scripts/seed-faheemly-knowledge.js",
     "db:demo": "node scripts/create-demo-data.js",
     "check": "node scripts/check-infrastructure.js",
