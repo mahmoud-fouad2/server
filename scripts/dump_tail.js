@@ -1,1 +1,0 @@
-const fs=require('fs');const path='client/src/app/docs/page.jsx';const s=fs.readFileSync(path,'utf8');const tail=s.slice(-400);console.log('----TAIL START----');console.log(tail);console.log('----TAIL END----');console.log('CharCodes:');console.log(tail.split('').map(c=>c.charCodeAt(0)).join(' '));
