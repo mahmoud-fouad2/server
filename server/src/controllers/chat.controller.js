@@ -487,7 +487,16 @@ exports.sendMessage = asyncHandler(async (req, res) => {
     }
 
     // Sanitize response to remove provider/model signatures
-    const sanitized = responseValidator.sanitizeResponse(aiResult.response || '');
+    let sanitized = responseValidator.sanitizeResponse(aiResult.response || '');
+
+    // Defensive: remove any model-inserted rating markers (|RATING_REQUEST|)
+    try {
+      if (typeof sanitized === 'string' && /\|RATING_REQUEST\|/.test(sanitized)) {
+        sanitized = sanitized.replace(/\s*\|RATING_REQUEST\|\s*/g, ' ').trim();
+      }
+    } catch (e) {
+      logger.debug('Failed to sanitize rating marker from response', e.message || e);
+    }
 
     await prisma.message.create({
       data: {

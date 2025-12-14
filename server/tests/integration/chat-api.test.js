@@ -259,7 +259,9 @@ describe('Chat API Integration Tests', () => {
         .send(chatRequest);
 
       expect(res.status).toBe(200);
-      expect(res.body).toHaveProperty('response', 'Test AI response');
+      expect(res.body).toHaveProperty('response');
+      // Ensure we don't leak internal rating markers
+      expect(res.body.response).not.toContain('|RATING_REQUEST|');
       expect(res.body).toHaveProperty('conversationId', testConversation.id);
       expect(res.body).toHaveProperty('fromCache', false);
       expect(res.body).toHaveProperty('tokensUsed', 50);
