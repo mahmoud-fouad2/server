@@ -14,7 +14,7 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
     "start:prod": "npm run install:pgvector && npx prisma migrate deploy && node src/index.js",
-    "start:render": "npm run install:pgvector && npm run pgvector:migrate:safe && npx prisma db push && npm start",
+   
     "prisma:studio": "prisma studio",
     "install:pgvector": "node scripts/install-pgvector.js && npm run prisma:push",
     "db:enable-pgvector": "node scripts/create_pgvector_extension.js",
@@ -35,7 +35,7 @@
     "test:full": "npm run test:create-users && npm run test:comprehensive",
     "migrate:uploads": "node scripts/migrate-uploads-to-s3.js",
     "check:embeddings": "node scripts/check_embedding_providers.js",
-    "pgvector:migrate:safe": "node scripts/run_pgvector_migration_safely.js",
+   
     "lint:fix": "eslint 'src/**/*.js' --fix"
   },
   "keywords": [],
