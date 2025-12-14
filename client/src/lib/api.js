@@ -251,6 +251,15 @@ export const adminApi = {
   getIntegration: (type, businessId) => apiCall(`/api/admin/integrations/${type}?businessId=${businessId}`),
   upsertIntegration: (type, payload) => apiCall(`/api/admin/integrations/${type}`, { method: 'PUT', body: payload }),
   testIntegration: (type, payload) => apiCall(`/api/admin/integrations/${type}/test`, { method: 'POST', body: payload }),
+  // Analytics (Superadmin)
+  getAnalyticsOverview: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return apiCall(`/api/admin/analytics/overview${qs ? `?${qs}` : ''}`);
+  },
+  getAnalyticsByCountry: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return apiCall(`/api/admin/analytics/by-country${qs ? `?${qs}` : ''}`);
+  },
   // Businesses management (Admin)
   getBusinesses: (params = {}) => {
     const qs = new URLSearchParams(params).toString();
