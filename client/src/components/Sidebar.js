@@ -98,8 +98,9 @@ export default function Sidebar({ activeTab, setActiveTab, userRole }) {
     const fetchUnread = async () => {
       try {
         const data = await notificationsApi.getUnreadCounts();
-        const total = (data.ticketsUnread || 0) + (data.messagesUnread || 0) + (data.notificationsUnread || 0);
-        setUnreadCount(total);
+        // Show number of tickets that have unread messages (avoid counting individual ticket messages)
+        const ticketsWithUnread = data.ticketsUnread || 0;
+        setUnreadCount(ticketsWithUnread);
       } catch (err) {
         // ignore
       }

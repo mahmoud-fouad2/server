@@ -14,6 +14,18 @@ The Knowledge Base feature requires a database schema update. The migration comm
     npx prisma migrate dev --name add_knowledge_fields
     ```
 
+4.  **PGVector extension & embedding_vector**
+    If you receive errors about missing `embedding_vector` or pgvector, the repo contains a migration SQL and helper scripts to create the extension and add the column. You can run:
+
+    ```bash
+    # Apply Prisma migrations (adds the new schema migration we included)
+    npx prisma migrate deploy
+
+    # If the DB requires superuser to create extension, or you prefer to run helpers:
+    node scripts/create_pgvector_extension.js
+    node scripts/migrate_embeddings_to_vector.js
+    ```
+
 3.  **Restart the Server**
     After the migration is successful, restart your backend server to apply the changes.
 

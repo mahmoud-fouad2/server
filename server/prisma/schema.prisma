@@ -253,6 +253,12 @@ model KnowledgeChunk {
   businessId      String
   content         String   @db.Text
   embedding       Json?
+  // embedding_vector stores the pgvector column for fast vector search.
+  // Note: This uses a database-specific type (vector via pgvector extension).
+  // Prisma does not natively support pgvector, so we declare it as Unsupported
+  // to keep the schema in sync. A migration will be provided to create the
+  // extension and column in Postgres.
+  embedding_vector Unsupported("vector")?
   metadata        Json?
   createdAt       DateTime @default(now())
 
