@@ -1,0 +1,32 @@
+name: Run Prisma Migrations (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      env:
+        description: 'Target environment (staging/production)'
+        required: true
+        default: 'staging'
+
+jobs:
+  prisma-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: ./server
+
+      - name: Run migrations
+        env:
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+          # If running for production, make sure to set the secret appropriately in the workflow UI
+        run: npx prisma migrate deploy
+        working-directory: ./server

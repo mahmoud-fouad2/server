@@ -27,9 +27,6 @@ export default function ConversationsScreen({ navigation }: any) {
     })();
   }, []);
 
-      })();
-    }, []);
-
   const renderItem = ({ item }: any) => {
     return (
       <TouchableOpacity onPress={() => navigation.navigate('Chat', { conversationId: item.id })} style={{ padding: 14, marginVertical: 6, borderRadius: 12, backgroundColor: '#fff', shadowColor: '#000', shadowOpacity: 0.04, elevation: 2 }}>
