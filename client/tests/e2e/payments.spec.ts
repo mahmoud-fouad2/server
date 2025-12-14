@@ -32,22 +32,26 @@ test.describe('Admin Payments E2E', () => {
       await page.route('**/api/admin/payments/invoices*', route => route.fulfill({ status: 200, body: JSON.stringify(invoicesMock) }));
     }
 
-    // If running against a live site and an admin token is provided, inject it into localStorage so admin pages load.
-    if (process.env.PLAYWRIGHT_ADMIN_TOKEN) {
-      const token = process.env.PLAYWRIGHT_ADMIN_TOKEN;
-      const user = process.env.PLAYWRIGHT_ADMIN_USER || '';
-      await page.addInitScript((t, u) => {
-        try {
-          localStorage.setItem('token', t);
-          if (u) localStorage.setItem('user', u);
-        } catch (e) {}
-      }, token, user);
-    }
+    // Inject an admin token + user so the admin UI loads in both local (stubbed)
+    // and live modes. In CI or production runs you can set PLAYWRIGHT_ADMIN_TOKEN
+    // / PLAYWRIGHT_ADMIN_USER to override these values.
+    const token = process.env.PLAYWRIGHT_ADMIN_TOKEN || 'test-admin-token';
+    const user =
+      process.env.PLAYWRIGHT_ADMIN_USER || JSON.stringify({ id: 'test-admin', role: 'ADMIN' });
+    await page.addInitScript((t, u) => {
+      try {
+        localStorage.setItem('token', t);
+        localStorage.setItem('user', u);
+      } catch (e) {}
+    }, token, user);
   });
 
   test('can open gateways list and edit a gateway', async ({ page }) => {
     // Use absolute URL to avoid baseURL resolution issues when running locally
     await page.goto('http://localhost:3000/admin');
+
+    // Navigate to Payments tab to ensure the gateways section is visible
+    await page.getByRole('button', { name: /المدفوعات|Payments|Payments/ }).click();
 
     // Ensure gateways section exists and shows our mocked gateway (try both English/Arabic headers)
     await expect(page.getByText(/Gateways|بوابات الدفع/i)).toBeVisible();
@@ -86,6 +90,9 @@ test.describe('Admin Payments E2E', () => {
   test('can create a custom payment', async ({ page }) => {
     // Use absolute URL to avoid baseURL resolution issues when running locally
     await page.goto('http://localhost:3000/admin');
+
+    // Open Payments tab
+    await page.getByRole('button', { name: /المدفوعات|Payments|Payments/ }).click();
 
     // Click "Create Custom Payment" (label in Arabic might exist)
     const createButton = page.getByRole('button', { name: /إنشاء دفعة مخصصة|Create Custom Payment|Create Custom Payment/ });

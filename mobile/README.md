@@ -26,6 +26,15 @@ For dev/testing, add the API URL (point to the server running locally):
 API_URL=http://localhost:3002
 DEMO_USER_EMAIL=hello@faheemly.com
 DEMO_USER_PASSWORD=demo
+
+If your backend is deployed and available on the web (production or staging), point the mobile app to it by setting:
+
+```
+API_URL=https://your-backend.example.com
+WEB_URL=https://your-frontend.example.com
+```
+
+Or set these keys in `app.json` under `expo.extra` so Expo and EAS builds pick them up. This will make the Support/Knowledge screens load the real web pages directly and all API calls go to your live backend.
 ```
 
 4. Start Expo:

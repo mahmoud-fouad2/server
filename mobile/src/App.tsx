@@ -15,6 +15,8 @@ import WidgetWebView from './screens/WidgetWebView';
 import WizardHome from './screens/Wizard/WizardHome';
 import Profile from './screens/ProfileScreen';
 import WebLoginScreen from './screens/WebLoginScreen';
+import SupportScreen from './screens/SupportScreen';
+import KnowledgeScreen from './screens/KnowledgeScreen';
 
 export type RootStackParamList = {
   Splash: undefined;
@@ -50,6 +52,8 @@ export default function App() {
         <Stack.Screen name="Forgot" component={ForgotPasswordScreen} />
         <Stack.Screen name="Reset" component={ResetPasswordScreen} />
         <Stack.Screen name="WebLogin" component={WebLoginScreen} />
+        <Stack.Screen name="Support" component={SupportScreen} />
+        <Stack.Screen name="Knowledge" component={KnowledgeScreen} />
         <Stack.Screen name="Subscription" component={require('./screens/SubscriptionScreen').default} />
         <Stack.Screen name="SubscriptionCheckout" component={require('./screens/SubscriptionCheckout').default} />
       </Stack.Navigator>

@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, TextInput, Alert, Image } from 'react-native';
 import { getProfile, updateProfile, logout as apiLogout } from '../services/profileService';
+import BottomNav from '../../components/BottomNav';
+import BackButton from '../../components/BackButton';
 import { useNavigation } from '@react-navigation/native';
 
-export default function ProfileScreen() {
-  const navigation = useNavigation();
+export default function ProfileScreen({ navigation }: any) {
+  const nav = navigation || useNavigation();
   const [user, setUser] = useState<any>({ name: '', email: '', subscription: 'مجاني' });
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState('');
@@ -36,8 +38,10 @@ export default function ProfileScreen() {
     navigation.reset({ index: 0, routes: [{ name: 'Login' as any }] });
   };
 
+  const [tab, setTab] = useState('profile');
   return (
-    <View style={{ flex: 1, padding: 20, backgroundColor: '#F8FAFC' }}>
+    <View style={{ flex: 1, padding: 20, backgroundColor: '#F8FAFC', paddingBottom: 72 }}>
+      <BackButton onPress={() => nav.goBack()} label="العودة" />
       <View style={{ alignItems: 'center', marginBottom: 18 }}>
         <View style={{ backgroundColor: '#EEF2FF', width: 96, height: 96, borderRadius: 22, alignItems: 'center', justifyContent: 'center' }}>
           <Image source={require('../../assets/logo2.png')} style={{ width: 72, height: 72, resizeMode: 'contain' }} />
@@ -81,6 +85,17 @@ export default function ProfileScreen() {
       <TouchableOpacity onPress={handleLogout} style={{ backgroundColor: '#EF4444', padding: 12, borderRadius: 8, alignItems: 'center' }}>
         <Text style={{ color: '#fff' }}>تسجيل خروج</Text>
       </TouchableOpacity>
+      <BottomNav
+        current={tab}
+        onTab={key => {
+          setTab(key);
+          if (key === 'home') nav.navigate('Conversations');
+          if (key === 'chat') nav.navigate('Chat');
+          if (key === 'wizard') nav.navigate('Wizard');
+          if (key === 'support') nav.navigate('Support');
+          if (key === 'profile') return;
+        }}
+      />
     </View>
   );
 }

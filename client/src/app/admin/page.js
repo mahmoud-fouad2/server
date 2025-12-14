@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import BusinessesView from './components/BusinessesView';
 import PaymentsView from './components/PaymentsView';
 import AuditLogsView from './components/AuditLogsView';
+import IntegrationsView from './components/IntegrationsView';
 import {
   LayoutDashboard,
   Users,
@@ -376,6 +377,7 @@ export default function AdminDashboard() {
           <SidebarItem id="users" icon={Users} label="المستخدمين" />
           <SidebarItem id="businesses" icon={Briefcase} label="الشركات" />
           <SidebarItem id="payments" icon={CreditCard} label="المدفوعات" />
+          <SidebarItem id="integrations" icon={Share2} label="التكاملات" />
           <SidebarItem id="audit" icon={Activity} label="سجل التدقيق" />
           <SidebarItem id="bots" icon={Bot} label="البوتات والذكاء" />
           <SidebarItem id="design" icon={Palette} label="التصميم والألوان" />
@@ -691,6 +693,18 @@ export default function AdminDashboard() {
               <div className="grid grid-cols-1">
                 <div className="col-span-1">
                   <PaymentsView />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'integrations' && (
+          <div>
+            <div className="space-y-6">
+              <div className="grid grid-cols-1">
+                <div className="col-span-1">
+                  <IntegrationsView />
                 </div>
               </div>
             </div>

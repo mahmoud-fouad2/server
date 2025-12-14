@@ -20,6 +20,8 @@ Pre-deploy (must have):
     3. Apply on staging and run verification queries (e.g., `SELECT count(*) FROM "AuditLog";`).
     4. Then on production run: `npx prisma migrate deploy`.
 
+    - If you added integration models (WhatsAppIntegration, TelegramIntegration, APIIntegration), follow the same process for those migrations and verify they are applied in staging before production.
+
 - [ ] Verify environment configuration (NODE_ENV=production, NEXT_PUBLIC_API_URL, etc.)
 
 Deployment using GitHub Actions (manual trigger):
@@ -33,6 +35,7 @@ Post-deploy checks:
 - Inspect server logs for errors (Render / hosting provider dashboard)
 - Verify admin features: Login as Super Admin → Payments → Gateways (edit + test key overwrite), Create Custom Payment, Invoice list.
 - Verify audit logs (if available) capture gateway updates and admin actions.
+ - Ensure `ENCRYPTION_KEY` is set in production environment before enabling integrations (used to encrypt API keys and secrets). Example: `ENCRYPTION_KEY=$(openssl rand -base64 32)`
 
 Rollback plan:
 - If a deploy fails or critical issue is found, use hosting provider dashboard to roll back to previous stable version.

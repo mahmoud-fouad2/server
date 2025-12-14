@@ -42,6 +42,16 @@ class IntegrationsService {
       status: 'inactive'
     });
 
+    this.integrations.set('infoseed', {
+      name: 'Infoseed API',
+      type: 'knowledge',
+      config: {
+        baseUrl: process.env.INFOSEED_BASE_URL || 'https://api.infoseed.com',
+        apiKey: process.env.INFOSEED_API_KEY
+      },
+      status: 'inactive'
+    });
+
     this.integrations.set('salesforce', {
       name: 'Salesforce CRM',
       type: 'crm',
@@ -146,6 +156,11 @@ class IntegrationsService {
           throw new Error('HubSpot requires apiKey');
         }
         break;
+      case 'infoseed':
+        if (!config.apiKey) {
+          throw new Error('Infoseed requires apiKey');
+        }
+        break;
     }
   }
 
@@ -180,6 +195,9 @@ class IntegrationsService {
 
         case 'telegram':
           return await this.testTelegramConnection(integration);
+
+        case 'infoseed':
+          return await this.testInfoseedConnection(integration);
 
         case 'salesforce':
           return await this.testSalesforceConnection(integration);
@@ -288,6 +306,27 @@ class IntegrationsService {
       return {
         success: false,
         message: `HubSpot connection failed: ${error.message}`
+      };
+    }
+  }
+
+  async testInfoseedConnection(integration) {
+    try {
+      const url = integration.config.baseUrl || 'https://api.infoseed.com';
+      const response = await axios.get(`${url}/health`, {
+        headers: { 'Authorization': `Bearer ${integration.config.apiKey}` },
+        timeout: 5000
+      });
+
+      return {
+        success: response.status === 200,
+        message: response.status === 200 ? 'Infoseed connection successful' : 'Infoseed returned non-200',
+        data: response.data
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: `Infoseed connection failed: ${error.message}`
       };
     }
   }

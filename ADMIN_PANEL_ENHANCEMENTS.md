@@ -96,6 +96,17 @@
 - Added a manual production deployment workflow (`.github/workflows/deploy-prod.yml`) that can trigger Render deploys and optionally run Playwright against https://faheemly.com. See `DEPLOYMENT_TO_PROD.md` for the checklist and secrets required.
 - البحث في الرسائل
 
+### 5. تكاملات (Integrations)
+
+- ✅ **WhatsApp (Business API / Twilio)**: دعم تكوين رقم الهاتف، Access Token، وURL الـ API؛ زر "Test Connection" للتحقق من صحة الإعدادات.
+- ✅ **Telegram**: دعم تكوين Bot Token وWebhook URL وزر اختبار.
+- ✅ **Infoseed (infoseed.com)**: دعم تكوين Base URL وAPI Key — يمكن استخدامه لربط خدمة البحث/المعرفة الخارجية.
+- ✅ **Facebook Messenger**: تكوين Page Access Token، Base URL، وإرشادات ربط الويب هوك.
+
+> كل تكامل يتم حفظه في قواعد البيانات المناسبة (`WhatsAppIntegration`, `TelegramIntegration`, `APIIntegration`) ويتم تشفير المفاتيح الحساسة باستخدام متغير البيئة `ENCRYPTION_KEY`.
+
+الواجهة الإدارية الآن تعرض تعليمات مبسطة ومقروءة أسفل كل خدمة لمساعدة المشرف على الربط بسرعة وبشكل مرتب.
+
 ---
 
 ## 🔐 نظام الصلاحيات

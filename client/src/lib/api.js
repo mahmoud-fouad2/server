@@ -229,6 +229,11 @@ export const adminApi = {
     const qs = new URLSearchParams(params).toString();
     return apiCall(`/api/admin/system/audit-log${qs ? `?${qs}` : ''}`);
   },
+  // Integrations (Superadmin)
+  getIntegrations: () => apiCall('/api/admin/integrations'),
+  getIntegration: (type, businessId) => apiCall(`/api/admin/integrations/${type}?businessId=${businessId}`),
+  upsertIntegration: (type, payload) => apiCall(`/api/admin/integrations/${type}`, { method: 'PUT', body: payload }),
+  testIntegration: (type, payload) => apiCall(`/api/admin/integrations/${type}/test`, { method: 'POST', body: payload }),
   // Businesses management (Admin)
   getBusinesses: (params = {}) => {
     const qs = new URLSearchParams(params).toString();

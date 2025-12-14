@@ -7,11 +7,14 @@ import Step4 from './Step4_Assistant';
 import Step5 from './Step5_Channels';
 import Step6 from './Step6_Review';
 import { getOnboarding } from '../../services/onboardingService';
+import BackButton from '../../components/BackButton';
+import { useNavigation } from '@react-navigation/native';
 
 export default function WizardHome({ navigation }: any) {
   const [step, setStep] = useState(1);
   const [onboarding, setOnboarding] = useState<any>({});
-  
+  const nav = navigation || useNavigation();
+
   useEffect(() => {
     (async () => {
       const res = await getOnboarding();
@@ -23,6 +26,7 @@ export default function WizardHome({ navigation }: any) {
 
   return (
     <View style={{ flex: 1, padding: 16 }}>
+      <BackButton onPress={() => (step === 1 ? nav.goBack() : back())} label={step === 1 ? 'العودة' : 'السابق'} />
       <View style={{ marginBottom: 8 }}>
         <Text style={{ fontWeight: '700' }}>خطوة {step} من 6</Text>
       </View>

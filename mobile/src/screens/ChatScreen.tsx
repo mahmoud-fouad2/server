@@ -2,11 +2,16 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList } from 'react-native';
 import { sendMessage, getMessages } from '../services/chatService';
 import { getMessagesFromCache, saveMessages } from '../services/messageCache';
+import BottomNav from '../../components/BottomNav';
+import BackButton from '../../components/BackButton';
+import { useNavigation } from '@react-navigation/native';
 
-export default function ChatScreen({ route }: any) {
+export default function ChatScreen({ route, navigation }: any) {
   const [messages, setMessages] = useState<Array<{id: string; role: 'user' | 'assistant'; content: string}>>([]);
   const [input, setInput] = useState('');
   const conversationId: string | undefined = route?.params?.conversationId;
+  const [tab, setTab] = useState('chat');
+  const nav = navigation || useNavigation();
 
   useEffect(() => {
     (async () => {
@@ -54,7 +59,8 @@ export default function ChatScreen({ route }: any) {
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#f6f8fb', padding: 12 }}>
+    <View style={{ flex: 1, backgroundColor: '#f6f8fb', padding: 12, paddingBottom: 72 }}>
+      <BackButton onPress={() => nav.goBack()} label="العودة" />
       <FlatList data={messages} renderItem={renderItem} keyExtractor={(i)=>i.id} />
 
       <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
@@ -63,6 +69,17 @@ export default function ChatScreen({ route }: any) {
           <Text style={{ color: '#fff' }}>إرسال</Text>
         </TouchableOpacity>
       </View>
+      <BottomNav
+        current={tab}
+        onTab={key => {
+          setTab(key);
+          if (key === 'home') nav.navigate('Conversations');
+          if (key === 'chat') return;
+          if (key === 'wizard') nav.navigate('Wizard');
+          if (key === 'support') nav.navigate('Support');
+          if (key === 'profile') nav.navigate('Profile');
+        }}
+      />
     </View>
   );
 }

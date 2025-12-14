@@ -11,16 +11,18 @@ test.describe('Admin Audit Logs E2E', () => {
       await page.route('**/api/admin/system/audit-log*', route => route.fulfill({ status: 200, body: JSON.stringify({ data: logsMock, pagination: { total: 1, totalPages: 1, page: 1 } }) }));
     }
 
-    if (process.env.PLAYWRIGHT_ADMIN_TOKEN) {
-      const token = process.env.PLAYWRIGHT_ADMIN_TOKEN;
-      const user = process.env.PLAYWRIGHT_ADMIN_USER || '';
+      // Inject an admin token + user so the admin UI loads in both local (stubbed)
+      // and live modes. In CI or production runs you can set PLAYWRIGHT_ADMIN_TOKEN
+      // / PLAYWRIGHT_ADMIN_USER to override these values.
+      const token = process.env.PLAYWRIGHT_ADMIN_TOKEN || 'test-admin-token';
+      const user =
+        process.env.PLAYWRIGHT_ADMIN_USER || JSON.stringify({ id: 'test-admin', role: 'ADMIN' });
       await page.addInitScript((t, u) => {
         try {
           localStorage.setItem('token', t);
-          if (u) localStorage.setItem('user', u);
+          localStorage.setItem('user', u);
         } catch (e) {}
       }, token, user);
-    }
   });
 
   test('shows audit logs and supports filters', async ({ page }) => {

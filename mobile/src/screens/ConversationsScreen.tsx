@@ -1,11 +1,16 @@
+
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Image } from 'react-native';
 import { getConversations } from '../services/chatService';
 import { getProfile } from '../services/profileService';
+import BottomNav from '../../components/BottomNav';
+import { useNavigation } from '@react-navigation/native';
 
 export default function ConversationsScreen({ navigation }: any) {
   const [convos, setConvos] = useState<any[]>([]);
   const [subscription, setSubscription] = useState<string>('مجاني');
+  const [tab, setTab] = useState('home');
+  const nav = navigation || useNavigation();
 
   useEffect(() => {
     (async () => {
@@ -19,9 +24,11 @@ export default function ConversationsScreen({ navigation }: any) {
           { id: 'conv-1', name: 'Welcome', lastMessage: 'مرحباً! ابدأ محادثة جديدة الآن', unread: 0 },
           { id: 'conv-2', name: 'Billing', lastMessage: 'اشترك في الخطة Pro للحصول على 1000 رسالة', unread: 2 },
         ]);
-      }
     })();
   }, []);
+
+      })();
+    }, []);
 
   const renderItem = ({ item }: any) => {
     return (
@@ -39,7 +46,7 @@ export default function ConversationsScreen({ navigation }: any) {
   };
 
   return (
-    <View style={{ flex: 1, padding: 16, backgroundColor: '#F8FAFC' }}>
+    <View style={{ flex: 1, padding: 16, backgroundColor: '#F8FAFC', paddingBottom: 72 }}>
       <View style={{ marginBottom: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
         <View>
           <Text style={{ fontSize: 22, fontWeight: '800' }}>مرحباً بك!</Text>
@@ -60,6 +67,17 @@ export default function ConversationsScreen({ navigation }: any) {
       <TouchableOpacity onPress={() => navigation.navigate('Chat' as any)} style={{ position: 'absolute', right: 20, bottom: 30, backgroundColor: '#6D28D9', width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOpacity: 0.12, elevation: 6 }}>
         <Text style={{ color: '#fff', fontWeight: '700' }}>＋</Text>
       </TouchableOpacity>
+      <BottomNav
+        current={tab}
+        onTab={key => {
+          setTab(key);
+          if (key === 'home') return;
+          if (key === 'chat') nav.navigate('Chat');
+          if (key === 'wizard') nav.navigate('Wizard');
+          if (key === 'support') nav.navigate('Support');
+          if (key === 'profile') nav.navigate('Profile');
+        }}
+      />
     </View>
   );
 }

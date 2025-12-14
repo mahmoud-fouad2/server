@@ -16,6 +16,7 @@ const router = express.Router();
 // Controllers
 const adminUsersController = require('../controllers/admin-users.controller');
 const systemController = require('../controllers/system.controller');
+const adminIntegrationsController = require('../controllers/admin-integrations.controller');
 
 // Middleware
 const { authenticateToken } = require('../middleware/auth');
@@ -272,6 +273,50 @@ router.post(
 // ============================================
 // 🔧 API CONFIGURATION ROUTES
 // ============================================
+
+/**
+ * @route   GET /api/admin/integrations
+ * @desc    Get available integrations and their status
+ * @access  SUPERADMIN
+ */
+router.get(
+  '/integrations',
+  requirePermission('integrations:read'),
+  adminIntegrationsController.getIntegrations
+);
+
+/**
+ * @route   GET /api/admin/integrations/:type?businessId=xxx
+ * @desc    Get integration config for a business
+ * @access  SUPERADMIN
+ */
+router.get(
+  '/integrations/:type',
+  requirePermission('integrations:read'),
+  adminIntegrationsController.getIntegrationForBusiness
+);
+
+/**
+ * @route   PUT /api/admin/integrations/:type
+ * @desc    Upsert integration config for a business
+ * @access  SUPERADMIN
+ */
+router.put(
+  '/integrations/:type',
+  requirePermission('integrations:update'),
+  adminIntegrationsController.upsertIntegration
+);
+
+/**
+ * @route   POST /api/admin/integrations/:type/test
+ * @desc    Test integration credentials/config without persisting
+ * @access  SUPERADMIN
+ */
+router.post(
+  '/integrations/:type/test',
+  requirePermission('integrations:read'),
+  adminIntegrationsController.testIntegration
+);
 
 /**
  * @route   GET /api/admin/system/api-config

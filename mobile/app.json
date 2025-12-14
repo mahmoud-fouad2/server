@@ -14,9 +14,10 @@
       "**/*"
     ],
     "extra": {
-      "API_URL": "http://localhost:3002",
+      "API_URL": "https://fahimo-api.onrender.com",
+      "WEB_URL": "https://faheemly.com",
       "DEMO_USER_EMAIL": "hello@faheemly.com",
-      "DEMO_USER_PASSWORD": "demo"
+      "DEMO_USER_PASSWORD": "FaheemlyDemo2025!"
     },
     "android": {
       "package": "com.faheemly.app",
