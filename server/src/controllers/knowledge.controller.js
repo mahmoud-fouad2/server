@@ -561,6 +561,34 @@ exports.embedChunks = async (req, res) => {
   }
 };
 
+/**
+ * Regenerate missing chunks for existing KnowledgeBase entries for the resolved business
+ * @route POST /api/knowledge/regen-chunks
+ */
+exports.regenerateChunks = async (req, res) => {
+  try {
+    const businessId = await resolveBusinessId(req);
+    if (!businessId) return res.status(400).json({ error: 'Business ID missing or invalid' });
+
+    // Find KB entries for business that have no chunks
+    const kbs = await prisma.knowledgeBase.findMany({ where: { businessId } });
+    let createdChunks = 0;
+    for (const kb of kbs) {
+      const chunkCount = await prisma.knowledgeChunk.count({ where: { knowledgeBaseId: kb.id } });
+      if (chunkCount === 0) {
+        await createChunksForKB(kb);
+        createdChunks += 1;
+      }
+    }
+
+    await redisCache.invalidate(businessId);
+    res.json({ message: 'Regen completed', kbCount: kbs.length, createdChunks });
+  } catch (err) {
+    logger.error('regenerateChunks error', err);
+    res.status(500).json({ error: 'Failed to regenerate chunks' });
+  }
+};
+
 exports.reindexEmbeddings = async (req, res) => {
   let businessId = null;
   let lockKey = null;
