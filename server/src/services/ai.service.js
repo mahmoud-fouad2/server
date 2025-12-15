@@ -377,21 +377,26 @@ async function callProvider(providerKey, providerConfig, messages, options = {})
     });
 
     // On rate limit, try any configured backup keys for this provider before giving up
-    if (error.response?.status === 429 && Array.isArray(providerConfig.backupKeys) && providerConfig.backupKeys.length > 0) {
-      logger.warn('[HybridAI] Primary key rate-limited, attempting backups', { provider: providerConfig.name, backups: providerConfig.backupKeys.length });
-      for (const bk of providerConfig.backupKeys) {
-        try {
-          const tempCfg = { ...providerConfig, apiKey: bk };
-          const res = await performCall(tempCfg);
-          logger.info('[HybridAI] Backup key succeeded for provider', { provider: providerConfig.name });
-          return res;
-        } catch (bkErr) {
-          logger.warn('[HybridAI] Backup key failed', { provider: providerConfig.name, error: bkErr.message });
-          // continue to next backup
+    if (error.response?.status === 429) {
+      if (Array.isArray(providerConfig.backupKeys) && providerConfig.backupKeys.length > 0) {
+        logger.warn('[HybridAI] Primary key rate-limited, attempting backups', { provider: providerConfig.name, backups: providerConfig.backupKeys.length });
+        for (const bk of providerConfig.backupKeys) {
+          try {
+            const tempCfg = { ...providerConfig, apiKey: bk };
+            const res = await performCall(tempCfg);
+            logger.info('[HybridAI] Backup key succeeded for provider', { provider: providerConfig.name });
+            return res;
+          } catch (bkErr) {
+            logger.warn('[HybridAI] Backup key failed', { provider: providerConfig.name, error: bkErr.message });
+            // continue to next backup
+          }
         }
+        // If backups all failed, mark as rate-limited
+        logger.error('[HybridAI] All backup keys failed for provider', { provider: providerConfig.name });
+        throw new Error('RATE_LIMIT');
       }
-      // If backups all failed, fall through to mark rate-limited
-      logger.error('[HybridAI] All backup keys failed for provider', { provider: providerConfig.name });
+
+      // No backups configured — surface rate limit so caller marks provider as limited
       throw new Error('RATE_LIMIT');
     }
 
