@@ -449,10 +449,30 @@
     `;
     document.body.appendChild(container);
 
+        // Pre-chat form element (hidden by default)
+        const prechatFormHtml = `
+            <div id="fahimo-prechat" style="display:none;padding:16px;border-top:1px solid #eee;background:#fff;">
+                <div style="font-weight:600;margin-bottom:8px;">نرجو إدخال بعض المعلومات</div>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                    <input id="prechat-name" placeholder="الاسم" style="padding:10px;border:1px solid #e5e7eb;border-radius:8px;" />
+                    <input id="prechat-email" placeholder="البريد الإلكتروني (اختياري)" style="padding:10px;border:1px solid #e5e7eb;border-radius:8px;" />
+                    <input id="prechat-phone" placeholder="رقم الهاتف (اختياري)" style="padding:10px;border:1px solid #e5e7eb;border-radius:8px;" />
+                    <textarea id="prechat-request" placeholder="ملخص الطلب" rows="3" style="padding:10px;border:1px solid #e5e7eb;border-radius:8px;"></textarea>
+                    <div style="display:flex;gap:8px;justify-content:flex-end;">
+                        <button id="prechat-cancel" style="background:#f3f4f6;border:none;padding:8px 12px;border-radius:8px;cursor:pointer;">إلغاء</button>
+                        <button id="prechat-submit" style="background:var(--fahimo-primary);color:white;border:none;padding:8px 12px;border-radius:8px;cursor:pointer;">إرسال</button>
+                    </div>
+                </div>
+            </div>`;
+
+        const chatWindowEl = document.getElementById('fahimo-chat-window');
+        chatWindowEl.insertAdjacentHTML('beforeend', prechatFormHtml);
+
     // Logic (enhanced with rating and session management)
     try {
         const launcher = document.getElementById('fahimo-launcher');
         const chatWindow = document.getElementById('fahimo-chat-window');
+            const prechatEl = document.getElementById('fahimo-prechat');
         const closeBtn = document.getElementById('fahimo-close');
         const input = document.getElementById('fahimo-input');
         const sendBtn = document.getElementById('fahimo-send');
@@ -502,6 +522,12 @@
                     if (!welcome) welcome = "Hello! How can I help?";
                     addMessage(welcome, 'bot');
                 }
+
+                // If pre-chat is required, show prechat form before opening chat
+                const prechatFlag = safeGetItem(`fahimo_prechat_${businessId}_${sessionId}`);
+                if (data.preChatFormEnabled && !prechatFlag) {
+                    showPrechatForm(data.fields || []);
+                }
             })
             .catch(err => console.log('Fahimo: Could not load config'));
 
@@ -541,6 +567,61 @@
                 addMessage("Sorry, something went wrong.", 'bot');
             }
         }
+
+        // Pre-chat form functions
+        function showPrechatForm(fields = []) {
+            try {
+                const prechat = document.getElementById('fahimo-prechat');
+                if (!prechat) return;
+                prechat.style.display = 'block';
+                const firstInput = document.getElementById('prechat-name');
+                if (firstInput) firstInput.focus();
+            } catch (e) { console.error(e); }
+        }
+
+        function hidePrechatForm() {
+            const prechat = document.getElementById('fahimo-prechat');
+            if (prechat) prechat.style.display = 'none';
+        }
+
+        async function submitPrechatForm() {
+            const name = document.getElementById('prechat-name').value.trim();
+            const email = document.getElementById('prechat-email').value.trim();
+            const phone = document.getElementById('prechat-phone').value.trim();
+            const request = document.getElementById('prechat-request').value.trim();
+
+            if (!name || !request) {
+                alert('يرجى ملء الاسم وملخص الطلب على الأقل');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${apiUrl}/api/chat/pre-chat/${businessId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sessionId, name, email, phone, requestSummary: request })
+                });
+
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({ error: 'Unknown' }));
+                    throw new Error(err.error || `Server returned ${res.status}`);
+                }
+
+                const data = await res.json();
+                safeSetItem(`fahimo_prechat_${businessId}_${sessionId}`, 'true');
+                hidePrechatForm();
+                // open chat and set conversation id
+                conversationId = data.conversationId;
+                safeSetItem('fahimo_conversation_id', conversationId);
+                openChat();
+            } catch (error) {
+                console.error('Pre-chat submission error:', error);
+                alert('حدث خطأ في إرسال بيانات ما قبل المحادثة. حاول مرة أخرى.');
+            }
+        }
+
+        document.getElementById('prechat-submit').onclick = submitPrechatForm;
+        document.getElementById('prechat-cancel').onclick = () => { hidePrechatForm(); };
 
         // Add Message
         function addMessage(text, sender, id = null) {
