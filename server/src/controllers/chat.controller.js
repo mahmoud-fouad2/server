@@ -256,6 +256,62 @@ exports.sendMessage = asyncHandler(async (req, res) => {
     }
   });
 
+  // PRE-FORM / Contact collection: if business requires collecting contact info and it's missing,
+  // ask for name and phone and store preChatData until provided.
+  try {
+    const collect = business.widgetConfig?.collectContactInfo;
+    if (collect && !conversation.preChatData) {
+      const leadKeywords = /حجز|حجزت|باقة|طلب|حجز غرفة|booking|order|سجل/i;
+      if (leadKeywords.test(message)) {
+        // Create preChatData with placeholders
+        await prisma.conversation.update({
+          where: { id: conversation.id },
+          data: { preChatData: JSON.stringify({ name: null, phone: null, requested: true }) }
+        });
+
+        const askForContact = business.widgetConfig?.dialect === 'sa'
+          ? 'هلا، ممكن تعطيني اسمك ورقم جوالك عشان أساعدك؟'
+          : 'ممكن اسمع اسمك ورقم موبايلك عشان أكمل لك العملية؟';
+
+        await prisma.message.create({
+          data: {
+            conversationId: conversation.id,
+            role: 'ASSISTANT',
+            content: askForContact,
+            tokensUsed: 0,
+            wasFromCache: false,
+            aiModel: 'preform'
+          }
+        });
+
+        return res.json({ response: askForContact, conversationId: conversation.id, sessionId: visitorSessionData?.id || null });
+      }
+    }
+
+    // If conversation has preChatData and user supplied name or phone, update it
+    if (conversation.preChatData) {
+      let parsed = null;
+      try { parsed = JSON.parse(conversation.preChatData); } catch (e) { parsed = null; }
+      const phoneMatch = message.match(/(\+?\d[\d\s\-]{6,}\d)/);
+      const nameMatch = message.match(/(?:اسمي|أنا|انا)\s+([\p{L} ]{2,40})/iu);
+      let updated = false;
+      if (parsed) {
+        if (!parsed.phone && phoneMatch) { parsed.phone = phoneMatch[1].replace(/\s|\-/g, ''); updated = true; }
+        if (!parsed.name && nameMatch) { parsed.name = nameMatch[1].trim(); updated = true; }
+        // if message is short and looks like a name
+        if (!parsed.name && !parsed.phone && message.length < 40 && /^[\p{L} ]+$/u.test(message.trim())) {
+          parsed.name = message.trim(); updated = true;
+        }
+      }
+      if (updated) {
+        await prisma.conversation.update({ where: { id: conversation.id }, data: { preChatData: JSON.stringify(parsed) } });
+      }
+      // If both present, continue to normal AI flow (don't early return)
+    }
+  } catch (e) {
+    logger.warn('Preform contact collection failed', e.message || e);
+  }
+
   // Create a notification for business and emit socket event
   try {
     await prisma.notification.create({ data: { businessId: resolvedBusinessId, title: 'New chat message', message: message.substring(0,200), link: `/conversations/${conversation.id}`, meta: { conversationId: conversation.id } } });
