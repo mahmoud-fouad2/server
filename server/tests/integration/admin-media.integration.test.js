@@ -7,6 +7,8 @@ describe('Admin Media Endpoints', () => {
     const jwt = require('jsonwebtoken');
     const secret = process.env.JWT_SECRET || 'test-secret';
     token = jwt.sign({ role: 'SUPERADMIN' }, secret, { expiresIn: '1h' });
+    // Some file operations and auth checks can take longer on shared environments
+    jest.setTimeout(15000);
   });
 
   test('GET /api/admin/media should return list (auth required)', async () => {

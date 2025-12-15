@@ -4,16 +4,19 @@ const logger = require('../utils/logger');
 // Database configuration with connection pooling and optimization
 // If `PGBOUNCER_URL` is set, prefer it so connections are routed through pgbouncer.
 const effectiveDbUrl = process.env.PGBOUNCER_URL || process.env.DATABASE_URL;
+
+// Prisma v7 removed the `datasources` client option; ensure the effective
+// DATABASE_URL is set via environment variable before constructing the client.
+if (effectiveDbUrl && process.env.DATABASE_URL !== effectiveDbUrl) {
+  process.env.DATABASE_URL = effectiveDbUrl;
+}
+
 const prisma = new PrismaClient({
   log: process.env.NODE_ENV === 'development' ? ['query', 'info', 'warn', 'error'] : ['warn', 'error'],
-  datasources: {
-    db: {
-      url: effectiveDbUrl,
-    },
-  },
   // Connection pool settings for better stability
   __internal: {
     engine: {
+      type: 'binary',
       connectTimeout: 60000, // 60 seconds
       transactionTimeout: 60000,
     },

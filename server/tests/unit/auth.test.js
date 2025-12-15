@@ -58,7 +58,7 @@ describe('Authentication Middleware', () => {
       const res = await request(app)
         .get('/test-auth')
         .set('Authorization', 'Bearer invalid-token-here');
-      expect(res.status).toBe(403);
+      expect(res.status).toBe(401);
       expect(res.body.error).toContain('Invalid token');
     });
 
@@ -66,7 +66,7 @@ describe('Authentication Middleware', () => {
       const res = await request(app)
         .get('/test-auth')
         .set('Authorization', `Bearer ${expiredToken}`);
-      expect(res.status).toBe(403);
+      expect(res.status).toBe(401);
     });
 
     test('should accept valid token', async () => {

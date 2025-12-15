@@ -194,6 +194,26 @@ exports.getSystemPrompts = asyncHandler(async (req, res) => {
 });
 
 /**
+ * @desc    Update generic system settings (compatibility endpoint)
+ * @route   POST /api/admin/system-settings
+ * @access  Private (SUPERADMIN only)
+ */
+exports.updateSystemSettings = asyncHandler(async (req, res) => {
+  const { key, value } = req.body;
+  if (!key) {
+    return res.status(400).json({ success: false, error: 'Key is required' });
+  }
+
+  const upserted = await prisma.systemSetting.upsert({
+    where: { key },
+    create: { key, value: String(value || '') },
+    update: { value: String(value || '') }
+  });
+
+  res.json({ success: true, setting: upserted });
+});
+
+/**
  * @desc    Create new system prompt version
  * @route   POST /api/admin/system/prompts
  * @access  Private (SUPERADMIN only)

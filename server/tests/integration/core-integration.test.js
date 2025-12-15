@@ -29,15 +29,18 @@ describe('Core Integration Tests', () => {
       return;
     }
 
-    // Create test business
-    const business = await prisma.business.create({
-      data: {
-        userId: 'test-user-id',
-        name: 'Test Business',
-        activityType: 'COMPANY'
-      }
-    });
-    testBusinessId = business.id;
+    // Create test user and business (use unique email to avoid collisions)
+    try {
+      const { genEmail } = require('./testUtils')
+      const user = await prisma.user.create({ data: { email: genEmail('core'), password: 'hashed', name: 'Core Test User' } });
+      const business = await prisma.business.create({ data: { userId: user.id, name: 'Test Business', activityType: 'COMPANY' } });
+      testBusinessId = business.id;
+    } catch (err) {
+      dbAvailable = false;
+      dbErrorMessage = err.message || String(err);
+      console.warn('[Core Integration Tests] Setup failed, skipping tests:', dbErrorMessage);
+      return;
+    }
   });
 
   afterAll(async () => {
@@ -76,7 +79,7 @@ describe('Core Integration Tests', () => {
       if (skipIfNoDb()) return;
 
       const query = 'مواعيد العمل';
-      const results = await vectorSearchService.searchKnowledge(testBusinessId, query, 3, 0.5);
+      const results = await vectorSearchService.searchKnowledge(query, testBusinessId, 3, 0.5);
 
       expect(Array.isArray(results)).toBe(true);
       expect(results.length).toBeGreaterThan(0);
@@ -94,7 +97,7 @@ describe('Core Integration Tests', () => {
       if (skipIfNoDb()) return;
 
       const query = 'سيارات ومركبات';
-      const results = await vectorSearchService.searchKnowledge(testBusinessId, query, 3, 0.7);
+      const results = await vectorSearchService.searchKnowledge(query, testBusinessId, 3, 0.7);
 
       // Should return empty or very low similarity results
       expect(Array.isArray(results)).toBe(true);

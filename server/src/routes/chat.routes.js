@@ -37,6 +37,28 @@ router.post('/pre-chat/:businessId', preChatLimiter, chatController.submitPreCha
 
 router.post('/message', chatLimiter, validateChatMessage, chatController.sendMessage);
 
+// Backwards-compatible endpoint for older clients/tests posting ratings to /api/chat/rating
+router.post('/rating', async (req, res) => {
+  try {
+    const { conversationId, rating, feedback } = req.body;
+
+    if (!conversationId || !rating) {
+      return res.status(400).json({ error: 'Conversation ID and rating are required' });
+    }
+
+    if (rating < 1 || rating > 5) {
+      return res.status(400).json({ error: 'Rating must be between 1 and 5' });
+    }
+
+    const conversation = await prisma.conversation.update({ where: { id: conversationId }, data: { rating, feedback: feedback || null, status: 'CLOSED' } });
+
+    res.json({ success: true, conversation });
+  } catch (error) {
+    logger.error('Chat rating compatibility handler error', { error });
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
 // Admin / Dashboard routes (require authentication)
 router.get('/conversations', authenticateToken, chatController.getConversations);
 router.get('/:conversationId/messages', authenticateToken, chatController.getMessages);
@@ -83,6 +105,8 @@ router.post('/test', chatLimiter, async (req, res) => {
       logger.warn('Test Chat: knowledge search failed, continuing without KB', { error: e.message });
     }
 
+    // Debug: ensure test-ai path is exercised in tests
+    console.log('Test Chat: calling aiService.generateChatResponse');
     const aiResult = await aiService.generateChatResponse(
       message,
       business,
@@ -90,9 +114,24 @@ router.post('/test', chatLimiter, async (req, res) => {
       knowledgeContext,
       null
     );
+    console.log('Test Chat aiResult:', aiResult);
 
     // Sanitize AI response to remove any provider/model self-identification
-    const sanitizedResponse = responseValidator.sanitizeResponse(aiResult?.response || '');
+    let sanitizedResponse = responseValidator.sanitizeResponse(aiResult?.response || '');
+
+    // If sanitized result is empty, try to extract an answer field if AI returned structured JSON
+    if (!sanitizedResponse || typeof sanitizedResponse !== 'string' || sanitizedResponse.trim().length === 0) {
+      try {
+        const parsed = typeof aiResult.response === 'string' ? JSON.parse(aiResult.response) : aiResult.response;
+        if (parsed && (parsed.answer || parsed.answerText || parsed.text)) {
+          sanitizedResponse = parsed.answer || parsed.answerText || parsed.text;
+        }
+      } catch (e) {
+        // ignore parse errors and fall back to default greeting below
+      }
+    }
+
+    console.log('Test Chat sanitizedResponse:', sanitizedResponse);
 
     res.json({
       response: sanitizedResponse || 'مرحباً! كيف يمكنني مساعدتك؟',

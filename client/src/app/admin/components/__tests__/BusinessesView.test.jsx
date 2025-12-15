@@ -7,6 +7,8 @@ jest.mock('@/lib/api', () => ({
     getBusinesses: jest.fn().mockResolvedValue({ data: [], pagination: { totalPages: 1 } }),
     activateBusiness: jest.fn().mockResolvedValue({}),
     deleteBusiness: jest.fn().mockResolvedValue({}),
+    toggleBusinessCrm: jest.fn().mockResolvedValue({}),
+    toggleBusinessPreChat: jest.fn().mockResolvedValue({}),
   }
 }))
 
@@ -25,7 +27,7 @@ describe('BusinessesView', () => {
 
   test('renders list of businesses', async () => {
     const b = { id: 'b1', name: 'TestCo', ownerName: 'Ali', planType: 'PRO', isActive: true, createdAt: new Date().toISOString() }
-    adminApi.getBusinesses.mockResolvedValueOnce({ data: [b], pagination: { totalPages: 1 } })
+    adminApi.getBusinesses.mockResolvedValue({ data: [b], pagination: { totalPages: 1 } })
     render(<BusinessesView />)
     await waitFor(() => expect(adminApi.getBusinesses).toHaveBeenCalled())
     await waitFor(() => expect(screen.getByText('TestCo')).toBeInTheDocument())
@@ -49,5 +51,31 @@ describe('BusinessesView', () => {
     const deleteBtn = screen.getByText('حذف')
     fireEvent.click(deleteBtn)
     await waitFor(() => expect(adminApi.deleteBusiness).toHaveBeenCalledWith('b2'))
+  })
+
+  test('toggle prechat calls API', async () => {
+    const b = { id: 'b3', name: 'YCo', ownerName: 'M', planType: 'BASIC', isActive: true, preChatFormEnabled: false, crmLeadCollectionEnabled: false, createdAt: new Date().toISOString() }
+    adminApi.getBusinesses.mockResolvedValue({ data: [b], pagination: { totalPages: 1 } })
+    render(<BusinessesView />)
+    await waitFor(() => expect(adminApi.getBusinesses).toHaveBeenCalled())
+
+    window.confirm = jest.fn().mockReturnValue(true)
+
+    const prechatBtn = await screen.findByText('نموذج ما قبل الدردشة: معطل')
+    fireEvent.click(prechatBtn)
+    await waitFor(() => expect(adminApi.toggleBusinessPreChat).toHaveBeenCalledWith('b3', true))
+  })
+
+  test('toggle crm calls API', async () => {
+    const b = { id: 'b4', name: 'ZCo', ownerName: 'L', planType: 'BASIC', isActive: true, preChatFormEnabled: true, crmLeadCollectionEnabled: false, createdAt: new Date().toISOString() }
+    adminApi.getBusinesses.mockResolvedValue({ data: [b], pagination: { totalPages: 1 } })
+    render(<BusinessesView />)
+    await waitFor(() => expect(adminApi.getBusinesses).toHaveBeenCalled())
+
+    window.confirm = jest.fn().mockReturnValue(true)
+
+    const crmBtn = await screen.findByText('CRM: معطل')
+    fireEvent.click(crmBtn)
+    await waitFor(() => expect(adminApi.toggleBusinessCrm).toHaveBeenCalledWith('b4', true))
   })
 })

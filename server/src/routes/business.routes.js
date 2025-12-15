@@ -11,6 +11,7 @@ const {
 // logger intentionally not used in routes; use controller-level logging where required
 
 // Dashboard Routes
+router.get('/', authenticateToken, businessController.getSettings);
 router.get('/stats', authenticateToken, businessController.getDashboardStats);
 router.get('/chart-data', authenticateToken, businessController.getChartData);
 

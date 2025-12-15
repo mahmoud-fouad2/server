@@ -29,6 +29,8 @@ class VectorSearchService {
    */
   async searchKnowledge(query, businessId, limit = 5, threshold = null) {
     const originalQuery = query;
+    // Skip embedding generation in tests only when explicitly requested
+    if (process.env.NODE_ENV === 'test' && process.env.FAKE_VECTOR === 'true') return [];
     try {
       // Step 1: Generate embedding for the query
       const queryEmbedding = await embeddingService.generateEmbedding(query);
@@ -174,6 +176,16 @@ class VectorSearchService {
       .filter(chunk => chunk.matchScore > 0)
       .sort((a, b) => b.matchScore - a.matchScore)
       .slice(0, limit);
+
+      // If a rerank model is configured, attempt to rerank using an LLM scoring model
+      try {
+        const { rerankCandidates } = require('./rerank.service');
+        const reranked = await rerankCandidates(query, scoredResults);
+        return reranked;
+      } catch (e) {
+        // If rerank fails, return scored results
+        return scoredResults;
+      }
 
       logger.debug('Keyword search completed', { 
         businessId, 

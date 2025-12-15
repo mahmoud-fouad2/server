@@ -4,6 +4,12 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const prisma = new PrismaClient();
+const { genEmail } = require('./testUtils')
+
+// Ensure dependent services are mocked for deterministic behavior
+jest.mock('../../src/services/ai.service');
+jest.mock('../../src/services/vector-search.service');
+jest.mock('../../src/services/knowledge-base.service');
 
 let dbAvailable = true;
 let dbErrorMessage = null;
@@ -42,6 +48,14 @@ describe('Complete User Journey Integration Tests', () => {
   let conversationId;
 
   beforeAll(async () => {
+    // Ensure dependent services are mocked for deterministic behavior
+    jest.mock('../../src/services/ai.service');
+    jest.mock('../../src/services/vector-search.service');
+    jest.mock('../../src/services/knowledge-base.service');
+
+    const aiService = require('../../src/services/ai.service');
+    const vectorSearchService = require('../../src/services/vector-search.service');
+    const knowledgeBaseService = require('../../src/services/knowledge-base.service');
     // Import the app after mocking
     app = require('../../src/index');
 
@@ -97,31 +111,42 @@ describe('Complete User Journey Integration Tests', () => {
       return;
     }
 
-    // Clean up test data
-    await prisma.messageCache.deleteMany();
-    await prisma.message.deleteMany();
-    await prisma.conversation.deleteMany();
-    await prisma.knowledgeChunk.deleteMany();
-    await prisma.knowledgeBase.deleteMany();
-    await prisma.business.deleteMany();
-    await prisma.user.deleteMany();
+    // Clean up test data (scope to test records to avoid touching unrelated data)
+    await prisma.messageCache.deleteMany({ where: { query: { contains: 'Test' } } }).catch(() => {});
+    await prisma.message.deleteMany({ where: { content: { contains: 'Test' } } }).catch(() => {});
+    await prisma.conversation.deleteMany({ where: { preChatData: { contains: 'Test' } } }).catch(() => {});
+    await prisma.knowledgeChunk.deleteMany({ where: { content: { contains: 'معلومات تجريبية' } } }).catch(() => {});
+    await prisma.knowledgeBase.deleteMany({ where: { title: { contains: 'Test' } } }).catch(() => {});
+    // Only remove businesses created by this suite (those created via register() use 'register-' in email)
+    await prisma.business.deleteMany({ where: { user: { email: { contains: 'register-' } } } }).catch(() => {});
   });
 
   describe('User Registration and Business Setup', () => {
     runIfDbAvailable('should complete full user registration journey', async () => {
         // 1. Register new user
+      const email = genEmail('register')
       const registerResponse = await request(app)
         .post('/api/auth/register')
         .send({
-          email: 'test@example.com',
+          email,
           password: 'TestPass123!',
           name: 'Test User',
           businessName: 'Test Business',
           activityType: 'RESTAURANT',
           language: 'ar'
-        })
-        .expect(201);
+        });
 
+      // Helpful debug output on shared DBs
+      if (registerResponse.status !== 201) {
+        // eslint-disable-next-line no-console
+        console.error('Register failed response:', registerResponse.status, registerResponse.body);
+      }
+
+      expect(registerResponse.status).toBe(201);
+      if (registerResponse.body.success === undefined) {
+        // eslint-disable-next-line no-console
+        console.error('Register response body missing expected fields:', registerResponse.body);
+      }
       expect(registerResponse.body.success).toBe(true);
       expect(registerResponse.body.user).toBeDefined();
       expect(registerResponse.body.business).toBeDefined();
@@ -133,10 +158,7 @@ describe('Complete User Journey Integration Tests', () => {
       // 2. Verify user can login
       const loginResponse = await request(app)
         .post('/api/auth/login')
-        .send({
-          email: 'test@example.com',
-          password: 'TestPass123!'
-        })
+        .send({ email, password: 'TestPass123!' })
         .expect(200);
 
       expect(loginResponse.body.success).toBe(true);
@@ -148,7 +170,7 @@ describe('Complete User Journey Integration Tests', () => {
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 
-      expect(profileResponse.body.user.email).toBe('test@example.com');
+      expect(profileResponse.body.user.email).toBe(email);
       expect(profileResponse.body.business.name).toBe('Test Business');
     });
 

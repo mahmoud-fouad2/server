@@ -170,6 +170,71 @@ router.put('/leads/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// Add a note to a lead
+router.post('/leads/:id/notes', authenticateToken, async (req, res) => {
+  try {
+    const businessId = req.user.businessId;
+    const { id } = req.params;
+    const { message } = req.body;
+
+    if (!message || message.trim() === '') return res.status(400).json({ error: 'Message required' });
+
+    const note = await crmService.addNote(businessId, id, req.user.id, message);
+
+    res.json({ success: true, data: note });
+  } catch (error) {
+    logger.error('CRM add note error:', error);
+    res.status(500).json({ error: 'Failed to add note' });
+  }
+});
+
+// Get notes for a lead
+router.get('/leads/:id/notes', authenticateToken, async (req, res) => {
+  try {
+    const businessId = req.user.businessId;
+    const { id } = req.params;
+
+    const notes = await crmService.getNotes(businessId, id);
+
+    res.json({ success: true, data: notes });
+  } catch (error) {
+    logger.error('CRM get notes error:', error);
+    res.status(500).json({ error: 'Failed to fetch notes' });
+  }
+});
+
+// Assign a lead to an agent
+router.put('/leads/:id/assign', authenticateToken, async (req, res) => {
+  try {
+    const businessId = req.user.businessId;
+    const { id } = req.params;
+    const { userId } = req.body;
+
+    const updated = await crmService.assignLead(businessId, id, userId);
+
+    res.json({ success: true, data: updated });
+  } catch (error) {
+    logger.error('CRM assign error:', error);
+    res.status(500).json({ error: 'Failed to assign lead' });
+  }
+});
+
+// Update lead status
+router.put('/leads/:id/status', authenticateToken, async (req, res) => {
+  try {
+    const businessId = req.user.businessId;
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const updated = await crmService.updateStatus(businessId, id, status);
+
+    res.json({ success: true, data: updated });
+  } catch (error) {
+    logger.error('CRM status update error:', error);
+    res.status(500).json({ error: 'Failed to update status' });
+  }
+});
+
 // Delete lead
 router.delete('/leads/:id', authenticateToken, async (req, res) => {
   try {

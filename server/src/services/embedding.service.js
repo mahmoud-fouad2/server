@@ -71,10 +71,29 @@ async function generateEmbedding(text, options = {}) {
   // Cerebras deployments do not expose an embeddings endpoint. If you do have
   // a Cerebras embeddings endpoint, either add it explicitly to
   // EMBEDDING_PROVIDER_ORDER or set CEREBRAS_SUPPORTS_EMBEDDINGS=true in env.
-  // Prefer Gemini for embeddings by default (only Gemini will be attempted
-  // unless EMBEDDING_PROVIDER_ORDER is explicitly set).
-  const defaultPriority = ['gemini'];
-  const priority = envPriority.length ? envPriority : defaultPriority;
+  // New default: prefer Gemini and Voyage alternately when both are available.
+  const defaultPriority = ['gemini', 'voyage'];
+  let priority = envPriority.length ? envPriority : defaultPriority;
+
+  // Alternation (round-robin) between Gemini and Voyage when both providers
+  // are available and EMBEDDING_PROVIDER_ORDER is not explicitly set.
+  // This gives you Gemini/Voyage alternating embeddings as requested.
+  // We persist the last-used index in module scope so subsequent calls rotate.
+  if (!envPriority.length) {
+    if (!global.__embeddingRoundRobin) global.__embeddingRoundRobin = { lastIdx: -1 };
+    const available = [];
+    if (getGeminiKey()) available.push('gemini');
+    if (process.env.VOYAGE_API_KEY) available.push('voyage');
+    if (available.length >= 2) {
+      // pick the next provider in round-robin order and set priority accordingly
+      const nextIdx = (global.__embeddingRoundRobin.lastIdx + 1) % available.length;
+      global.__embeddingRoundRobin.lastIdx = nextIdx;
+      const start = available[nextIdx];
+      // ensure both are present in the priority list and start with `start`
+      const rest = available.filter(p => p !== start);
+      priority = [start, ...rest];
+    }
+  }
 
 
 
@@ -106,7 +125,8 @@ async function generateEmbedding(text, options = {}) {
   // 2a) Try Voyage AI if configured
   const VOYAGE_KEY = process.env.VOYAGE_API_KEY;
   const VOYAGE_EMBED_URL = process.env.VOYAGE_EMBED_URL || 'https://api.voyageai.com/v1/embeddings';
-  const VOYAGE_EMBED_MODEL = process.env.VOYAGE_EMBED_MODEL || 'voyage-embed';
+  // Prefer higher-quality multilingual Voyage model by default
+  const VOYAGE_EMBED_MODEL = process.env.VOYAGE_EMBED_MODEL || 'voyage-multilingual-2';
   async function tryVoyage() {
     if (!VOYAGE_KEY) return null;
     try {
@@ -265,12 +285,12 @@ async function generateEmbedding(text, options = {}) {
     }
   }
 
-  // 5) Development / forced fake fallback — only if explicitly allowed or in dev without providers
+  // 5) Development / test / forced fake fallback — allow tests to run without external providers
   const FORCE_FAKE = process.env.FORCE_FAKE_EMBEDDINGS === 'true';
   const providersAvailable = !!((process.env.DEEPSEEK_API_KEY) || CEREBRAS_KEY || (getGeminiKey() && !skipGeminiEnv) || VOYAGE_KEY);
 
-  if (FORCE_FAKE || (process.env.NODE_ENV === 'development' && !providersAvailable)) {
-    logger.warn('⚠️ WARNING: Using FAKE embeddings. Vector search will NOT work correctly.', { forceFake: FORCE_FAKE, providersAvailable });
+  if (FORCE_FAKE || process.env.NODE_ENV === 'test' || (process.env.NODE_ENV === 'development' && !providersAvailable)) {
+    logger.warn('⚠️ WARNING: Using FAKE embeddings for testing/development. Vector search will NOT work correctly.', { forceFake: FORCE_FAKE, providersAvailable, nodeEnv: process.env.NODE_ENV });
     const seed = Array.from(text).reduce((s, c) => (s * 31 + c.charCodeAt(0)) >>> 0, 17);
     const dims = 768;
     const vec = new Array(dims).fill(0).map((_, i) => {

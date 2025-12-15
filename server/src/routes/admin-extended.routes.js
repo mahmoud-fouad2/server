@@ -79,6 +79,9 @@ router.post(
   adminUsersController.createUser
 );
 
+// Compatibility endpoint for older admin clients/tests
+router.post('/system-settings', requirePermission('system:update'), systemController.updateSystemSettings);
+
 /**
  * @route   PUT /api/admin/users/:id
  * @desc    Update user details

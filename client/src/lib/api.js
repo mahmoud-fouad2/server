@@ -273,6 +273,24 @@ export const adminApi = {
   updateBusiness: (id, data) => apiCall(`/api/admin/businesses/${id}`, { method: 'PUT', body: data }),
   deleteBusiness: id => apiCall(`/api/admin/businesses/${id}`, { method: 'DELETE' }),
   activateBusiness: id => apiCall(`/api/admin/businesses/${id}/activate`, { method: 'POST' }),
+  // Admin CRM / Super Admin helpers
+  getCrmBusinesses: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return apiCall(`/api/admin/crm/businesses${qs ? `?${qs}` : ''}`);
+  },
+  toggleBusinessCrm: (id, enabled) => apiCall(`/api/admin/crm/businesses/${id}/toggle`, { method: 'PUT', body: { enabled } }),
+  toggleBusinessPreChat: (id, enabled) => apiCall(`/api/admin/crm/businesses/${id}/pre-chat`, { method: 'PUT', body: { enabled } }),
+  getAdminCrmLeads: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return apiCall(`/api/admin/crm/leads${qs ? `?${qs}` : ''}`);
+  },
+  getAdminCrmLeadById: (id) => apiCall(`/api/admin/crm/leads/${id}`),
+  deleteAdminCrmLead: id => apiCall(`/api/admin/crm/leads/${id}`, { method: 'DELETE' }),
+  bulkUpdateCrmLeads: (payload) => apiCall('/api/crm/leads/bulk-update', { method: 'POST', body: payload }),
+  getAdminCrmStats: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return apiCall(`/api/admin/crm/stats${qs ? `?${qs}` : ''}`);
+  },
   // Knowledge / Content (Admin)
   getKnowledgeList: (params = {}) => {
     const qs = new URLSearchParams(params).toString();

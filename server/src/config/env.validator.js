@@ -58,6 +58,14 @@ const REQUIRED_ENV_VARS = {
     required: false,
     description: 'VoyageAI API key for AI responses and embeddings'
   },
+  VOYAGE_EMBED_MODEL: {
+    required: false,
+    description: 'Voyage embedding model name (default voyage-multilingual-2)'
+  },
+  RERANK_MODEL: {
+    required: false,
+    description: 'Optional rerank model name for LLM-based reranking (e.g., rerank-2-lite)'
+  },
   
   // Client
   CLIENT_URL: {
