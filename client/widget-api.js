@@ -149,6 +149,12 @@
             font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
         }
         :root {
+
+                /* small helper for smooth entry when animating from launcher */
+                #fahimo-chat-window {
+                    opacity: 0; /* initial hidden state; JS will set to 1 when opened */
+                    transition: opacity 220ms ease, transform 280ms cubic-bezier(0.16, 1, 0.3, 1);
+                }
             --fahimo-primary: #003366;
             --fahimo-accent: #00D4AA;
             --fahimo-bg: #ffffff;
@@ -605,6 +611,29 @@
             }
             // Focus input for convenience
             setTimeout(() => { input && input.focus(); }, 50);
+                // Desktop: animate from launcher position to chat window
+                if (window.innerWidth > 640) {
+                    try {
+                        const lr = launcher.getBoundingClientRect();
+                        const wr = chatWindow.getBoundingClientRect();
+                        const dx = (lr.left + lr.width / 2) - (wr.left + wr.width / 2);
+                        const dy = (lr.top + lr.height / 2) - (wr.top + wr.height / 2);
+                        // Start from transform (offset to launcher + scaled down)
+                        chatWindow.style.transform = `translate(${dx}px, ${dy}px) scale(0.65)`;
+                        chatWindow.style.opacity = '0';
+                        // Trigger transition to identity
+                        requestAnimationFrame(() => {
+                            chatWindow.style.transform = '';
+                            chatWindow.style.opacity = '1';
+                        });
+                    } catch (e) {
+                        // if anything fails, fallback to simple fade in
+                        chatWindow.style.opacity = '1';
+                    }
+                } else {
+                    // mobile: simple fade-in handled by CSS/visibility
+                    chatWindow.style.opacity = '1';
+                }
         }
 
         function closeWidget() {
@@ -617,6 +646,28 @@
             document.body.style.overflow = '';
             launcher.style.opacity = '1';
             launcher.style.pointerEvents = '';
+                // Animate back to launcher on desktop
+                if (window.innerWidth > 640) {
+                    try {
+                        const lr = launcher.getBoundingClientRect();
+                        const wr = chatWindow.getBoundingClientRect();
+                        const dx = (lr.left + lr.width / 2) - (wr.left + wr.width / 2);
+                        const dy = (lr.top + lr.height / 2) - (wr.top + wr.height / 2);
+                        // animate to launcher position and scale down
+                        chatWindow.style.transform = `translate(${dx}px, ${dy}px) scale(0.65)`;
+                        chatWindow.style.opacity = '0';
+                        const cleanup = () => {
+                            chatWindow.style.transform = '';
+                            chatWindow.style.opacity = '';
+                            chatWindow.removeEventListener('transitionend', cleanup);
+                        };
+                        chatWindow.addEventListener('transitionend', cleanup);
+                    } catch (e) {
+                        chatWindow.style.opacity = '0';
+                    }
+                } else {
+                    chatWindow.style.opacity = '0';
+                }
         }
 
         launcher.onclick = () => { isOpen ? closeWidget() : openWidget(); };
