@@ -296,6 +296,22 @@ class CrmService {
    * Bulk update leads
    */
   async bulkUpdateLeads(businessId, leadIds, updates) {
+    // Only allow certain fields to be bulk-updated
+    const allowed = ['status', 'assignedTo'];
+    const keys = Object.keys(updates || {});
+    for (const k of keys) {
+      if (!allowed.includes(k)) throw new Error(`Invalid update field: ${k}`);
+    }
+
+    // If assigning to a user, validate the user exists and belongs to the business (or is SUPERADMIN)
+    if (updates && updates.assignedTo) {
+      const user = await prisma.user.findUnique({ where: { id: updates.assignedTo } });
+      if (!user) throw new Error('User not found');
+      if (user.role !== 'SUPERADMIN' && user.employerId !== businessId) {
+        throw new Error('User does not belong to the business');
+      }
+    }
+
     return await prisma.crmLead.updateMany({
       where: {
         businessId,
@@ -318,6 +334,64 @@ class CrmService {
   }
 
   /**
+   * Add a note to a lead
+   */
+  async addNote(businessId, leadId, authorId, message) {
+    // Ensure the lead belongs to the business
+    const lead = await prisma.crmLead.findFirst({ where: { id: leadId, businessId } });
+    if (!lead) throw new Error('Lead not found');
+
+    return await prisma.crmLeadNote.create({
+      data: {
+        leadId,
+        authorId,
+        message
+      }
+    });
+  }
+
+  /**
+   * Get notes for a lead
+   */
+  async getNotes(businessId, leadId) {
+    const lead = await prisma.crmLead.findFirst({ where: { id: leadId, businessId } });
+    if (!lead) return [];
+
+    return await prisma.crmLeadNote.findMany({
+      where: { leadId },
+      orderBy: { createdAt: 'desc' },
+      include: { author: { select: { id: true, name: true, email: true } } }
+    });
+  }
+
+  /**
+   * Assign lead to a user (agent)
+   */
+  async assignLead(businessId, leadId, userId) {
+    const lead = await prisma.crmLead.findFirst({ where: { id: leadId, businessId } });
+    if (!lead) throw new Error('Lead not found');
+
+    // Validate the user exists and belongs to the business (or is SUPERADMIN)
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new Error('User not found');
+    if (user.role !== 'SUPERADMIN' && user.employerId !== businessId) {
+      throw new Error('User does not belong to the business');
+    }
+
+    return await prisma.crmLead.update({ where: { id: leadId }, data: { assignedTo: userId } });
+  }
+
+  /**
+   * Update lead status
+   */
+  async updateStatus(businessId, leadId, status) {
+    const lead = await prisma.crmLead.findFirst({ where: { id: leadId, businessId } });
+    if (!lead) throw new Error('Lead not found');
+
+    return await prisma.crmLead.update({ where: { id: leadId }, data: { status } });
+  }
+
+  /**
    * Get lead by ID
    */
   async getLeadById(businessId, leadId) {
@@ -333,7 +407,14 @@ class CrmService {
             name: true,
             activityType: true
           }
-        }
+        },
+        assigned: {
+          select: { id: true, name: true, email: true }
+        },
+        // include last 10 notes
+        _count: true,
+        // lightweight notes preview
+        // (notes are fetched with separate endpoint when needed)
       }
     });
   }

@@ -53,11 +53,16 @@ exports.register = async (req, res) => {
       validActivityType = 'OTHER';
     }
 
+    // Sanitize inputs to prevent XSS
+    const { sanitizeInput } = require('../utils/sanitize');
+    const safeName = sanitizeInput(name);
+    const safeBusinessName = sanitizeInput(businessName || `${name}'s Business`);
+
     // Create User and Business in transaction
     const result = await prisma.$transaction(async (prisma) => {
       const user = await prisma.user.create({
         data: {
-          name,
+          name: safeName,
           email,
           password: hashedPassword,
           role: 'CLIENT'
@@ -67,7 +72,7 @@ exports.register = async (req, res) => {
       const business = await prisma.business.create({
         data: {
           userId: user.id,
-          name: businessName || `${name}'s Business`,
+          name: safeBusinessName,
           activityType: validActivityType,
           planType: 'TRIAL',
           trialEndsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days trial
@@ -85,6 +90,7 @@ exports.register = async (req, res) => {
     );
 
     res.status(201).json({ 
+      success: true,
       message: 'Registration successful', 
       token,
       user: { id: result.user.id, name: result.user.name, email: result.user.email, businessId: result.business.id },
@@ -128,6 +134,7 @@ exports.login = async (req, res) => {
     );
 
     res.json({
+      success: true,
       message: 'Login successful',
       token,
       user: { id: user.id, name: user.name, email: user.email, role: user.role, businessId },
@@ -197,6 +204,7 @@ exports.demoLogin = async (req, res) => {
     );
 
     res.json({
+      success: true,
       message: 'Demo login successful',
       token,
       user: { id: user.id, name: user.name, email: user.email, role: user.role, businessId },
@@ -240,8 +248,9 @@ exports.getProfile = async (req, res) => {
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     const businessId = payload.businessId || user.businesses?.[0]?.id;
+    const business = user.businesses?.find(b => b.id === businessId) || user.businesses?.[0] || null;
 
-    res.json({ user: { id: user.id, name: user.name, email: user.email, role: user.role, businessId }, businesses: user.businesses || [] });
+    res.json({ user: { id: user.id, name: user.name, email: user.email, role: user.role, businessId }, business, businesses: user.businesses || [] });
   } catch (error) {
     logger.error('Get profile failed', error);
     res.status(500).json({ error: 'Failed to fetch profile' });

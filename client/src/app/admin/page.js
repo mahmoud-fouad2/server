@@ -11,6 +11,7 @@ import AnalyticsView from './components/AnalyticsView';
 import ContentView from './components/ContentView';
 import SEOView from './components/SEOView';
 import MediaView from './components/MediaView';
+import AdminCrmView from './components/AdminCrmView'
 import {
   LayoutDashboard,
   Users,
@@ -383,6 +384,7 @@ export default function AdminDashboard() {
           <SidebarItem id="analytics" icon={Database} label="التحليلات" />
           <SidebarItem id="payments" icon={CreditCard} label="المدفوعات" />
           <SidebarItem id="integrations" icon={Share2} label="التكاملات" />
+          <SidebarItem id="crm" icon={Shield} label="CRM و العملاء" />
           <SidebarItem id="audit" icon={Activity} label="سجل التدقيق" />
           <SidebarItem id="bots" icon={Bot} label="البوتات والذكاء" />
           <SidebarItem id="design" icon={Palette} label="التصميم والألوان" />
@@ -710,6 +712,18 @@ export default function AdminDashboard() {
               <div className="grid grid-cols-1">
                 <div className="col-span-1">
                   <IntegrationsView />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'crm' && (
+          <div>
+            <div className="space-y-6">
+              <div className="grid grid-cols-1">
+                <div className="col-span-1">
+                  <AdminCrmView />
                 </div>
               </div>
             </div>

@@ -10,7 +10,7 @@ class KnowledgeBaseService {
    * @param {string} title - Optional title for the content
    * @returns {Promise<Object>} Processing result
    */
-  async processKnowledgeBase(businessId, content, title = '') {
+  async processKnowledgeBase(businessId, content, title = '', knowledgeBaseId = null) {
     try {
       logger.info('Knowledge base processing started', { businessId, contentLength: content.length });
 
@@ -24,24 +24,49 @@ class KnowledgeBaseService {
         try {
           const embedding = await vectorSearchService.generateEmbedding(chunkContent);
 
-          return {
-            businessId,
-            content: chunkContent,
-            embedding,
-            chunkIndex: index,
-            title: title || `Chunk ${index + 1}`,
-            metadata: {
-              wordCount: chunkContent.split(/\s+/).length,
-              charCount: chunkContent.length
-            }
-          };
+            return {
+              knowledgeBaseId,
+              businessId,
+              content: chunkContent,
+              embedding,
+              metadata: {
+                title: title || `Chunk ${index + 1}`,
+                chunkIndex: index,
+                wordCount: chunkContent.split(/\s+/).length,
+                charCount: chunkContent.length
+              }
+            };
         } catch (error) {
           logger.warn('Failed to generate embedding for knowledge chunk', { businessId, chunkIndex: index, error: error.message });
           return null;
         }
       });
 
+      // Resolve embeddings and prepare chunk data
       const chunkData = (await Promise.all(chunkPromises)).filter(chunk => chunk !== null);
+
+      // If knowledgeBaseId is not provided, create a knowledge base record to attach chunks to
+      if (!knowledgeBaseId) {
+        try {
+          const created = await prisma.knowledgeBase.create({
+            data: { businessId, type: 'TEXT', content, metadata: { title: title || 'Untitled' } }
+          });
+          knowledgeBaseId = created.id;
+          logger.info('Created knowledgeBase for chunks', { businessId, knowledgeBaseId });
+        } catch (e) {
+          logger.warn('Failed to create knowledgeBase record for chunks', { businessId, error: e?.message || e });
+        }
+      }
+
+      // Ensure chunkData references the created knowledgeBaseId (map after possible creation)
+      if (knowledgeBaseId && Array.isArray(chunkData) && chunkData.length > 0) {
+        chunkData.forEach(c => { c.knowledgeBaseId = knowledgeBaseId; });
+      }
+
+      logger.debug('Preparing to store chunks', { businessId, knowledgeBaseId, chunksFound: chunks.length, chunkDataLength: chunkData.length });
+      if (Array.isArray(chunkData) && chunkData.length > 0) {
+        logger.debug('Sample chunkData before createMany', { sample: chunkData[0], sampleKnowledgeBaseId: chunkData[0].knowledgeBaseId });
+      }
 
       // Store chunks in database
       // Defensive: ensure chunkData is an array before createMany
@@ -76,10 +101,10 @@ class KnowledgeBaseService {
       };
 
     } catch (error) {
-      logger.error('Knowledge base processing failed', { businessId, error: error.message });
+      logger.error('Knowledge base processing failed', { businessId, error: error && (error.message || error), stack: error && error.stack });
       return {
         success: false,
-        error: error.message,
+        error: error && (error.message || String(error)),
         businessId
       };
     }
@@ -140,7 +165,7 @@ class KnowledgeBaseService {
 
       // Process each knowledge base entry
       for (const kb of knowledgeBases) {
-        const result = await this.processKnowledgeBase(businessId, kb.content, kb.title);
+        const result = await this.processKnowledgeBase(businessId, kb.content, kb.title, kb.id);
         if (result.success) {
           totalChunks += result.chunksStored;
         }

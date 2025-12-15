@@ -20,9 +20,15 @@ const resolveBusinessId = async (req, res, next) => {
       return res.status(400).json({ error: 'Invalid business id provided in request header.' });
     }
 
-    // 2) If businessId already exists in token, skip lookup
+    // 2) If businessId already exists in token, validate it exists and skip lookup
     if (req.user && req.user.businessId) {
-      return next();
+      try {
+        const business = await prisma.business.findUnique({ where: { id: req.user.businessId } });
+        if (business) return next();
+        // If the businessId in token is stale/invalid, fall through to lookup via user
+      } catch (e) {
+        // proceed to lookup below
+      }
     }
 
     // 3) Allow businessId via query param as a fallback (public widget usage)

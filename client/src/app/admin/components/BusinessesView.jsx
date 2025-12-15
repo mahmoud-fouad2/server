@@ -40,6 +40,22 @@ export default function BusinessesView() {
     } catch (err) { console.error(err) }
   }
 
+  const handleToggleCrm = async (id, current) => {
+    if (!confirm(`${current ? 'هل أنت متأكد من تعطيل CRM لهذه الشركة؟' : 'هل تريد تفعيل CRM لهذه الشركة؟'}`)) return
+    try {
+      await adminApi.toggleBusinessCrm(id, !current)
+      fetch()
+    } catch (err) { console.error(err) }
+  }
+
+  const handleTogglePreChat = async (id, current) => {
+    if (!confirm(`${current ? 'هل أنت متأكد من تعطيل نموذج ما قبل الدردشة لهذه الشركة؟' : 'هل تريد تفعيل نموذج ما قبل الدردشة لهذه الشركة؟'}`)) return
+    try {
+      await adminApi.toggleBusinessPreChat(id, !current)
+      fetch()
+    } catch (err) { console.error(err) }
+  }
+
   const handleDelete = async (id) => {
     if (!confirm('هل تريد حذف هذه الشركة؟')) return
     try {
@@ -85,6 +101,12 @@ export default function BusinessesView() {
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap text-sm text-gray-600">{b.ownerName || b.ownerEmail}</td>
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap text-sm">{b.planType}</td>
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap"><span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${b.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{b.isActive ? 'نشطة' : 'معطلة'}</span></td>
+                    <td className="px-4 md:px-6 py-4 whitespace-nowrap text-sm">
+                      <div className="flex gap-2">
+                        <button onClick={() => handleTogglePreChat(b.id, !!b.preChatFormEnabled)} className={`px-2 py-1 rounded-lg text-sm ${b.preChatFormEnabled ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`} title="تفعيل/تعطيل ما قبل الدردشة">{b.preChatFormEnabled ? 'نموذج ما قبل الدردشة: مفعل' : 'نموذج ما قبل الدردشة: معطل'}</button>
+                        <button onClick={() => handleToggleCrm(b.id, !!b.crmLeadCollectionEnabled)} className={`px-2 py-1 rounded-lg text-sm ${b.crmLeadCollectionEnabled ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`} title="تفعيل/تعطيل CRM">{b.crmLeadCollectionEnabled ? 'CRM: مفعل' : 'CRM: معطل'}</button>
+                      </div>
+                    </td>
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap text-sm text-gray-600">{new Date(b.createdAt).toLocaleDateString('ar-EG')}</td>
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap text-sm font-medium"><div className="flex gap-2"><button onClick={()=>router.push(`/admin/businesses/${b.id}`)} className="text-blue-600">عرض</button><button onClick={()=>router.push(`/admin/businesses/${b.id}/edit`)} className="text-green-600">تعديل</button><button onClick={()=>handleActivate(b.id)} className="text-yellow-600">تفعيل/إيقاف</button><button onClick={()=>handleDelete(b.id)} className="text-red-600">حذف</button></div></td>
                   </tr>

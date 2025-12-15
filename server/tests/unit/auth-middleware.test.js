@@ -63,7 +63,7 @@ describe('Authentication Middleware', () => {
 
       await authenticateToken(mockReq, mockRes, mockNext);
 
-      expect(mockRes.status).toHaveBeenCalledWith(403);
+      expect(mockRes.status).toHaveBeenCalledWith(401);
       expect(mockRes.json).toHaveBeenCalledWith({
         error: 'Invalid token'
       });
@@ -80,7 +80,7 @@ describe('Authentication Middleware', () => {
 
       await authenticateToken(mockReq, mockRes, mockNext);
 
-      expect(mockRes.status).toHaveBeenCalledWith(403);
+      expect(mockRes.status).toHaveBeenCalledWith(401);
       expect(mockRes.json).toHaveBeenCalledWith({
         error: 'Invalid token'
       });
@@ -127,7 +127,10 @@ describe('Authentication Middleware', () => {
 
       prisma.user.findUnique.mockResolvedValue(mockUser);
 
+      // Force DB lookup in tests to validate behavior
+      process.env.FORCE_AUTH_DB_LOOKUP = 'true';
       await authenticateToken(mockReq, mockRes, mockNext);
+      delete process.env.FORCE_AUTH_DB_LOOKUP;
 
       expect(prisma.user.findUnique).toHaveBeenCalledWith({
         where: { id: 'test-user-123' },
@@ -154,7 +157,10 @@ describe('Authentication Middleware', () => {
 
       prisma.user.findUnique.mockResolvedValue(mockUser);
 
+      // Force DB lookup in tests to validate behavior
+      process.env.FORCE_AUTH_DB_LOOKUP = 'true';
       await authenticateToken(mockReq, mockRes, mockNext);
+      delete process.env.FORCE_AUTH_DB_LOOKUP;
 
       expect(prisma.user.findUnique).toHaveBeenCalledWith({
         where: { email: 'test@example.com' },

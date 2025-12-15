@@ -136,6 +136,11 @@ class VisitorSessionService {
    * يستخدم ip-api.com (مجاني: 45 req/min)
    */
   async getGeoLocation(ip) {
+    // In test environments, avoid external GeoIP calls for speed and determinism
+    if (process.env.NODE_ENV === 'test') {
+      return { country: 'Local', city: 'Localhost', countryCode: 'LO', region: 'Local', timezone: 'UTC' };
+    }
+
     try {
       // Local IPs
       if (ip === 'unknown' || ip.startsWith('127.') || ip.startsWith('192.168.') || ip === '::1') {

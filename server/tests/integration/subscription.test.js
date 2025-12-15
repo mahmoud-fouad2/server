@@ -52,14 +52,10 @@ describe('Subscription Plan Limits', () => {
       return;
     }
 
+    const { genEmail } = require('./testUtils')
     // Create test user and business
     testUser = await prisma.user.create({
-      data: {
-        email: 'test-subscription@example.com',
-        fullName: 'Test User',
-        password: 'hashed-password-here',
-        role: 'CLIENT'
-      }
+      data: { email: genEmail('test-subscription'), fullName: 'Test User', password: 'hashed-password-here', role: 'CLIENT' }
     });
 
     testBusiness = await prisma.business.create({

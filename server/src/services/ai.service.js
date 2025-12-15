@@ -418,6 +418,10 @@ async function callProvider(providerKey, providerConfig, messages, options = {})
  * @returns {Promise<Object>} - { response, tokensUsed, model, provider }
  */
 async function generateResponse(messages, options = {}) {
+  // Fast-path when explicitly requested (useful for some integration tests)
+  if (process.env.NODE_ENV === 'test' && process.env.FAKE_AI === 'true') {
+    return { response: 'هذه إجابة اختبارية', tokensUsed: 0, model: 'test-mock' };
+  }
   let lastError = null;
   let attemptCount = 0;
   const maxAttempts = Object.keys(PROVIDER_DEFINITIONS).length;

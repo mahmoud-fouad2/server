@@ -59,6 +59,7 @@ const updateKnowledgeSchema = z.object({
 
 // Business Schemas
 const updateBusinessSchema = z.object({
+  businessId: z.string().cuid().optional(),
   name: z.string().min(2).max(200).optional(),
   activityType: z.enum([
     'RESTAURANT', 'CAFE', 'BAKERY', 'CLINIC', 'HOSPITAL', 'PHARMACY', 'DENTAL',

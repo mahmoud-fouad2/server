@@ -9,11 +9,21 @@ const express = require('express');
 const router = express.Router();
 const monitor = require('../utils/monitor');
 
+const rateLimit = require('express-rate-limit');
+
+// Rate limiter for health endpoint to mitigate DoS-style bursts in tests
+const healthLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 20, // allow 20 requests per minute
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
 /**
  * GET /api/health - Basic health check
  * Public endpoint - no authentication required
  */
-router.get('/', async (req, res) => {
+router.get('/', healthLimiter, async (req, res) => {
   try {
     const status = await monitor.getHealthStatus();
     

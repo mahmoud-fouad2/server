@@ -30,6 +30,8 @@ const chatRoutes = require('../../src/routes/chat.routes');
 app.use('/api/chat', chatRoutes);
 
 describe('Chat KB E2E Behavior', () => {
+  // some DB operations can be slow in shared environments
+  jest.setTimeout(30000);
   let testUser;
   let testBusiness;
   let authToken;
@@ -47,7 +49,8 @@ describe('Chat KB E2E Behavior', () => {
       return;
     }
 
-    testUser = await prisma.user.create({ data: { email: 'kbtest@example.com', password: 'hashed', name: 'KB Tester', role: 'CLIENT' } });
+    const { genEmail } = require('./testUtils')
+    testUser = await prisma.user.create({ data: { email: genEmail('kbtest'), password: 'hashed', name: 'KB Tester', role: 'CLIENT' } });
     testBusiness = await prisma.business.create({ data: { userId: testUser.id, name: 'KB E2E Business', activityType: 'RETAIL', language: 'ar' } });
 
     authToken = jwt.sign({ userId: testUser.id, businessId: testBusiness.id, role: 'CLIENT' }, process.env.JWT_SECRET);
