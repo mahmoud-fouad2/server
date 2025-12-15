@@ -69,6 +69,8 @@ const sortedResults = filteredResults
 - ✅ نفس sanitization للاستجابات
 - ✅ نفس validation
 
+**ملاحظة:** تم تحديث نقطة النهاية التجريبية `POST /api/chat/test` في `server/src/routes/chat.routes.js` لتستخدم `generateChatResponse` وإدراج نتائج بحث قاعدة المعرفة حتى تكون تجربة "تجربة البوت" في الداشبورد مماثلة لتجربة الويجت. تمت إضافة اختبار تكاملي يحقّق التماثل.
+
 **قبل:** كل قناة لها منطق مختلف
 
 **بعد:** منطق موحد في جميع القنوات
