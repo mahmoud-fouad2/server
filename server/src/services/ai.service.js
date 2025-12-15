@@ -70,8 +70,13 @@ const PROVIDER_DEFINITIONS = {
 function getProviderConfig(providerKey) {
   const definition = PROVIDER_DEFINITIONS[providerKey];
   if (!definition) return null;
-
-  const apiKey = process.env[definition.envVar];
+  // Support fallback/backup environment variables for API keys, e.g.
+  // GEMINI_API_KEY_BACKUP or GEMINI_API_KEY_2 when rotating keys.
+  const candidates = [definition.envVar, `${definition.envVar}_BACKUP`, `${definition.envVar}_2`, `${definition.envVar}_ALT`];
+  let apiKey = null;
+  for (const name of candidates) {
+    if (process.env[name]) { apiKey = process.env[name]; break; }
+  }
   const baseEnabled = definition.enabled !== false;
 
   return {

@@ -5,6 +5,11 @@ const logger = require('../utils/logger');
 // Module-scoped cooldown timestamp for Gemini to avoid repeated 429 retries
 let geminiDisabledUntil = 0;
 
+// Helper to support a primary + backup Gemini API key configuration
+function getGeminiKey() {
+  return process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY_BACKUP || process.env.GEMINI_API_KEY_2 || process.env.GEMINI_API_KEY_ALT || '';
+}
+
 // Simple helper to perform HTTP POST with a small retry/backoff
 async function postWithRetry(url, payload, opts = {}, attempts = 2) {
   for (let i = 0; i < attempts; i++) {
@@ -147,7 +152,8 @@ async function generateEmbedding(text, options = {}) {
   }
 
   // 4) Try Gemini embeddings last (unless explicitly skipped or in cooldown)
-  const geminiAvailable = !!process.env.GEMINI_API_KEY && !skipGeminiEnv && Date.now() > geminiDisabledUntil;
+  const GEMINI_KEY = getGeminiKey();
+  const geminiAvailable = !!GEMINI_KEY && !skipGeminiEnv && Date.now() > geminiDisabledUntil;
   // Default to the cost-effective embedding model that's broadly available
   const GEMINI_EMBED_MODEL = process.env.GEMINI_EMBED_MODEL || 'text-embedding-004';
   async function tryGemini() {
@@ -159,7 +165,7 @@ async function generateEmbedding(text, options = {}) {
     let msg = null;
 
     try {
-      genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+      genAI = new GoogleGenerativeAI(GEMINI_KEY);
       model = genAI.getGenerativeModel({ model: GEMINI_EMBED_MODEL });
       result = await model.embedContent(text);
       const embedding = result?.embedding?.values || result?.embedding || null;
@@ -261,7 +267,7 @@ async function generateEmbedding(text, options = {}) {
 
   // 5) Development / forced fake fallback — only if explicitly allowed or in dev without providers
   const FORCE_FAKE = process.env.FORCE_FAKE_EMBEDDINGS === 'true';
-  const providersAvailable = !!((process.env.DEEPSEEK_API_KEY) || CEREBRAS_KEY || (process.env.GEMINI_API_KEY && !skipGeminiEnv) || VOYAGE_KEY);
+  const providersAvailable = !!((process.env.DEEPSEEK_API_KEY) || CEREBRAS_KEY || (getGeminiKey() && !skipGeminiEnv) || VOYAGE_KEY);
 
   if (FORCE_FAKE || (process.env.NODE_ENV === 'development' && !providersAvailable)) {
     logger.warn('⚠️ WARNING: Using FAKE embeddings. Vector search will NOT work correctly.', { forceFake: FORCE_FAKE, providersAvailable });

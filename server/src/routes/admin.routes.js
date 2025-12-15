@@ -365,10 +365,10 @@ router.get('/ai-providers', authenticateToken, isAdmin, async (req, res) => {
         id: 'gemini',
         name: 'Google Gemini',
         model: 'gemini-1.5-flash',
-        apiKey: process.env.GEMINI_API_KEY ? 'configured' : 'not-configured', // SECURITY: Don't expose actual key
+        apiKey: (process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY_BACKUP) ? 'configured' : 'not-configured', // SECURITY: Don't expose actual key
         isActive: true,
         tier: 'Free',
-        status: process.env.GEMINI_API_KEY ? 'configured' : 'not-configured'
+        status: (process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY_BACKUP) ? 'configured' : 'not-configured'
       },
       {
         id: 'cerebras',
