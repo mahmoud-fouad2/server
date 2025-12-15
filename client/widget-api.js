@@ -148,18 +148,26 @@
             z-index: 9999;
             font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
         }
+        :root {
+            --fahimo-primary: #003366;
+            --fahimo-accent: #00D4AA;
+            --fahimo-bg: #ffffff;
+            --fahimo-muted: #f8fafc;
+        }
+
         #fahimo-launcher {
             width: 56px;
             height: 56px;
-            background: linear-gradient(135deg, #003366, #00D4AA);
+            background: linear-gradient(135deg, var(--fahimo-primary), var(--fahimo-accent));
             border-radius: 50%;
             cursor: pointer;
-            box-shadow: 0 4px 20px rgba(0, 212, 170, 0.4);
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s ease;
+            transition: transform 0.25s ease, opacity 0.25s ease;
             animation: fahimo-pulse 2s infinite;
+            touch-action: manipulation;
         }
         @keyframes fahimo-pulse {
             0% { box-shadow: 0 0 0 0 rgba(0, 212, 170, 0.4); }
@@ -174,16 +182,17 @@
             width: 380px;
             height: 600px;
             max-height: calc(100vh - 120px);
-            background: #ffffff;
+            background: var(--fahimo-bg);
             border-radius: 16px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.14);
             flex-direction: column;
             overflow: hidden;
             position: absolute;
             bottom: 80px;
             right: 0;
-            animation: fahimo-slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            border: 1px solid rgba(0,0,0,0.05);
+            animation: fahimo-slide-up 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+            border: 1px solid rgba(0,0,0,0.06);
+            display: flex;
         }
         #fahimo-chat-window.fahimo-open { display: flex !important; }
 
@@ -305,19 +314,45 @@
         @media (max-width: 640px) {
             #fahimo-chat-window {
                 position: fixed;
-                left: 10px;
-                right: 10px;
-                bottom: 10px;
-                top: 12vh;
+                left: 8px;
+                right: 8px;
+                bottom: 8px;
+                top: 10vh;
                 width: auto;
                 height: auto;
-                max-height: 78vh;
+                max-height: calc(100vh - 16px - 10vh);
                 border-radius: 12px;
-                box-shadow: 0 12px 50px rgba(0,0,0,0.3);
+                box-shadow: 0 18px 80px rgba(0,0,0,0.32);
                 transform: translateY(0);
+                padding-bottom: env(safe-area-inset-bottom, 12px);
             }
             #fahimo-launcher { right: 14px; bottom: 14px; }
             #fahimo-input { font-size: 15px; }
+
+            /* Make messages full width on mobile for readability */
+            .fahimo-msg { max-width: 92% !important; font-size: 16px; padding: 14px; border-radius: 14px; }
+            .fahimo-msg.user { border-bottom-right-radius: 8px; }
+            .fahimo-msg.bot { border-bottom-left-radius: 8px; }
+
+            /* Sticky input area for better keyboard behavior */
+            #fahimo-input-area { position: sticky; bottom: 0; background: var(--fahimo-bg); padding-bottom: calc(env(safe-area-inset-bottom) + 12px); z-index: 10; }
+
+            /* Improve header touch targets */
+            #fahimo-header { padding: 14px 12px; }
+            #fahimo-bot-name { font-size: 16px; }
+            #fahimo-bot-avatar { width: 44px; height: 44px; }
+        }
+
+        /* Fullscreen/class helper for very small devices */
+        #fahimo-chat-window.fahimo-fullscreen {
+            left: 0 !important;
+            right: 0 !important;
+            top: 0 !important;
+            bottom: 0 !important;
+            border-radius: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            max-height: 100vh !important;
         }
 
         /* Rating UI */
@@ -551,14 +586,44 @@
         sendBtn.onclick = sendMessage;
         input.onkeypress = (e) => { if (e.key === 'Enter') sendMessage(); };
 
-        launcher.onclick = () => {
-            isOpen = !isOpen;
-            chatWindow.classList.toggle('fahimo-open', isOpen);
-        };
-        closeBtn.onclick = () => {
+        launcher.setAttribute('aria-label', 'Open chat');
+        launcher.setAttribute('role', 'button');
+        launcher.setAttribute('tabindex', '0');
+
+        function openWidget() {
+            isOpen = true;
+            chatWindow.classList.add('fahimo-open');
+            chatWindow.setAttribute('role', 'dialog');
+            chatWindow.setAttribute('aria-modal', 'true');
+            chatWindow.setAttribute('aria-hidden', 'false');
+            // On small screens, use fullscreen mode and prevent background scroll
+            if (window.innerWidth <= 640) {
+                chatWindow.classList.add('fahimo-fullscreen');
+                document.body.style.overflow = 'hidden';
+                launcher.style.opacity = '0';
+                launcher.style.pointerEvents = 'none';
+            }
+            // Focus input for convenience
+            setTimeout(() => { input && input.focus(); }, 50);
+        }
+
+        function closeWidget() {
             isOpen = false;
             chatWindow.classList.remove('fahimo-open');
-        };
+            chatWindow.classList.remove('fahimo-fullscreen');
+            chatWindow.setAttribute('aria-hidden', 'true');
+            chatWindow.removeAttribute('aria-modal');
+            chatWindow.removeAttribute('role');
+            document.body.style.overflow = '';
+            launcher.style.opacity = '1';
+            launcher.style.pointerEvents = '';
+        }
+
+        launcher.onclick = () => { isOpen ? closeWidget() : openWidget(); };
+        closeBtn.onclick = () => { closeWidget(); };
+
+        // Close on ESC for accessibility
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeWidget(); });
     } catch (e) {
         console.error('Fahimo widget init error', e);
     }
