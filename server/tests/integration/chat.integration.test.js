@@ -94,5 +94,63 @@ describe('Chat Integration Tests', () => {
     expect(parsed).toHaveProperty('action');
   });
 
+  test('compare dashboard test flow vs widget flow provider payloads', async () => {
+    const capturedCalls = [];
+
+    // Capture axios.post calls so we can inspect provider-facing payloads
+    axios.post.mockImplementation((url, payload, opts = {}) => {
+      capturedCalls.push({ url, payload, opts });
+      return Promise.resolve({ data: { choices: [{ message: { content: 'OK' } }], usage: { total_tokens: 1 } } });
+    });
+
+    const userMessage = 'هل عندكم فرع في القاهرة؟';
+
+    // 1) Dashboard-style minimal call (what /api/chat/test does)
+    capturedCalls.length = 0;
+    await aiService.generateResponse([{ role: 'user', content: userMessage }]);
+    expect(capturedCalls.length).toBeGreaterThanOrEqual(1);
+    const dashboardCall = capturedCalls[0];
+
+    // The dashboard call should send an OpenAI-like messages array with only the user message
+    expect(dashboardCall.payload).toBeDefined();
+    expect(Array.isArray(dashboardCall.payload.messages)).toBe(true);
+    expect(dashboardCall.payload.messages.length).toBeGreaterThanOrEqual(1);
+    expect(dashboardCall.payload.messages[0].role).toBe('user');
+    expect(dashboardCall.payload.messages[0].content).toContain('القاهرة');
+
+    // 2) Widget-style call (what /api/chat/message does via generateChatResponse)
+    capturedCalls.length = 0;
+    const business = { id: 'cmpushbiz0001', name: 'تجربة', widgetConfig: { personality: 'friendly' }, language: 'ar' };
+    const kb = [{ id: 'KB1', content: 'فرعنا في القاهرة - KB1' }];
+
+    await generateChatResponse(userMessage, business, [], kb, 'conv-test-1');
+    expect(capturedCalls.length).toBeGreaterThanOrEqual(1);
+    const widgetCall = capturedCalls[0];
+
+    // Widget call should include the system prompt / KB context.
+    expect(widgetCall.payload).toBeDefined();
+    if (Array.isArray(widgetCall.payload.messages)) {
+      // OpenAI-like payload
+      expect(widgetCall.payload.messages[0].role).toBe('system');
+      expect(widgetCall.payload.messages[0].content).toMatch(/قاعدة المعرفة|قاعدة/);
+    } else if (widgetCall.payload.systemInstruction || widgetCall.payload.contents) {
+      // Gemini-style payload
+      const instr = widgetCall.payload.systemInstruction || JSON.stringify(widgetCall.payload.contents || '');
+      expect(instr).toMatch(/قاعدة المعرفة|قاعدة/);
+    } else {
+      throw new Error('Unknown provider payload format for widget call');
+    }
+
+    // Ensure difference: dashboard has no system prompt while widget does
+    const dashboardHasSystem = Array.isArray(dashboardCall.payload.messages) && dashboardCall.payload.messages.some(m => m.role === 'system');
+    const widgetHasSystem = (
+      (Array.isArray(widgetCall.payload.messages) && widgetCall.payload.messages.some(m => m.role === 'system')) ||
+      !!widgetCall.payload.systemInstruction ||
+      !!widgetCall.payload.contents
+    );
+    expect(dashboardHasSystem).toBe(false);
+    expect(widgetHasSystem).toBe(true);
+  });
+
   // More scenarios can be added here: KB conflicts, rating append, clarification flows, etc.
 });

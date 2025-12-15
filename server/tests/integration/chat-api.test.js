@@ -445,6 +445,28 @@ describe('Chat API Integration Tests', () => {
         })
       );
     });
+
+      runIfDbAvailable('POST /api/chat/test should use KB context and return KB-aware response', async () => {
+        // Make the vector search return a KB chunk and spy on aiService.generateChatResponse
+        vectorSearch.searchKnowledge.mockResolvedValue([{ id: 'KBZ', content: 'زحمتنا القاهرة - KBZ' }]);
+
+        const spy = jest.spyOn(aiService, 'generateChatResponse').mockResolvedValue({
+          response: JSON.stringify({ language: 'ar', tone: 'friendly', answer: 'المعلومة موجودة في KBZ', sources: ['KBZ'], action: 'no_action' }),
+          tokensUsed: 5,
+          model: 'test-model'
+        });
+
+        const res = await request(app)
+          .post('/api/chat/test')
+          .send({ message: 'سؤال عن فرع', businessId: testBusiness.id });
+
+        expect(res.status).toBe(200);
+        expect(res.body).toBeDefined();
+        expect(res.body.response).toContain('KBZ');
+        expect(spy).toHaveBeenCalled();
+
+        spy.mockRestore();
+      });
   });
 
   describe('POST /api/chat/rating', () => {

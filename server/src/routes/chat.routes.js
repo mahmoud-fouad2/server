@@ -7,6 +7,7 @@ const chatController = require('../controllers/chat.controller');
 const asyncHandler = require('express-async-handler');
 const prisma = require('../config/database');
 const aiService = require('../services/ai.service');
+const vectorSearch = require('../services/vector-search.service');
 const responseValidator = require('../services/response-validator.service');
 const logger = require('../utils/logger');
 
@@ -73,13 +74,25 @@ router.post('/test', chatLimiter, async (req, res) => {
       return res.status(404).json({ error: 'No business found' });
     }
 
-    // Simple AI response for testing
-    const aiResponse = await aiService.generateResponse(
-      [{ role: 'user', content: message }]
+    // For better parity with the widget flow, include KB/context and use the
+    // same `generateChatResponse` path so the test playground mirrors real behavior.
+    let knowledgeContext = [];
+    try {
+      knowledgeContext = await vectorSearch.searchKnowledge(message, business.id, 5);
+    } catch (e) {
+      logger.warn('Test Chat: knowledge search failed, continuing without KB', { error: e.message });
+    }
+
+    const aiResult = await aiService.generateChatResponse(
+      message,
+      business,
+      [],
+      knowledgeContext,
+      null
     );
 
     // Sanitize AI response to remove any provider/model self-identification
-    const sanitizedResponse = responseValidator.sanitizeResponse(aiResponse?.response || '');
+    const sanitizedResponse = responseValidator.sanitizeResponse(aiResult?.response || '');
 
     res.json({
       response: sanitizedResponse || 'مرحباً! كيف يمكنني مساعدتك؟',
