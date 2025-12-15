@@ -356,10 +356,10 @@ router.get('/ai-providers', authenticateToken, isAdmin, async (req, res) => {
         id: 'groq',
         name: 'Groq',
         model: 'llama-3.3-70b-versatile',
-        apiKey: process.env.GROQ_API_KEY ? 'configured' : 'not-configured', // SECURITY: Don't expose actual key
+        apiKey: (process.env.GROQ_API_KEY || process.env.GROQ_API_KEY_BACKUP) ? 'configured' : 'not-configured', // SECURITY: Don't expose actual key
         isActive: true,
         tier: 'Free',
-        status: process.env.GROQ_API_KEY ? 'configured' : 'not-configured'
+        status: (process.env.GROQ_API_KEY || process.env.GROQ_API_KEY_BACKUP) ? 'configured' : 'not-configured'
       },
       {
         id: 'gemini',

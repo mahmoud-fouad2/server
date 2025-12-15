@@ -70,20 +70,20 @@ const PROVIDER_DEFINITIONS = {
 function getProviderConfig(providerKey) {
   const definition = PROVIDER_DEFINITIONS[providerKey];
   if (!definition) return null;
-  // Support fallback/backup environment variables for API keys, e.g.
-  // GEMINI_API_KEY_BACKUP or GEMINI_API_KEY_2 when rotating keys.
-  const candidates = [definition.envVar, `${definition.envVar}_BACKUP`, `${definition.envVar}_2`, `${definition.envVar}_ALT`];
-  let apiKey = null;
-  for (const name of candidates) {
-    if (process.env[name]) { apiKey = process.env[name]; break; }
-  }
+  // Support primary + backup environment variables for API keys, e.g.
+  // GROQ_API_KEY, GROQ_API_KEY_BACKUP, GROQ_API_KEY_2, GROQ_API_KEY_ALT
+  const primaryName = definition.envVar;
+  const fallbackNames = [`${definition.envVar}_BACKUP`, `${definition.envVar}_2`, `${definition.envVar}_ALT`];
+  const apiKey = process.env[primaryName] || null;
+  const backupKeys = fallbackNames.map(n => process.env[n]).filter(Boolean);
   const baseEnabled = definition.enabled !== false;
 
   return {
     ...definition,
     apiKey,
-    enabled: baseEnabled && !!apiKey,
-    configured: !!apiKey
+    backupKeys,
+    enabled: baseEnabled && (!!apiKey || backupKeys.length > 0),
+    configured: !!apiKey || backupKeys.length > 0
   };
 }
 
@@ -305,15 +305,15 @@ function convertGeminiResponse(geminiResponse, modelName) {
 async function callProvider(providerKey, providerConfig, messages, options = {}) {
   const startTime = Date.now();
   const logger = require('../utils/logger');
-  
-  try {
-    logger.debug('AI provider call initiated', { provider: providerConfig.name });
+  // Perform a single attempt using the given providerConfig (may contain apiKey)
+  async function performCall(cfg) {
+    logger.debug('AI provider call initiated', { provider: cfg.name });
 
     // Special handling for Gemini
-    if (providerConfig.isGemini) {
+    if (cfg.isGemini) {
       const geminiPayload = convertToGeminiFormat(messages);
       const response = await axios.post(
-        `${providerConfig.endpoint}?key=${providerConfig.apiKey}`,
+        `${cfg.endpoint}?key=${cfg.apiKey}`,
         geminiPayload,
         {
           headers: { 'Content-Type': 'application/json' },
@@ -321,16 +321,15 @@ async function callProvider(providerKey, providerConfig, messages, options = {})
         }
       );
 
-      const result = convertGeminiResponse(response.data, providerConfig.model);
+      const result = convertGeminiResponse(response.data, cfg.model);
       recordUsage(providerKey, result.tokensUsed);
-      
-      logger.info('AI provider success', { provider: providerConfig.name, duration: Date.now() - startTime, tokens: result.tokensUsed });
+      logger.info('AI provider success', { provider: cfg.name, duration: Date.now() - startTime, tokens: result.tokensUsed });
       return result;
     }
 
     // Standard OpenAI-compatible format
     const payload = {
-      model: providerConfig.model,
+      model: cfg.model,
       messages,
       temperature: options.temperature || 0.7,
       max_tokens: options.maxTokens || 1024,
@@ -338,11 +337,11 @@ async function callProvider(providerKey, providerConfig, messages, options = {})
     };
 
     const response = await axios.post(
-      providerConfig.endpoint,
+      cfg.endpoint,
       payload,
       {
         headers: {
-          'Authorization': `Bearer ${providerConfig.apiKey}`,
+          'Authorization': `Bearer ${cfg.apiKey}`,
           'Content-Type': 'application/json'
         },
         timeout: 30000
@@ -356,15 +355,18 @@ async function callProvider(providerKey, providerConfig, messages, options = {})
     const result = {
       response: response.data.choices[0].message.content,
       tokensUsed: response.data.usage?.total_tokens || 0,
-      model: providerConfig.model,
-      provider: providerConfig.name
+      model: cfg.model,
+      provider: cfg.name
     };
 
     recordUsage(providerKey, result.tokensUsed);
-    
-    logger.info('AI provider success', { provider: providerConfig.name, duration: Date.now() - startTime, tokensUsed: result.tokensUsed });
+    logger.info('AI provider success', { provider: cfg.name, duration: Date.now() - startTime, tokensUsed: result.tokensUsed });
     return result;
+  }
 
+  try {
+    // Try primary key first
+    return await performCall(providerConfig);
   } catch (error) {
     const duration = Date.now() - startTime;
     logger.error('AI provider failed', { 
@@ -373,16 +375,33 @@ async function callProvider(providerKey, providerConfig, messages, options = {})
       error: error.message,
       statusCode: error.response?.status
     });
-    
-    // Classify error type
-    if (error.response?.status === 429) {
+
+    // On rate limit, try any configured backup keys for this provider before giving up
+    if (error.response?.status === 429 && Array.isArray(providerConfig.backupKeys) && providerConfig.backupKeys.length > 0) {
+      logger.warn('[HybridAI] Primary key rate-limited, attempting backups', { provider: providerConfig.name, backups: providerConfig.backupKeys.length });
+      for (const bk of providerConfig.backupKeys) {
+        try {
+          const tempCfg = { ...providerConfig, apiKey: bk };
+          const res = await performCall(tempCfg);
+          logger.info('[HybridAI] Backup key succeeded for provider', { provider: providerConfig.name });
+          return res;
+        } catch (bkErr) {
+          logger.warn('[HybridAI] Backup key failed', { provider: providerConfig.name, error: bkErr.message });
+          // continue to next backup
+        }
+      }
+      // If backups all failed, fall through to mark rate-limited
+      logger.error('[HybridAI] All backup keys failed for provider', { provider: providerConfig.name });
       throw new Error('RATE_LIMIT');
-    } else if (error.response?.status === 401 || error.response?.status === 403) {
+    }
+
+    // Classify other error types
+    if (error.response?.status === 401 || error.response?.status === 403) {
       throw new Error('AUTH_ERROR');
     } else if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
       throw new Error('TIMEOUT');
     }
-    
+
     throw error;
   }
 }
