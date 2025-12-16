@@ -326,7 +326,7 @@ async function setupDemoUser() {
           data: {
             userId: user.id,
             name: 'Faheemly - Demo Business',
-            activityType: 'SAAS',
+            activityType: 'SOFTWARE',
             language: 'ar',
             status: 'ACTIVE',
             planType: 'UNLIMITED',
