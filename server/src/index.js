@@ -360,6 +360,15 @@ try {
   logger.warn('Admin CRM routes not available', { error: e?.message || e });
 }
 
+// Internal maintenance endpoints (protected)
+try {
+  const internalRoutes = require('./routes/internal.routes');
+  app.use('/internal', internalRoutes);
+  logger.info('✅ Internal routes loaded (maintenance)');
+} catch (e) {
+  logger.warn('Internal routes not available', { error: e?.message || e });
+}
+
 // Admin Extended routes (Phase 2: User Management & System Control)
 try {
   const adminExtendedRoutes = require('./routes/admin-extended.routes');
