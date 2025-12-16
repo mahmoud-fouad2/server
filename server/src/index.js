@@ -4,6 +4,10 @@ const dotenv = require('dotenv');
 const path = require('path');
 const http = require('http');
 const helmet = require('helmet');
+
+// Force Prisma to use binary engine
+process.env.PRISMA_CLIENT_ENGINE_TYPE = 'binary';
+
 const prisma = require('./config/database');
 const logger = require('./utils/logger');
 const redisCache = require('./services/cache.service');
