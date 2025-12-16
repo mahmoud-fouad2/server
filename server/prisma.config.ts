@@ -4,11 +4,10 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 export default defineConfig({
-  // Prisma migrate expects a singular `datasource` property when running `prisma migrate deploy`.
+  // For Prisma migrate, specify the datasource configuration
+  // The actual connection is handled by @prisma/adapter-pg in src/config/database.js
   datasource: {
     provider: 'postgresql',
-    url: process.env.DATABASE_URL || undefined
-  },
-  // Prefer binary engine by default to avoid needing an adapter in hosted envs
-  // The runtime also enforces PRISMA_CLIENT_ENGINE_TYPE=binary in src/config/database.js
+    url: process.env.PGBOUNCER_URL || process.env.DATABASE_URL || undefined
+  }
 });

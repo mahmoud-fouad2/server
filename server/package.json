@@ -15,12 +15,10 @@
     "prisma:deploy": "prisma migrate deploy",
     "migrate:resolve": "npx prisma migrate resolve --applied 20251209120000_production_cleanup",
     "migrate:rollback": "npx prisma migrate resolve --rolled-back 20251209120000_production_cleanup",
-    "start:prod": "PRISMA_CLIENT_ENGINE_TYPE=binary npm run install:pgvector && PRISMA_CLIENT_ENGINE_TYPE=binary npx prisma generate && PRISMA_CLIENT_ENGINE_TYPE=binary node scripts/ensure-migrations.js && node src/index.js",
-   
+    "start:prod": "npm run install:pgvector && npx prisma generate && node scripts/ensure-migrations.js && node src/index.js",
     "prisma:studio": "prisma studio",
     "install:pgvector": "node scripts/install-pgvector.js",
     "apply:user-name-migration": "node scripts/apply-user-name-migration.js",
-    
     "db:seed": "node scripts/seed-faheemly-knowledge.js",
     "db:demo": "node scripts/create-demo-data.js",
     "check": "node scripts/check-infrastructure.js",
@@ -37,7 +35,6 @@
     "test:full": "npm run test:create-users && npm run test:comprehensive",
     "migrate:uploads": "node scripts/migrate-uploads-to-s3.js",
     "check:embeddings": "node scripts/check_embedding_providers.js",
-   
     "lint:fix": "eslint 'src/**/*.js' --fix"
   },
   "keywords": [],
@@ -48,7 +45,6 @@
     "@google/generative-ai": "^0.24.1",
     "@prisma/adapter-pg": "^7.1.0",
     "@prisma/client": "^7.1.0",
-    "pg": "^8.11.0",
     "axios": "^1.13.2",
     "bcryptjs": "^2.4.3",
     "bullmq": "^5.0.0",
@@ -71,6 +67,7 @@
     "node-fetch": "^3.3.2",
     "nodemailer": "^7.0.11",
     "pdf-parse": "^1.1.1",
+    "pg": "^8.11.0",
     "prisma": "^7.1.0",
     "redis": "^5.10.0",
     "sanitize-html": "^2.17.0",

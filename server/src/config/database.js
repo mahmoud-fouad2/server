@@ -1,6 +1,7 @@
 const logger = require('../utils/logger');
 
 // Database configuration with connection pooling and optimization
+// Prisma v7+ with @prisma/adapter-pg for direct PostgreSQL connection
 // If `PGBOUNCER_URL` is set, prefer it so connections are routed through pgbouncer.
 // Lazy Prisma initialization to avoid hard failures at module import time
 let _prisma = null;
@@ -14,30 +15,31 @@ function createPrismaClient() {
     throw new Error('DATABASE_URL is not configured; Prisma client will not be initialized');
   }
 
+  // Keep DATABASE_URL in sync with effective URL for Prisma tools compatibility
   if (process.env.DATABASE_URL !== effectiveDbUrl) process.env.DATABASE_URL = effectiveDbUrl;
 
   try {
-    // Ensure Prisma uses the binary engine in environments where the client
-    // might default to the 'client' engine which requires an adapter/accelerateUrl.
-    // process.env.PRISMA_CLIENT_ENGINE_TYPE = process.env.PRISMA_CLIENT_ENGINE_TYPE || 'binary';
-
     // Lazy-require Prisma so tests / environments without generated client
     // do not fail at module import time.
-    let PrismaClient;
+    let PrismaClient, PrismaPg;
     try {
-      // Force engine type env for platforms that default to 'client'
-      // process.env.PRISMA_CLIENT_ENGINE_TYPE = process.env.PRISMA_CLIENT_ENGINE_TYPE || 'binary';
-
       PrismaClient = require('@prisma/client').PrismaClient;
+      PrismaPg = require('@prisma/adapter-pg').PrismaPg;
     } catch (e) {
       // Prisma client library not installed / generated in this environment
-      throw new Error('Prisma client module not available in this environment');
+      throw new Error('Prisma client module or @prisma/adapter-pg not available: ' + e.message);
     }
 
-    // Construct PrismaClient with valid Prisma v7+ options
-    // Note: PRISMA_CLIENT_ENGINE_TYPE must be set BEFORE any Prisma imports
-    // This is done at the top of index.js before database.js is required
+    // Initialize adapter for PostgreSQL in Prisma v7+
+    // This replaces the need for PRISMA_CLIENT_ENGINE_TYPE env variable
+    // The adapter handles connection pooling and ensures binary engine is used
+    const adapter = new PrismaPg({
+      connectionString: effectiveDbUrl
+    });
+
+    // Construct PrismaClient with adapter for Prisma v7+
     _prisma = new PrismaClient({
+      adapter,  // Use the PostgreSQL adapter
       log: process.env.NODE_ENV === 'development' ? ['query', 'info', 'warn', 'error'] : ['warn', 'error']
     });
     _initialized = true;

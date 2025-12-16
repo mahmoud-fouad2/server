@@ -1,9 +1,13 @@
 generator client {
   provider = "prisma-client-js"
+  // Use cjs module format to avoid ESM issues in Node.js environments
+  moduleFormat = "cjs"
 }
 
 datasource db {
   provider = "postgresql"
+  // Note: Connection URL is handled by prisma.config.ts and @prisma/adapter-pg
+  // Do NOT set url here in Prisma v7+ when using an adapter
 }
 
 model User {
