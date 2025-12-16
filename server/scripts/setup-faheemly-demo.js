@@ -295,15 +295,33 @@ async function setupDemoUser() {
     logger.info('═══════════════════════════════════════════════════════');
 
   } catch (error) {
-    logger.error('❌ Setup failed:', error.message);
+    logger.error('❌ Setup failed:', error, {
+      message: error?.message,
+      code: error?.code,
+      hint: error?.meta?.hint,
+      target: error?.meta?.target
+    });
     process.exit(1);
   } finally {
-    await prisma.$disconnect();
-    await pool.end();
+    try {
+      await prisma.$disconnect();
+    } catch (e) {
+      logger.warn('Error disconnecting Prisma:', e);
+    }
+    try {
+      await pool.end();
+    } catch (e) {
+      logger.warn('Error closing pool:', e);
+    }
   }
 }
 
 setupDemoUser().catch(error => {
-  logger.error('Fatal error:', error);
+  logger.error('Fatal setup error:', error, {
+    message: error?.message,
+    code: error?.code,
+    hint: error?.meta?.hint,
+    target: error?.meta?.target
+  });
   process.exit(1);
 });

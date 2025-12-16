@@ -53,14 +53,30 @@ async function validateSchema() {
     }
     
   } catch (error) {
-    logger.error('❌ Schema validation failed:', error.message);
+    logger.error('❌ Schema validation failed:', error, {
+      message: error?.message,
+      code: error?.code,
+      hint: error?.meta?.hint
+    });
   } finally {
-    await prisma.$disconnect();
-    await pool.end();
+    try {
+      await prisma.$disconnect();
+    } catch (e) {
+      logger.warn('Error disconnecting Prisma:', e);
+    }
+    try {
+      await pool.end();
+    } catch (e) {
+      logger.warn('Error closing pool:', e);
+    }
   }
 }
 
 validateSchema().catch(error => {
-  logger.error('Fatal error:', error);
+  logger.error('Fatal validation error:', error, {
+    message: error?.message,
+    code: error?.code,
+    hint: error?.meta?.hint
+  });
   process.exit(1);
 });
