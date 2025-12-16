@@ -129,7 +129,7 @@ async function validateSchema() {
     
     // Test database connectivity with retry logic
     await retryWithBackoff(async () => {
-      // Log pool stats to diagnose connection issues
+        // Log pool stats to diagnose connection issues
       try {
         logger.debug('DB pool stats', {
           totalCount: pool.totalCount,
@@ -140,20 +140,16 @@ async function validateSchema() {
         logger.warn('Failed to read pool stats:', e?.message);
       }
 
-      // Simple query to test connectivity
+      // Diagnostic: list public tables and user table columns via pool
       try {
-        const result = await prisma.user.findMany({ take: 1 });
-        logger.info(`✅ Database query successful. Found ${result.length} users.`);
-        return result;
-      } catch (err) {
-        // Attach pool diagnostics to error and rethrow
-        err.poolStats = {
-          totalCount: pool.totalCount,
-          idleCount: pool.idleCount,
-          waitingCount: pool.waitingCount
-        };
-        throw err;
-      }
+        const tablesRes = await pool.query("SELECT tablename FROM pg_tables WHERE schemaname='public'");
+        logger.info('Public tables:', tablesRes.rows.map(r => r.tablename).join(', '));
+
+        const userColsRes = await pool.query(`SELECT column_name FROM information_schema.columns WHERE table_name='user'`);
+        logger.info('User table columns (lowercase):', userColsRes.rows.map(r => r.column_name).join(', '));
+
+        const userColsRes2 = await pool.query(`SELECT column_name FROM information_schema.columns WHERE table_name='User'`);
+        logger.info('User table columns (Case 
     }, 5, 2000);
     
     // Check for the demo user
