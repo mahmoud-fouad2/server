@@ -14,8 +14,8 @@ export async function POST(request: NextRequest) {
 
     const selectedAvatar = formData.get('selectedAvatar');
     const selectedIcon = formData.get('selectedIcon');
-    const customAvatar = formData.get('customAvatar') as File | null;
-    const customIcon = formData.get('customIcon') as File | null;
+    const customAvatar = formData.get('customAvatar');
+    const customIcon = formData.get('customIcon');
 
     const settings = {
       businessId,
