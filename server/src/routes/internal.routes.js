@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const prisma = require('../config/database');
+const { authenticateToken } = require('../middleware/auth');
 
 // Protected internal endpoint to fix NULL User.name values when shell access
 // is not available. Requires ADMIN_MIGRATION_SECRET header to match env.
@@ -26,6 +27,29 @@ router.post('/run-user-name-fix', async (req, res) => {
     res.json({ success: true, message: 'User name fix applied', before: beforeCnt, after: afterCnt });
   } catch (err) {
     console.error('Internal migration endpoint failed', err?.message || err);
+    res.status(500).json({ success: false, error: 'Internal error' });
+  }
+});
+
+// Authenticated endpoint that allows a SUPERADMIN to trigger the same fix
+router.post('/run-user-name-fix-auth', authenticateToken, async (req, res) => {
+  try {
+    const user = req.user || {};
+    if (user.role !== 'SUPERADMIN') return res.status(403).json({ success: false, error: 'Forbidden' });
+
+    const before = await prisma.$queryRaw`SELECT COUNT(*)::int as cnt FROM "User" WHERE "name" IS NULL OR TRIM(COALESCE("name",'')) = ''`;
+    const beforeCnt = before && before[0] ? before[0].cnt : 0;
+
+    if (beforeCnt === 0) return res.json({ success: true, message: 'No NULL names found', before: 0, after: 0 });
+
+    await prisma.$executeRawUnsafe(`UPDATE "User" SET "name" = COALESCE(NULLIF(TRIM("fullName"), ''), SUBSTRING("email" FROM '^[^@]+'), id::text) WHERE "name" IS NULL OR TRIM(COALESCE("name",'')) = ''`);
+
+    const afterRes = await prisma.$queryRaw`SELECT COUNT(*)::int as cnt FROM "User" WHERE "name" IS NULL OR TRIM(COALESCE("name",'')) = ''`;
+    const afterCnt = afterRes && afterRes[0] ? afterRes[0].cnt : 0;
+
+    res.json({ success: true, message: 'User name fix applied', before: beforeCnt, after: afterCnt });
+  } catch (err) {
+    console.error('Authenticated migration endpoint failed', err?.message || err);
     res.status(500).json({ success: false, error: 'Internal error' });
   }
 });
