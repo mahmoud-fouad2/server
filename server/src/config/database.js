@@ -34,30 +34,12 @@ function createPrismaClient() {
       throw new Error('Prisma client module not available in this environment');
     }
 
-    // Try to construct PrismaClient; if the environment tries to use the "client" engine
-    // and fails due to missing adapter/accelerateUrl, retry with explicit binary engine option.
-    try {
-      _prisma = new PrismaClient({
-        log: process.env.NODE_ENV === 'development' ? ['query', 'info', 'warn', 'error'] : ['warn', 'error'],
-        engine: { type: 'binary' }
-      });
-    } catch (initialErr) {
-      // If engine type 'client' error appears, try again with top-level engine option
-      if (String(initialErr).includes('requires either "adapter" or "accelerateUrl"') || String(initialErr).includes('Using engine type "client"')) {
-        process.env.PRISMA_CLIENT_ENGINE_TYPE = 'binary';
-        try {
-          _prisma = new PrismaClient({
-            log: process.env.NODE_ENV === 'development' ? ['query', 'info', 'warn', 'error'] : ['warn', 'error'],
-            engine: { type: 'binary' }
-          });
-        } catch (retryErr) {
-          // Give up and throw the original error to be handled by the caller
-          throw initialErr;
-        }
-      } else {
-        throw initialErr;
-      }
-    }
+    // Construct PrismaClient with valid Prisma v7+ options
+    // Note: PRISMA_CLIENT_ENGINE_TYPE environment variable is set in index.js
+    // before this module is imported, so the correct engine is already selected.
+    _prisma = new PrismaClient({
+      log: process.env.NODE_ENV === 'development' ? ['query', 'info', 'warn', 'error'] : ['warn', 'error']
+    });
     _initialized = true;
     return _prisma;
   } catch (err) {
