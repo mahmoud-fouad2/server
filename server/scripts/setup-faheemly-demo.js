@@ -258,38 +258,59 @@ async function setupDemoUser() {
 
     // 1. Create or update user with retry logic
     let user = await retryWithBackoff(async () => {
+      // Log pool stats before attempting Prisma calls
+      try {
+        logger.debug('DB pool stats', {
+          totalCount: pool.totalCount,
+          idleCount: pool.idleCount,
+          waitingCount: pool.waitingCount
+        });
+      } catch (e) {
+        logger.warn('Failed to read pool stats:', e?.message);
+      }
+
       const hashedPassword = await bcryptjs.hash(DEMO_USER_PASSWORD, 10);
       
-      let userData = await prisma.user.findUnique({
-        where: { email: DEMO_USER_EMAIL }
-      });
+      try {
+        let userData = await prisma.user.findUnique({
+          where: { email: DEMO_USER_EMAIL }
+        });
 
-      if (!userData) {
-        userData = await prisma.user.create({
-          data: {
-            email: DEMO_USER_EMAIL,
-            password: hashedPassword,
-            name: DEMO_USER_NAME,
-            fullName: 'Faheemly Demo',
-            role: 'ADMIN',
-            isActive: true
-          }
-        });
-        logger.info(`✅ User created: ${DEMO_USER_EMAIL}`);
-      } else {
-        // Update password if user exists
-        userData = await prisma.user.update({
-          where: { email: DEMO_USER_EMAIL },
-          data: {
-            password: hashedPassword,
-            role: 'ADMIN',
-            isActive: true
-          }
-        });
-        logger.info(`✅ User updated: ${DEMO_USER_EMAIL}`);
+        if (!userData) {
+          userData = await prisma.user.create({
+            data: {
+              email: DEMO_USER_EMAIL,
+              password: hashedPassword,
+              name: DEMO_USER_NAME,
+              fullName: 'Faheemly Demo',
+              role: 'ADMIN',
+              isActive: true
+            }
+          });
+          logger.info(`✅ User created: ${DEMO_USER_EMAIL}`);
+        } else {
+          // Update password if user exists
+          userData = await prisma.user.update({
+            where: { email: DEMO_USER_EMAIL },
+            data: {
+              password: hashedPassword,
+              role: 'ADMIN',
+              isActive: true
+            }
+          });
+          logger.info(`✅ User updated: ${DEMO_USER_EMAIL}`);
+        }
+        
+        return userData;
+      } catch (err) {
+        // Add pool stats to error for diagnostics and rethrow
+        err.poolStats = {
+          totalCount: pool.totalCount,
+          idleCount: pool.idleCount,
+          waitingCount: pool.waitingCount
+        };
+        throw err;
       }
-      
-      return userData;
     }, 5, 2000);
 
     // 2. Create or update business with retry logic
@@ -404,33 +425,36 @@ async function setupDemoUser() {
     logger.info('═══════════════════════════════════════════════════════');
 
   } catch (error) {
-    logger.error('❌ Setup failed:', error, {
+    // Attach pool stats for diagnostics
+    const extra = {
       message: error?.message,
       code: error?.code,
       hint: error?.meta?.hint,
-      target: error?.meta?.target
-    });
+      poolStats: error?.poolStats
+    };
+    logger.error('❌ Setup failed:', error, extra);
     process.exit(1);
   } finally {
     try {
       await prisma.$disconnect();
     } catch (e) {
-      logger.warn('Error disconnecting Prisma:', e);
+      logger.warn('Error disconnecting Prisma:', e?.message);
     }
     try {
       await pool.end();
     } catch (e) {
-      logger.warn('Error closing pool:', e);
+      logger.warn('Error closing pool:', e?.message);
     }
   }
 }
 
 setupDemoUser().catch(error => {
-  logger.error('Fatal setup error:', error, {
+  const extra = {
     message: error?.message,
     code: error?.code,
     hint: error?.meta?.hint,
-    target: error?.meta?.target
-  });
+    poolStats: error?.poolStats
+  };
+  logger.error('Fatal setup error:', error, extra);
   process.exit(1);
 });

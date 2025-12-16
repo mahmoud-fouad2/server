@@ -127,11 +127,31 @@ async function validateSchema() {
     
     // Test database connectivity with retry logic
     await retryWithBackoff(async () => {
+      // Log pool stats to diagnose connection issues
+      try {
+        logger.debug('DB pool stats', {
+          totalCount: pool.totalCount,
+          idleCount: pool.idleCount,
+          waitingCount: pool.waitingCount
+        });
+      } catch (e) {
+        logger.warn('Failed to read pool stats:', e?.message);
+      }
+
       // Simple query to test connectivity
-      const result = await prisma.user.findMany({ take: 1 });
-      logger.info(`✅ Database query successful. Found ${result.length} users.`);
-      
-      return result;
+      try {
+        const result = await prisma.user.findMany({ take: 1 });
+        logger.info(`✅ Database query successful. Found ${result.length} users.`);
+        return result;
+      } catch (err) {
+        // Attach pool diagnostics to error and rethrow
+        err.poolStats = {
+          totalCount: pool.totalCount,
+          idleCount: pool.idleCount,
+          waitingCount: pool.waitingCount
+        };
+        throw err;
+      }
     }, 5, 2000);
     
     // Check for the demo user
@@ -149,11 +169,14 @@ async function validateSchema() {
     }
     
   } catch (error) {
-    logger.error('❌ Schema validation failed:', error, {
+    // Include pool stats if available
+    const extra = {
       message: error?.message,
       code: error?.code,
-      hint: error?.meta?.hint
-    });
+      hint: error?.meta?.hint,
+      poolStats: error?.poolStats
+    };
+    logger.error('❌ Schema validation failed:', error, extra);
     throw error; // Re-throw to fail the setup if validation fails
   } finally {
     try {
