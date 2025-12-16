@@ -1,4 +1,3 @@
-const { PrismaClient } = require('@prisma/client');
 const logger = require('../utils/logger');
 
 // Database configuration with connection pooling and optimization
@@ -18,6 +17,20 @@ function createPrismaClient() {
   if (process.env.DATABASE_URL !== effectiveDbUrl) process.env.DATABASE_URL = effectiveDbUrl;
 
   try {
+    // Ensure Prisma uses the binary engine in environments where the client
+    // might default to the 'client' engine which requires an adapter/accelerateUrl.
+    process.env.PRISMA_CLIENT_ENGINE_TYPE = process.env.PRISMA_CLIENT_ENGINE_TYPE || 'binary';
+
+    // Lazy-require Prisma so tests / environments without generated client
+    // do not fail at module import time.
+    let PrismaClient;
+    try {
+      PrismaClient = require('@prisma/client').PrismaClient;
+    } catch (e) {
+      // Prisma client library not installed / generated in this environment
+      throw new Error('Prisma client module not available in this environment');
+    }
+
     _prisma = new PrismaClient({
       log: process.env.NODE_ENV === 'development' ? ['query', 'info', 'warn', 'error'] : ['warn', 'error'],
       // Force binary engine to avoid runtime requiring an adapter/accelerateUrl
@@ -34,13 +47,29 @@ function createPrismaClient() {
 
 function createPrismaStub(reason) {
   const message = reason && reason.message ? reason.message : String(reason);
-  return new Proxy({}, {
+
+  // Return a recursive proxy that gracefully handles nested property access
+  // such as `prisma.paymentGateway.findMany()` by returning callable
+  // proxies whose invocation throws a helpful error instead of causing
+  // confusing "... is not a function" runtime errors.
+  const thrower = function() {
+    throw new Error(`Prisma client is not available: ${message}`);
+  };
+
+  const handler = {
     get() {
-      return async () => {
-        throw new Error(`Prisma client is not available: ${message}`);
-      };
+      // Return another proxy so deep property access like `.paymentGateway.findMany`
+      // keeps returning callable proxies until invoked, at which point `apply`
+      // will throw the helpful error.
+      return new Proxy(thrower, handler);
+    },
+    apply() {
+      // When the callable proxy is invoked, throw a clear error.
+      throw new Error(`Prisma client is not available: ${message}`);
     }
-  });
+  };
+
+  return new Proxy(thrower, handler);
 }
 
 const prisma = new Proxy({}, {
