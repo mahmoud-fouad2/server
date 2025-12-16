@@ -53,7 +53,9 @@ async function validateSchema() {
     connectionTimeoutMillis: parseInt(process.env.DB_CONN_TIMEOUT || '5000', 10)
   };
   if (process.env.DB_SSL === 'true') {
-    poolOptions.ssl = { rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false' };
+    // For Render PostgreSQL databases, allow self-signed certificates
+    const isRenderPostgres = connectionString.includes('render.com') || connectionString.includes('dpg-');
+    poolOptions.ssl = { rejectUnauthorized: isRenderPostgres ? false : (process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false') };
   }
 
   const pool = new Pool(poolOptions);

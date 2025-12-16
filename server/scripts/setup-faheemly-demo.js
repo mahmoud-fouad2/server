@@ -34,8 +34,10 @@ const poolOptions = {
   keepAlive: true,
   keepAliveInitialDelayMillis: 0
 };
-if (process.env.DB_SSL === 'true' || process.env.NODE_ENV === 'production') {
-  poolOptions.ssl = { rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false' };
+if (process.env.DB_SSL === 'true' || (process.env.NODE_ENV === 'production' && process.env.DB_SSL !== 'false')) {
+  // For Render PostgreSQL databases, allow self-signed certificates
+  const isRenderPostgres = connectionString.includes('render.com') || connectionString.includes('dpg-');
+  poolOptions.ssl = { rejectUnauthorized: isRenderPostgres ? false : (process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false') };
 }
 
 const pool = new Pool(poolOptions);
