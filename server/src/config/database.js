@@ -1,5 +1,8 @@
 const logger = require('../utils/logger');
 
+// Force binary engine for Prisma in all environments to avoid adapter requirements
+process.env.PRISMA_CLIENT_ENGINE_TYPE = 'binary';
+
 // Database configuration with connection pooling and optimization
 // If `PGBOUNCER_URL` is set, prefer it so connections are routed through pgbouncer.
 // Lazy Prisma initialization to avoid hard failures at module import time
@@ -19,14 +22,14 @@ function createPrismaClient() {
   try {
     // Ensure Prisma uses the binary engine in environments where the client
     // might default to the 'client' engine which requires an adapter/accelerateUrl.
-    process.env.PRISMA_CLIENT_ENGINE_TYPE = process.env.PRISMA_CLIENT_ENGINE_TYPE || 'binary';
+    // process.env.PRISMA_CLIENT_ENGINE_TYPE = process.env.PRISMA_CLIENT_ENGINE_TYPE || 'binary';
 
     // Lazy-require Prisma so tests / environments without generated client
     // do not fail at module import time.
     let PrismaClient;
     try {
       // Force engine type env for platforms that default to 'client'
-      process.env.PRISMA_CLIENT_ENGINE_TYPE = process.env.PRISMA_CLIENT_ENGINE_TYPE || 'binary';
+      // process.env.PRISMA_CLIENT_ENGINE_TYPE = process.env.PRISMA_CLIENT_ENGINE_TYPE || 'binary';
 
       PrismaClient = require('@prisma/client').PrismaClient;
     } catch (e) {
