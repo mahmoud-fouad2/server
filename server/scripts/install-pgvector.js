@@ -1,6 +1,8 @@
-// Use the already-configured Prisma instance to respect Prisma v7 client
-// options and any datasource overrides provided by the environment.
-const prisma = require('../src/config/database');
+// Do NOT require the Prisma client at module load time — importing
+// `src/config/database.js` constructs a PrismaClient which may fail during
+// build-time hooks (Prisma v7 can require engine adapter options). We will
+// require it lazily only when needed (fallback path below).
+let prisma = null;
 
 async function installPgVector() {
   try {
