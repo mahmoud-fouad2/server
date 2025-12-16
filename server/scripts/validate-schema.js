@@ -146,10 +146,32 @@ async function validateSchema() {
         logger.info('Public tables:', tablesRes.rows.map(r => r.tablename).join(', '));
 
         const userColsRes = await pool.query(`SELECT column_name FROM information_schema.columns WHERE table_name='user'`);
-        logger.info('User table columns (lowercase):', userColsRes.rows.map(r => r.column_name).join(', '));
-
         const userColsRes2 = await pool.query(`SELECT column_name FROM information_schema.columns WHERE table_name='User'`);
-        logger.info('User table columns (Case 
+        const userColsRes3 = await pool.query(`SELECT column_name FROM information_schema.columns WHERE table_name='users'`);
+
+        const colsLower = userColsRes.rows.map(r => r.column_name);
+        const colsUpper = userColsRes2.rows.map(r => r.column_name);
+        const colsPlural = userColsRes3.rows.map(r => r.column_name);
+
+        logger.info('User table columns (lowercase):', colsLower.join(', ') || '(none)');
+        logger.info('User table columns (Case "User"):', colsUpper.join(', ') || '(none)');
+        logger.info('User table columns (plural "users"):', colsPlural.join(', ') || '(none)');
+
+        // Try selecting a sample row from likely table names for quick diagnostics
+        const candidateTables = ['"User"', 'user', 'users'];
+        for (const t of candidateTables) {
+          try {
+            const sample = await pool.query(`SELECT * FROM ${t} LIMIT 1`);
+            logger.info(`Sample row from ${t}:`, sample.rows[0] ? Object.keys(sample.rows[0]).join(', ') : '(empty)');
+            break;
+          } catch (rowErr) {
+            logger.warn(`Cannot read sample rows from ${t}: ${rowErr.message}`);
+          }
+        }
+      } catch (e) {
+        logger.warn('Error listing tables/columns via pool:', e?.message);
+      }
+
     }, 5, 2000);
     
     // Check for the demo user
