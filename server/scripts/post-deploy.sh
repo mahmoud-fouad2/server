@@ -7,9 +7,14 @@ echo "🚀 Running post-deployment tasks..."
 echo "📦 Generating Prisma Client..."
 npx prisma generate
 
-# Push database schema changes
-echo "🗄️ Pushing database schema..."
-npx prisma db push || echo "⚠️ Schema push failed or no changes needed"
+# Apply migrations (preferred) to ensure safe, ordered schema changes
+echo "🗄️ Applying Prisma migrations (preferred)..."
+if npx prisma migrate deploy; then
+  echo "✅ Migrations applied"
+else
+  echo "⚠️ Migrations failed. Do NOT run prisma db push --force-reset in production. Investigate and apply migrations or run the safe data-fix script."
+  echo "ℹ️ To fix NULL name issue manually: run \`node scripts/apply-user-name-migration.js\` with DATABASE_URL set, or add and apply the safe migration and re-run migrate deploy."
+fi
 
 # Seed the database with initial data
 echo "🌱 Seeding database..."

@@ -17,6 +17,7 @@
    
     "prisma:studio": "prisma studio",
     "install:pgvector": "node scripts/install-pgvector.js",
+    "apply:user-name-migration": "node scripts/apply-user-name-migration.js",
     
     "db:seed": "node scripts/seed-faheemly-knowledge.js",
     "db:demo": "node scripts/create-demo-data.js",
