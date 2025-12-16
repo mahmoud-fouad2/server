@@ -39,6 +39,39 @@ async function validateSchema() {
   }
 
   const pool = new Pool({ connectionString });
+
+  // Helpers for diagnostics (mask secrets)
+  function maskConnectionString(cs) {
+    try {
+      const u = new URL(cs);
+      return `${u.hostname}:${u.port || 5432}`;
+    } catch (e) {
+      return 'unknown-host';
+    }
+  }
+
+  // Ensure DB is reachable before creating Prisma client
+  try {
+    await retryWithBackoff(async () => {
+      const client = await pool.connect();
+      try {
+        logger.info(`✅ Connected to DB host ${maskConnectionString(connectionString)}`);
+      } finally {
+        client.release();
+      }
+    }, 6, 2000);
+  } catch (connErr) {
+    logger.error('❌ Unable to connect to database after retries:', connErr, {
+      message: connErr?.message,
+      code: connErr?.code,
+      host: maskConnectionString(connectionString)
+    });
+
+    // Close pool and exit early
+    try { await pool.end(); } catch (e) { logger.warn('Error closing pool:', e?.message); }
+    process.exit(1);
+  }
+
   const adapter = new PrismaPg({ pool });
   const prisma = new PrismaClient({ adapter });
   
