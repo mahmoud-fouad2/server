@@ -12,6 +12,8 @@ const require = createRequire(import.meta.url);
 const { PrismaClient } = require('@prisma/client');
 const { PrismaPg } = require('@prisma/adapter-pg');
 const { Pool } = require('pg');
+const dotenv = require('dotenv');
+dotenv.config();
 const logger = require('../src/utils/logger');
 
 /**

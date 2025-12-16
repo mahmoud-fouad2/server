@@ -30,9 +30,11 @@ const poolOptions = {
   connectionString,
   max: parseInt(process.env.DB_POOL_MAX || '20', 10),
   idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT || '10000', 10),
-  connectionTimeoutMillis: parseInt(process.env.DB_CONN_TIMEOUT || '5000', 10)
+  connectionTimeoutMillis: parseInt(process.env.DB_CONN_TIMEOUT || '5000', 10),
+  keepAlive: true,
+  keepAliveInitialDelayMillis: 0
 };
-if (process.env.DB_SSL === 'true') {
+if (process.env.DB_SSL === 'true' || process.env.NODE_ENV === 'production') {
   poolOptions.ssl = { rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false' };
 }
 
@@ -102,7 +104,10 @@ try {
 
 logger.info('🔧 Initializing Prisma adapter with connectionString');
 logger.info(`Using DB host: ${maskConnectionString(connectionString)}`);
-const adapter = new PrismaPg({ connectionString });
+const adapter = new PrismaPg({ 
+  connectionString,
+  ...poolOptions
+});
 const prisma = new PrismaClient({ adapter });
 
 const DEMO_USER_EMAIL = 'hello@faheemly.com';
@@ -329,7 +334,7 @@ async function setupDemoUser() {
             activityType: 'SOFTWARE',
             language: 'ar',
             status: 'ACTIVE',
-            planType: 'UNLIMITED',
+            planType: 'ENTERPRISE',
             messageQuota: 999999999, // Unlimited
             messagesUsed: 0,
             botTone: 'professional',
@@ -345,7 +350,7 @@ async function setupDemoUser() {
           where: { id: businessData.id },
           data: {
             status: 'ACTIVE',
-            planType: 'UNLIMITED',
+            planType: 'ENTERPRISE',
             messageQuota: 999999999,
             messagesUsed: 0,
             crmLeadCollectionEnabled: true,
@@ -373,8 +378,8 @@ async function setupDemoUser() {
             title: knowledge.title,
             content: knowledge.content,
             category: knowledge.category,
-            language: 'ar',
-            status: 'ACTIVE'
+            status: 'ACTIVE',
+            type: 'TEXT'
           }
         });
       }
@@ -386,20 +391,8 @@ async function setupDemoUser() {
       where: { businessId: business.id }
     });
     
-    const crm = await prisma.integration.create({
-      data: {
-        businessId: business.id,
-        type: 'CRM',
-        name: 'Faheemly CRM',
-        status: 'ACTIVE',
-        config: JSON.stringify({
-          leadTracking: true,
-          salesPipeline: true,
-          customerSegmentation: true
-        })
-      }
-    });
-    logger.info(`✅ CRM integration enabled: ${crm.id}`);
+    // Skip CRM integration for demo
+    logger.info(`✅ CRM features enabled via business settings`);
 
     // Summary
     logger.info('');
