@@ -7,7 +7,10 @@ export default defineConfig({
   datasources: {
     db: {
       provider: 'postgresql',
-      url: process.env.DATABASE_URL || ''
+      // Only pass the URL when present; otherwise let Prisma CLI/runtime
+      // treat it as undefined so migrate deploy can fail early and be
+      // skipped where appropriate.
+      url: process.env.DATABASE_URL || undefined
     }
   }
 });
