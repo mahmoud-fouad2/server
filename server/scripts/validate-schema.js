@@ -119,7 +119,9 @@ async function validateSchema() {
     process.exit(1);
   }
 
-  const adapter = new PrismaPg({ pool });
+  logger.info('🔧 Initializing Prisma adapter with connectionString');
+  logger.info(`Using DB host: ${maskConnectionString(connectionString)}`);
+  const adapter = new PrismaPg({ connectionString });
   const prisma = new PrismaClient({ adapter });
   
   try {
