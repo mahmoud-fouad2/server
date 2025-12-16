@@ -153,14 +153,21 @@ client-out-updated.zip
 # ========================================
 # Documentation (generated/temporary)
 # ========================================
+# Documentation (Ignore Generic, Allow Critical)
 *.md.backup
 *.md.tmp
 COMPREHENSIVE_REVIEW.md
 DEPLOYMENT_AUDIT_REPORT.md
 STATUS_REPORT.md
-*_SUMMARY.md
+# *_SUMMARY.md  # Disabled - allow critical reports
 RENDER_ENV_FIX.md
 API_DOCUMENTATION_GENERATED.md
+
+# Important reports - DO NOT IGNORE
+!DEPLOYMENT_SUMMARY.md
+!PRODUCTION_FIX_GUIDE.md
+!COMPREHENSIVE_AUDIT_REPORT.md
+!AUDIT_FINDINGS.json
 
 # ========================================
 # Backups
