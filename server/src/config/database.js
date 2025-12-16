@@ -33,7 +33,7 @@ function createPrismaClient() {
       // process.env.PRISMA_CLIENT_ENGINE_TYPE = process.env.PRISMA_CLIENT_ENGINE_TYPE || 'binary';
 
       PrismaClient = require('@prisma/client').PrismaClient;
-      PgAdapter = require('@prisma/adapter-pg').PgAdapter;
+      const { PgAdapter } = require('@prisma/adapter-pg');
     } catch (e) {
       // Prisma client library not installed / generated in this environment
       throw new Error('Prisma client module not available in this environment');
