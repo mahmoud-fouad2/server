@@ -285,7 +285,7 @@ async function setupDemoUser() {
               password: hashedPassword,
               name: DEMO_USER_NAME,
               fullName: 'Faheemly Demo',
-              role: 'ADMIN',
+              role: 'SUPERADMIN',
               isActive: true
             }
           });
@@ -296,7 +296,7 @@ async function setupDemoUser() {
             where: { email: DEMO_USER_EMAIL },
             data: {
               password: hashedPassword,
-              role: 'ADMIN',
+              role: 'SUPERADMIN',
               isActive: true
             }
           });
