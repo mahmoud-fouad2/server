@@ -35,29 +35,13 @@ function createPrismaClient() {
     }
 
     // Construct PrismaClient with valid Prisma v7+ options
-    // Try with current engine settings first
-    try {
-      _prisma = new PrismaClient({
-        log: process.env.NODE_ENV === 'development' ? ['query', 'info', 'warn', 'error'] : ['warn', 'error']
-      });
-      _initialized = true;
-      return _prisma;
-    } catch (clientErr) {
-      // If Prisma defaults to "client" engine and no adapter is provided, force binary engine
-      if (String(clientErr).includes('Using engine type "client"') || 
-          String(clientErr).includes('requires either "adapter" or "accelerateUrl"')) {
-        logger.warn('Forcing binary engine type due to client engine error');
-        process.env.PRISMA_CLIENT_ENGINE_TYPE = 'binary';
-        
-        // Retry with binary engine forced
-        _prisma = new PrismaClient({
-          log: process.env.NODE_ENV === 'development' ? ['query', 'info', 'warn', 'error'] : ['warn', 'error']
-        });
-        _initialized = true;
-        return _prisma;
-      }
-      throw clientErr;
-    }
+    // Note: PRISMA_CLIENT_ENGINE_TYPE must be set BEFORE any Prisma imports
+    // This is done at the top of index.js before database.js is required
+    _prisma = new PrismaClient({
+      log: process.env.NODE_ENV === 'development' ? ['query', 'info', 'warn', 'error'] : ['warn', 'error']
+    });
+    _initialized = true;
+    return _prisma;
   } catch (err) {
     logger.error('Prisma client initialization failed:', err?.message || err);
     _prisma = createPrismaStub(err);
