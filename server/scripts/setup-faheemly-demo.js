@@ -28,6 +28,26 @@ const DEMO_USER_EMAIL = 'hello@faheemly.com';
 const DEMO_USER_PASSWORD = 'FaheemlyDemo2025!';
 const DEMO_USER_NAME = 'Faheemly';
 
+/**
+ * Retry logic with exponential backoff
+ */
+async function retryWithBackoff(fn, maxRetries = 5, initialDelay = 1000) {
+  let lastError;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      if (attempt < maxRetries) {
+        const delay = initialDelay * Math.pow(2, attempt - 1);
+        logger.warn(`Attempt ${attempt} failed, retrying in ${delay}ms...`, error.message);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+  throw lastError;
+}
+
 // Knowledge base content for Faheemly
 const FAHEEMLY_KNOWLEDGE = [
   {
@@ -157,96 +177,106 @@ async function setupDemoUser() {
   try {
     logger.info('Starting Faheemly demo user setup...');
 
-    // 1. Create or update user
-    const hashedPassword = await bcryptjs.hash(DEMO_USER_PASSWORD, 10);
-    
-    let user = await prisma.user.findUnique({
-      where: { email: DEMO_USER_EMAIL }
-    });
-
-    if (!user) {
-      user = await prisma.user.create({
-        data: {
-          email: DEMO_USER_EMAIL,
-          password: hashedPassword,
-          name: DEMO_USER_NAME,
-          fullName: 'Faheemly Demo',
-          role: 'ADMIN',
-          isActive: true
-        }
+    // 1. Create or update user with retry logic
+    let user = await retryWithBackoff(async () => {
+      const hashedPassword = await bcryptjs.hash(DEMO_USER_PASSWORD, 10);
+      
+      let userData = await prisma.user.findUnique({
+        where: { email: DEMO_USER_EMAIL }
       });
-      logger.info(`✅ User created: ${DEMO_USER_EMAIL}`);
-    } else {
-      // Update password if user exists
-      user = await prisma.user.update({
-        where: { email: DEMO_USER_EMAIL },
-        data: {
-          password: hashedPassword,
-          role: 'ADMIN',
-          isActive: true
-        }
-      });
-      logger.info(`✅ User updated: ${DEMO_USER_EMAIL}`);
-    }
 
-    // 2. Create or update business
-    let business = await prisma.business.findFirst({
-      where: { userId: user.id }
-    });
+      if (!userData) {
+        userData = await prisma.user.create({
+          data: {
+            email: DEMO_USER_EMAIL,
+            password: hashedPassword,
+            name: DEMO_USER_NAME,
+            fullName: 'Faheemly Demo',
+            role: 'ADMIN',
+            isActive: true
+          }
+        });
+        logger.info(`✅ User created: ${DEMO_USER_EMAIL}`);
+      } else {
+        // Update password if user exists
+        userData = await prisma.user.update({
+          where: { email: DEMO_USER_EMAIL },
+          data: {
+            password: hashedPassword,
+            role: 'ADMIN',
+            isActive: true
+          }
+        });
+        logger.info(`✅ User updated: ${DEMO_USER_EMAIL}`);
+      }
+      
+      return userData;
+    }, 5, 2000);
 
-    if (!business) {
-      business = await prisma.business.create({
-        data: {
-          userId: user.id,
-          name: 'Faheemly - Demo Business',
-          activityType: 'SAAS',
-          language: 'ar',
-          status: 'ACTIVE',
-          planType: 'UNLIMITED',
-          messageQuota: 999999999, // Unlimited
-          messagesUsed: 0,
-          botTone: 'professional',
-          primaryColor: '#6366F1',
-          crmLeadCollectionEnabled: true,
-          preChatFormEnabled: true
-        }
+    // 2. Create or update business with retry logic
+    let business = await retryWithBackoff(async () => {
+      let businessData = await prisma.business.findFirst({
+        where: { userId: user.id }
       });
-      logger.info(`✅ Business created: ${business.id}`);
-    } else {
-      // Update business with unlimited quota
-      business = await prisma.business.update({
-        where: { id: business.id },
-        data: {
-          status: 'ACTIVE',
-          planType: 'UNLIMITED',
-          messageQuota: 999999999,
-          messagesUsed: 0,
-          crmLeadCollectionEnabled: true,
-          preChatFormEnabled: true
-        }
-      });
-      logger.info(`✅ Business updated: ${business.id}`);
-    }
 
-    // 3. Clear existing knowledge base
-    await prisma.knowledgeBase.deleteMany({
-      where: { businessId: business.id }
-    });
-    logger.info(`✅ Cleared existing knowledge base`);
+      if (!businessData) {
+        businessData = await prisma.business.create({
+          data: {
+            userId: user.id,
+            name: 'Faheemly - Demo Business',
+            activityType: 'SAAS',
+            language: 'ar',
+            status: 'ACTIVE',
+            planType: 'UNLIMITED',
+            messageQuota: 999999999, // Unlimited
+            messagesUsed: 0,
+            botTone: 'professional',
+            primaryColor: '#6366F1',
+            crmLeadCollectionEnabled: true,
+            preChatFormEnabled: true
+          }
+        });
+        logger.info(`✅ Business created: ${businessData.id}`);
+      } else {
+        // Update business with unlimited quota
+        businessData = await prisma.business.update({
+          where: { id: businessData.id },
+          data: {
+            status: 'ACTIVE',
+            planType: 'UNLIMITED',
+            messageQuota: 999999999,
+            messagesUsed: 0,
+            crmLeadCollectionEnabled: true,
+            preChatFormEnabled: true
+          }
+        });
+        logger.info(`✅ Business updated: ${businessData.id}`);
+      }
+      
+      return businessData;
+    }, 5, 2000);
 
-    // 4. Populate knowledge base
-    for (const knowledge of FAHEEMLY_KNOWLEDGE) {
-      await prisma.knowledgeBase.create({
-        data: {
-          businessId: business.id,
-          title: knowledge.title,
-          content: knowledge.content,
-          category: knowledge.category,
-          language: 'ar',
-          status: 'ACTIVE'
-        }
+    // 3. Clear and populate knowledge base with retry logic
+    await retryWithBackoff(async () => {
+      await prisma.knowledgeBase.deleteMany({
+        where: { businessId: business.id }
       });
-    }
+      logger.info(`✅ Cleared existing knowledge base`);
+
+      // Populate knowledge base
+      for (const knowledge of FAHEEMLY_KNOWLEDGE) {
+        await prisma.knowledgeBase.create({
+          data: {
+            businessId: business.id,
+            title: knowledge.title,
+            content: knowledge.content,
+            category: knowledge.category,
+            language: 'ar',
+            status: 'ACTIVE'
+          }
+        });
+      }
+    }, 5, 2000);
     logger.info(`✅ Knowledge base populated with ${FAHEEMLY_KNOWLEDGE.length} articles`);
 
     // 5. Ensure CRM features enabled

@@ -9,6 +9,26 @@ const { PrismaPg } = require('@prisma/adapter-pg');
 const { Pool } = require('pg');
 const logger = require('../src/utils/logger');
 
+/**
+ * Retry logic with exponential backoff
+ */
+async function retryWithBackoff(fn, maxRetries = 5, initialDelay = 1000) {
+  let lastError;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      if (attempt < maxRetries) {
+        const delay = initialDelay * Math.pow(2, attempt - 1);
+        logger.warn(`Attempt ${attempt} failed, retrying in ${delay}ms...`, error.message);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+  throw lastError;
+}
+
 async function validateSchema() {
   // Use pgBouncer URL for connections in production
   const connectionString = process.env.PGBOUNCER_URL || process.env.DATABASE_URL;
@@ -25,31 +45,27 @@ async function validateSchema() {
   try {
     logger.info('Validating database schema...');
     
-    // Test User table
-    const userTest = await prisma.$queryRaw`
-      SELECT column_name FROM information_schema.columns 
-      WHERE table_name='user' AND table_schema='public'
-    `;
+    // Test database connectivity with retry logic
+    await retryWithBackoff(async () => {
+      // Simple query to test connectivity
+      const result = await prisma.user.findMany({ take: 1 });
+      logger.info(`✅ Database query successful. Found ${result.length} users.`);
+      
+      return result;
+    }, 5, 2000);
     
-    logger.info('✅ User table columns:', userTest.map(c => c.column_name).join(', '));
-    
-    // Test if we can query users
-    const users = await prisma.user.findMany({ take: 1 });
-    logger.info(`✅ Database query successful. Found ${users.length} users.`);
-    
-    // Check for the specific user
+    // Check for the demo user
     const testUser = await prisma.user.findUnique({
-      where: { email: 'hello@faheemly.com' },
-      select: { id: true, email: true, name: true }
+      where: { email: 'hello@faheemly.com' }
     }).catch(e => {
-      logger.warn('⚠️  User not found or query failed:', e.message);
+      logger.warn('⚠️  Demo user not found (not yet created)');
       return null;
     });
     
     if (testUser) {
-      logger.info('✅ Demo user found:', testUser);
+      logger.info('✅ Demo user already exists:', testUser.email);
     } else {
-      logger.info('⚠️  Demo user not yet created - will create during setup');
+      logger.info('⚠️  Demo user will be created during setup');
     }
     
   } catch (error) {
@@ -58,16 +74,17 @@ async function validateSchema() {
       code: error?.code,
       hint: error?.meta?.hint
     });
+    throw error; // Re-throw to fail the setup if validation fails
   } finally {
     try {
       await prisma.$disconnect();
     } catch (e) {
-      logger.warn('Error disconnecting Prisma:', e);
+      logger.warn('Error disconnecting Prisma:', e.message);
     }
     try {
       await pool.end();
     } catch (e) {
-      logger.warn('Error closing pool:', e);
+      logger.warn('Error closing pool:', e.message);
     }
   }
 }
