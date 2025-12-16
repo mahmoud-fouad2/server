@@ -38,7 +38,18 @@ async function validateSchema() {
     process.exit(1);
   }
 
-  const pool = new Pool({ connectionString });
+  // Build Pool options with sensible defaults and optional SSL
+  const poolOptions = {
+    connectionString,
+    max: parseInt(process.env.DB_POOL_MAX || '20', 10),
+    idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT || '10000', 10),
+    connectionTimeoutMillis: parseInt(process.env.DB_CONN_TIMEOUT || '5000', 10)
+  };
+  if (process.env.DB_SSL === 'true') {
+    poolOptions.ssl = { rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false' };
+  }
+
+  const pool = new Pool(poolOptions);
 
   // Helpers for diagnostics (mask secrets)
   function maskConnectionString(cs) {
@@ -50,15 +61,46 @@ async function validateSchema() {
     }
   }
 
-  // Ensure DB is reachable before creating Prisma client
+  // Low-level TCP connectivity check to provide clearer diagnostics
+  const net = require('net');
+  async function tcpCheck(host, port = 5432, timeout = 3000) {
+    return new Promise((resolve, reject) => {
+      const socket = new net.Socket();
+      let called = false;
+      socket.setTimeout(timeout);
+      socket.on('connect', () => {
+        called = true;
+        socket.destroy();
+        resolve(true);
+      });
+      socket.on('timeout', () => {
+        if (!called) { called = true; socket.destroy(); reject(new Error('timeout')); }
+      });
+      socket.on('error', (err) => {
+        if (!called) { called = true; reject(err); }
+      });
+      socket.connect(port, host);
+    });
+  }
+
+  // Ensure DB host resolves and port is open before creating Prisma client
   try {
+    const u = new URL(connectionString);
+    const host = u.hostname;
+    const port = u.port ? parseInt(u.port, 10) : 5432;
+
+    logger.info(`🔎 Checking DB TCP connectivity to ${maskConnectionString(connectionString)} (ssl=${!!poolOptions.ssl})`);
+
     await retryWithBackoff(async () => {
+      await tcpCheck(host, port, 3000);
+      // quick PG check via a simple connect-release
       const client = await pool.connect();
       try {
-        logger.info(`✅ Connected to DB host ${maskConnectionString(connectionString)}`);
+        await client.query('SELECT 1');
       } finally {
         client.release();
       }
+      logger.info(`✅ TCP and simple query successful to ${host}:${port}`);
     }, 6, 2000);
   } catch (connErr) {
     logger.error('❌ Unable to connect to database after retries:', connErr, {
