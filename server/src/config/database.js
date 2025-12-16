@@ -13,15 +13,8 @@ if (effectiveDbUrl && process.env.DATABASE_URL !== effectiveDbUrl) {
 
 const prisma = new PrismaClient({
   log: process.env.NODE_ENV === 'development' ? ['query', 'info', 'warn', 'error'] : ['warn', 'error'],
-  // Connection pool settings for better stability
-  __internal: {
-    engine: {
-      type: 'binary',
-      connectTimeout: 60000, // 60 seconds
-      transactionTimeout: 60000,
-    },
-  },
 });
+
 
 // Connection pool configuration
   // Note: Prisma automatically handles connection pooling with PostgreSQL.

@@ -7,6 +7,13 @@ if (!process.env.DATABASE_URL) {
   process.exit(0);
 }
 
+// Basic validation: ensure DATABASE_URL looks like a postgres URL before attempting deploy
+const dbUrl = process.env.DATABASE_URL || '';
+if (!/^postgres(?:ql)?:\/\//i.test(dbUrl)) {
+  log('DATABASE_URL does not look like a Postgres URL — skipping `prisma migrate deploy` (value masked).');
+  process.exit(0);
+}
+
 try {
   log('Running `npx prisma migrate deploy`...');
   execSync('npx prisma migrate deploy', { stdio: 'inherit' });
