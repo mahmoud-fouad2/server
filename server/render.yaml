@@ -33,3 +33,5 @@ services:
         sync: false
       - key: RERANK_MODEL
         sync: false
+      - key: DB_SSL_REJECT_UNAUTHORIZED
+        value: false
