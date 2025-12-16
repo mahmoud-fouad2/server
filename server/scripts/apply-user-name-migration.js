@@ -21,7 +21,7 @@ async function main() {
   await client.connect();
 
   try {
-    const { rows } = await client.query('SELECT COUNT(*)::int as cnt FROM "User" WHERE "name" IS NULL OR TRIM(COALESCE("name",'')) = '''');
+    const { rows } = await client.query("SELECT COUNT(*)::int as cnt FROM \"User\" WHERE \"name\" IS NULL OR TRIM(COALESCE(\"name\",'')) = ''");
     const nullCount = rows[0].cnt;
     console.log(`Users with NULL/empty name: ${nullCount}`);
 
@@ -40,7 +40,7 @@ async function main() {
     `);
 
     // Re-check
-    const { rows: rows2 } = await client.query('SELECT COUNT(*)::int as cnt FROM "User" WHERE "name" IS NULL OR TRIM(COALESCE("name",'')) = '''');
+    const { rows: rows2 } = await client.query("SELECT COUNT(*)::int as cnt FROM \"User\" WHERE \"name\" IS NULL OR TRIM(COALESCE(\"name\",'')) = ''");
     const remaining = rows2[0].cnt;
     if (remaining > 0) {
       console.error(`After update, ${remaining} rows still have NULL/empty name. Aborting without altering schema.`);

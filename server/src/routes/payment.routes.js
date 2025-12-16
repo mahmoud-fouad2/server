@@ -11,10 +11,8 @@ const prisma = require('../config/database');
 const logger = require('../utils/logger');
 const asyncHandler = require('express-async-handler');
 
-// Initialize gateways on startup
-paymentService.initializeGateways().catch(err => {
-  logger.error('Failed to initialize payment gateways', err);
-});
+// NOTE: initialization of payment gateways is deferred until after DB connectivity
+// to avoid running DB-dependent code during module load. See `index.js` startup sequence.
 
 /**
  * @route   GET /api/payments/gateways
