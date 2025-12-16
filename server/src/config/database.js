@@ -3,16 +3,51 @@ const logger = require('../utils/logger');
 
 // Database configuration with connection pooling and optimization
 // If `PGBOUNCER_URL` is set, prefer it so connections are routed through pgbouncer.
-const effectiveDbUrl = process.env.PGBOUNCER_URL || process.env.DATABASE_URL;
+// Lazy Prisma initialization to avoid hard failures at module import time
+let _prisma = null;
+let _initialized = false;
 
-// Prisma v7 removed the `datasources` client option; ensure the effective
-// DATABASE_URL is set via environment variable before constructing the client.
-if (effectiveDbUrl && process.env.DATABASE_URL !== effectiveDbUrl) {
-  process.env.DATABASE_URL = effectiveDbUrl;
+function createPrismaClient() {
+  if (_prisma) return _prisma;
+
+  const effectiveDbUrl = process.env.PGBOUNCER_URL || process.env.DATABASE_URL;
+  if (!effectiveDbUrl) {
+    throw new Error('DATABASE_URL is not configured; Prisma client will not be initialized');
+  }
+
+  if (process.env.DATABASE_URL !== effectiveDbUrl) process.env.DATABASE_URL = effectiveDbUrl;
+
+  try {
+    _prisma = new PrismaClient({
+      log: process.env.NODE_ENV === 'development' ? ['query', 'info', 'warn', 'error'] : ['warn', 'error'],
+    });
+    _initialized = true;
+    return _prisma;
+  } catch (err) {
+    logger.error('Prisma client initialization failed:', err?.message || err);
+    _prisma = createPrismaStub(err);
+    return _prisma;
+  }
 }
 
-const prisma = new PrismaClient({
-  log: process.env.NODE_ENV === 'development' ? ['query', 'info', 'warn', 'error'] : ['warn', 'error'],
+function createPrismaStub(reason) {
+  const message = reason && reason.message ? reason.message : String(reason);
+  return new Proxy({}, {
+    get() {
+      return async () => {
+        throw new Error(`Prisma client is not available: ${message}`);
+      };
+    }
+  });
+}
+
+const prisma = new Proxy({}, {
+  get(_target, prop) {
+    const client = createPrismaClient();
+    const val = client[prop];
+    if (typeof val === 'function') return val.bind(client);
+    return val;
+  }
 });
 
 
@@ -26,16 +61,22 @@ const prisma = new PrismaClient({
 // Test database connection on startup
 async function testConnection() {
   try {
-    await prisma.$connect();
+    const dbUrl = process.env.PGBOUNCER_URL || process.env.DATABASE_URL;
+    if (!dbUrl || !/^postgres(?:ql)?:\/\//i.test(dbUrl)) {
+      logger.warn('Skipping database connection test - DATABASE_URL not configured or not Postgres');
+      return;
+    }
+
+    const client = createPrismaClient();
+    await client.$connect();
     logger.info('Database connected successfully');
 
     // Run a simple query to verify vector extension
-    await prisma.$queryRaw`SELECT 1`;
+    await client.$queryRaw`SELECT 1`;
     logger.info('Database basic test query executed');
 
   } catch (error) {
     logger.error('Database connection failed', error);
-    // Throw error to allow caller to perform graceful shutdown
     throw error;
   }
 }
