@@ -20,6 +20,8 @@ function createPrismaClient() {
   try {
     _prisma = new PrismaClient({
       log: process.env.NODE_ENV === 'development' ? ['query', 'info', 'warn', 'error'] : ['warn', 'error'],
+      // Force binary engine to avoid runtime requiring an adapter/accelerateUrl
+      __internal: { engine: { type: 'binary' } }
     });
     _initialized = true;
     return _prisma;
