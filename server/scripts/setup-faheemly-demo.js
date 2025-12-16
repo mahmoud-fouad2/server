@@ -8,10 +8,21 @@
  */
 
 const { PrismaClient } = require('@prisma/client');
+const { PrismaPg } = require('@prisma/adapter-pg');
+const { Pool } = require('pg');
 const bcryptjs = require('bcryptjs');
 const logger = require('../src/utils/logger');
 
-const prisma = new PrismaClient();
+// Setup database connection with adapter
+const connectionString = process.env.PGBOUNCER_URL || process.env.DATABASE_URL;
+if (!connectionString) {
+  logger.error('❌ DATABASE_URL or PGBOUNCER_URL not set');
+  process.exit(1);
+}
+
+const pool = new Pool({ connectionString });
+const adapter = new PrismaPg({ pool });
+const prisma = new PrismaClient({ adapter });
 
 const DEMO_USER_EMAIL = 'hello@faheemly.com';
 const DEMO_USER_PASSWORD = 'FaheemlyDemo2025!';
@@ -288,7 +299,11 @@ async function setupDemoUser() {
     process.exit(1);
   } finally {
     await prisma.$disconnect();
+    await pool.end();
   }
 }
 
-setupDemoUser();
+setupDemoUser().catch(error => {
+  logger.error('Fatal error:', error);
+  process.exit(1);
+});
