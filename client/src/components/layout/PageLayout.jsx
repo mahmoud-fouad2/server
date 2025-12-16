@@ -63,22 +63,22 @@ export default function PageLayout({ children }) {
       <nav
         className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? 'h-20 shadow-lg' : 'h-24'} bg-white/95 dark:bg-cosmic-950/95 backdrop-blur-sm border-b border-gray-200 dark:border-white/5`}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-full flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="hover:scale-105 transition-transform">
               <Image
                 src="/logo.webp"
                 alt="Faheemly"
-                width={240}
-                height={120}
-                className={`${scrolled ? 'h-16' : 'h-28'} w-auto object-contain transition-all`}
+                width={160}
+                height={80}
+                className={`${scrolled ? 'h-14 md:h-16' : 'h-20 md:h-24'} w-auto object-contain transition-all`}
                 priority={true}
               />
           </Link>
 
           {/* Desktop Menu */}
-          <div className="hidden lg:flex items-center gap-6">
-            {menuItems.slice(0, 4).map(item => (
+          <div className="hidden lg:flex items-center gap-4">
+            {menuItems.slice(0, 5).map(item => (
               <Link
                 key={item.href}
                 href={item.href}
@@ -97,15 +97,15 @@ export default function PageLayout({ children }) {
 
             <Link
               href="/login"
-              className={`text-sm font-bold px-5 py-2.5 rounded-full transition-all hover:scale-105 ${isDark ? 'text-gray-300 hover:text-white hover:bg-white/5' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'}`}
+              className={`text-sm font-bold px-4 py-2 rounded-full transition-all hover:scale-105 ${isDark ? 'text-gray-300 hover:text-white hover:bg-white/5' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'}`}
             >
               تسجيل الدخول
             </Link>
             <Link
               href="/register"
-              className="px-6 py-2.5 rounded-full bg-gradient-to-r from-brand-600 to-brand-500 text-white font-bold shadow-lg hover:scale-105 transition-all text-sm"
+              className="px-6 py-2 rounded-full bg-gradient-to-r from-brand-600 to-brand-500 text-white font-bold shadow-lg hover:scale-105 transition-all text-sm"
             >
-              ابدأ الآن
+              جرب مجاناً
             </Link>
           </div>
 
@@ -119,7 +119,7 @@ export default function PageLayout({ children }) {
             </button>
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="px-4 py-2.5 rounded-full bg-brand-600 text-white hover:bg-brand-700 transition-all hover:scale-105 shadow-lg shadow-brand-500/30"
+              className="px-4 py-2 rounded-full bg-brand-600 text-white hover:bg-brand-700 transition-all hover:scale-105 shadow-lg shadow-brand-500/30"
               aria-label="Open menu"
             >
               <Menu size={20} strokeWidth={2.5} />
@@ -143,8 +143,8 @@ export default function PageLayout({ children }) {
           className={`absolute top-0 right-0 h-full w-80 max-w-[85vw] bg-white dark:bg-cosmic-900 shadow-2xl transform transition-transform duration-300 ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}
         >
           {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-white/10">
-            <Image src="/logo2.png" alt="فهملي" width={200} height={100} className="h-20 w-auto" />
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-white/10">
+            <Image src="/logo2.png" alt="فهملي" width={120} height={60} className="h-16 w-auto" />
             <button
               onClick={() => setMobileMenuOpen(false)}
               className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"

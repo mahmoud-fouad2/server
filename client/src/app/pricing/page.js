@@ -22,8 +22,8 @@ import { convertCurrency } from '@/constants';
 
 // Base prices in SAR
 const BASE_PRICES = {
-  starter: 99,
-  pro: 299,
+  starter: 199,
+  pro: 399,
   agency: 999,
 };
 

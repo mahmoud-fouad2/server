@@ -26,32 +26,31 @@ export default function Footer() {
     <footer
       className={`border-t ${isDark ? 'border-white/5 bg-black/40 text-gray-400' : 'border-gray-200 bg-gray-50 text-gray-600'}`}
     >
-      <div className="max-w-7xl mx-auto px-6 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Brand Column */}
-          <div className="col-span-1 md:col-span-1">
-            <div className="flex items-center justify-center md:justify-start mb-6">
+          <div className="col-span-1">
+            <div className="flex items-center justify-center md:justify-start mb-4">
               <Image
                 src="/logo2.png"
                 alt="فهملي"
-                width={128}
-                height={128}
-                className="w-32 h-32 object-contain"
+                width={100}
+                height={100}
+                className="w-20 h-20 object-contain"
                 loading="lazy"
               />
             </div>
-            <p className="text-sm leading-relaxed mb-8 opacity-80">
-              أقوى منصة شات بوت عربي مدعومة بالذكاء الاصطناعي. نساعدك تزيد
-              مبيعاتك وترضي عملاءك 24/7.
+            <p className="text-xs leading-relaxed opacity-80">
+              أقوى شات بوت عربي بالذكاء الاصطناعي. 24/7 لخدمة عملاءك.
             </p>
           </div>
 
           {/* Links Column 1 */}
           <div>
-            <h4 className="font-bold text-gray-900 dark:text-white mb-6 text-lg">
+            <h4 className="font-bold text-gray-900 dark:text-white mb-4 text-sm">
               الشركة
             </h4>
-            <ul className="space-y-3 text-sm">
+            <ul className="space-y-2 text-xs">
               <li>
                 <Link
                   href="/"
@@ -66,22 +65,6 @@ export default function Footer() {
                   className="hover:text-brand-500 transition-colors"
                 >
                   الخدمات
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/solutions"
-                  className="hover:text-brand-500 transition-colors"
-                >
-                  الحلول
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/examples"
-                  className="hover:text-brand-500 transition-colors"
-                >
-                  الأمثلة
                 </Link>
               </li>
               <li>
@@ -105,26 +88,10 @@ export default function Footer() {
 
           {/* Links Column 2 */}
           <div>
-            <h4 className="font-bold text-gray-900 dark:text-white mb-6 text-lg">
-              المطورين والدعم
+            <h4 className="font-bold text-gray-900 dark:text-white mb-4 text-sm">
+              الدعم والقانون
             </h4>
-            <ul className="space-y-3 text-sm">
-              <li>
-                <Link
-                  href="/docs"
-                  className="hover:text-brand-500 transition-colors"
-                >
-                  التوثيق الشامل
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/docs#api"
-                  className="hover:text-brand-500 transition-colors"
-                >
-                  مرجع API
-                </Link>
-              </li>
+            <ul className="space-y-2 text-xs">
               <li>
                 <Link
                   href="/privacy"
@@ -151,36 +118,27 @@ export default function Footer() {
               </li>
             </ul>
           </div>
-
-          {/* Contact Column */}
-          <div>
-            <h4 className="font-bold text-gray-900 dark:text-white mb-6 text-lg">
-              تواصل معنا
-            </h4>
-            <p className="text-sm mb-4">info@faheemly.com</p>
-            <p className="text-sm">الرياض، المملكة العربية السعودية</p>
-          </div>
         </div>
 
-        <div className="border-t border-gray-200 dark:border-white/5 mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm opacity-60">
+        <div className="border-t border-gray-200 dark:border-white/5 mt-6 pt-4 flex flex-col md:flex-row justify-between items-center gap-3">
+          <p className="text-xs opacity-60">
             © 2025 جميع الحقوق محفوظة لشركة فهملي
           </p>
           <a
             href="https://ma-fo.info"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 opacity-70 hover:opacity-100 transition-opacity group"
+            className="flex items-center gap-1.5 opacity-70 hover:opacity-100 transition-opacity group text-xs"
           >
             <Image
               src="https://ma-fo.info/logo2.png"
               alt="Ma-Fo Logo"
-              width={16}
-              height={16}
+              width={12}
+              height={12}
               className="object-contain"
               unoptimized
             />
-            <span className="text-xs font-medium tracking-wide group-hover:text-brand-500 transition-colors">
+            <span className="font-medium tracking-wide group-hover:text-brand-500 transition-colors">
               Development By Ma-Fo
             </span>
           </a>
