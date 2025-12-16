@@ -27,13 +27,11 @@ function createPrismaClient() {
     // Lazy-require Prisma so tests / environments without generated client
     // do not fail at module import time.
     let PrismaClient;
-    let PgAdapter;
     try {
       // Force engine type env for platforms that default to 'client'
       // process.env.PRISMA_CLIENT_ENGINE_TYPE = process.env.PRISMA_CLIENT_ENGINE_TYPE || 'binary';
 
       PrismaClient = require('@prisma/client').PrismaClient;
-      PgAdapter = require('@prisma/adapter-pg');
     } catch (e) {
       // Prisma client library not installed / generated in this environment
       throw new Error('Prisma client module not available in this environment');
@@ -42,20 +40,21 @@ function createPrismaClient() {
     // Try to construct PrismaClient; if the environment tries to use the "client" engine
     // and fails due to missing adapter/accelerateUrl, retry with explicit binary engine option.
     try {
-      const adapter = new PgAdapter({ connectionString: effectiveDbUrl });
       _prisma = new PrismaClient({
-        adapter,
-        log: process.env.NODE_ENV === 'development' ? ['query', 'info', 'warn', 'error'] : ['warn', 'error']
+        log: process.env.NODE_ENV === 'development' ? ['query', 'info', 'warn', 'error'] : ['warn', 'error'],
+        __internal: { engine: { type: 'binary' } }
       });
     } catch (initialErr) {
-      // If adapter fails, try without adapter (binary engine)
-      if (String(initialErr).includes('adapter')) {
+      // If engine type 'client' error appears, try again with top-level engine option
+      if (String(initialErr).includes('requires either "adapter" or "accelerateUrl"') || String(initialErr).includes('Using engine type "client"')) {
+        process.env.PRISMA_CLIENT_ENGINE_TYPE = 'binary';
         try {
           _prisma = new PrismaClient({
             log: process.env.NODE_ENV === 'development' ? ['query', 'info', 'warn', 'error'] : ['warn', 'error'],
-            __internal: { engine: { type: 'binary' } }
+            engine: { type: 'binary' }
           });
         } catch (retryErr) {
+          // Give up and throw the original error to be handled by the caller
           throw initialErr;
         }
       } else {
