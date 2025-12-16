@@ -19,6 +19,23 @@ try {
   execSync('npx prisma migrate deploy', { stdio: 'inherit' });
   log('Migrations applied successfully');
 } catch (err) {
-  console.error('[migrations] Failed to apply migrations:', err && err.message ? err.message : err);
+  const errMsg = err && err.message ? err.message : String(err);
+  console.error('[migrations] Failed to apply migrations:', errMsg);
+
+  // Auto-resolve option for known failed migration
+  if (process.env.FORCE_MIGRATION_RESOLVE === 'true' && process.env.FORCE_MIGRATION_NAME) {
+    try {
+      log(`FORCE_MIGRATION_RESOLVE is enabled - attempting to mark ${process.env.FORCE_MIGRATION_NAME} as applied`);
+      execSync(`npx prisma migrate resolve --applied ${process.env.FORCE_MIGRATION_NAME}`, { stdio: 'inherit' });
+      log('Migration marked as applied. Re-running `npx prisma migrate deploy`...');
+      execSync('npx prisma migrate deploy', { stdio: 'inherit' });
+      log('Migrations applied successfully after resolution');
+      return;
+    } catch (resolveErr) {
+      console.error('[migrations] Auto-resolve failed:', resolveErr && resolveErr.message ? resolveErr.message : resolveErr);
+      log('Auto-resolve failed; please inspect the migration table or run manual resolve from Render shell.');
+    }
+  }
+
   log('Continuing without blocking start; please inspect migration failures and run migrations manually if needed.');
 }
