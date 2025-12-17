@@ -1,4 +1,6 @@
-const logger = require('../utils/logger');
+import logger from '../utils/logger.js';
+import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
 
 // Database configuration with connection pooling and optimization
 // Prisma v7+ with @prisma/adapter-pg for direct PostgreSQL connection
@@ -21,17 +23,6 @@ function createPrismaClient() {
   if (process.env.DATABASE_URL !== effectiveDbUrl) process.env.DATABASE_URL = effectiveDbUrl;
 
   try {
-    // Lazy-require Prisma so tests / environments without generated client
-    // do not fail at module import time.
-    let PrismaClient, PrismaPg;
-    try {
-      PrismaClient = require('@prisma/client').PrismaClient;
-      PrismaPg = require('@prisma/adapter-pg').PrismaPg;
-    } catch (e) {
-      // Prisma client library not installed / generated in this environment
-      throw new Error('Prisma client module or @prisma/adapter-pg not available: ' + e.message);
-    }
-
     // Initialize adapter for PostgreSQL in Prisma v7+
     // This replaces the need for PRISMA_CLIENT_ENGINE_TYPE env variable
     // The adapter handles connection pooling and ensures binary engine is used
@@ -153,8 +144,5 @@ async function testConnection() {
 // Note: Graceful shutdown is handled in index.js
 // testConnection is called from index.js to ensure environment variables are loaded
 
-module.exports = prisma;
-// Provide a default property so ESM `import prisma from '../config/database.js'` works during migration
-module.exports.default = prisma;
-// Export helper for tests/startup to optionally validate DB connectivity
-module.exports.testConnection = testConnection;
+export default prisma;
+export { testConnection };
