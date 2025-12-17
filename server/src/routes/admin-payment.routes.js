@@ -29,23 +29,6 @@ function encrypt(text) {
   return iv.toString('hex') + ':' + encrypted;
 }
 
-/* eslint-disable no-unused-vars */
-/*
- * Decrypt sensitive data (helper kept for future use)
- */
-function _decrypt(encryptedText) {
-  const algorithm = 'aes-256-cbc';
-  const key = crypto.scryptSync(process.env.ENCRYPTION_KEY || 'default-key-change-in-production', 'salt', 32);
-  const parts = encryptedText.split(':');
-  const iv = Buffer.from(parts[0], 'hex');
-  const encrypted = parts[1];
-  const decipher = crypto.createDecipheriv(algorithm, key, iv);
-  let decrypted = decipher.update(encrypted, 'hex', 'utf8');
-  decrypted += decipher.final('utf8');
-  return decrypted;
-}
-/* eslint-enable no-unused-vars */
-
 /**
  * @route   GET /api/admin/payments/gateways
  * @desc    Get all payment gateways
@@ -408,9 +391,11 @@ router.post(
   })
 );
 
-module.exports = router;
-
-// Admin: list payments (invoices) with pagination & filtering
+/**
+ * @route   GET /api/admin/payments/invoices
+ * @desc    List payments with pagination & filtering
+ * @access  SUPERADMIN
+ */
 router.get(
   '/invoices',
   requirePermission('system:read'),
@@ -445,7 +430,11 @@ router.get(
   })
 );
 
-// Admin: get single invoice/payment details
+/**
+ * @route   GET /api/admin/payments/invoices/:id
+ * @desc    Get single invoice/payment details
+ * @access  SUPERADMIN
+ */
 router.get(
   '/invoices/:id',
   requirePermission('system:read'),
@@ -466,7 +455,11 @@ router.get(
   })
 );
 
-// Admin: list subscriptions
+/**
+ * @route   GET /api/admin/payments/subscriptions
+ * @desc    List subscriptions
+ * @access  SUPERADMIN
+ */
 router.get(
   '/subscriptions',
   requirePermission('system:read'),
@@ -485,4 +478,6 @@ router.get(
     res.json({ success: true, data: subs, pagination: { page: parseInt(page), limit: parseInt(limit), total, totalPages: Math.ceil(total / parseInt(limit)) } });
   })
 );
+
+module.exports = router;
 
