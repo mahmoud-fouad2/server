@@ -254,7 +254,9 @@ describe('LandingSections Components', () => {
       const egyptProps = { ...mockProps, activeCountry: 'eg' };
       const { rerender } = render(<LimitedTimeOffer {...egyptProps} />);
 
-      expect(screen.getByText(/خصم 50% 1122 جنيه فقط/)).toBeInTheDocument();
+      const { convertCurrency } = require('@/constants');
+      const expectedEgyptDiscounted = Math.round(convertCurrency(199, 'EGP') * 0.5);
+      expect(screen.getByText(new RegExp(`خصم 50% ${expectedEgyptDiscounted} جنيه فقط`))).toBeInTheDocument();
 
       const uaeProps = { ...mockProps, activeCountry: 'ae' };
       rerender(<LimitedTimeOffer {...uaeProps} />);

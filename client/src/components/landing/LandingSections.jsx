@@ -38,6 +38,18 @@ import {
   Zap,
 } from 'lucide-react';
 import Image from 'next/image';
+import { convertCurrency } from '@/constants';
+
+// Helper: compute discounted offer price for countries
+const computeOfferText = (country) => {
+  const baseSar = 199;
+  if (country === 'sa') return `${baseSar} ريال فقط`;
+  const map = { eg: { code: 'EGP', label: 'جنيه' }, ae: { code: 'AED', label: 'درهم' }, kw: { code: 'KWD', label: 'دينار' } };
+  const entry = map[country] || { code: 'SAR', label: 'ريال' };
+  const price = convertCurrency(baseSar, entry.code);
+  const discounted = Math.round(price * 0.5); // 50% discount
+  return `${discounted} ${entry.label} فقط`;
+};
 import {
   TRANSLATIONS,
   SEO_DATA,
@@ -668,10 +680,7 @@ const LimitedTimeOffer = ({ t, activeCountry, isDark }) => (
             </div>
 
             <h3 className={`text-3xl md:text-4xl font-black ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              {activeCountry === 'eg' && `${t.offerTitle} 1122 جنيه فقط`}
-              {activeCountry === 'ae' && `${t.offerTitle} 199 درهم فقط`}
-              {activeCountry === 'kw' && `${t.offerTitle} 16 دينار فقط`}
-              {activeCountry === 'sa' && `${t.offerTitle} 199 ريال فقط`}
+              {`${t.offerTitle} ${computeOfferText(activeCountry)}`}
             </h3>
 
             <p className={`text-lg font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>

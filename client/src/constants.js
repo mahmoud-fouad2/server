@@ -52,10 +52,10 @@ export const SEO_DATA = {
         'حلول أعمال مصرية, شات بوت مطاعم مصر, بوت عيادات طبية مصر, محلات تجارية مصر, AI business solutions Egypt',
     },
     pricing: {
-      title: 'أسعار فهملي بالجنيه المصري - باقات من 559 جنيه شهرياً',
-      desc: 'باقات مرنة تبدأ من 559 جنيه مصري شهرياً (199 ريال سعودي). تجربة مجانية 7 أيام بدون بطاقة ائتمان. أسعار واضحة وشفافة.',
+      title: `أسعار فهملي بالجنيه المصري - باقات من ${convertCurrency(199, 'EGP')} جنيه شهرياً`,
+      desc: `باقات مرنة تبدأ من ${convertCurrency(199, 'EGP')} جنيه مصري شهرياً (199 ريال سعودي). تجربة مجانية 7 أيام بدون بطاقة ائتمان. أسعار واضحة وشفافة.`,
       keywords:
-        'أسعار شات بوت مصر, باقات فهملي بالجنيه, 559 جنيه, 199 ريال, تجربة مجانية مصر, chatbot pricing Egypt',
+        `أسعار شات بوت مصر, باقات فهملي بالجنيه, ${convertCurrency(199, 'EGP')} جنيه, 199 ريال, تجربة مجانية مصر, chatbot pricing Egypt`,
     },
   },
   ae: {
@@ -151,7 +151,7 @@ export const DIALECT_OPTIONS = [
 // Currency Exchange Rates (SAR as base)
 export const CURRENCY_RATES = {
   SAR: 1,
-  EGP: 5.64, // 1 SAR = 5.64 EGP (updated for new pricing)
+  EGP: 13, // 1 SAR = 13 EGP (updated per request)
   AED: 1.0, // 1 SAR = 1.0 AED (approximate parity)
   KWD: 0.081, // 1 SAR = 0.081 KWD
 };
