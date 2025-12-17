@@ -154,5 +154,7 @@ async function testConnection() {
 // testConnection is called from index.js to ensure environment variables are loaded
 
 module.exports = prisma;
+// Provide a default property so ESM `import prisma from '../config/database.js'` works during migration
+module.exports.default = prisma;
 // Export helper for tests/startup to optionally validate DB connectivity
 module.exports.testConnection = testConnection;
