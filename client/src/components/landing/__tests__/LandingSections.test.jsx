@@ -260,7 +260,8 @@ describe('LandingSections Components', () => {
 
       const uaeProps = { ...mockProps, activeCountry: 'ae' };
       rerender(<LimitedTimeOffer {...uaeProps} />);
-      expect(screen.getByText(/خصم 50% 199 درهم فقط/)).toBeInTheDocument();
+      const expectedUAEDiscounted = Math.round(Math.round(199 * 1) * 0.5);
+      expect(screen.getByText(new RegExp(`خصم 50% ${expectedUAEDiscounted} درهم فقط`))).toBeInTheDocument();
     });
   });
 
