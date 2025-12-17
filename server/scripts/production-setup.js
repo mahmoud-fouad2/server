@@ -8,8 +8,9 @@
  * 4. Demo user setup
  */
 
-const { execSync } = require('child_process');
-const logger = require('../src/utils/logger');
+import { execSync } from 'child_process';
+import { Client } from 'pg';
+import logger from '../src/utils/logger.js';
 
 async function runProductionSetup() {
   try {
@@ -32,13 +33,20 @@ async function runProductionSetup() {
     logger.info('');
     logger.info('🗄️  Step 2: Consolidating migrations by resetting DB to current schema...');
     
-    // Ensure pgvector extension is installed before schema operations
-    logger.info('🔧 Installing pgvector extension...');
+    // Ensure pgvector extension is installed and verified before schema operations
+    logger.info('🔧 Installing and verifying pgvector extension...');
     try {
       execSync('node scripts/install-pgvector.js', { stdio: 'inherit' });
-      logger.info('✅ pgvector extension ready');
+      logger.info('✅ pgvector extension installed');
+      
+      // Verify pgvector is actually available in the current session
+      const client = new Client({ connectionString: process.env.DATABASE_URL, ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false });
+      await client.connect();
+      await client.query('SELECT \'[1,2,3]\'::vector(3) as test;');
+      await client.end();
+      logger.info('✅ pgvector extension verified and ready');
     } catch (e) {
-      logger.warn('⚠️  pgvector installation failed, but continuing (fallback will work):', e.message);
+      logger.warn('⚠️  pgvector verification failed, but continuing (fallback will work):', e.message);
     }
     
     try {
