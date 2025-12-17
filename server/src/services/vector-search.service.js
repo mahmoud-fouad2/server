@@ -31,90 +31,10 @@ class VectorSearchService {
     const originalQuery = query;
     // Skip embedding generation in tests only when explicitly requested
     if (process.env.NODE_ENV === 'test' && process.env.FAKE_VECTOR === 'true') return [];
-    try {
-      // Step 1: Generate embedding for the query
-      const queryEmbedding = await embeddingService.generateEmbedding(query);
-      
-      if (!queryEmbedding || !Array.isArray(queryEmbedding) || queryEmbedding.length === 0 || !queryEmbedding.every(n => typeof n === 'number' && Number.isFinite(n))) {
-        logger.warn('Vector search: failed to generate query embedding, using keyword fallback', { businessId });
-        return await this.fallbackKeywordSearch(query, businessId, limit);
-      }
-
-      // Step 2: Perform vector similarity search using parameterized query
-      // Note: Prisma doesn't support vector operations natively yet, but we use Prisma.$queryRaw with template literals for safety
-      const limitValue = Math.max(1, Math.min(Number(limit) || 5, 50));
-      const embeddingVector = queryEmbedding.map(num => Number.isFinite(num) ? Number(num) : 0);
-      
-      // Use Prisma's parameterized query to prevent SQL injection
-      // Convert embedding array to PostgreSQL vector format
-      const embeddingArray = `[${embeddingVector.join(',')}]`;
-      
-      // Use Prisma.$queryRaw with template literal for parameterized query
-      const results = await prisma.$queryRaw`
-        SELECT 
-          id,
-          "knowledgeBaseId",
-          "businessId",
-          content,
-          metadata,
-          "createdAt",
-          1 - (embedding_vector <=> ${embeddingArray}::vector) as similarity
-        FROM "KnowledgeChunk"
-        WHERE "businessId" = ${businessId}
-          AND embedding_vector IS NOT NULL
-        ORDER BY embedding_vector <=> ${embeddingArray}::vector
-        LIMIT ${limitValue}
-      `;
-
-      // Step 3: Filter results by similarity threshold (0.7 = 70% similar for quality results)
-      // Higher threshold ensures more relevant results
-      // Allow per-call threshold override, fall back to env variable, then default
-      const thresholdParamValue = threshold !== null ? Number(threshold) : parseFloat(process.env.VECTOR_SIMILARITY_THRESHOLD || '0.7');
-      const resolvedThreshold = Number.isFinite(thresholdParamValue) ? thresholdParamValue : 0.7;
-      const filteredResults = results.filter(r => (r.similarity || 0) >= resolvedThreshold);
-
-      if (filteredResults.length === 0) {
-        logger.debug('Vector search: no results above threshold, using keyword fallback', { 
-          businessId, 
-          threshold: resolvedThreshold,
-          queryLength: originalQuery.length 
-        });
-        return await this.fallbackKeywordSearch(originalQuery, businessId, limit);
-      }
-
-      // Step 4: Rerank by similarity + recency (newer chunks might be more relevant)
-      const now = Date.now();
-      const rerankedResults = filteredResults
-        .map(chunk => {
-          const chunkAge = chunk.createdAt ? (now - new Date(chunk.createdAt).getTime()) : Infinity;
-          const recencyScore = Math.max(0, 1 - (chunkAge / (30 * 24 * 60 * 60 * 1000))); // 30 days max
-          const combinedScore = (chunk.similarity || 0) * 0.8 + recencyScore * 0.2; // 80% similarity, 20% recency
-          return { ...chunk, combinedScore };
-        })
-        .sort((a, b) => (b.combinedScore || 0) - (a.combinedScore || 0))
-        .slice(0, Math.min(limitValue, 3)); // Limit to top 3 for better quality
-
-      logger.debug('Vector search completed', { 
-        businessId, 
-        resultsCount: rerankedResults.length, 
-        threshold: resolvedThreshold,
-        topSimilarity: rerankedResults[0]?.similarity,
-        topScore: rerankedResults[0]?.combinedScore
-      });
-      
-      return rerankedResults;
-
-    } catch (error) {
-      const msg = error && (error.message || error.toString());
-      // If pgvector is not installed or query fails, fall back to keyword search
-      if ((msg && msg.includes('vector')) || error?.code === '42883') {
-        logger.warn('Vector search: pgvector extension not available, using keyword fallback', { businessId, error: msg });
-        return await this.fallbackKeywordSearch(originalQuery, businessId, limit);
-      }
-
-      logger.error('[VectorSearch] Error:', { error: msg || error, businessId });
-      throw error;
-    }
+    
+    // Temporarily disable vector search due to pgvector issues, use keyword fallback
+    logger.info('Vector search disabled, using keyword fallback', { businessId });
+    return await this.fallbackKeywordSearch(query, businessId, limit);
   }
 
   /**
@@ -200,48 +120,8 @@ class VectorSearchService {
    * @returns {Promise<boolean>} - True if pgvector is installed
    */
   async isPgVectorAvailable() {
-    // Allow forcing pgvector availability via environment (useful for managed DBs where
-    // extension check may be restricted or in CI environments)
-    if (process.env.FORCE_PGVECTOR === 'true') {
-      return true;
-    }
-
-    try {
-      // Try to query pg_available_extensions first (works in managed DBs)
-      const rawExecutor = prisma.$queryRaw
-        ? prisma.$queryRaw.bind(prisma)
-        : prisma.$queryRawUnsafe
-          ? prisma.$queryRawUnsafe.bind(prisma)
-          : null;
-
-      if (!rawExecutor) {
-        throw new Error('Prisma client does not expose a raw query executor');
-      }
-      
-      // Check if vector extension exists (installed or available)
-      // Use Prisma.$queryRaw with template literal for safety
-      const result = await prisma.$queryRaw`
-        SELECT EXISTS (
-          SELECT 1 FROM pg_available_extensions WHERE name = 'vector'
-        ) as available
-      `;
-      
-      const isAvailable = result[0]?.available || false;
-      
-      // If available, try to create it if not already created
-      if (isAvailable) {
-        try {
-          await prisma.$executeRaw`CREATE EXTENSION IF NOT EXISTS vector`;
-        } catch (createError) {
-          logger.debug('pgvector extension already exists or cannot be created', { error: createError.message });
-        }
-      }
-      
-      return isAvailable;
-    } catch (error) {
-      logger.error('Failed to check pgvector availability', { error: error.message || error });
-      return false;
-    }
+    // Temporarily disabled due to pgvector issues
+    return false;
   }
 
   /**

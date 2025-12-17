@@ -147,7 +147,7 @@ model KnowledgeChunk {
   embedding        Json?
   metadata         Json?
   createdAt        DateTime               @default(now())
-  embedding_vector Unsupported("vector")?
+  // embedding_vector Unsupported("vector")? // Temporarily disabled due to pgvector issues
   knowledgeBase    KnowledgeBase          @relation(fields: [knowledgeBaseId], references: [id], onDelete: Cascade)
 
   @@index([businessId])
