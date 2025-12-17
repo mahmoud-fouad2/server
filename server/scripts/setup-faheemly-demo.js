@@ -113,11 +113,11 @@ const adapter = new PrismaPg({
 const prisma = new PrismaClient({ adapter });
 
 const DEMO_USER_EMAIL = 'hello@faheemly.com';
-const DEMO_USER_PASSWORD = 'FaheemlyDemo2025!';
+const DEMO_USER_PASSWORD = process.env.ADMIN_INITIAL_PASSWORD1 || 'FaheemlyDemo2025!';
 const DEMO_USER_NAME = 'Faheemly';
 
 const SECOND_USER_EMAIL = 'admin@faheemly.com';
-const SECOND_USER_PASSWORD = 'FaheemlyDemo2025!'; // Same password
+const SECOND_USER_PASSWORD = process.env.ADMIN_INITIAL_PASSWORD || 'FaheemlyDemo2025!'; // Same password
 const SECOND_USER_NAME = 'Admin';
 
 /**
@@ -483,8 +483,9 @@ async function setupDemoUser() {
     logger.info('═══════════════════════════════════════════════════════');
     logger.info('');
     logger.info('📧 Email 1:     hello@faheemly.com');
+    logger.info('� Password 1:  [Set via ADMIN_INITIAL_PASSWORD1 env var]');
     logger.info('📧 Email 2:     admin@faheemly.com');
-    logger.info('🔑 Password:    FaheemlyDemo2025!');
+    logger.info('🔑 Password 2:  [Set via ADMIN_INITIAL_PASSWORD env var]');
     logger.info(`💼 Business ID 1: ${business.id}`);
     logger.info(`💼 Business ID 2: ${secondBusiness.id}`);
     logger.info('');

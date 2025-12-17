@@ -38,8 +38,8 @@ if (!configuredFrontendUrl) {
 }
 
 // Warn about ephemeral local uploads in production if S3 is not configured
-if (process.env.NODE_ENV === 'production' && !process.env.AWS_S3_BUCKET) {
-  logger.warn('No persistent object storage configured (AWS_S3_BUCKET not set). Uploaded widget icons stored on local disk may not persist across deploys.');
+if (process.env.NODE_ENV === 'production' && !process.env.AWS_S3_BUCKET && !process.env.S3_BUCKET) {
+  logger.warn('No persistent object storage configured (AWS_S3_BUCKET or S3_BUCKET not set). Uploaded widget icons stored on local disk may not persist across deploys.');
 }
 
 const isTestEnvironment = process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID !== undefined;
