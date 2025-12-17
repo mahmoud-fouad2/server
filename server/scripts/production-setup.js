@@ -46,7 +46,9 @@ async function runProductionSetup() {
       await client.end();
       logger.info('✅ pgvector extension verified and ready');
     } catch (e) {
-      logger.warn('⚠️  pgvector verification failed, but continuing (fallback will work):', e.message);
+      logger.error('❌ pgvector installation/verification failed:', e.message);
+      logger.error('This is required for vector search functionality. Please check DATABASE_URL and pgvector setup.');
+      throw new Error('pgvector extension is required but not available: ' + e.message);
     }
     
     try {

@@ -2,13 +2,15 @@ import express from 'express';
 import rateLimit from 'express-rate-limit';
 import { authenticateToken } from '../middleware/auth.js';
 import { validateChatMessage } from '../middleware/validation.js';
-import chatController from '../controllers/chat.controller.js';
 import asyncHandler from 'express-async-handler';
 import prisma from '../config/database.js';
 import * as aiService from '../services/ai.service.js';
 import vectorSearch from '../services/vector-search.service.js';
-const responseValidator = require('../services/response-validator.service');
-const logger = require('../utils/logger');
+
+// Import CommonJS modules using dynamic import compatibility
+const chatController = (await import('../controllers/chat.controller.js')).default;
+const responseValidator = (await import('../services/response-validator.service.js')).default;
+const logger = (await import('../utils/logger.js')).default;
 
 // Rate limiter for public chat endpoint
 const chatLimiter = rateLimit({

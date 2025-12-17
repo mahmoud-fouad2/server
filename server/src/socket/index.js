@@ -1,5 +1,6 @@
 const { Server } = require('socket.io');
 const logger = require('../utils/logger');
+const initializeSocket = require('./socketHandler');
 
 let io;
 
@@ -11,18 +12,8 @@ exports.init = (httpServer) => {
     }
   });
 
-  io.on('connection', (socket) => {
-    logger.info(`Socket connected: ${socket.id}`);
-
-    socket.on('join_room', (room) => {
-      socket.join(room);
-      logger.info(`Socket ${socket.id} joined room ${room}`);
-    });
-
-    socket.on('disconnect', () => {
-      logger.info(`Socket disconnected: ${socket.id}`);
-    });
-  });
+  // Initialize socket handlers
+  initializeSocket(io);
 
   return io;
 };

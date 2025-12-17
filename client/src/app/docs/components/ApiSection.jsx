@@ -217,6 +217,19 @@ export default function ApiSection() {
 
               {/* Response */}
               <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-bold text-lg dark:text-white">Response</h4>
+                  <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                    200 OK
+                  </span>
+                </div>
+                <div className="bg-gray-900 rounded-xl p-6 overflow-x-auto">
+                  <pre className="text-sm text-gray-100">
+                    <code>{selectedEndpoint.response}</code>
+                  </pre>
+                </div>
+              </div>
+
               {/* Usage & Policies */}
               <div>
                 <h4 className="font-bold text-lg dark:text-white mb-3">المصادقة (Authentication)</h4>
@@ -254,23 +267,6 @@ export default function ApiSection() {
                   <li>عالج الأخطاء بعقلانية: افترض أن الأخطاء المؤقتة قابلة للاستدعاء (Retry) لكن الأخطاء 4xx يجب الانتباه لها فوراً.</li>
                   <li>حد من مقدار البيانات في كل طلب لتقليل التأخير واستهلاك التوكين.</li>
                 </ul>
-
-                <h4 className="font-bold text-lg dark:text-white mt-4 mb-3">مثال سريع (curl)</h4>
-                <pre className="bg-gray-900 text-gray-100 rounded-lg p-4 font-mono text-sm overflow-auto" dir="ltr">
-{`curl -X POST ${window.location.origin}/api/chat/message \
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-bold text-lg dark:text-white">Response</h4>
-                  <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-                </pre>
-              </div>
-                    200 OK
-                  </span>
-                </div>
-                <div className="bg-gray-900 rounded-xl p-6 overflow-x-auto">
-                  <pre className="text-sm text-gray-100">
-                    <code>{selectedEndpoint.response}</code>
-                  </pre>
-                </div>
               </div>
             </div>
           </motion.div>

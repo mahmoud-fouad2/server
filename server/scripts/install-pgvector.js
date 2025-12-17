@@ -7,31 +7,47 @@ let prisma = null;
 async function installPgVector() {
   try {
     console.log('Installing pgvector extension...');
+    console.log('DATABASE_URL available:', !!process.env.DATABASE_URL);
 
     if (process.env.DATABASE_URL) {
       // Use `pg` directly (safer in deploy scripts)
       const { Client } = await import('pg');
-      const client = new Client({ connectionString: process.env.DATABASE_URL, ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false });
+      const client = new Client({ 
+        connectionString: process.env.DATABASE_URL, 
+        ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false 
+      });
+      
+      console.log('Connecting to database...');
       await client.connect();
+      console.log('Connected successfully');
+      
+      console.log('Creating pgvector extension...');
       await client.query('CREATE EXTENSION IF NOT EXISTS vector;');
+      console.log('Extension created');
+      
+      console.log('Verifying extension...');
+      const result = await client.query("SELECT * FROM pg_extension WHERE extname = 'vector';");
+      console.log('Extension check result:', result.rows);
+      
       await client.end();
-      console.log('✅ pgvector extension installed successfully (via pg client)');
+      console.log('✅ pgvector extension installed and verified successfully (via pg client)');
     } else {
-      // Fallback: use the project's prisma instance (useful for local/dev runs)
-      await prisma.$queryRaw`CREATE EXTENSION IF NOT EXISTS vector;`;
-      console.log('✅ pgvector extension installed successfully (via prisma client)');
+      console.error('❌ DATABASE_URL not set, cannot install pgvector');
+      throw new Error('DATABASE_URL environment variable is required');
     }
   } catch (error) {
     console.error('❌ Failed to install pgvector extension:', error?.message || error);
-    // Don't exit, just warn - the app can fall back to keyword search
+    throw error; // Re-throw to make the script fail
   } finally {
     // Disconnect prisma if we initialized it as a fallback
     try {
-      await prisma.$disconnect();
+      if (prisma) {
+        await prisma.$disconnect();
+      }
     } catch (e) {
       // ignore
     }
   }
 }
 
-installPgVector();
+installPgVector().catch(() => process.exit(1));

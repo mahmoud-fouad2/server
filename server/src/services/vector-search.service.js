@@ -1,5 +1,5 @@
 import prisma from '../config/database.js';
-import embeddingService from './embedding.service.js';
+import { generateEmbedding } from './embedding.service.js';
 import { rerankCandidates } from './rerank.service.js';
 import logger from '../utils/logger.js';
 
@@ -82,7 +82,7 @@ class VectorSearchService {
    * @returns {Promise<Array>} - Embedding vector
    */
   async generateEmbedding(text) {
-    return await embeddingService.generateEmbedding(text);
+    return await generateEmbedding(text);
   }
 
   /**
@@ -126,7 +126,7 @@ class VectorSearchService {
   async vectorSearch(query, businessId, limit = 5, threshold = 0.7) {
     try {
       // Generate embedding for the query
-      const queryEmbedding = await embeddingService.generateEmbedding(query);
+      const queryEmbedding = await generateEmbedding(query);
       
       if (!queryEmbedding || queryEmbedding.length === 0) {
         logger.warn('Failed to generate embedding for query, falling back to keyword search');

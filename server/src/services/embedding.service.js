@@ -365,3 +365,4 @@ async function generateEmbedding(text, options = {}) {
 }
 
 export { generateEmbedding };
+export default { generateEmbedding };
