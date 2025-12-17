@@ -1,4 +1,4 @@
-const { body, param, validationResult } = require('express-validator');
+import { body, param, validationResult } from 'express-validator';
 
 /**
  * Input Validation Middleware
@@ -231,7 +231,7 @@ const validateId = [
   handleValidationErrors
 ];
 
-module.exports = {
+export {
   validateRegister,
   validateLogin,
   validateChatMessage,
