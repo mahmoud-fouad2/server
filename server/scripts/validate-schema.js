@@ -4,12 +4,13 @@
  * Checks if all Prisma schema fields exist in the database
  */
 
-const { PrismaClient } = require('@prisma/client');
-const { PrismaPg } = require('@prisma/adapter-pg');
-const { Pool } = require('pg');
-const dotenv = require('dotenv');
+import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
+import dotenv from 'dotenv';
+import net from 'net';
 dotenv.config();
-const logger = require('../src/utils/logger');
+import logger from '../src/utils/logger.js';
 
 /**
  * Retry logic with exponential backoff
@@ -66,7 +67,6 @@ async function validateSchema() {
   }
 
   // Low-level TCP connectivity check to provide clearer diagnostics
-  const net = require('net');
   async function tcpCheck(host, port = 5432, timeout = 3000) {
     return new Promise((resolve, reject) => {
       const socket = new net.Socket();

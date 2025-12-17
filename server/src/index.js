@@ -1,20 +1,60 @@
 // Trigger Render redeploy for CORS fix
-const express = require('express');
-const cors = require('cors');
-const dotenv = require('dotenv');
-const path = require('path');
-const http = require('http');
-const helmet = require('helmet');
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import path from 'path';
+import http from 'http';
+import helmet from 'helmet';
 
 // Force Prisma to use binary engine
 process.env.PRISMA_CLIENT_ENGINE_TYPE = 'binary';
 
-const prisma = require('./config/database');
-const logger = require('./utils/logger');
-const redisCache = require('./services/cache.service');
-const { errorHandler, handleUnhandledRejections, handleUncaughtExceptions } = require('./middleware/errorHandler');
-const { authenticateToken } = require('./middleware/auth');
-const { validateEnv, getEnvSummary } = require('./config/env.validator');
+import prisma from './config/database.js';
+import logger from './utils/logger.js';
+import redisCache from './services/cache.service.js';
+import { errorHandler, handleUnhandledRejections, handleUncaughtExceptions } from './middleware/errorHandler.js';
+import { authenticateToken } from './middleware/auth.js';
+import { validateEnv, getEnvSummary } from './config/env.validator.js';
+import socketIO from './socket.js';
+import { responseWrapperMiddleware } from './middleware/response-wrapper.js';
+import authRoutes from './routes/auth.routes.js';
+import passwordRoutes from './routes/password.routes.js';
+import chatRoutes from './routes/chat.routes.js';
+import businessRoutes from './routes/business.routes.js';
+import notificationsRoutes from './routes/notifications.routes.js';
+import contactRoutes from './routes/contact.routes.js';
+import knowledgeRoutes from './routes/knowledge.routes.js';
+import teamRoutes from './routes/team.routes.js';
+import adminRoutes from './routes/admin.routes.js';
+import adminBusinessRoutes from './routes/admin-business.routes.js';
+import adminConversationsRoutes from './routes/admin-conversations.routes.js';
+import adminKnowledgeRoutes from './routes/admin-knowledge.routes.js';
+import paymentRoutes from './routes/payment.routes.js';
+import paymentWebhookRoutes from './routes/payment-webhooks.routes.js';
+import adminPaymentRoutes from './routes/admin-payment.routes.js';
+import adminCrmRoutes from './routes/admin-crm.routes.js';
+import internalRoutes from './routes/internal.routes.js';
+import adminExtendedRoutes from './routes/admin-extended.routes.js';
+import ticketsRoutes from './routes/tickets.routes.js';
+import multiLanguageRoutes from './routes/multi-language.routes.js';
+import continuousImprovementRoutes from './routes/continuous-improvement.routes.js';
+import proxyRoutes from './routes/proxy.routes.js';
+import widgetRoutes from './routes/widget.routes.js';
+import uploadsRoutes from './routes/uploads.routes.js';
+import healthRoutes from './routes/health.routes.js';
+import analyticsRoutes from './routes/analytics.routes.js';
+import visitorRoutes from './routes/visitor.routes.js';
+import ratingRoutes from './routes/rating.routes.js';
+import crmRoutes from './routes/crm.routes.js';
+import convRoutes from './routes/conversations.routes.js';
+import kbCompat from './routes/knowledge-base.routes.js';
+import { validateEnvironment } from './config/env.js';
+import monitor from './utils/monitor.js';
+import continuousImprovement from './services/continuous-improvement.service.js';
+import cacheService from './services/cache.service.js';
+import queueService from './queue/queue.js';
+import bcrypt from 'bcryptjs';
+import vectorSearch from './services/vector-search.service.js';
 
 // Initialize environment variables
 dotenv.config();
@@ -211,7 +251,6 @@ async function startServerWithRetries(startPort, maxAttempts = 10) {
       });
 
       // Initialize Socket.IO
-      const socketIO = require('./socket');
       socketIO.init(s);
       logger.info('Socket.IO initialized');
 
@@ -245,7 +284,6 @@ const rawBodySaver = (req, res, buf, encoding) => {
 app.use(express.json({ verify: rawBodySaver }));
 
 // Response wrapper middleware for standardized responses
-const { responseWrapperMiddleware } = require('./middleware/response-wrapper');
 app.use(responseWrapperMiddleware());
 
 app.use(express.static(path.join(__dirname, '../public'), {
@@ -272,38 +310,30 @@ app.get('/', (req, res) => {
 });
 
 // Auth routes
-const authRoutes = require('./routes/auth.routes');
-const passwordRoutes = require('./routes/password.routes');
 app.use('/api/auth', authRoutes);
 app.use('/api/auth', passwordRoutes);
 
 // Chat routes
-const chatRoutes = require('./routes/chat.routes');
 app.use('/api/chat', chatRoutes);
 
 // Business routes
-const businessRoutes = require('./routes/business.routes');
 app.use('/api/business', businessRoutes);
 
 // Notifications
-const notificationsRoutes = require('./routes/notifications.routes');
 app.use('/api/notifications', notificationsRoutes);
 
 // Contact routes
-const contactRoutes = require('./routes/contact.routes');
 app.use('/api/contact', contactRoutes);
 
 // Knowledge routes
-const knowledgeRoutes = require('./routes/knowledge.routes');
 app.use('/api/knowledge', knowledgeRoutes);
 
 // Team routes
-const teamRoutes = require('./routes/team.routes');
+app.use('/api/team', teamRoutes);
 app.use('/api/team', teamRoutes);
 
 // Admin routes
 try {
-  const adminRoutes = require('./routes/admin.routes');
   app.use('/api/admin', adminRoutes);
   logger.info('✅ Admin routes loaded');
 } catch (e) {
@@ -312,7 +342,6 @@ try {
 
 // Admin Business Management routes
 try {
-  const adminBusinessRoutes = require('./routes/admin-business.routes');
   app.use('/api/admin', adminBusinessRoutes);
   logger.info('✅ Admin Business Management routes loaded');
 } catch (e) {
@@ -321,7 +350,7 @@ try {
 
 // Admin Conversation Management routes
 try {
-  const adminConversationsRoutes = require('./routes/admin-conversations.routes');
+  app.use('/api/admin', adminConversationsRoutes);
   app.use('/api/admin', adminConversationsRoutes);
   logger.info('✅ Admin Conversation Management routes loaded');
 } catch (e) {
@@ -330,7 +359,7 @@ try {
 
 // Admin Knowledge Base Management routes
 try {
-  const adminKnowledgeRoutes = require('./routes/admin-knowledge.routes');
+  app.use('/api/admin', adminKnowledgeRoutes);
   app.use('/api/admin', adminKnowledgeRoutes);
   logger.info('✅ Admin Knowledge Base Management routes loaded');
 } catch (e) {
@@ -339,7 +368,7 @@ try {
 
 // Payment routes
 try {
-  const paymentRoutes = require('./routes/payment.routes');
+  app.use('/api/payment', paymentRoutes);
   app.use('/api/payments', paymentRoutes);
   logger.info('✅ Payment routes loaded');
 } catch (e) {
@@ -348,7 +377,7 @@ try {
 
 // Payment webhook routes
 try {
-  const paymentWebhookRoutes = require('./routes/payment-webhooks.routes');
+  app.use('/api/payment', paymentWebhookRoutes);
   app.use('/api/payments/webhook', paymentWebhookRoutes);
   logger.info('✅ Payment webhook routes loaded');
 } catch (e) {
@@ -357,7 +386,7 @@ try {
 
 // Admin Payment Management routes
 try {
-  const adminPaymentRoutes = require('./routes/admin-payment.routes');
+  app.use('/api/admin', adminPaymentRoutes);
   app.use('/api/admin/payments', adminPaymentRoutes);
   logger.info('✅ Admin Payment Management routes loaded');
 } catch (e) {
@@ -366,7 +395,6 @@ try {
 
 // Admin CRM Management routes
 try {
-  const adminCrmRoutes = require('./routes/admin-crm.routes');
   app.use('/api/admin/crm', adminCrmRoutes);
   logger.info('✅ Admin CRM Management routes loaded');
 } catch (e) {
@@ -375,7 +403,6 @@ try {
 
 // Internal maintenance endpoints (protected)
 try {
-  const internalRoutes = require('./routes/internal.routes');
   app.use('/internal', internalRoutes);
   logger.info('✅ Internal routes loaded (maintenance)');
 } catch (e) {
@@ -384,7 +411,6 @@ try {
 
 // Admin Extended routes (Phase 2: User Management & System Control)
 try {
-  const adminExtendedRoutes = require('./routes/admin-extended.routes');
   app.use('/api/admin', adminExtendedRoutes);
   logger.info('✅ Admin Extended routes loaded (User Management & System Control)');
 } catch (e) {
@@ -399,19 +425,15 @@ app.post('/api/admin/system-settings', authenticateToken, (req, res) => {
 });
 
 // Tickets routes
-const ticketsRoutes = require('./routes/tickets.routes');
 app.use('/api/tickets', ticketsRoutes);
 
 // Phase 2 Routes
-const multiLanguageRoutes = require('./routes/multi-language.routes');
 app.use('/api/multi-language', multiLanguageRoutes);
 
-const continuousImprovementRoutes = require('./routes/continuous-improvement.routes');
 app.use('/api/improvement', continuousImprovementRoutes);
 
 // Proxy routes (useful to avoid CORS to external APIs during local dev)
 try {
-  const proxyRoutes = require('./routes/proxy.routes');
   app.use('/api/proxy', proxyRoutes);
 } catch (e) {
   logger.warn('Proxy routes not available', { error: e?.message || e });
@@ -419,7 +441,6 @@ try {
 
 // Widget routes (config endpoint used by client widget)
 try {
-  const widgetRoutes = require('./routes/widget.routes');
   app.use('/api/widget', widgetRoutes);
 } catch (e) {
   logger.warn('Widget routes not available', { error: e?.message || e });
@@ -427,7 +448,6 @@ try {
 
 // Uploads route (generic security tests expect /api/uploads)
 try {
-  const uploadsRoutes = require('./routes/uploads.routes');
   app.use('/api/uploads', uploadsRoutes);
   logger.info('✅ Uploads routes loaded');
 } catch (e) {
@@ -436,7 +456,6 @@ try {
 
 // Health routes (public)
 try {
-  const healthRoutes = require('./routes/health.routes');
   app.use('/api/health', healthRoutes);
   logger.info('✅ Health routes loaded');
 } catch (e) {
@@ -445,7 +464,6 @@ try {
 
 // Analytics routes
 try {
-  const analyticsRoutes = require('./routes/analytics.routes');
   app.use('/api/analytics', analyticsRoutes);
 } catch (e) {
   logger.warn('Analytics routes not available', { error: e?.message || e });
@@ -453,7 +471,6 @@ try {
 
 // Visitor routes
 try {
-  const visitorRoutes = require('./routes/visitor.routes');
   app.use('/api/visitor', visitorRoutes);
 } catch (e) {
   logger.warn('Visitor routes not available', { error: e?.message || e });
@@ -461,7 +478,6 @@ try {
 
 // Rating routes
 try {
-  const ratingRoutes = require('./routes/rating.routes');
   app.use('/api/rating', ratingRoutes);
 } catch (e) {
   logger.warn('Rating routes not available', { error: e?.message || e });
@@ -495,7 +511,6 @@ app.post('/api/chat/rating', async (req, res) => {
 
 // CRM routes
 try {
-  const crmRoutes = require('./routes/crm.routes');
   app.use('/api/crm', crmRoutes);
 } catch (e) {
   logger.warn('CRM routes not available', { error: e?.message || e });
@@ -503,7 +518,6 @@ try {
 
 // Compatibility: Conversations endpoints used by older clients/tests
 try {
-  const convRoutes = require('./routes/conversations.routes');
   app.use('/api/conversations', convRoutes);
   logger.info('✅ Conversations compatibility routes loaded');
 } catch (e) {
@@ -512,7 +526,6 @@ try {
 
 // Compatibility: older tests expect `/api/knowledge-base` endpoints
 try {
-  const kbCompat = require('./routes/knowledge-base.routes');
   app.use('/api/knowledge-base', kbCompat);
   logger.info('✅ Knowledge-base compatibility routes loaded');
 } catch (e) {
@@ -551,7 +564,6 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 3002;
 
 // Validate environment variables on startup
-const { validateEnvironment } = require('./config/env');
 
 // Initialize error handling
 handleUncaughtExceptions();
@@ -564,20 +576,19 @@ async function shutdown(code = 0) {
     logger.info('Shutting down gracefully...');
     // Stop periodic monitoring if running
     try {
-      const monitor = require('./utils/monitor');
       if (monitor && monitor.stopPeriodicMonitoring) monitor.stopPeriodicMonitoring();
     } catch (e) {
       // ignore
     }
 
     // Stop continuous improvement background tasks (non-fatal)
-    try { const continuousImprovement = require('./services/continuous-improvement.service'); if (continuousImprovement && typeof continuousImprovement.stop === 'function') continuousImprovement.stop(); } catch (e) { logger.warn('Error stopping continuous improvement service', e?.message || e); }
+    try { if (continuousImprovement && typeof continuousImprovement.stop === 'function') continuousImprovement.stop(); } catch (e) { logger.warn('Error stopping continuous improvement service', e?.message || e); }
 
     // Disconnect external resources
     try { await prisma.$disconnect(); } catch (e) { logger.warn('Error disconnecting Prisma', e?.message || e); }
-    try { const cacheService = require('./services/cache.service'); if (cacheService && cacheService.disconnect) await cacheService.disconnect(); } catch (e) { logger.warn('Error disconnecting Redis', e?.message || e); }
+    try { if (cacheService && cacheService.disconnect) await cacheService.disconnect(); } catch (e) { logger.warn('Error disconnecting Redis', e?.message || e); }
     // Close any initialized job queues
-    try { const queueService = require('./queue/queue'); if (queueService && queueService.closeQueues) await queueService.closeQueues(); } catch (e) { logger.warn('Error closing job queues', e?.message || e); }
+    try { if (queueService && queueService.closeQueues) await queueService.closeQueues(); } catch (e) { logger.warn('Error closing job queues', e?.message || e); }
 
     if (serverInstance && serverInstance.close) {
       await new Promise((resolve) => serverInstance.close(resolve));
@@ -596,7 +607,6 @@ process.on('SIGTERM', () => shutdown(0));
 // Auto-create admin on startup
 async function ensureAdminExists() {
   try {
-    const bcrypt = require('bcryptjs');
     const adminEmail = 'admin@faheemly.com';
     
     // SECURITY: Use environment variable for initial password
@@ -656,9 +666,6 @@ async function checkServicesStatus() {
       logger.warn('⚠️  WARNING: Database connection issues!');
     }
 
-    const redisCache = require('./services/cache.service');
-    const vectorSearch = require('./services/vector-search.service');
-
     // Check Redis
     if (redisCache.isEnabled && redisCache.isConnected) {
       logger.info('✅ Redis Cache is ACTIVE and CONNECTED');
@@ -714,13 +721,11 @@ if (!isTestEnvironment) {
 
         // Try to connect to Redis if configured
         try {
-          const redisCache = require('./services/cache.service');
           if (redisCache.isEnabled && !redisCache.isConnected) {
             await redisCache.connect();
           }
           // Initialize background queues (if configured)
           try {
-            const queueService = require('./queue/queue');
             if (queueService && queueService.initQueues) queueService.initQueues();
           } catch (err) {
             logger.warn('Failed to initialize job queues', err?.message || err);
@@ -734,7 +739,6 @@ if (!isTestEnvironment) {
 
         // Start continuous improvement tasks now the server is ready
         try {
-          const continuousImprovement = require('./services/continuous-improvement.service');
           if (continuousImprovement && typeof continuousImprovement.start === 'function') {
             continuousImprovement.start();
             logger.info('Continuous Improvement tasks started');
@@ -744,7 +748,6 @@ if (!isTestEnvironment) {
         }
 
         // Start system monitoring (every 5 minutes)
-        const monitor = require('./utils/monitor');
         monitor.startPeriodicMonitoring(5);
         logger.info('🔍 System monitoring ENABLED');
 
