@@ -18,7 +18,7 @@ Comprehensive code cleanup and bug fixes applied to address:
 
 ## ✅ Issues Fixed
 
-### 1. **MODULE_TYPELESS_PACKAGE_JSON Warning** ⚠️
+### 1. **MODULE_TYPELESS_PACKAGE_JSON Warning** ⚠️ (REVERTED)
 
 **File:** `server/package.json`
 
@@ -27,12 +27,32 @@ Comprehensive code cleanup and bug fixes applied to address:
 [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///opt/render/project/src/server/scripts/setup-faheemly-demo.js is not specified and it doesn't parse as CommonJS.
 ```
 
-**Solution:**
-- Added `"type": "module"` to `package.json` at line 5
-- This explicitly marks the project as using ES modules
-- Resolves Node.js warning about ambiguous module parsing
+**Initial Solution Attempted:** Added `"type": "module"` to `package.json`
 
-**Impact:** ✅ Cleaner startup logs, no performance impact
+**Issue with Initial Solution:** ❌ This broke ALL production deploy scripts because they use CommonJS `require()` extensively. When `"type": "module"` is set, ALL `.js` files are treated as ES modules, causing:
+```
+ReferenceError: require is not defined in ES module scope
+```
+
+This broke:
+- `scripts/install-pgvector.js`
+- `scripts/production-setup.js`
+- `scripts/setup-faheemly-demo.js`
+- All other `.js` scripts
+
+**Final Solution:** ✅ REVERTED the change
+- Removed `"type": "module"` from package.json
+- Deploy scripts use CommonJS `require()` which is standard and works fine
+- The warning is not critical - it's just Node.js noting that the script could specify its module type explicitly
+- Production deployment now works correctly
+
+**Why This Was Better:**
+1. ✅ All scripts work without modification
+2. ✅ No breaking changes to production
+3. ✅ Simpler solution (don't fix what isn't broken)
+4. ✅ CommonJS is still standard for Node.js scripts
+
+**Impact:** ✅ Deploy scripts now work, warning can be ignored or fixed in future refactor
 
 ---
 
