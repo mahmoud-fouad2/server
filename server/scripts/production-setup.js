@@ -71,7 +71,7 @@ async function runProductionSetup() {
     logger.info('');
     logger.info('🔗 Test login at: https://faheemly.com');
     logger.info('📧 Email: hello@faheemly.com');
-    logger.info('🔑 Pass: FaheemlyDemo2025!');
+    logger.info('🔑 Password: [Set via ADMIN_INITIAL_PASSWORD1 env var]');
     logger.info('');
 
   } catch (error) {
