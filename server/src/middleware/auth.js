@@ -1,8 +1,9 @@
-const jwt = require('jsonwebtoken');
-const prisma = require('../config/database');
+import jwt from 'jsonwebtoken';
+import prisma from '../config/database.js';
+import logger from '../utils/logger.js';
 
 // Enhanced authenticateToken: verifies JWT and ensures req.user.businessId
-const authenticateToken = async (req, res, next) => {
+export const authenticateToken = async (req, res, next) => {
   // Small fixed delay in test env to reduce timing attack variance
   if (process.env.NODE_ENV === 'test') {
     await new Promise(r => setTimeout(r, 250));
@@ -36,7 +37,6 @@ const authenticateToken = async (req, res, next) => {
           req.user.businessId = dbUser.businesses[0].id;
         }
       } catch (e) {
-        const logger = require('../utils/logger');
         logger.warn('authenticateToken: failed to lookup businessId', { error: e?.message || e });
       }
     }
@@ -59,7 +59,7 @@ const authenticateToken = async (req, res, next) => {
           // perform a couple of lightweight DB reads to better emulate route DB work
           await prisma.business.findFirst({ select: { id: true } }).catch(() => null);
           await prisma.conversation.findFirst({ select: { id: true } }).catch(() => null);
-        } catch (e) { const logger = require('../utils/logger'); logger.warn('authenticateToken test DB reads failed', { message: e?.message || e }); }
+        } catch (e) { logger.warn('authenticateToken test DB reads failed', { message: e?.message || e }); }
         await new Promise(r => setTimeout(r, 200));
       }
       return res.status(401).json({ error: 'Invalid token' });
@@ -82,4 +82,4 @@ const requireRole = (...roles) => (req, res, next) => {
 // Alias for compatibility
 const protect = authenticateToken;
 
-module.exports = { authenticateToken, requireRole, protect };
+export { requireRole, protect };
