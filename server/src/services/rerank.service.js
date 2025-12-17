@@ -1,4 +1,4 @@
-import aiService from './ai.service.js';
+import * as aiService from './ai.service.js';
 import logger from '../utils/logger.js';
 
 /**

@@ -1,7 +1,7 @@
-const prisma = require('../config/database');
-const embeddingService = require('./embedding.service');
-const { rerankCandidates } = require('./rerank.service');
-const logger = require('../utils/logger');
+import prisma from '../config/database.js';
+import embeddingService from './embedding.service.js';
+import { rerankCandidates } from './rerank.service.js';
+import logger from '../utils/logger.js';
 
 const STOP_WORDS = new Set([
   'the', 'and', 'for', 'are', 'with', 'from', 'this', 'that', 'have', 'has',
@@ -325,4 +325,4 @@ class VectorSearchService {
   }
 }
 
-module.exports = new VectorSearchService();
+export default new VectorSearchService();

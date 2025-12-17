@@ -1,6 +1,6 @@
-const axios = require('axios');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-const logger = require('../utils/logger');
+import axios from 'axios';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import logger from '../utils/logger.js';
 
 // Module-scoped cooldown timestamp for Gemini to avoid repeated 429 retries
 let geminiDisabledUntil = 0;
@@ -364,4 +364,4 @@ async function generateEmbedding(text, options = {}) {
   return null;
 }
 
-module.exports = { generateEmbedding };
+export { generateEmbedding };

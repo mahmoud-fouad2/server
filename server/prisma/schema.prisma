@@ -147,7 +147,8 @@ model KnowledgeChunk {
   embedding        Json?
   metadata         Json?
   createdAt        DateTime               @default(now())
-  embedding_vector Unsupported("vector(1536)")?
+  // Note: pgvector type stored directly in DB via raw SQL migrations
+  // Use raw queries for vector similarity: 1 - (embedding_vector <=> query_embedding::vector(1536))
   knowledgeBase    KnowledgeBase          @relation(fields: [knowledgeBaseId], references: [id], onDelete: Cascade)
 
   @@index([businessId])
