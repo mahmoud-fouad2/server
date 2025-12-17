@@ -214,6 +214,19 @@ exports.sendMessage = asyncHandler(async (req, res) => {
 
   const resolvedBusinessId = business.id;
 
+  // Enforce monthly message quota (prevent calling AI when quota exceeded)
+  try {
+    if (typeof business.messageQuota === 'number' && typeof business.messagesUsed === 'number' && business.messagesUsed >= business.messageQuota) {
+      // Legal-safe, user-friendly message in Arabic with upgrade hint
+      const upgradeMessage = 'لترقية باقتك أو معرفة خيارات إضافية، تواصل مع فريق الدعم: support@faheemly.com';
+      const msg = `عذراً، لقد استهلكت رصيد الرسائل المتاح في باقتك (${business.messageQuota} رسالة/شهر).\n\n${upgradeMessage}`;
+      logger.warn('Quota exceeded for business', { businessId: resolvedBusinessId, used: business.messagesUsed, quota: business.messageQuota });
+      return res.status(429).json({ error: msg, quotaExceeded: true, used: business.messagesUsed, quota: business.messageQuota });
+    }
+  } catch (e) {
+    logger.warn('Quota check failed', { error: e?.message || e });
+  }
+
   // Create or get visitor session
   let visitorSessionData = null;
   let detectedDialect = 'standard';

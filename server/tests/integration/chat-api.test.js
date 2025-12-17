@@ -81,7 +81,7 @@ beforeAll(async () => {
   try {
     const { genEmail } = require('./testUtils');
     testUser = await prisma.user.create({ data: { email: genEmail('test-chat'), fullName: 'Test Chat User', password: 'hashed-password', role: 'CLIENT' } });
-    testBusiness = await prisma.business.create({ data: { userId: testUser.id, name: 'Test Chat Business', activityType: 'RETAIL', planType: 'TRIAL', messageQuota: 1000, messagesUsed: 0, language: 'ar' } });
+    testBusiness = await prisma.business.create({ data: { userId: testUser.id, name: 'Test Chat Business', activityType: 'RETAIL', planType: 'TRIAL', messageQuota: 100, messagesUsed: 0, language: 'ar' } });
     authToken = jwt.sign({ userId: testUser.id, businessId: testBusiness.id, role: 'CLIENT' }, process.env.JWT_SECRET || 'test-secret', { expiresIn: '1h' });
     testConversation = await prisma.conversation.create({ data: { businessId: testBusiness.id, channel: 'WIDGET', status: 'ACTIVE' } });
   } catch (err) {
@@ -365,6 +365,29 @@ beforeAll(async () => {
       // Cleanup
       await prisma.message.deleteMany({ where: { conversationId: freshConversation.id } });
       await prisma.conversation.delete({ where: { id: freshConversation.id } });
+    });
+
+    runIfDbAvailable('should return 429 when message quota exceeded', async () => {
+      // Set business usage to quota limit
+      await prisma.business.update({ where: { id: testBusiness.id }, data: { messagesUsed: testBusiness.messageQuota || 100, messageQuota: testBusiness.messageQuota || 100 } });
+
+      const chatRequest = {
+        message: 'This message should be blocked by quota',
+        businessId: testBusiness.id,
+        conversationId: testConversation.id
+      };
+
+      const res = await request(app)
+        .post('/api/chat/message')
+        .send(chatRequest);
+
+      expect(res.status).toBe(429);
+      expect(res.body).toHaveProperty('quotaExceeded', true);
+      expect(res.body).toHaveProperty('used');
+      expect(res.body).toHaveProperty('quota');
+
+      // Reset usage so following tests are unaffected
+      await prisma.business.update({ where: { id: testBusiness.id }, data: { messagesUsed: 0 } });
     });
 
     runIfDbAvailable('should handle AI service errors gracefully', async () => {

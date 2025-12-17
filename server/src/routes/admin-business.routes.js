@@ -266,8 +266,9 @@ router.put(
 
     const planQuotas = {
       TRIAL: 100,
-      START: 1000,
-      GROWTH: 5000,
+      BASIC: 500,      // Package A: 500 chats/month
+      PRO: 1500,       // Package B: 1,500 chats/month
+      AGENCY: 3000,    // Package C: 3,000 chats/month
       ENTERPRISE: 999999
     };
 

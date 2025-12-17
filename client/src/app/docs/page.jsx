@@ -66,6 +66,8 @@ const sections = [
           {`<script src="${widgetSrc}" data-business-id="YOUR_BUSINESS_ID"></script>`}
         </div>
 
+        <p className="text-sm text-gray-600 dark:text-gray-400">Tip: If your site is served from a different host (staging or self-hosted), include <code>data-api-url</code> pointing to your API (or set <code>window.__FAHIMO_WIDGET_API_URL</code> before loading the script) to avoid the widget calling the production API and returning 404/400.</p>
+
         <h4 className="font-semibold">خطوات التثبيت (تفصيلي)</h4>
         <ol className="list-decimal list-inside space-y-2 text-sm">
           <li>انسخ كود التضمين وضعه قبل وسم <code>&lt;/body&gt;</code> في الموقع.</li>

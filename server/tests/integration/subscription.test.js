@@ -64,7 +64,7 @@ describe('Subscription Plan Limits', () => {
         name: 'Test Business',
         activityType: 'RETAIL',
         planType: 'TRIAL',
-        messageQuota: 1000,
+        messageQuota: 100, // TRIAL default
         messagesUsed: 0
       }
     });
@@ -103,7 +103,7 @@ describe('Subscription Plan Limits', () => {
       // Set messagesUsed to quota limit
       await prisma.business.update({
         where: { id: testBusiness.id },
-        data: { messagesUsed: 1000, messageQuota: 1000 }
+        data: { messagesUsed: 100, messageQuota: 100 }
       });
 
       const business = await prisma.business.findUnique({
@@ -131,10 +131,10 @@ describe('Subscription Plan Limits', () => {
   });
 
   describe('Plan Type Quotas', () => {
-    runIfDbAvailable('TRIAL plan should have 1000 messages quota', async () => {
+    runIfDbAvailable('TRIAL plan should have 100 messages quota', async () => {
       await prisma.business.update({
         where: { id: testBusiness.id },
-        data: { planType: 'TRIAL', messageQuota: 1000 }
+        data: { planType: 'TRIAL', messageQuota: 100 }
       });
 
       const business = await prisma.business.findUnique({
@@ -142,13 +142,13 @@ describe('Subscription Plan Limits', () => {
       });
 
       expect(business.planType).toBe('TRIAL');
-      expect(business.messageQuota).toBe(1000);
+      expect(business.messageQuota).toBe(100);
     });
 
-    runIfDbAvailable('BASIC plan should have 5000 messages quota', async () => {
+    runIfDbAvailable('BASIC plan should have 500 messages quota', async () => {
       await prisma.business.update({
         where: { id: testBusiness.id },
-        data: { planType: 'BASIC', messageQuota: 5000 }
+        data: { planType: 'BASIC', messageQuota: 500 }
       });
 
       const business = await prisma.business.findUnique({
@@ -156,13 +156,13 @@ describe('Subscription Plan Limits', () => {
       });
 
       expect(business.planType).toBe('BASIC');
-      expect(business.messageQuota).toBe(5000);
+      expect(business.messageQuota).toBe(500);
     });
 
-    runIfDbAvailable('PRO plan should have 25000 messages quota', async () => {
+    runIfDbAvailable('PRO plan should have 1500 messages quota', async () => {
       await prisma.business.update({
         where: { id: testBusiness.id },
-        data: { planType: 'PRO', messageQuota: 25000 }
+        data: { planType: 'PRO', messageQuota: 1500 }
       });
 
       const business = await prisma.business.findUnique({
@@ -270,8 +270,8 @@ describe('Subscription Plan Limits', () => {
       await prisma.business.update({
         where: { id: testBusiness.id },
         data: { 
-          messagesUsed: 500,
-          messageQuota: 1000
+          messagesUsed: 50,
+          messageQuota: 100
         }
       });
 

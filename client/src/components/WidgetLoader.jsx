@@ -34,6 +34,11 @@ export default function WidgetLoader() {
         s.defer = true;
         s.src = src;
         s.setAttribute('data-business-id', bid);
+        // Prefer an explicit API URL if provided via env at build time or fall back to the current origin
+        try {
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL || window.location.origin;
+          if (apiUrl) s.setAttribute('data-api-url', apiUrl);
+        } catch (e) {}
         s.crossOrigin = 'anonymous';
         s.onload = () => console.debug('Fahimo widget script loaded:', src);
         s.onerror = () => console.error('Failed to load Fahimo widget from:', src);
@@ -41,8 +46,16 @@ export default function WidgetLoader() {
       }
 
       // Always attempt to load the external (production) widget first.
-        // Attempt external widget only (no local/localhost fallback in production)
-        loadScript(externalWidget);
+      // Attempt external widget only (no local/localhost fallback in production)
+      // Warn developers if the default external widget points to production while the page origin is clearly not production.
+      try {
+        const isProdWidget = externalWidget && externalWidget.indexOf('fahimo-api.onrender.com') !== -1;
+        const pageHost = typeof window !== 'undefined' ? window.location.host : '';
+        if (isProdWidget && pageHost && pageHost.indexOf('faheemly.com') === -1 && !process.env.NEXT_PUBLIC_API_URL) {
+          console.warn('WidgetLoader: loading production widget script without NEXT_PUBLIC_API_URL set. This may cause the widget to call the production API and return 404/400 on non-production sites.');
+        }
+      } catch (e) {}
+      loadScript(externalWidget);
     } catch (e) {
       console.error('WidgetLoader error', e);
     }

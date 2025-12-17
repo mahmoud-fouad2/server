@@ -60,6 +60,14 @@ router.post('/webhook', async (req, res) => {
       return res.status(200).send('<Response></Response>'); // Acknowledge to stop retries
     }
 
+    // Check monthly quota
+    if (typeof business.messageQuota === 'number' && typeof business.messagesUsed === 'number' && business.messagesUsed >= business.messageQuota) {
+      const upgradeMessage = 'لترقية باقتك أو معرفة خيارات إضافية، تواصل مع فريق الدعم: support@faheemly.com';
+      const msg = `عذراً، تم استهلاك رصيد الرسائل المتاح لهذه الباقة (${business.messageQuota} رسالة/شهر). ${upgradeMessage}`;
+      logger.warn('[Twilio] Quota exceeded', { businessId: business.id, used: business.messagesUsed, quota: business.messageQuota });
+      return res.status(200).send(`<Response><Message>${msg}</Message></Response>`);
+    }
+
     // 2. Find or Create Conversation
     let conversation = await prisma.conversation.findFirst({
       where: { 

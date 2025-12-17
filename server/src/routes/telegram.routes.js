@@ -130,6 +130,16 @@ router.post('/webhook/:integrationId', async (req, res) => {
       });
     }
 
+    // Quota enforcement: if business exceeded monthly quota, reply and stop
+    const business = integration.business;
+    if (typeof business.messageQuota === 'number' && typeof business.messagesUsed === 'number' && business.messagesUsed >= business.messageQuota) {
+      const upgradeMessage = 'لترقية باقتك أو معرفة خيارات إضافية، تواصل مع فريق الدعم: support@faheemly.com';
+      const msg = `عذراً، تم استهلاك رصيد الرسائل المتاح لهذه الباقة (${business.messageQuota} رسالة/شهر). ${upgradeMessage}`;
+      logger.warn('[Telegram] Quota exceeded', { businessId: business.id, used: business.messagesUsed, quota: business.messageQuota });
+      await telegramService.sendMessage(integration.config.token, chatId, msg);
+      return res.status(200).send('OK');
+    }
+
     // 3. Save User Message
     await prisma.message.create({
       data: {

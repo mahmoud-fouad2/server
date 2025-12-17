@@ -36,6 +36,16 @@ export const API_CONFIG = {
 export const getApiUrl = endpoint => {
   // Remove leading slash if present
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
+  // Warn when using the production API host from a non-production host without explicit override
+  try {
+    if (typeof window !== 'undefined' && API_CONFIG.BASE_URL && API_CONFIG.BASE_URL.indexOf('fahimo-api.onrender.com') !== -1) {
+      const pageHost = window.location && window.location.host ? window.location.host : '';
+      const hasOverride = process.env.NEXT_PUBLIC_API_URL;
+      if (pageHost && pageHost.indexOf('faheemly.com') === -1 && !hasOverride && process.env.NODE_ENV !== 'production') {
+        console.warn('API_CONFIG: Using production API host from non-production page host. Consider setting NEXT_PUBLIC_API_URL to your staging/local API.');
+      }
+    }
+  } catch (e) {}
   return `${API_CONFIG.BASE_URL}/${cleanEndpoint}`;
 };
 

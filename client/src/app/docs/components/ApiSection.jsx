@@ -230,6 +230,16 @@ export default function ApiSection() {
                 </ul>
                 <p className="text-sm mt-2">التخطي عن الحدود قد يؤدي إلى استجابة 429. استخدم آلية إعادة المحاولة مع تأخير متزايد (exponential backoff).</p>
 
+                <h4 className="font-bold text-lg dark:text-white mt-4 mb-3">حصص الرسائل الشهرية (Monthly Chat Quotas)</h4>
+                <p className="text-sm">بجانب حدود الطلبات قصيرة الأمد، نوفر حدوداً شهرية لعدد المحادثات/الرسائل وفق الباقة:</p>
+                <ul className="list-disc list-inside text-sm ml-4">
+                  <li>TRIAL: 100 رسالة/شهر</li>
+                  <li>BASIC: 500 رسالة/شهر</li>
+                  <li>PRO: 1,500 رسالة/شهر</li>
+                  <li>AGENCY: 3,000 رسالة/شهر</li>
+                </ul>
+                <p className="text-sm mt-2">إذا تجاوزت الحصة الشهرية، ستتلقى رسالة توضيحية مع تعليمات الترقية ودعمنا القانوني - سيتم رفض الطلبات الجديدة حتى بداية الشهر التالي أو حتى ترقية الباقة.</p>
+
                 <h4 className="font-bold text-lg dark:text-white mt-4 mb-3">الاستخدام الممنوع</h4>
                 <ul className="list-disc list-inside text-sm ml-4">
                   <li>المحتوى غير القانوني أو التحريضي على العنف أو الكراهية.</li>

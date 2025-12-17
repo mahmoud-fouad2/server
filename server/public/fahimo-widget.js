@@ -7,7 +7,38 @@
     // Configuration
     const scriptTag = document.currentScript;
     const businessId = scriptTag && scriptTag.getAttribute && scriptTag.getAttribute('data-business-id');
-    const apiUrl = 'https://fahimo-api.onrender.com'; // Unified API URL
+
+    // Determine API URL with multiple override options (data attribute, global override, script origin, fallback)
+    let apiUrl = 'https://fahimo-api.onrender.com'; // default fallback
+    try {
+        const dataApi = scriptTag && scriptTag.getAttribute && scriptTag.getAttribute('data-api-url');
+        const globalApi = window.__FAHIMO_WIDGET_API_URL || window.__FAHIMO_WIDGET_API;
+        if (dataApi) {
+            apiUrl = dataApi;
+        } else if (globalApi) {
+            apiUrl = globalApi;
+        } else if (scriptTag && scriptTag.src) {
+            try {
+                // Use script origin as a sensible default when embedded from same host
+                const u = new URL(scriptTag.src);
+                apiUrl = u.origin;
+            } catch (e) {
+                // ignore and use fallback
+            }
+        }
+    } catch (e) {
+        // Defensive: keep the default apiUrl
+    }
+
+    // Warn if the widget is contacting a remote production API while embedded on a different host
+    try {
+        const apiHost = (new URL(apiUrl)).host;
+        if (window && window.location && window.location.host && apiHost && apiHost !== window.location.host && apiHost.indexOf('fahimo-api.onrender.com') !== -1) {
+            console.warn('[Fahimo] Widget is configured to use production API host:', apiUrl, 'while this page is served from', window.location.host);
+        }
+    } catch (e) {
+        // ignore URL parse errors
+    }
 
     if (!businessId) {
         console.error('Fahimo: Business ID is missing.');
@@ -619,7 +650,32 @@
         fetch(`${apiUrl}/api/widget/config/${businessId}`)
             .then(res => res.json())
             .then(data => {
-                const config = data.widgetConfig || {};
+                        const config = data.widgetConfig || {};
+                // Support widgetVariant switching: if the business prefers the enhanced variant, dynamically load enhanced script
+                const serverVariant = (data.widgetVariant || (config.widgetVariant || 'standard')).toLowerCase();
+                if (serverVariant === 'enhanced' && !(scriptTag && scriptTag.src && scriptTag.src.indexOf('enhanced') !== -1)) {
+                    // Load enhanced script from same API host
+                    try {
+                        const enhancedSrc = (apiUrl || '').replace(/\/$/, '') + '/fahimo-widget-enhanced.js';
+                        if (!document.querySelector('script[src="' + enhancedSrc + '"]')) {
+                            const s2 = document.createElement('script');
+                            s2.async = true;
+                            s2.defer = true;
+                            s2.src = enhancedSrc;
+                            s2.setAttribute('data-business-id', businessId);
+                            s2.setAttribute('data-api-url', apiUrl);
+                            s2.crossOrigin = 'anonymous';
+                            s2.onload = function() { console.debug('Fahimo enhanced widget loaded via variant switch:', enhancedSrc); };
+                            s2.onerror = function() { console.error('Failed to load enhanced variant:', enhancedSrc); };
+                            document.body.appendChild(s2);
+                        }
+                    } catch (e) {
+                        console.warn('[Fahimo] Failed to auto-switch to enhanced variant', e);
+                    }
+                    // Do not continue initializing the basic widget when enhanced variant is used
+                    return;
+                }
+
                 // Allow script author to override displayed name via data-business-name attribute
                 const scriptName = scriptTag && scriptTag.getAttribute && scriptTag.getAttribute('data-business-name');
                 const rawName = scriptName || data.name || config.name || "Faheemly Assistant";
@@ -692,7 +748,7 @@
                 // Check pre-chat settings
                 prechatEnabled = data.preChatFormEnabled || config.preChatEnabled || false;
 
-                if (!conversationId && messagesDiv && storedMessages.length === 0) {
+                        if (!conversationId && messagesDiv && storedMessages.length === 0) {
                     // Sanitize welcome message to remove 'Demo' mentions
                     let welcome = config.welcomeMessage || "Hello! How can I help?";
                     welcome = String(welcome || '').replace(/demo/gi, '').replace(/\bBusiness\b/gi, '').trim();
@@ -701,6 +757,69 @@
                 }
             })
             .catch(err => console.log('Fahimo: Could not load config'));
+
+        // Auto-refresh: poll widget config periodically and apply live updates when configVersion changes
+        (function enableAutoRefresh(){
+            try {
+                let currentConfigVersion = null;
+                // initialize from loaded config if available (attempt a quick HEAD to get version)
+                fetch(`${apiUrl}/api/widget/config/${businessId}`).then(r => r.json()).then(d => { currentConfigVersion = d.configVersion || d.widgetConfig?.configVersion || null; }).catch(()=>{});
+
+                const intervalMs = 30 * 1000; // 30s polling
+                setInterval(async () => {
+                    try {
+                        const res = await fetch(`${apiUrl}/api/widget/config/${businessId}?_=${Date.now()}`);
+                        if (!res.ok) return;
+                        const d = await res.json();
+                        const newVer = d.configVersion || (d.widgetConfig && d.widgetConfig.configVersion) || null;
+                        if (newVer && newVer !== currentConfigVersion) {
+                            currentConfigVersion = newVer;
+                            // apply the new config dynamically
+                            const cfg = d.widgetConfig || {};
+                            // apply primary color
+                            if (cfg.primaryColor) {
+                                const color = cfg.primaryColor;
+                                document.getElementById('fahimo-launcher').style.background = color;
+                                document.getElementById('fahimo-header').style.background = color;
+                                document.getElementById('fahimo-send').style.background = color;
+                                const dynamicStyle = document.createElement('style');
+                                dynamicStyle.setAttribute('data-fahimo-refresh', String(Date.now()));
+                                dynamicStyle.innerHTML = `
+                                    .fahimo-msg.user { background: ${color} !important; }
+                                    #fahimo-launcher { background: ${color} !important; }
+                                `;
+                                document.head.appendChild(dynamicStyle);
+                            }
+                            // apply avatar updates
+                            if (cfg.customIconData) {
+                                const avatarEl = document.getElementById('fahimo-bot-avatar');
+                                const img = document.createElement('img');
+                                img.src = cfg.customIconData;
+                                img.alt = 'Bot';
+                                img.style.width = '100%'; img.style.height = '100%'; img.style.borderRadius = '50%'; img.style.objectFit = 'cover'; img.style.display = 'block';
+                                avatarEl.innerHTML = '';
+                                avatarEl.appendChild(img);
+                                avatarEl.style.background = 'transparent';
+                            } else if (cfg.customIconUrl) {
+                                const avatarEl = document.getElementById('fahimo-bot-avatar');
+                                const img = document.createElement('img');
+                                img.src = cfg.customIconUrl;
+                                img.alt = 'Bot';
+                                img.style.width = '100%'; img.style.height = '100%'; img.style.borderRadius = '50%'; img.style.objectFit = 'cover'; img.style.display = 'block';
+                                img.onerror = function() { try{ img.remove(); }catch(e){}; avatarEl.style.background='rgba(255,255,255,0.12)'; avatarEl.innerText = (window.__FAHIMO_WIDGET_BOT_NAME && window.__FAHIMO_WIDGET_BOT_NAME[0]) ? window.__FAHIMO_WIDGET_BOT_NAME[0] : 'F'; };
+                                avatarEl.innerHTML = '';
+                                avatarEl.appendChild(img);
+                                avatarEl.style.background = 'transparent';
+                            }
+                        }
+                    } catch (e) {
+                        // ignore polling errors
+                    }
+                }, intervalMs);
+            } catch (e) {
+                // ignore
+            }
+        })();
 
         // Send Message
         async function sendMessage() {

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -30,6 +31,8 @@ export default function AvatarAndWidgetSettingsView({
   const [previewCustomIcon, setPreviewCustomIcon] = useState(null);
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [selectedVariant, setSelectedVariant] = useState('standard');
+  const [latestConfigVersion, setLatestConfigVersion] = useState(null);
 
   const handleAvatarUpload = (e) => {
     const file = e.target.files[0];
@@ -44,6 +47,31 @@ export default function AvatarAndWidgetSettingsView({
     };
     reader.readAsDataURL(file);
   };
+
+  // Load current business settings (including widgetVariant) when component mounts
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await fetch('/api/business/settings');
+        if (!res.ok) return;
+        const biz = await res.json();
+        if (!mounted) return;
+        if (biz.widgetConfig) {
+          try {
+            const cfg = typeof biz.widgetConfig === 'string' ? JSON.parse(biz.widgetConfig) : biz.widgetConfig;
+            if (cfg.avatar) setSelectedAvatar(cfg.avatar);
+            if (cfg.customIconUrl) setPreviewCustomIcon(cfg.customIconUrl);
+            if (cfg.customAvatarUrl) setPreviewCustomAvatar(cfg.customAvatarUrl);
+          } catch (e) {}
+        }
+        if (biz.widgetVariant) setSelectedVariant(biz.widgetVariant.toLowerCase());
+      } catch (e) {
+        // ignore
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
 
   const handleIconUpload = (e) => {
     const file = e.target.files[0];
@@ -66,6 +94,7 @@ export default function AvatarAndWidgetSettingsView({
       const formData = new FormData();
       formData.append('selectedAvatar', selectedAvatar);
       formData.append('selectedIcon', selectedIcon);
+      formData.append('widgetVariant', selectedVariant);
       if (customAvatar) formData.append('customAvatar', customAvatar);
       if (customIcon) formData.append('customIcon', customIcon);
 
@@ -75,7 +104,23 @@ export default function AvatarAndWidgetSettingsView({
       });
 
       if (response.ok) {
-        addNotification('تم حفظ إعدادات الأفاتار والأيقونة بنجاح', 'success');
+        const data = await response.json();
+        addNotification(`تم حفظ إعدادات الأفاتار والأيقونة (config v:${data.configVersion})`, 'success');
+        // update previews and variant
+        if (data.widgetConfig) {
+          try {
+            const cfg = data.widgetConfig;
+            if (cfg.customIconUrl) setPreviewCustomIcon(cfg.customIconUrl);
+            if (cfg.customAvatarUrl) setPreviewCustomAvatar(cfg.customAvatarUrl);
+            if (cfg.avatar) setSelectedAvatar(cfg.avatar);
+          } catch (e) {}
+        }
+        if (data.widgetVariant) setSelectedVariant(String(data.widgetVariant).toLowerCase());
+        // expose latest configVersion for embed code (so user can copy with ?v=...)
+        if (data.configVersion) {
+          setLatestConfigVersion(data.configVersion);
+          setTimeout(() => addNotification(`Embed tip: append ?v=${data.configVersion} to script URL to force a cache-bust`, 'info'), 500);
+        }
       } else {
         addNotification('فشل حفظ الإعدادات', 'error');
       }
@@ -89,7 +134,9 @@ export default function AvatarAndWidgetSettingsView({
 
   const copyEmbedCode = () => {
     const businessId = user?.businessId;
-    const embedCode = `<script src="https://fahimo-api.onrender.com/fahimo-widget-enhanced.js" data-business-id="${businessId}"></script>`;
+    const scriptName = selectedVariant === 'enhanced' ? 'fahimo-widget-enhanced.js' : 'fahimo-widget.js';
+    const qu = latestConfigVersion ? `?v=${latestConfigVersion}` : '';
+    const embedCode = `<script src="https://fahimo-api.onrender.com/${scriptName}${qu}" data-business-id="${businessId}" data-api-url="https://fahimo-api.onrender.com"></script>`;
     
     navigator.clipboard.writeText(embedCode).then(() => {
       setCopied(true);
@@ -302,8 +349,9 @@ export default function AvatarAndWidgetSettingsView({
               </p>
               <div className="relative">
                 <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg text-xs overflow-x-auto">
-                  <code>{`<script src="https://fahimo-api.onrender.com/fahimo-widget-enhanced.js" data-business-id="${user?.businessId}"></script>`}</code>
+                  <code>{`<script src="https://fahimo-api.onrender.com/${selectedVariant === 'enhanced' ? 'fahimo-widget-enhanced.js' : 'fahimo-widget.js'}" data-business-id="${user?.businessId}" data-api-url="https://fahimo-api.onrender.com"></script>`}</code>
                 </pre>
+                <p className="text-xs text-gray-400 mt-2">⚠️ If you host the widget on your own site or staging, set <code>data-api-url</code> to your API host (or set <code>window.__FAHIMO_WIDGET_API_URL</code> before the script).</p>
                 <button
                   onClick={copyEmbedCode}
                   className="absolute top-2 left-2 p-2 bg-brand-600 hover:bg-brand-700 text-white rounded transition-colors"
@@ -320,6 +368,29 @@ export default function AvatarAndWidgetSettingsView({
           </CardContent>
         </Card>
       </motion.div>
+
+      {/* Widget Variant Selection (Superadmin only) */}
+      {user?.role === 'SUPERADMIN' && (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <span className="text-2xl">⚙️</span>
+                Widget Variant
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <p className="text-sm text-gray-600 dark:text-gray-400">Choose which widget variant should be used by default for this business. This affects the embed code and allows switching remotely (basic script will auto-load the enhanced script when configured).</p>
+                <select value={selectedVariant} onChange={(e) => setSelectedVariant(e.target.value)} className="w-full px-3 py-2 border rounded">
+                  <option value="standard">Standard (Fast)</option>
+                  <option value="enhanced">Enhanced (Feature-rich)</option>
+                </select>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
 
       {/* Save Button */}
       <motion.div

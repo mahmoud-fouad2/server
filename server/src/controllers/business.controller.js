@@ -113,12 +113,103 @@ exports.getSettings = asyncHandler(async (req, res) => {
 });
 
 /**
+ * @desc    Update avatar / widget settings for a business (supports file uploads)
+ * @route   POST /api/business/:businessId/avatar-settings
+ * @access  Private (Business Owner) or SUPERADMIN
+ */
+exports.updateAvatarSettings = asyncHandler(async (req, res) => {
+  try {
+    const businessId = req.params.businessId;
+
+    // Authorization: allow SUPERADMIN to update any business; otherwise ensure caller owns the business
+    if (req.user?.role !== 'SUPERADMIN' && req.user?.businessId !== businessId) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    // Fetch current business
+    const business = await prisma.business.findUnique({ where: { id: businessId } });
+    if (!business) return res.status(404).json({ error: 'Business not found' });
+
+    // Parse incoming fields
+    const { selectedAvatar, selectedIcon, widgetVariant } = req.body || {};
+
+    // Start with existing config
+    const currentConfig = business.widgetConfig ? JSON.parse(business.widgetConfig) : {};
+
+    if (selectedAvatar) currentConfig.avatar = selectedAvatar;
+    if (selectedIcon) currentConfig.icon = selectedIcon;
+
+    // Handle uploaded files (multer puts files in req.files)
+    if (req.files) {
+      const files = req.files;
+      // Determine base URL for serving uploads
+      let baseUrl = process.env.API_URL || process.env.CLIENT_URL;
+      if (!baseUrl) {
+        baseUrl = process.env.NODE_ENV === 'production' ? 'https://fahimo-api.onrender.com' : 'http://localhost:3001';
+      }
+      baseUrl = baseUrl.replace(/\/$/, '');
+
+      if (files.customAvatar && files.customAvatar.length) {
+        const f = files.customAvatar[0];
+        currentConfig.customAvatarUrl = `${baseUrl}/uploads/icons/${f.filename}`;
+      }
+      if (files.customIcon && files.customIcon.length) {
+        const f = files.customIcon[0];
+        currentConfig.customIconUrl = `${baseUrl}/uploads/icons/${f.filename}`;
+      }
+    }
+
+    // Update business (widgetConfig and optional widgetVariant)
+    const updateData = { widgetConfig: JSON.stringify(currentConfig) };
+    if (typeof widgetVariant !== 'undefined') updateData.widgetVariant = widgetVariant;
+
+    const updatedBusiness = await prisma.business.update({
+      where: { id: businessId },
+      data: updateData
+    });
+
+    res.json({
+      success: true,
+      message: 'Avatar and widget settings updated',
+      widgetConfig: updatedBusiness.widgetConfig ? JSON.parse(updatedBusiness.widgetConfig) : {},
+      widgetVariant: updatedBusiness.widgetVariant,
+      configVersion: updatedBusiness.updatedAt ? updatedBusiness.updatedAt.getTime() : Date.now()
+    });
+  } catch (error) {
+    console.error('updateAvatarSettings error', error);
+    res.status(500).json({ error: 'Failed to update avatar settings' });
+  }
+});
+
+/**
+ * @desc    Bump widget version (touch updatedAt) to force a refresh
+ * @route   POST /api/business/:businessId/bump-widget-version
+ * @access  Private (Business Owner) or SUPERADMIN
+ */
+exports.bumpWidgetVersion = asyncHandler(async (req, res) => {
+  try {
+    const businessId = req.params.businessId;
+
+    // Authorization: allow SUPERADMIN to update any business; otherwise ensure caller owns the business
+    if (req.user?.role !== 'SUPERADMIN' && req.user?.businessId !== businessId) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    const updated = await prisma.business.update({ where: { id: businessId }, data: { updatedAt: new Date() } });
+    return res.json({ success: true, message: 'Widget version bumped', configVersion: updated.updatedAt.getTime() });
+  } catch (e) {
+    console.error('bumpWidgetVersion error', e);
+    res.status(500).json({ error: 'Failed to bump widget version' });
+  }
+});
+
+/**
  * @desc    Update Business Settings
  * @route   PUT /api/business/settings
  * @access  Private (Business Owner)
  */
 exports.updateSettings = asyncHandler(async (req, res) => {
-  const { name, activityType, botTone } = req.body;
+  const { name, activityType, botTone, widgetVariant } = req.body;
   let businessId = req.user.businessId;
 
   // If caller tries to provide a different businessId in the body, reject for non-superadmins
@@ -150,9 +241,12 @@ exports.updateSettings = asyncHandler(async (req, res) => {
       throw new Error('Business not found');
     }
 
+    const updateData = { name, activityType, botTone };
+    if (typeof widgetVariant !== 'undefined') updateData.widgetVariant = widgetVariant;
+
     const updatedBusiness = await prisma.business.update({
       where: { id: businessId },
-      data: { name, activityType, botTone }
+      data: updateData
     });
 
     res.json({ 

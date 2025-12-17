@@ -47,6 +47,8 @@ model Business {
   trialEndsAt              DateTime?
   botTone                  String                  @default("friendly")
   primaryColor             String                  @default("#6366F1")
+  /** Widget variant selection: STANDARD or ENHANCED */
+  widgetVariant            WidgetVariant           @default(STANDARD)
   widgetConfig             String?
   messageQuota             Int                     @default(1000)
   messagesUsed             Int                     @default(0)
@@ -1020,6 +1022,12 @@ enum WidgetType {
   MAP
   TIMELINE
   CUSTOM
+}
+
+// WidgetVariant controls which client widget variant to serve or auto-switch to
+enum WidgetVariant {
+  STANDARD
+  ENHANCED
 }
 
 enum AIModelStatus {

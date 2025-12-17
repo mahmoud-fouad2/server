@@ -5,7 +5,27 @@
 
     const scriptTag = document.currentScript;
     const businessId = scriptTag && scriptTag.getAttribute && scriptTag.getAttribute('data-business-id');
-    const apiUrl = 'https://fahimo-api.onrender.com';
+
+    // Determine API URL via data attribute / global override / script origin / fallback
+    let apiUrl = 'https://fahimo-api.onrender.com';
+    try {
+        const dataApi = scriptTag && scriptTag.getAttribute && scriptTag.getAttribute('data-api-url');
+        const globalApi = window.__FAHIMO_WIDGET_API_URL || window.__FAHIMO_WIDGET_API;
+        if (dataApi) {
+            apiUrl = dataApi;
+        } else if (globalApi) {
+            apiUrl = globalApi;
+        } else if (scriptTag && scriptTag.src) {
+            try { apiUrl = (new URL(scriptTag.src)).origin; } catch (e) {}
+        }
+    } catch (e) {}
+
+    try {
+        const apiHost = (new URL(apiUrl)).host;
+        if (window && window.location && window.location.host && apiHost && apiHost !== window.location.host && apiHost.indexOf('fahimo-api.onrender.com') !== -1) {
+            console.warn('[Fahimo] Enhanced widget is configured to use production API host:', apiUrl, 'while this page is served from', window.location.host);
+        }
+    } catch (e) {}
 
     if (!businessId) {
         console.error('Fahimo: Business ID is missing.');
@@ -746,6 +766,73 @@
 
     // ===== INITIALIZATION =====
     renderAvatars();
+
+    // Load widget config from API and apply styling/avatars; also poll for changes to apply live updates
+    (function initEnhancedConfig(){
+        let currentConfigVersion = null;
+        async function applyConfigData(d) {
+            const cfg = d.widgetConfig || {};
+            // Set bot name
+            const rawName = d.name || cfg.name || 'Faheemly';
+            const botName = String(rawName || '').replace(/demo/gi, '').replace(/\bBusiness\b/gi, '').trim() || 'Faheemly';
+            try { document.getElementById('fahimo-bot-name').innerText = botName; window.__FAHIMO_WIDGET_BOT_NAME = botName; } catch(e){}
+            // Primary color
+            if (cfg.primaryColor) {
+                const color = cfg.primaryColor;
+                try {
+                    document.getElementById('fahimo-tab-header').style.background = color;
+                    document.getElementById('fahimo-tab-header').style.backgroundImage = '';
+                    const styleId = 'fahimo-enhanced-dynamic-style';
+                    let existing = document.getElementById(styleId);
+                    if (existing) existing.remove();
+                    const s = document.createElement('style'); s.id = styleId; s.innerHTML = `#fahimo-tab-header { background: ${color} !important } .fahimo-tab-btn.active { color: ${color} !important; border-bottom-color: ${color} !important }`;
+                    document.head.appendChild(s);
+                } catch (e) {}
+            }
+            // Avatar
+            try {
+                if (cfg.customIconData) {
+                    const el = document.getElementById('fahimo-avatar-badge');
+                    el.innerHTML = `<img src="${cfg.customIconData}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;" alt="Bot">`;
+                } else if (cfg.customIconUrl) {
+                    const el = document.getElementById('fahimo-avatar-badge');
+                    el.innerHTML = '';
+                    const img = document.createElement('img');
+                    img.src = cfg.customIconUrl; img.style.width='100%'; img.style.height='100%'; img.style.borderRadius='50%'; img.style.objectFit='cover';
+                    img.onerror = function(){ try{ img.remove(); } catch(e){}; el.textContent = '👤'; };
+                    el.appendChild(img);
+                }
+            } catch (e) {}
+            // Save version
+            currentConfigVersion = d.configVersion || currentConfigVersion;
+        }
+
+        async function loadOnce(){
+            try {
+                const resp = await fetch(`${apiUrl}/api/widget/config/${businessId}`);
+                if (!resp.ok) return;
+                const d = await resp.json();
+                await applyConfigData(d);
+            } catch (e) {}
+        }
+
+        // initial load
+        loadOnce();
+
+        // polling
+        const pollMs = 30 * 1000;
+        setInterval(async () => {
+            try {
+                const r = await fetch(`${apiUrl}/api/widget/config/${businessId}?_=${Date.now()}`);
+                if (!r.ok) return;
+                const d = await r.json();
+                const nv = d.configVersion || null;
+                if (nv && nv !== currentConfigVersion) {
+                    await applyConfigData(d);
+                }
+            } catch (e) {}
+        }, pollMs);
+    })();
     
     // Update avatar badge
     const selectedAvatar = getAvatarData(getSelectedAvatar());

@@ -82,7 +82,7 @@ describe('Knowledge Base API Integration Tests', () => {
       const { genEmail } = require('./testUtils')
       // Create test user and business
       testUser = await prisma.user.create({ data: { email: genEmail('test-knowledge'), fullName: 'Test Knowledge User', password: 'hashed-password', role: 'CLIENT' } });
-      testBusiness = await prisma.business.create({ data: { userId: testUser.id, name: 'Test Knowledge Business', activityType: 'RETAIL', planType: 'TRIAL', messageQuota: 1000, messagesUsed: 0, language: 'ar' } });
+      testBusiness = await prisma.business.create({ data: { userId: testUser.id, name: 'Test Knowledge Business', activityType: 'RETAIL', planType: 'TRIAL', messageQuota: 100, messagesUsed: 0, language: 'ar' } });
 
       // Verify business exists (guard against cross-test deletions in shared DB)
       const existingBusiness = await prisma.business.findUnique({ where: { id: testBusiness.id } });

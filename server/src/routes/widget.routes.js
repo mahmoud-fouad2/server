@@ -63,6 +63,7 @@ router.get('/config/:businessId', async (req, res) => {
           showBranding: true,
           avatar: "robot"
         },
+        widgetVariant: 'standard',
         configVersion: Date.now()
       });
     }
@@ -128,6 +129,7 @@ router.get('/config/:businessId', async (req, res) => {
       name: business.name,
       widgetConfig: config,
       preChatFormEnabled: business.preChatFormEnabled || false,
+      widgetVariant: (business.widgetVariant || 'STANDARD').toLowerCase(),
       configVersion: business.updatedAt?.getTime() || Date.now()
     });
   } catch (error) {

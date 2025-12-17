@@ -456,7 +456,7 @@ export default function PricingPage() {
 
                 <ul className="space-y-4 mb-8">
                   <li className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
-                    <Check size={18} className="text-green-500" /> 6,000 محادثة
+                    <Check size={18} className="text-green-500" /> 3,000 محادثة
                     شهرياً
                   </li>
                   <li className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
@@ -537,7 +537,7 @@ export default function PricingPage() {
                       feature: 'عدد المحادثات',
                       starter: '500',
                       pro: '1,500',
-                      agency: '6,000',
+                      agency: '3,000',
                     },
                     {
                       feature: 'قاعدة المعرفة',
