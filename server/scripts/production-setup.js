@@ -31,6 +31,16 @@ async function runProductionSetup() {
     // Step 2: Reset and push schema to consolidate migrations
     logger.info('');
     logger.info('🗄️  Step 2: Consolidating migrations by resetting DB to current schema...');
+    
+    // Ensure pgvector extension is installed before schema operations
+    logger.info('🔧 Installing pgvector extension...');
+    try {
+      execSync('node scripts/install-pgvector.js', { stdio: 'inherit' });
+      logger.info('✅ pgvector extension ready');
+    } catch (e) {
+      logger.warn('⚠️  pgvector installation failed, but continuing (fallback will work):', e.message);
+    }
+    
     try {
       execSync('npx prisma db push --force-reset', { stdio: 'inherit' });
       logger.info('✅ Database reset and schema applied');

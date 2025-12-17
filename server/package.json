@@ -15,7 +15,7 @@
     "prisma:deploy": "prisma migrate deploy",
     "migrate:resolve": "npx prisma migrate resolve --applied 20251209120000_production_cleanup",
     "migrate:rollback": "npx prisma migrate resolve --rolled-back 20251209120000_production_cleanup",
-    "start:prod": "npm run install:pgvector && npx prisma generate && npm run production:setup && node src/index.js",
+    "start:prod": "npx prisma generate && npm run production:setup && node src/index.js",
     "production:setup": "node scripts/production-setup.js",
     "setup:demo": "node scripts/setup-faheemly-demo.js",
     "validate:schema": "node scripts/validate-schema.js",
