@@ -147,12 +147,13 @@ model KnowledgeChunk {
   embedding        Json?
   metadata         Json?
   createdAt        DateTime               @default(now())
-  // embedding_vector Unsupported("vector")? // Temporarily disabled due to pgvector issues
+  embedding_vector Unsupported("vector(1536)")?
   knowledgeBase    KnowledgeBase          @relation(fields: [knowledgeBaseId], references: [id], onDelete: Cascade)
 
   @@index([businessId])
   @@index([knowledgeBaseId])
   @@index([businessId, knowledgeBaseId])
+  @@index([embedding_vector], type: Ivfflat)
 }
 
 model Conversation {

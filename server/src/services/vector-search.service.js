@@ -29,12 +29,21 @@ class VectorSearchService {
    */
   async searchKnowledge(query, businessId, limit = 5, threshold = null) {
     const originalQuery = query;
-    // Skip embedding generation in tests only when explicitly requested
-    if (process.env.NODE_ENV === 'test' && process.env.FAKE_VECTOR === 'true') return [];
     
-    // Temporarily disable vector search due to pgvector issues, use keyword fallback
-    logger.info('Vector search disabled, using keyword fallback', { businessId });
-    return await this.fallbackKeywordSearch(query, businessId, limit);
+    // Try vector search first if available
+    try {
+      // Check if pgvector is available by testing a simple query
+      const testVector = await prisma.$queryRaw`SELECT '[1,2,3]'::vector(3) as test;`;
+      if (testVector) {
+        logger.info('pgvector extension available, attempting vector search', { businessId });
+        return await this.vectorSearch(query, businessId, limit, threshold);
+      }
+    } catch (vectorError) {
+      logger.info('pgvector not available, using enhanced keyword search', { businessId, error: vectorError.message });
+    }
+    
+    // Fallback to enhanced keyword search
+    return await this.enhancedKeywordSearch(query, businessId, limit);
   }
 
   /**
@@ -47,71 +56,8 @@ class VectorSearchService {
    * @returns {Promise<Array>} - Matching knowledge chunks
    */
   async fallbackKeywordSearch(query, businessId, limit = 5) {
-    try {
-      // Enhanced keyword matching - extract meaningful keywords
-      const keywords = query
-        .toLowerCase()
-        .split(/\s+/)
-        .map(w => w.trim())
-        .filter(w => w.length > 2 && !STOP_WORDS.has(w));
-      
-      if (keywords.length === 0) {
-        // If no keywords, return recent knowledge base entries
-        const recentKnowledge = await prisma.knowledgeBase.findMany({
-          where: { businessId },
-          orderBy: { createdAt: 'desc' },
-          take: limit
-        });
-        return recentKnowledge.map(kb => ({
-          id: kb.id,
-          businessId: kb.businessId,
-          content: kb.content,
-          metadata: kb.metadata
-        }));
-      }
-
-      // Try to find chunks containing any of the keywords
-      const results = await prisma.knowledgeChunk.findMany({
-        where: {
-          businessId,
-          OR: keywords.map(keyword => ({
-            content: {
-              contains: keyword,
-              mode: 'insensitive'
-            }
-          }))
-        },
-        orderBy: {
-          createdAt: 'desc'
-        },
-        take: limit * 2 // Get more results to filter
-      });
-
-      // Score results by number of matching keywords
-      const scoredResults = results.map(chunk => {
-        const contentLower = chunk.content.toLowerCase();
-        const matchCount = keywords.filter(kw => contentLower.includes(kw)).length;
-        return { ...chunk, matchScore: matchCount };
-      })
-      .filter(chunk => chunk.matchScore > 0)
-      .sort((a, b) => b.matchScore - a.matchScore)
-      .slice(0, limit);
-
-      logger.debug('Keyword search completed (pre-rerank)', { businessId, resultsCount: scoredResults.length, keywords: keywords.length });
-      // If a rerank model is configured, attempt to rerank using an LLM scoring model
-      try {
-        const { rerankCandidates } = require('./rerank.service');
-        const reranked = await rerankCandidates(query, scoredResults);
-        return reranked;
-      } catch (e) {
-        // If rerank fails, return scored results
-        return scoredResults;
-      }
-
-    } catch (error) {
-      logger.error('Keyword search failed', { businessId, error: error.message });
-      return []; // Return empty array on error
-    }
+    // Use the enhanced keyword search
+    return await this.enhancedKeywordSearch(query, businessId, limit);
   }
 
   /**
@@ -170,6 +116,196 @@ class VectorSearchService {
       logger.error('Failed to get vector search statistics', { businessId, error: error.message });
       return null;
     }
+  }
+
+  /**
+   * Check if pgvector extension is available
+   */
+  async isPgVectorAvailable() {
+    try {
+      await prisma.$queryRaw`SELECT '[1,2,3]'::vector(3) as test;`;
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  /**
+   * Perform vector similarity search
+   */
+  async vectorSearch(query, businessId, limit = 5, threshold = 0.7) {
+    try {
+      // Generate embedding for the query
+      const queryEmbedding = await embeddingService.generateEmbedding(query);
+      
+      if (!queryEmbedding || queryEmbedding.length === 0) {
+        logger.warn('Failed to generate embedding for query, falling back to keyword search');
+        return await this.enhancedKeywordSearch(query, businessId, limit);
+      }
+
+      // Perform vector similarity search
+      const results = await prisma.$queryRaw`
+        SELECT 
+          kc.id,
+          kc."businessId",
+          kc.content,
+          kc.metadata,
+          kc."createdAt",
+          1 - (embedding_vector <=> ${queryEmbedding}::vector(1536)) as similarity
+        FROM "KnowledgeChunk" kc
+        WHERE kc."businessId" = ${businessId}
+          AND kc.embedding_vector IS NOT NULL
+          AND 1 - (embedding_vector <=> ${queryEmbedding}::vector(1536)) > ${threshold}
+        ORDER BY embedding_vector <=> ${queryEmbedding}::vector(1536)
+        LIMIT ${limit}
+      `;
+
+      logger.debug('Vector search completed', { businessId, resultsCount: results.length, threshold });
+      
+      return results.map(row => ({
+        id: row.id,
+        businessId: row.businessId,
+        content: row.content,
+        metadata: row.metadata,
+        similarity: parseFloat(row.similarity)
+      }));
+
+    } catch (error) {
+      logger.warn('Vector search failed, falling back to keyword search', { error: error.message, businessId });
+      return await this.enhancedKeywordSearch(query, businessId, limit);
+    }
+  }
+
+  /**
+   * Enhanced keyword search with better relevance scoring
+   */
+  async enhancedKeywordSearch(query, businessId, limit = 5) {
+    try {
+      // Enhanced keyword extraction
+      const keywords = this.extractKeywords(query);
+      
+      if (keywords.length === 0) {
+        // If no keywords, return recent knowledge base entries
+        const recentKnowledge = await prisma.knowledgeBase.findMany({
+          where: { businessId },
+          orderBy: { createdAt: 'desc' },
+          take: limit
+        });
+        return recentKnowledge.map(kb => ({
+          id: kb.id,
+          businessId: kb.businessId,
+          content: kb.content,
+          metadata: kb.metadata,
+          relevanceScore: 0.1 // Low relevance for fallback
+        }));
+      }
+
+      // Search in knowledge chunks first
+      let chunkResults = [];
+      try {
+        chunkResults = await prisma.knowledgeChunk.findMany({
+          where: {
+            businessId,
+            OR: keywords.map(keyword => ({
+              content: {
+                contains: keyword,
+                mode: 'insensitive'
+              }
+            }))
+          },
+          orderBy: {
+            createdAt: 'desc'
+          },
+          take: limit * 2
+        });
+      } catch (error) {
+        logger.warn('Knowledge chunk search failed', error);
+      }
+
+      // Also search in knowledge bases
+      let kbResults = [];
+      try {
+        kbResults = await prisma.knowledgeBase.findMany({
+          where: {
+            businessId,
+            OR: keywords.map(keyword => ({
+              content: {
+                contains: keyword,
+                mode: 'insensitive'
+              }
+            }))
+          },
+          orderBy: {
+            createdAt: 'desc'
+          },
+          take: limit
+        });
+      } catch (error) {
+        logger.warn('Knowledge base search failed', error);
+      }
+
+      // Combine and score results
+      const allResults = [
+        ...chunkResults.map(chunk => ({
+          id: chunk.id,
+          businessId: chunk.businessId,
+          content: chunk.content,
+          metadata: chunk.metadata,
+          type: 'chunk',
+          createdAt: chunk.createdAt
+        })),
+        ...kbResults.map(kb => ({
+          id: kb.id,
+          businessId: kb.businessId,
+          content: kb.content,
+          metadata: kb.metadata,
+          type: 'knowledge_base',
+          createdAt: kb.createdAt
+        }))
+      ];
+
+      // Score by keyword matches and recency
+      const scoredResults = allResults.map(item => {
+        const contentLower = item.content.toLowerCase();
+        const matchCount = keywords.filter(kw => contentLower.includes(kw)).length;
+        const daysSinceCreation = (Date.now() - new Date(item.createdAt).getTime()) / (1000 * 60 * 60 * 24);
+        const recencyScore = Math.max(0, 1 - (daysSinceCreation / 365)); // Prefer newer content
+        
+        return {
+          ...item,
+          relevanceScore: (matchCount * 0.7) + (recencyScore * 0.3)
+        };
+      })
+      .filter(item => item.relevanceScore > 0)
+      .sort((a, b) => b.relevanceScore - a.relevanceScore)
+      .slice(0, limit);
+
+      logger.debug('Enhanced keyword search completed', { 
+        businessId, 
+        keywords: keywords.length,
+        chunkResults: chunkResults.length,
+        kbResults: kbResults.length,
+        finalResults: scoredResults.length 
+      });
+
+      return scoredResults;
+
+    } catch (error) {
+      logger.error('Enhanced keyword search failed', error);
+      return [];
+    }
+  }
+
+  /**
+   * Extract meaningful keywords from query
+   */
+  extractKeywords(query) {
+    return query
+      .toLowerCase()
+      .split(/[^\p{L}\p{N}]+/u) // Split on non-alphanumeric characters
+      .map(w => w.trim())
+      .filter(w => w.length > 2 && !STOP_WORDS.has(w))
+      .filter((w, i, arr) => arr.indexOf(w) === i); // Remove duplicates
   }
 }
 

@@ -7,27 +7,30 @@
  * - Fully populated knowledge base
  */
 
-const { PrismaClient } = require('@prisma/client');
-const { PrismaPg } = require('@prisma/adapter-pg');
-const { Pool } = require('pg');
-const bcryptjs = require('bcryptjs');
-const logger = require('../src/utils/logger');
+import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
+import bcryptjs from 'bcryptjs';
+import logger from '../src/utils/logger.js';
+import net from 'net';
 
-// Setup database connection with adapter
-const connectionString = process.env.PGBOUNCER_URL || process.env.DATABASE_URL;
-if (!connectionString) {
-  logger.error('❌ DATABASE_URL or PGBOUNCER_URL not set');
-  process.exit(1);
-}
+(async () => {
 
-// Build Pool options with sensible defaults and optional SSL
-const poolOptions = {
-  connectionString,
-  max: parseInt(process.env.DB_POOL_MAX || '20', 10),
-  idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT || '10000', 10),
-  connectionTimeoutMillis: parseInt(process.env.DB_CONN_TIMEOUT || '5000', 10),
-  keepAlive: true,
-  keepAliveInitialDelayMillis: 0
+  // Setup database connection with adapter
+  const connectionString = process.env.PGBOUNCER_URL || process.env.DATABASE_URL;
+  if (!connectionString) {
+    logger.error('❌ DATABASE_URL or PGBOUNCER_URL not set');
+    process.exit(1);
+  }
+
+  // Build Pool options with sensible defaults and optional SSL
+  const poolOptions = {
+    connectionString,
+    max: parseInt(process.env.DB_POOL_MAX || '20', 10),
+    idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT || '10000', 10),
+    connectionTimeoutMillis: parseInt(process.env.DB_CONN_TIMEOUT || '5000', 10),
+    keepAlive: true,
+    keepAliveInitialDelayMillis: 0
 };
 if (process.env.DB_SSL === 'true' || (process.env.NODE_ENV === 'production' && process.env.DB_SSL !== 'false')) {
   // For Render PostgreSQL databases, allow self-signed certificates
@@ -48,7 +51,6 @@ function maskConnectionString(cs) {
 }
 
 // Low-level TCP connectivity check to provide clearer diagnostics
-const net = require('net');
 async function tcpCheck(host, port = 5432, timeout = 3000) {
   return new Promise((resolve, reject) => {
     const socket = new net.Socket();
@@ -539,5 +541,9 @@ setupDemoUser().catch(error => {
     poolStats: error?.poolStats
   };
   logger.error('Fatal setup error:', error, extra);
+  process.exit(1);
+});
+})().catch(error => {
+  console.error('Script execution failed:', error);
   process.exit(1);
 });
