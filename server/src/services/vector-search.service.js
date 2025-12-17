@@ -67,8 +67,13 @@ class VectorSearchService {
    * @returns {Promise<boolean>} - True if pgvector is installed
    */
   async isPgVectorAvailable() {
-    // Temporarily disabled due to pgvector issues
-    return false;
+    try {
+      await prisma.$queryRaw`SELECT '[1,2,3]'::vector(3) as test;`;
+      return true;
+    } catch (error) {
+      logger.debug('pgvector not available', { error: error.message });
+      return false;
+    }
   }
 
   /**
@@ -95,8 +100,7 @@ class VectorSearchService {
       const chunksWithEmbeddings = await prisma.knowledgeChunk.count({
         where: {
           businessId,
-          // count by embedding field (vector search temporarily disabled)
-          embedding: { not: null }
+          embedding_vector: { not: null }
         }
       });
 
@@ -113,18 +117,6 @@ class VectorSearchService {
     } catch (error) {
       logger.error('Failed to get vector search statistics', { businessId, error: error.message });
       return null;
-    }
-  }
-
-  /**
-   * Check if pgvector extension is available
-   */
-  async isPgVectorAvailable() {
-    try {
-      await prisma.$queryRaw`SELECT '[1,2,3]'::vector(3) as test;`;
-      return true;
-    } catch (error) {
-      return false;
     }
   }
 
