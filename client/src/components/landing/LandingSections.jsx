@@ -38,15 +38,13 @@ import {
   Zap,
 } from 'lucide-react';
 import Image from 'next/image';
-import { convertCurrency } from '@/constants';
-
-// Helper: compute discounted offer price for countries
+// Helper: compute discounted offer price for countries (local rates to avoid circular-test issues)
 const computeOfferText = (country) => {
   const baseSar = 199;
   if (country === 'sa') return `${baseSar} ريال فقط`;
-  const map = { eg: { code: 'EGP', label: 'جنيه' }, ae: { code: 'AED', label: 'درهم' }, kw: { code: 'KWD', label: 'دينار' } };
-  const entry = map[country] || { code: 'SAR', label: 'ريال' };
-  const price = convertCurrency(baseSar, entry.code);
+  const map = { eg: { code: 'EGP', label: 'جنيه', rate: 13 }, ae: { code: 'AED', label: 'درهم', rate: 1 }, kw: { code: 'KWD', label: 'دينار', rate: 0.081 } };
+  const entry = map[country] || { code: 'SAR', label: 'ريال', rate: 1 };
+  const price = Math.round(baseSar * entry.rate);
   const discounted = Math.round(price * 0.5); // 50% discount
   return `${discounted} ${entry.label} فقط`;
 };
