@@ -115,12 +115,16 @@ router.post('/end-session', async (req, res) => {
  */
 router.get('/active-sessions', authenticateToken, async (req, res) => {
   try {
-    const businessId = req.user.role === 'SUPERADMIN' 
-      ? req.query.businessId 
-      : (req.user.businessId || req.user.businesses?.[0]?.id);
+    // Determine business ID with proper null checks
+    let businessId;
+    if (req.user.role === 'SUPERADMIN') {
+      businessId = req.query.businessId;
+    } else {
+      businessId = req.user.businessId || (Array.isArray(req.user.businesses) && req.user.businesses.length > 0 ? req.user.businesses[0]?.id : null);
+    }
 
     if (!businessId) {
-      return res.status(400).json({ success: false, message: 'Business not found' });
+      return res.status(400).json({ success: false, message: 'Business ID is required or user has no associated business' });
     }
 
     const sessions = await visitorService.getActiveSessions(businessId);
@@ -138,12 +142,16 @@ router.get('/active-sessions', authenticateToken, async (req, res) => {
  */
 router.get('/analytics', authenticateToken, async (req, res) => {
   try {
-    const businessId = req.user.role === 'SUPERADMIN' 
-      ? req.query.businessId 
-      : (req.user.businessId || req.user.businesses?.[0]?.id);
+    // Determine business ID with proper null checks
+    let businessId;
+    if (req.user.role === 'SUPERADMIN') {
+      businessId = req.query.businessId;
+    } else {
+      businessId = req.user.businessId || (Array.isArray(req.user.businesses) && req.user.businesses.length > 0 ? req.user.businesses[0]?.id : null);
+    }
 
     if (!businessId) {
-      return res.status(400).json({ success: false, message: 'Business not found' });
+      return res.status(400).json({ success: false, message: 'Business ID is required or user has no associated business' });
     }
 
     // Default: last 30 days
@@ -166,10 +174,17 @@ router.get('/analytics', authenticateToken, async (req, res) => {
 router.post('/track-user', authenticateToken, async (req, res) => {
   try {
     const { action, metadata } = req.body;
-    const businessId = req.user.businesses[0]?.id;
+    
+    // Determine business ID with proper null checks (safer than direct array access)
+    let businessId;
+    if (req.user.businessId) {
+      businessId = req.user.businessId;
+    } else if (Array.isArray(req.user.businesses) && req.user.businesses.length > 0) {
+      businessId = req.user.businesses[0]?.id;
+    }
 
     if (!businessId) {
-      return res.status(400).json({ success: false, message: 'Business not found' });
+      return res.status(400).json({ success: false, message: 'Business ID is required or user has no associated business' });
     }
 
     const activity = await visitorService.trackUserActivity(

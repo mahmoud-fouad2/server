@@ -561,7 +561,28 @@ exports.sendMessage = asyncHandler(async (req, res) => {
     }
 
     // Sanitize response to remove provider/model signatures
-    let sanitized = responseValidator.sanitizeResponse(aiResult.response || '');
+    // First, check if the response is a JSON string containing structured data
+    let sanitized = aiResult.response || '';
+    
+    try {
+      // Try to parse as JSON in case AI service returned structured format
+      const parsed = JSON.parse(sanitized);
+      if (parsed && typeof parsed === 'object' && parsed.answer) {
+        // Extract the answer field from structured response
+        sanitized = parsed.answer;
+        // Store metadata if available
+        if (parsed.sources && Array.isArray(parsed.sources) && parsed.sources.length > 0) {
+          aiResult.knowledgeBaseUsed = true;
+          aiResult.sources = parsed.sources;
+        }
+      }
+    } catch (e) {
+      // If parsing fails, just use the response as-is (it's already a string)
+      // This handles plain text responses that aren't JSON
+    }
+    
+    // Now apply sanitization
+    sanitized = responseValidator.sanitizeResponse(sanitized);
 
     // Ensure sanitized response is a non-empty string; otherwise use a safe fallback
     if (!sanitized || typeof sanitized !== 'string' || sanitized.trim().length === 0) {

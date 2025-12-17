@@ -756,6 +756,7 @@ module.exports = {
   // System Settings
   getSystemSettings: exports.getSystemSettings,
   updateSystemSetting: exports.updateSystemSetting,
+  updateSystemSettings: exports.updateSystemSettings,
   
   // Health Monitoring
   getSystemHealth: exports.getSystemHealth,

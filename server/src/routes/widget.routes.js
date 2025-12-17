@@ -42,6 +42,12 @@ const upload = multer({
 router.get('/config/:businessId', async (req, res) => {
   try {
     const { businessId } = req.params;
+    
+    // Set cache-busting headers to ensure fresh config on every request
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    
     const business = await prisma.business.findUnique({
       where: { id: businessId }
     });
@@ -56,7 +62,8 @@ router.get('/config/:businessId', async (req, res) => {
           personality: "friendly",
           showBranding: true,
           avatar: "robot"
-        }
+        },
+        configVersion: Date.now()
       });
     }
 
@@ -114,10 +121,14 @@ router.get('/config/:businessId', async (req, res) => {
        config.customIconUrl = config.customIconUrl.replace(/https?:\/\/localhost:\d+/, baseUrl);
     }
 
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
     res.json({
       name: business.name,
       widgetConfig: config,
-      preChatFormEnabled: business.preChatFormEnabled || false
+      preChatFormEnabled: business.preChatFormEnabled || false,
+      configVersion: business.updatedAt?.getTime() || Date.now()
     });
   } catch (error) {
     logger.error('Widget Config Error', error);
@@ -151,15 +162,21 @@ router.post('/config', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'Invalid widget config format' });
     }
 
-    // Update business widget config
+    // Update business widget config (this will update the updatedAt timestamp automatically)
     const updatedBusiness = await prisma.business.update({
       where: { id: businessId },
       data: { widgetConfig: JSON.stringify(widgetConfig) }
     });
 
+    // Set cache-busting headers
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    
     res.json({ 
       message: 'Widget config updated successfully',
-      widgetConfig: JSON.parse(updatedBusiness.widgetConfig)
+      widgetConfig: JSON.parse(updatedBusiness.widgetConfig),
+      configVersion: updatedBusiness.updatedAt?.getTime() || Date.now()
     });
   } catch (error) {
     logger.error('Update Widget Config Error', error);
