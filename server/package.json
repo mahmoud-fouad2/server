@@ -2,7 +2,6 @@
   "name": "fahimo-server",
   "version": "1.0.0",
   "description": "Backend for Fahimo SaaS",
-  "type": "module",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
