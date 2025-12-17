@@ -4,11 +4,6 @@
  * Checks if all Prisma schema fields exist in the database
  */
 
-// Support running as ESM in environments where package.json sets "type": "module"
-// This allows using existing CommonJS-style requires safely
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
-
 const { PrismaClient } = require('@prisma/client');
 const { PrismaPg } = require('@prisma/adapter-pg');
 const { Pool } = require('pg');
