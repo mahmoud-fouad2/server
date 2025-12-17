@@ -1,5 +1,6 @@
 const prisma = require('../config/database');
 const embeddingService = require('./embedding.service');
+const { rerankCandidates } = require('./rerank.service');
 const logger = require('../utils/logger');
 
 const STOP_WORDS = new Set([
@@ -162,6 +163,19 @@ class VectorSearchService {
 
       logger.debug('Vector search completed', { businessId, resultsCount: results.length, threshold });
       
+      // Apply LLM-based reranking if available
+      try {
+        if (results.length > 1) {
+          const rerankedResults = await rerankCandidates(query, results);
+          if (rerankedResults && rerankedResults.length > 0) {
+            logger.debug('Reranking applied successfully', { businessId, originalCount: results.length });
+            results = rerankedResults;
+          }
+        }
+      } catch (rerankError) {
+        logger.warn('Reranking failed, using original order', { error: rerankError.message, businessId });
+      }
+
       return results.map(row => ({
         id: row.id,
         businessId: row.businessId,
@@ -287,6 +301,19 @@ class VectorSearchService {
         kbResults: kbResults.length,
         finalResults: scoredResults.length 
       });
+
+      // Apply LLM-based reranking if available
+      try {
+        if (scoredResults.length > 1) {
+          const rerankedResults = await rerankCandidates(query, scoredResults);
+          if (rerankedResults && rerankedResults.length > 0) {
+            logger.debug('Reranking applied to keyword search', { businessId, originalCount: scoredResults.length });
+            scoredResults = rerankedResults;
+          }
+        }
+      } catch (rerankError) {
+        logger.warn('Reranking failed for keyword search, using original order', { error: rerankError.message, businessId });
+      }
 
       return scoredResults;
 

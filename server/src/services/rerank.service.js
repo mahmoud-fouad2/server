@@ -1,5 +1,5 @@
-const aiService = require('./ai.service');
-const logger = require('../utils/logger');
+import aiService from './ai.service.js';
+import logger from '../utils/logger.js';
 
 /**
  * Rerank candidates using an LLM-based rerank model.
@@ -49,4 +49,4 @@ async function rerankCandidates(query, candidates = []) {
   }
 }
 
-module.exports = { rerankCandidates };
+export { rerankCandidates };
