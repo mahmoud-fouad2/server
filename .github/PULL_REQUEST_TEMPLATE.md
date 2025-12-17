@@ -1,3 +1,13 @@
+## Summary
+Describe the change and why it is needed.
+
+## Checklist
+- [ ] Tests added or updated where applicable
+- [ ] Linted and formatted
+- [ ] Documentation updated (`CONTRIBUTING.md`/`ARCHITECTURE.md`) when relevant
+- [ ] CI passes on this PR
+
+Please include any additional notes for reviewers.
 # 🛡️ Pull Request Template - Faheemly Official Repository
 
 ## ⚠️ IMPORTANT: Authorization Required

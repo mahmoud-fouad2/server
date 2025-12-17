@@ -1,0 +1,4 @@
+# Code owners for critical areas — review required for PRs that modify these
+/server/src/* @mahmoud-fouad2
+/client/src/* @mahmoud-fouad2
+/.github/workflows/* @mahmoud-fouad2
