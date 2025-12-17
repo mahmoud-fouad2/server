@@ -125,7 +125,7 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Enable Pre-Flight for all routes and ensure headers include Authorization
-app.options('*', cors({ allowedHeaders: 'Origin, X-Requested-With, Content-Type, Accept, Authorization' }));
+app.options('*', cors({ allowedHeaders: 'Origin, X-Requested-With, Content-Type, Accept, Authorization, x-business-id' }));
 
 // SECURITY: Fail-safe CORS configuration
 // In production, we MUST have explicit origins configured
@@ -175,13 +175,14 @@ app.use(cors({
     error.statusCode = 403;
     cb(error);
   },
+  allowedHeaders: 'Origin, X-Requested-With, Content-Type, Accept, Authorization, x-business-id',
   credentials: true,
 }));
 
 // Ensure Access-Control-Allow-Headers is always present on preflight responses
 app.use((req, res, next) => {
   if (!res.get('Access-Control-Allow-Headers')) {
-    res.set('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    res.set('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, x-business-id');
   }
   next();
 });
