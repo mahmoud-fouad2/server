@@ -3,6 +3,7 @@ const router = express.Router();
 const prisma = require('../config/database');
 const { authenticateToken } = require('../middleware/auth');
 const logger = require('../utils/logger');
+const ConversationAnalyticsService = require('../services/conversation-analytics.service');
 
 // Fix for BigInt serialization in JSON (Prisma COUNT returns BigInt)
 BigInt.prototype.toJSON = function() { return Number(this) }
@@ -499,6 +500,174 @@ router.get('/alerts', authenticateToken, async (req, res) => {
   } catch (error) {
     logger.error('Alerts error', { error });
     res.status(500).json({ error: error.message });
+  }
+});
+
+// ===== Conversation Analytics (merged from conversation-analytics.routes.js) =====
+
+// Analyze a conversation and extract insights
+router.post('/conversation', authenticateToken, async (req, res) => {
+  try {
+    const { messages, conversationId } = req.body;
+    if (!messages || !Array.isArray(messages)) return res.error('Messages array is required', 400);
+
+    const analysis = ConversationAnalyticsService.analyzeConversation(
+      messages,
+      conversationId || `conv_${Date.now()}`
+    );
+
+    res.success(analysis, 'Conversation analyzed');
+  } catch (error) {
+    logger.error('[Conversation Analytics] Analyze error:', error);
+    res.error('Failed to analyze conversation', 500, { message: error.message });
+  }
+});
+
+// Public demo dashboard (no auth)
+router.get('/dashboard-public/:days?', async (req, res) => {
+  try {
+    const days = parseInt(req.params.days) || 7;
+    const dashboard = ConversationAnalyticsService.getDashboardData(days);
+    res.success(dashboard, 'Public dashboard');
+  } catch (error) {
+    logger.error('[Conversation Analytics] Public Dashboard error:', error);
+    res.error('Failed to get dashboard data', 500, { message: error.message });
+  }
+});
+
+// Daily analytics report
+router.get('/report/:date', authenticateToken, async (req, res) => {
+  try {
+    const { date } = req.params;
+    const report = ConversationAnalyticsService.getDailyReport(date);
+    if (!report) return res.error('No data found for the specified date', 404);
+    res.success(report, 'Daily report');
+  } catch (error) {
+    logger.error('[Conversation Analytics] Report error:', error);
+    res.error('Failed to get analytics report', 500, { message: error.message });
+  }
+});
+
+// Export analytics data
+router.get('/export', authenticateToken, async (req, res) => {
+  try {
+    const format = req.query.format || 'json';
+    const days = parseInt(req.query.days) || 30;
+    const businessId = req.user?.businessId || req.query.businessId;
+    if (!businessId) return res.error('Business ID is required', 400);
+
+    const exportData = ConversationAnalyticsService.exportAnalyticsData(format, days);
+
+    if (format === 'csv') {
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename=analytics_${businessId}_${Date.now()}.csv`);
+    } else {
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', `attachment; filename=analytics_${businessId}_${Date.now()}.json`);
+    }
+
+    res.send(exportData);
+  } catch (error) {
+    logger.error('[Conversation Analytics] Export error:', error);
+    res.error('Failed to export analytics data', 500, { message: error.message });
+  }
+});
+
+// Topics analysis
+router.get('/topics', authenticateToken, async (req, res) => {
+  try {
+    const dashboard = ConversationAnalyticsService.getDashboardData(30);
+    res.success({ topTopics: dashboard.topTopics, topicTrends: dashboard.trends.topics }, 'Topics analysis');
+  } catch (error) {
+    logger.error('[Conversation Analytics] Topics error:', error);
+    res.error('Failed to get topic analysis', 500, { message: error.message });
+  }
+});
+
+// Performance metrics
+router.get('/performance', authenticateToken, async (req, res) => {
+  try {
+    const dashboard = ConversationAnalyticsService.getDashboardData(7);
+    res.success({
+      responseTime: dashboard.performance?.averageResponseTime || 0,
+      resolutionRate: dashboard.performance?.resolutionRate || 0,
+      customerSatisfaction: dashboard.performance?.customerSatisfaction || 0,
+      conversationFlow: dashboard.performance?.conversationFlow || {}
+    }, 'Performance metrics');
+  } catch (error) {
+    logger.error('[Conversation Analytics] Performance error:', error);
+    res.error('Failed to get performance metrics', 500, { message: error.message });
+  }
+});
+
+// Track an analytics event (private)
+router.post('/track-event', authenticateToken, async (req, res) => {
+  try {
+    const { eventType: et, eventData, conversationId, event } = req.body;
+    const eventType = et || event;
+    if (!eventType) return res.error('Event type is required', 400);
+
+    const analyticsEvent = {
+      type: eventType,
+      data: eventData,
+      conversationId,
+      timestamp: new Date(),
+      businessId: req.user?.businessId || req.business?.id,
+      userId: req.user?.id
+    };
+
+    logger.info('[Conversation Analytics] Event tracked', analyticsEvent);
+
+    try {
+      await require('../config/database').userAnalytics.create({ data: analyticsEvent });
+      logger.info('[Conversation Analytics] Event persisted to DB');
+    } catch (dbErr) {
+      logger.warn('[Conversation Analytics] Failed to persist analytics event:', { message: dbErr?.message || dbErr });
+    }
+
+    res.success(null, 'Event tracked successfully');
+  } catch (error) {
+    logger.error('[Conversation Analytics] Track event error:', error);
+    res.error('Failed to track event', 500, { message: error.message });
+  }
+});
+
+// Public analytics endpoint for lightweight widget events (no auth)
+router.post('/public/track-event', async (req, res) => {
+  try {
+    const { eventType: et, eventData, conversationId, event, businessId } = req.body;
+    const eventType = et || event;
+    if (!eventType) return res.error('Event type is required', 400);
+
+    const eventRecord = {
+      type: eventType,
+      data: eventData || {},
+      conversationId: conversationId || null,
+      timestamp: new Date(),
+      businessId: businessId || null
+    };
+
+    logger.info('[Conversation Analytics - Public] Event tracked', { eventRecord });
+
+    try {
+      await require('../config/database').userAnalytics.create({
+        data: {
+          businessId: eventRecord.businessId,
+          userId: null,
+          action: eventRecord.type,
+          metadata: eventRecord.data,
+          createdAt: eventRecord.timestamp
+        }
+      });
+      logger.info('[Conversation Analytics - Public] Event persisted to DB');
+    } catch (e) {
+      logger.warn('[Conversation Analytics - Public] DB persist failed:', { message: e?.message || e });
+    }
+
+    res.success(null, 'Event tracked (public)');
+  } catch (error) {
+    logger.error('[Conversation Analytics - Public] Track event error:', error);
+    res.error('Failed to track event', 500, { message: error.message });
   }
 });
 

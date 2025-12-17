@@ -5,14 +5,16 @@ const logger = require('../utils/logger');
 // If `PGBOUNCER_URL` is set, prefer it so connections are routed through pgbouncer.
 // Lazy Prisma initialization to avoid hard failures at module import time
 let _prisma = null;
-let _initialized = false;
 
 function createPrismaClient() {
   if (_prisma) return _prisma;
 
   const effectiveDbUrl = process.env.PGBOUNCER_URL || process.env.DATABASE_URL;
   if (!effectiveDbUrl) {
-    throw new Error('DATABASE_URL is not configured; Prisma client will not be initialized');
+    // No DATABASE_URL in environment - fall back to a callable stub to make tests and tools work
+    logger.warn('DATABASE_URL is not configured; using Prisma stub for non-DB environment');
+    _prisma = createPrismaStub(new Error('DATABASE_URL not configured'));
+    return _prisma;
   }
 
   // Keep DATABASE_URL in sync with effective URL for Prisma tools compatibility
@@ -42,7 +44,6 @@ function createPrismaClient() {
       adapter,  // Use the PostgreSQL adapter
       log: process.env.NODE_ENV === 'development' ? ['query', 'info', 'warn', 'error'] : ['warn', 'error']
     });
-    _initialized = true;
     return _prisma;
   } catch (err) {
     logger.error('Prisma client initialization failed:', err?.message || err);
@@ -58,32 +59,63 @@ function createPrismaStub(reason) {
   // such as `prisma.paymentGateway.findMany()` by returning callable
   // proxies whose invocation throws a helpful error instead of causing
   // confusing "... is not a function" runtime errors.
-  const thrower = function() {
-    throw new Error(`Prisma client is not available: ${message}`);
+  // Create a callable proxy that recursively returns itself for any
+  // property access. This makes chained access like
+  // `prisma.paymentGateway.findMany()` behave as expected in tests:
+  // - `typeof prisma.paymentGateway.findMany === 'function'`
+  // - invoking the function returns a rejected Promise with a clear error
+  const makeRecursiveCallable = () => {
+    const fn = function() {
+      return Promise.reject(new Error(`Prisma client is not available: ${message}`));
+    };
+
+    const proxy = new Proxy(fn, {
+      get() {
+        // Any property access returns the same proxy so nested chains
+        // (e.g. model.findMany) are functions themselves.
+        return proxy;
+      },
+      apply() {
+        // Calling the proxy returns a rejected Promise with a clear error
+        return Promise.reject(new Error(`Prisma client is not available: ${message}`));
+      }
+    });
+
+    return proxy;
   };
 
-  const handler = {
-    get() {
-      // Return another proxy so deep property access like `.paymentGateway.findMany`
-      // keeps returning callable proxies until invoked, at which point `apply`
-      // will throw the helpful error.
-      return new Proxy(thrower, handler);
-    },
-    apply() {
-      // When the callable proxy is invoked, throw a clear error.
-      throw new Error(`Prisma client is not available: ${message}`);
-    }
-  };
-
-  return new Proxy(thrower, handler);
+  return makeRecursiveCallable();
 }
 
 const prisma = new Proxy({}, {
-  get(_target, prop) {
+  get(target, prop) {
+    // Allow test-suite overrides by checking the proxy's own properties first
+    if (prop in target) return target[prop];
     const client = createPrismaClient();
     const val = client[prop];
-    if (typeof val === 'function') return val.bind(client);
+    if (typeof val === 'function') {
+      // Return a callable proxy that preserves both direct invocation and
+      // nested property access. This ensures that `prisma.model.findMany`
+      // is a function and invoking it will call through to the underlying
+      // client (or stub) at call time without triggering proxy traps
+      // during the bind phase.
+      const surrogate = new Proxy(function() {}, {
+        get(_t, subProp) {
+          return (...args) => Reflect.apply(Reflect.get(val, subProp), client, args);
+        },
+        apply(_t, _thisArg, args) {
+          return Reflect.apply(val, client, args);
+        }
+      });
+
+      return surrogate;
+    }
     return val;
+  },
+  set(target, prop, value) {
+    // Allow tests and runtime to override certain model methods for mocking
+    target[prop] = value;
+    return true;
   }
 });
 

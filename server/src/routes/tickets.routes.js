@@ -37,7 +37,7 @@ router.post('/', authenticateToken, async (req, res) => {
     // Create a notification for admins/business
     try {
       await prisma.notification.create({ data: { businessId: ticket.businessId, title: 'New support ticket', message: ticket.subject.substring(0,200), link: `/tickets/${ticket.id}`, meta: { ticketId: ticket.id } } });
-      try { const io = require('../socket').getIO(); io.to(`business_${ticket.businessId}`).emit('notification:new', { type: 'ticket', ticketId: ticket.id, message: ticket.subject.substring(0,200) }); } catch (e) {}
+      try { const io = require('../socket').getIO(); io.to(`business_${ticket.businessId}`).emit('notification:new', { type: 'ticket', ticketId: ticket.id, message: ticket.subject.substring(0,200) }); } catch (e) { logger.warn('Socket emit failed (create ticket):', { message: e?.message || e }); }
     } catch (e) {
       // Non-fatal
     }
@@ -169,11 +169,11 @@ router.post('/:id/reply', authenticateToken, async (req, res) => {
         // If admin wrote the message, notify creator (client)
         if (isAdmin) {
           await prisma.notification.create({ data: { businessId, title: 'New reply on your ticket', message: message.substring(0, 200), link: `/tickets/${id}`, meta: { ticketId: id } } });
-          try { const io = require('../socket').getIO(); io.to(`business_${businessId}`).emit('notification:new', { type: 'ticket', ticketId: id, message: message.substring(0,200) }); } catch (e) {}
+          try { const io = require('../socket').getIO(); io.to(`business_${businessId}`).emit('notification:new', { type: 'ticket', ticketId: id, message: message.substring(0,200) }); } catch (e) { logger.warn('Socket emit failed (reply - admin):', { message: e?.message || e }); }
         } else {
           // client replied - notify business admins
           await prisma.notification.create({ data: { businessId, title: 'Customer replied to ticket', message: message.substring(0, 200), link: `/admin/tickets/${id}`, meta: { ticketId: id } } });
-          try { const io = require('../socket').getIO(); io.to(`business_${businessId}`).emit('notification:new', { type: 'ticket', ticketId: id, message: message.substring(0,200) }); } catch (e) {}
+          try { const io = require('../socket').getIO(); io.to(`business_${businessId}`).emit('notification:new', { type: 'ticket', ticketId: id, message: message.substring(0,200) }); } catch (e) { logger.warn('Socket emit failed (reply - client):', { message: e?.message || e }); }
         }
       }
     } catch (e) {

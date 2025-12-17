@@ -64,4 +64,5 @@ router.post('/:conversationId/rate', authenticateToken, (req, res, next) => {
   return chatController.submitRating(req, res, next);
 });
 
-module.exports = router;
+// Backwards compatibility: forward to main chat routes
+module.exports = require('./chat.routes');

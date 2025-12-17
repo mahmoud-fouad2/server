@@ -1,5 +1,4 @@
 const fs = require('fs');
-const path = require('path');
 const logger = require('../utils/logger');
 
 // Optional S3 support using AWS SDK v3. If S3 env vars present, we'll use S3.

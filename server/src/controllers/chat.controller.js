@@ -20,21 +20,18 @@ exports.getConversations = asyncHandler(async (req, res) => {
     return res.status(400).json({ error: 'Business ID required' });
   }
 
-  const [conversations, total] = await Promise.all([
-    prisma.conversation.findMany({
-      where: { businessId },
-      include: {
-        messages: {
-          orderBy: { createdAt: 'desc' },
-          take: 1
-        }
-      },
-      orderBy: { updatedAt: 'desc' },
-      skip,
-      take: limit
-    }),
-    prisma.conversation.count({ where: { businessId } })
-  ]);
+  const conversations = await prisma.conversation.findMany({
+    where: { businessId },
+    include: {
+      messages: {
+        orderBy: { createdAt: 'desc' },
+        take: 1
+      }
+    },
+    orderBy: { updatedAt: 'desc' },
+    skip,
+    take: limit
+  });
 
   // Return plain array for compatibility with older clients/tests
   res.json(conversations);
@@ -57,8 +54,7 @@ exports.getMessages = asyncHandler(async (req, res) => {
     queryOptions.skip = 1;
   }
 
-  const messages = await prisma.message.findMany(queryOptions);
-  const nextCursor = messages.length === limit ? messages[messages.length - 1].id : null;
+  const messages = await prisma.message.findMany(queryOptions); 
 
   // Return plain array for compatibility with older clients/tests
   res.json(messages);
@@ -116,7 +112,7 @@ exports.agentReply = asyncHandler(async (req, res) => {
   });
 
   // Emit socket event to conversation (visitor) and return
-  try { const io = getIO(); io.to(`conversation_${conversationId}`).emit('message:new', { conversationId, message: message.substring(0,200) }); } catch (e) {}
+  try { const io = getIO(); io.to(`conversation_${conversationId}`).emit('message:new', { conversationId, message: message.substring(0,200) }); } catch (e) { logger.warn('Socket emit failed (agentReply):', { message: e?.message || e }); }
 
   res.json(newMessage);
 });
@@ -248,7 +244,7 @@ exports.sendMessage = asyncHandler(async (req, res) => {
   }
 
   // Save User Message
-  const userMessage = await prisma.message.create({
+  await prisma.message.create({
     data: {
       conversationId: conversation.id,
       role: 'USER',
@@ -295,11 +291,11 @@ exports.sendMessage = asyncHandler(async (req, res) => {
     if (conversation.preChatData) {
       let parsed = null;
       try { parsed = JSON.parse(conversation.preChatData); } catch (e) { parsed = null; }
-      const phoneMatch = message.match(/(\+?\d[\d\s\-]{6,}\d)/);
+      const phoneMatch = message.match(/(\+?\d[\d\s-]{6,}\d)/);
       const nameMatch = message.match(/(?:اسمي|أنا|انا)\s+([\p{L} ]{2,40})/iu);
       let updated = false;
       if (parsed) {
-        if (!parsed.phone && phoneMatch) { parsed.phone = phoneMatch[1].replace(/\s|\-/g, ''); updated = true; }
+        if (!parsed.phone && phoneMatch) { parsed.phone = phoneMatch[1].replace(/[\s-]/g, ''); updated = true; }
         if (!parsed.name && nameMatch) { parsed.name = nameMatch[1].trim(); updated = true; }
         // if message is short and looks like a name
         if (!parsed.name && !parsed.phone && message.length < 40 && /^[\p{L} ]+$/u.test(message.trim())) {
@@ -321,7 +317,7 @@ exports.sendMessage = asyncHandler(async (req, res) => {
     try {
       const io = getIO();
       io.to(`business_${resolvedBusinessId}`).emit('notification:new', { type: 'chat', conversationId: conversation.id, message: message.substring(0,200) });
-    } catch (e) {}
+    } catch (e) { logger.warn('Socket emit failed (notification):', { message: e?.message || e }); }
   } catch (e) {
     // non-fatal
   }

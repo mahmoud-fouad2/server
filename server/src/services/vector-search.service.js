@@ -177,6 +177,7 @@ class VectorSearchService {
       .sort((a, b) => b.matchScore - a.matchScore)
       .slice(0, limit);
 
+      logger.debug('Keyword search completed (pre-rerank)', { businessId, resultsCount: scoredResults.length, keywords: keywords.length });
       // If a rerank model is configured, attempt to rerank using an LLM scoring model
       try {
         const { rerankCandidates } = require('./rerank.service');
@@ -186,14 +187,6 @@ class VectorSearchService {
         // If rerank fails, return scored results
         return scoredResults;
       }
-
-      logger.debug('Keyword search completed', { 
-        businessId, 
-        resultsCount: scoredResults.length,
-        keywords: keywords.length 
-      });
-      
-      return scoredResults;
 
     } catch (error) {
       logger.error('Keyword search failed', { businessId, error: error.message });

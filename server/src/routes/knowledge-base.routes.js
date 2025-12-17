@@ -65,4 +65,5 @@ router.get('/search', authenticateToken, resolveBusinessId, async (req, res) => 
   }
 });
 
-module.exports = router;
+// Backwards compatibility: forward to main knowledge routes
+module.exports = require('./knowledge.routes');

@@ -8,7 +8,6 @@ const router = express.Router();
 const { authenticateToken } = require('../middleware/auth');
 const paymentService = require('../services/payment.service');
 const prisma = require('../config/database');
-const logger = require('../utils/logger');
 const asyncHandler = require('express-async-handler');
 
 // NOTE: initialization of payment gateways is deferred until after DB connectivity

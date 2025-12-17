@@ -29,7 +29,7 @@ const upload = multer({
 });
 
 // POST /api/uploads
-router.post('/', authenticateToken, (req, res, next) => {
+router.post('/', authenticateToken, (req, res) => {
   upload.single('file')(req, res, (err) => {
     if (err && err instanceof multer.MulterError) {
       // File too large

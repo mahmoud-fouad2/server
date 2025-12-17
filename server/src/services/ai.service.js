@@ -836,10 +836,10 @@ async function generateChatResponse(message, business, history = [], knowledgeBa
     // Format and sanitize KB to avoid prompt injection
     let formattedKB = kbPreparation.formatForPrompt(preparedKB);
 
-    function sanitizeFormattedKB(text) {
+    const sanitizeFormattedKB = (text) => {
       if (!text) return '';
       // remove role tokens like system: or assistant:
-      text = text.replace(/(^|\n)\s*(system|assistant)[:\-].*?(\n|$)/gi, '\n');
+      text = text.replace(/(^|\n)\s*(system|assistant)[:-].*?(\n|$)/gi, '\n');
       // strip typical override directives
       text = text.replace(/ignore (the )?system prompt/gi, '');
       text = text.replace(/do not follow previous instructions/gi, '');
@@ -851,14 +851,14 @@ async function generateChatResponse(message, business, history = [], knowledgeBa
       // remove any tokens like <|system|>
       text = text.replace(/<\|.*?\|>/g, '');
       // drop lines that look like instructions
-      text = text.split('\n').filter(l => !/^(instruction|note|warning|directive)[:\-]/i.test(l.trim())).join('\n');
+      text = text.split('\n').filter(l => !/^(instruction|note|warning|directive)[:-]/i.test(l.trim())).join('\n');
       return text.trim();
     }
 
     formattedKB = sanitizeFormattedKB(formattedKB);
 
     // If KB too large, trim to top-prepared chunks and reformat
-    function estimateTokens(s) { return s ? s.split(/\s+/).length : 0; }
+    const estimateTokens = (s) => s ? s.split(/\s+/).length : 0;
     const KB_TOKEN_LIMIT = business.widgetConfig?.kbTokenLimit || 800;
     if (estimateTokens(formattedKB) > KB_TOKEN_LIMIT) {
       logger.info('[AI] KB trimmed for prompt due to token size', { tokens: estimateTokens(formattedKB) });
@@ -985,14 +985,14 @@ ${knowledgeContext}
     return false;
   }
 
-  function clarifyingQuestionFor(msg) {
+  const clarifyingQuestionFor = () => {
     // Generic yet helpful clarifying question
     return 'ممكن توضح طلبك شوية؟ هل يمكنك تحديد التاريخ/الوقت أو مشاركة مزيد من التفاصيل (مثلاً: اسم الباقة أو العنوان)؟';
-  }
+  };
 
   if (isAmbiguousMsg(message, preparedKB)) {
     return {
-      response: clarifyingQuestionFor(message),
+      response: clarifyingQuestionFor(),
       tokensUsed: 0,
       model: 'clarification',
       knowledgeBaseUsed: false
@@ -1017,7 +1017,7 @@ ${knowledgeContext}
     topP: 0.85 // Lower topP for more focused responses
   };
 
-  const result = await generateResponse(messages, options);
+  let result = await generateResponse(messages, options);
 
   // (moved earlier in flow)
   // If overlap is below threshold, retry once with an explicit 'KB-only' system instruction
@@ -1162,12 +1162,11 @@ ${knowledgeContext}
           if (re.test(sanitizedResp)) {
             sanitizedResp = sanitizedResp.replace(re, '[محذوف]');
           }
-        } catch (ee) {}
+        } catch (ee) { logger.warn('sanitize forbidden phrase failed', { phrase: f, message: ee?.message || ee }); }
       });
       result.response = sanitizedResp;
     }
-  } catch (e) {
-  }
+  } catch (e) { logger.warn('Failed to apply forbidden phrases sanitization', { message: e?.message || e }); }
   
   // -- Enforce structured JSON output and formatting early (so we can format provider JSON even if KB-match fails)
   // Use the parsed structured object when available; start with that as our structured value
@@ -1266,7 +1265,7 @@ ${knowledgeContext}
       logger.info('[AI] Formatting retry response', { retryResponse: retry.response });
       const newStruct = extractJSONFromText(retry.response || '');
       logger.info('[AI] Formatting retry extracted struct', { newStruct });
-      if (newStruct && newStruct.answer && !placeholderPatterns.some(p => p.test(newStruct.answer))) {
+      if (newStruct && newStruct.answer && !needsFormattingAnswer(newStruct.answer)) {
         // adopt the formatted result
         result.response = JSON.stringify(newStruct, null, 2);
         structured = newStruct;
@@ -1280,7 +1279,7 @@ ${knowledgeContext}
           result.response = JSON.stringify(s, null, 2);
           structured = s;
           logger.info('[AI] Applied fallback formatted response', { response: result.response });
-        } catch (ee) {}
+        } catch (ee) { logger.warn('[AI] Applying fallback formatted response failed', { message: ee?.message || ee }); }
       }
     } catch (e) {
       logger.warn('[AI] Formatting retry failed', e.message || e);

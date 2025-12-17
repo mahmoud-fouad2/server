@@ -300,7 +300,8 @@ exports.toggleUserStatus = asyncHandler(async (req, res) => {
  */
 exports.deleteUser = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { reason } = req.body;
+  const { reason, restoreUntil: restoreUntilRaw } = req.body || {};
+  const restoreUntil = restoreUntilRaw ? new Date(restoreUntilRaw) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
   // Prevent self-deletion
   if (id === req.user.id) {

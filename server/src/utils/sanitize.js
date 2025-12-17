@@ -4,8 +4,8 @@ function sanitizeInput(input) {
   let s = input.replace(/<[^>]*>/g, '');
   // Remove javascript: URIs
   s = s.replace(/javascript:/gi, '');
-  // Strip control characters and trim
-  s = s.replace(/[\x00-\x1F\x7F]/g, '').trim();
+  // Strip control characters and trim (avoid control-character regex literals)
+  s = Array.from(s).filter(ch => { const c = ch.charCodeAt(0); return c >= 32 && c !== 127; }).join('').trim();
   return s;
 }
 

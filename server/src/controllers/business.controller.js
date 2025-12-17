@@ -6,6 +6,7 @@
 const asyncHandler = require('express-async-handler');
 const prisma = require('../config/database');
 const cacheService = require('../services/cache.service');
+const logger = require('../utils/logger');
 
 /**
  * @desc    Get Dashboard Statistics

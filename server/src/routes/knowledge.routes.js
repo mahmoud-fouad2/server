@@ -6,6 +6,10 @@ const { authenticateToken } = require('../middleware/auth');
 const { resolveBusinessId } = require('../middleware/businessMiddleware');
 const { validateAddTextKnowledge, validateAddUrlKnowledge, validateUpdateKnowledge } = require('../middleware/zodValidation');
 const knowledgeController = require('../controllers/knowledge.controller');
+const prisma = require('../config/database');
+const vectorSearch = require('../services/vector-search.service');
+const knowledgeBaseService = require('../services/knowledge-base.service');
+const logger = require('../utils/logger');
 
 // Configure Multer with security limits
 const upload = multer({ 
@@ -59,5 +63,58 @@ router.post('/chunks/embed', authenticateToken, knowledgeController.embedChunks)
 router.post('/reindex', authenticateToken, knowledgeController.reindexEmbeddings);
 // Regenerate chunks for existing KB entries that lack chunks
 router.post('/regen-chunks', authenticateToken, resolveBusinessId, knowledgeController.regenerateChunks);
+
+// ===== Compatibility & Search Endpoints (merged from knowledge-base.routes.js) =====
+
+// POST /api/knowledge - compatibility endpoint for older clients/tests
+router.post('/', authenticateToken, resolveBusinessId, async (req, res) => {
+  try {
+    let businessId = req.businessId || req.user.businessId;
+
+    // Fallback resolution attempts (mirrors previous compat behavior)
+    if (!businessId && req.user) {
+      const userId = req.user.userId || req.user.id || null;
+      if (userId) {
+        const ownerBiz = await prisma.business.findFirst({ where: { userId } });
+        if (ownerBiz) businessId = ownerBiz.id;
+      } else if (req.user.email) {
+        const ownerUser = await prisma.user.findUnique({ where: { email: req.user.email }, include: { businesses: true } });
+        businessId = ownerUser?.businesses?.[0]?.id || null;
+      }
+      if (!businessId) {
+        const latest = await prisma.business.findFirst({ orderBy: { createdAt: 'desc' } });
+        if (latest) businessId = latest.id;
+      }
+    }
+
+    const { type, content, title } = req.body;
+    if (!businessId) return res.error('Business ID missing', 400);
+    if (!type || !content) return res.error('type and content are required', 400);
+
+    const kb = await prisma.knowledgeBase.create({ data: { businessId, type: type.toUpperCase(), content, metadata: { title: title || 'Untitled' } } });
+
+    // Kick off async processing (best-effort)
+    try { await knowledgeBaseService.processKnowledgeBase(businessId, content, title || 'Untitled', kb.id); } catch (e) { logger.warn('KB processing failed (compat)', e?.message || e); }
+
+    return res.success(kb, 'Knowledge base created', 201);
+  } catch (err) {
+    logger.error('Knowledge-base compatibility create failed', err);
+    return res.error('Failed to create knowledge base', 500, { message: err?.message || err });
+  }
+});
+
+// GET /api/knowledge/search?q=... - basic search wrapper
+router.get('/search', authenticateToken, resolveBusinessId, async (req, res) => {
+  try {
+    const businessId = req.businessId || req.user.businessId;
+    const q = req.query.query || req.query.q || '';
+    if (!q) return res.error('query required', 400);
+    const results = await vectorSearch.searchKnowledge(businessId, q, 5);
+    return res.success(results, 'Search results');
+  } catch (err) {
+    logger.error('Knowledge base search failed', err);
+    return res.error('Search failed', 500, { message: err?.message || err });
+  }
+});
 
 module.exports = router;

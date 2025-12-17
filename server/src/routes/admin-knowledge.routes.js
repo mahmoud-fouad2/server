@@ -10,7 +10,7 @@ const { authenticateToken } = require('../middleware/auth');
 const { requirePermission } = require('../middleware/authorization');
 const logger = require('../utils/logger');
 const asyncHandler = require('express-async-handler');
-const { requireRole } = require('../middleware/authorization');
+
 
 // ------------------------------------------------------------------
 // Secret-only trigger (no auth) for environments without shell access
@@ -153,7 +153,7 @@ router.get(
  * @access SUPERADMIN
  */
 router.post('/knowledge/pgvector-migrate', requirePermission('system:write'), asyncHandler(async (req, res) => {
-  const { sync = false } = req.body || {};
+
   // Migration already performed? Check system flag (best-effort)
   try {
     const flag = await prisma.systemSetting.findUnique({ where: { key: 'pgvector_migration_done' } });

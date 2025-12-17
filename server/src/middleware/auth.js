@@ -59,7 +59,7 @@ const authenticateToken = async (req, res, next) => {
           // perform a couple of lightweight DB reads to better emulate route DB work
           await prisma.business.findFirst({ select: { id: true } }).catch(() => null);
           await prisma.conversation.findFirst({ select: { id: true } }).catch(() => null);
-        } catch (e) {}
+        } catch (e) { const logger = require('../utils/logger'); logger.warn('authenticateToken test DB reads failed', { message: e?.message || e }); }
         await new Promise(r => setTimeout(r, 200));
       }
       return res.status(401).json({ error: 'Invalid token' });

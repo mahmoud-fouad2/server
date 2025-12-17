@@ -529,8 +529,6 @@ exports.embedChunks = async (req, res) => {
     logger.info('embedChunks found', { count: (chunks && chunks.length) || 0 });
     if (!chunks || chunks.length === 0) return res.json({ message: 'No unembedded chunks found', processed: 0 });
 
-    const hasRedis = !!process.env.REDIS_URL;
-
     // Determine whether to process synchronously for test environment to make tests deterministic
     const isTestEnv = process.env.NODE_ENV === 'test' || process.env.CI === 'true';
     let processed = 0;

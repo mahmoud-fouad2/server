@@ -43,20 +43,89 @@ router.post('/rating', async (req, res) => {
     const { conversationId, rating, feedback } = req.body;
 
     if (!conversationId || !rating) {
-      return res.status(400).json({ error: 'Conversation ID and rating are required' });
+      return res.error('Conversation ID and rating are required', 400);
     }
 
     if (rating < 1 || rating > 5) {
-      return res.status(400).json({ error: 'Rating must be between 1 and 5' });
+      return res.error('Rating must be between 1 and 5', 400);
     }
 
     const conversation = await prisma.conversation.update({ where: { id: conversationId }, data: { rating, feedback: feedback || null, status: 'CLOSED' } });
 
-    res.json({ success: true, conversation });
+    res.success(conversation, 'Conversation rated');
   } catch (error) {
     logger.error('Chat rating compatibility handler error', { error });
-    res.status(500).json({ success: false, message: 'Internal server error' });
+    res.error('Internal server error', 500, { message: error.message });
   }
+});
+
+// ===== Backwards-compatible Conversation Endpoints (merged from conversations.routes.js) =====
+
+// Create conversation (compatibility with older public API used in tests)
+router.post('/', async (req, res) => {
+  try {
+    const { businessId, channel = 'WIDGET' } = req.body;
+    if (!businessId) return res.error('businessId required', 400);
+    const conv = await prisma.conversation.create({ data: { businessId, channel, status: 'ACTIVE' } });
+    res.success(conv, 'Conversation created', 201);
+  } catch (err) {
+    logger.error('Create conversation (compat) failed', err);
+    res.error('Failed to create conversation', 500, { message: err?.message || err });
+  }
+});
+
+// Post a message to a conversation (compat)
+router.post('/:conversationId/messages', async (req, res, next) => {
+  try {
+    // ensure conversationId is available to controller
+    req.body.conversationId = req.params.conversationId;
+
+    // Fetch conversation to validate ownership or businessId
+    const conv = await prisma.conversation.findUnique({ where: { id: req.params.conversationId } });
+    if (!conv) return res.error('Conversation not found', 404);
+
+    // If Authorization header is present, enforce token validation and ownership
+    if (req.headers && req.headers.authorization) {
+      const { authenticateToken } = require('../middleware/auth');
+      try {
+        await new Promise((resolve, reject) => authenticateToken(req, res, (err) => err ? reject(err) : resolve()));
+      } catch (err) {
+        // authenticateToken already sent response; just return
+        return;
+      }
+
+      if (req.user && conv.businessId !== req.user.businessId) return res.error('Forbidden', 403);
+    } else {
+      // No auth: require businessId in body to match conversation (widget compatibility)
+      if (!req.body.businessId || req.body.businessId !== conv.businessId) {
+        return res.error('Forbidden', 403);
+      }
+    }
+
+    return chatController.sendMessage(req, res, next);
+  } catch (err) {
+    logger.error('Post message to conversation (compat) failed', err);
+    return res.error('Failed to post message', 500, { message: err?.message || err });
+  }
+});
+
+// Get conversation with messages
+router.get('/:conversationId', authenticateToken, async (req, res) => {
+  try {
+    const conversation = await prisma.conversation.findUnique({ where: { id: req.params.conversationId }, include: { messages: { orderBy: { createdAt: 'asc' } } } });
+    if (!conversation) return res.error('Conversation not found', 404);
+    if (conversation.businessId !== req.user.businessId) return res.error('Forbidden', 403);
+    res.success(conversation, 'Conversation fetched');
+  } catch (err) {
+    logger.error('Get conversation failed', err);
+    res.error('Failed to fetch conversation', 500, { message: err?.message || err });
+  }
+});
+
+// Rate conversation (compat)
+router.post('/:conversationId/rate', authenticateToken, (req, res, next) => {
+  req.body.conversationId = req.params.conversationId;
+  return chatController.submitRating(req, res, next);
 });
 
 // Admin / Dashboard routes (require authentication)
@@ -67,9 +136,9 @@ router.get('/handover-requests', authenticateToken, chatController.getHandoverRe
 router.post('/:conversationId/mark-read', authenticateToken, asyncHandler(async (req, res) => {
   const conversationId = req.params.conversationId;
   const { businessId } = req.user;
-  if (!businessId) return res.status(400).json({ error: 'Business ID required' });
+  if (!businessId) return res.error('Business ID required', 400);
   await prisma.message.updateMany({ where: { conversationId, role: 'USER', isReadByBusiness: false }, data: { isReadByBusiness: true } });
-  res.json({ success: true });
+  res.success(null, 'Marked read');
 }));
 router.post('/agent/reply', authenticateToken, chatController.agentReply);
 router.post('/reply', authenticateToken, chatController.agentReply); // Alias for /api/chat/reply
@@ -105,8 +174,7 @@ router.post('/test', chatLimiter, async (req, res) => {
       logger.warn('Test Chat: knowledge search failed, continuing without KB', { error: e.message });
     }
 
-    // Debug: ensure test-ai path is exercised in tests
-    console.log('Test Chat: calling aiService.generateChatResponse');
+    // Ensure test-ai path is exercised in tests
     const aiResult = await aiService.generateChatResponse(
       message,
       business,
@@ -114,7 +182,6 @@ router.post('/test', chatLimiter, async (req, res) => {
       knowledgeContext,
       null
     );
-    console.log('Test Chat aiResult:', aiResult);
 
     // Sanitize AI response to remove any provider/model self-identification
     let sanitizedResponse = responseValidator.sanitizeResponse(aiResult?.response || '');
@@ -130,8 +197,6 @@ router.post('/test', chatLimiter, async (req, res) => {
         // ignore parse errors and fall back to default greeting below
       }
     }
-
-    console.log('Test Chat sanitizedResponse:', sanitizedResponse);
 
     res.json({
       response: sanitizedResponse || 'مرحباً! كيف يمكنني مساعدتك؟',

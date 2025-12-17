@@ -241,6 +241,11 @@ const rawBodySaver = (req, res, buf, encoding) => {
   if (buf && buf.length) req.rawBody = buf.toString(encoding || 'utf8');
 };
 app.use(express.json({ verify: rawBodySaver }));
+
+// Response wrapper middleware for standardized responses
+const { responseWrapperMiddleware } = require('./middleware/response-wrapper');
+app.use(responseWrapperMiddleware());
+
 app.use(express.static(path.join(__dirname, '../public'), {
   setHeaders: (res, _path, _stat) => {
     // Allow cross-origin loading of static assets (scripts, images)
