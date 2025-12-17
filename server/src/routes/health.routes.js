@@ -5,9 +5,8 @@
  * ═══════════════════════════════════════════════════
  */
 
-const express = require('express');
-const router = express.Router();
-const monitor = require('../utils/monitor');
+import express from 'express';
+import monitor from '../utils/monitor.js';
 
 const rateLimit = require('express-rate-limit');
 
@@ -88,4 +87,4 @@ router.get('/detailed', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

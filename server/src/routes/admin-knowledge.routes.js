@@ -3,11 +3,10 @@
  * Manage knowledge base entries across all businesses for SUPERADMIN
  */
 
-const express = require('express');
-const router = express.Router();
-const prisma = require('../config/database');
-const { authenticateToken } = require('../middleware/auth');
-const { requirePermission } = require('../middleware/authorization');
+import express from 'express';
+import prisma from '../config/database.js';
+import { authenticateToken } from '../middleware/auth.js';
+import { requirePermission } from '../middleware/authorization.js';
 const logger = require('../utils/logger');
 const asyncHandler = require('express-async-handler');
 
@@ -241,5 +240,5 @@ router.post(
   })
 );
 
-module.exports = router;
+export default router;
 

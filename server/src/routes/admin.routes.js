@@ -1,8 +1,7 @@
-const express = require('express');
-const router = express.Router();
-const prisma = require('../config/database');
-const { authenticateToken } = require('../middleware/auth');
-const logger = require('../utils/logger');
+import express from 'express';
+import prisma from '../config/database.js';
+import { authenticateToken } from '../middleware/auth.js';
+import logger from '../utils/logger.js';
 
 // Middleware to check if user is SUPERADMIN
 const isAdmin = async (req, res, next) => {
@@ -689,4 +688,4 @@ router.post('/update-demo-business', authenticateToken, isAdmin, async (req, res
   }
 });
 
-module.exports = router;
+export default router;

@@ -3,13 +3,12 @@
  * Comprehensive business management for SUPERADMIN
  */
 
-const express = require('express');
-const router = express.Router();
-const prisma = require('../config/database');
-const { authenticateToken } = require('../middleware/auth');
-const { requirePermission } = require('../middleware/authorization');
-const logger = require('../utils/logger');
-const asyncHandler = require('express-async-handler');
+import express from 'express';
+import prisma from '../config/database.js';
+import { authenticateToken } from '../middleware/auth.js';
+import { requirePermission } from '../middleware/authorization.js';
+import logger from '../utils/logger.js';
+import asyncHandler from 'express-async-handler.js';
 
 // All routes require authentication
 router.use(authenticateToken);
@@ -613,5 +612,5 @@ router.get(
   })
 );
 
-module.exports = router;
+export default router;
 

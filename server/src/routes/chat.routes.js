@@ -1,13 +1,12 @@
-const express = require('express');
-const router = express.Router();
-const rateLimit = require('express-rate-limit');
-const { authenticateToken } = require('../middleware/auth');
-const { validateChatMessage } = require('../middleware/validation');
-const chatController = require('../controllers/chat.controller');
-const asyncHandler = require('express-async-handler');
-const prisma = require('../config/database');
-const aiService = require('../services/ai.service');
-const vectorSearch = require('../services/vector-search.service');
+import express from 'express';
+import rateLimit from 'express-rate-limit';
+import { authenticateToken } from '../middleware/auth.js';
+import { validateChatMessage } from '../middleware/validation.js';
+import chatController from '../controllers/chat.controller.js';
+import asyncHandler from 'express-async-handler';
+import prisma from '../config/database.js';
+import aiService from '../services/ai.service.js';
+import vectorSearch from '../services/vector-search.service.js';
 const responseValidator = require('../services/response-validator.service');
 const logger = require('../utils/logger');
 
@@ -212,4 +211,4 @@ router.post('/test', chatLimiter, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

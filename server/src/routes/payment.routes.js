@@ -3,11 +3,10 @@
  * Customer-facing payment endpoints
  */
 
-const express = require('express');
-const router = express.Router();
-const { authenticateToken } = require('../middleware/auth');
-const paymentService = require('../services/payment.service');
-const prisma = require('../config/database');
+import express from 'express';
+import { authenticateToken } from '../middleware/auth.js';
+import paymentService from '../services/payment.service.js';
+import prisma from '../config/database.js';
 const asyncHandler = require('express-async-handler');
 
 // NOTE: initialization of payment gateways is deferred until after DB connectivity
@@ -169,5 +168,5 @@ router.get(
   })
 );
 
-module.exports = router;
+export default router;
 
