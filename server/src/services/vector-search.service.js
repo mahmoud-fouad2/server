@@ -9,13 +9,14 @@ const STOP_WORDS = new Set([
 ]);
 
 /**
- * Vector Search Service
- * Implements semantic search using pgvector extension
+ * Knowledge Search Service
+ * Implements enhanced keyword search with relevance scoring
  * 
  * Features:
- * - Cosine similarity search for relevant knowledge chunks
- * - Fallback to keyword search if vector search fails
- * - Caching support for repeated queries
+ * - Enhanced keyword search with relevance scoring
+ * - Stop word filtering and keyword extraction
+ * - Recency weighting for better results
+ * - Vector search capability (currently disabled for production compatibility)
  */
 
 class VectorSearchService {
@@ -30,19 +31,11 @@ class VectorSearchService {
   async searchKnowledge(query, businessId, limit = 5, threshold = null) {
     const originalQuery = query;
     
-    // Try vector search first if available
-    try {
-      // Check if pgvector is available by testing a simple query
-      const testVector = await prisma.$queryRaw`SELECT '[1,2,3]'::vector(3) as test;`;
-      if (testVector) {
-        logger.info('pgvector extension available, attempting vector search', { businessId });
-        return await this.vectorSearch(query, businessId, limit, threshold);
-      }
-    } catch (vectorError) {
-      logger.info('pgvector not available, using enhanced keyword search', { businessId, error: vectorError.message });
-    }
+    // Note: Vector search is temporarily disabled due to schema changes
+    // The embedding_vector field has been removed for production deployment compatibility
+    logger.info('Using enhanced keyword search (vector search disabled)', { businessId });
     
-    // Fallback to enhanced keyword search
+    // Use enhanced keyword search
     return await this.enhancedKeywordSearch(query, businessId, limit);
   }
 
