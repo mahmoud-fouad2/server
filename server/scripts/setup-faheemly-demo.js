@@ -429,7 +429,15 @@ async function setupDemoUser() {
       hint: error?.meta?.hint,
       poolStats: error?.poolStats
     };
-    logger.error('❌ Setup failed:', error, extra);
+
+    // Provide a clearer message for Prisma P2022 (missing column / schema mismatch)
+    if (error && error.code === 'P2022') {
+      logger.error('❌ Database schema mismatch detected (Prisma P2022). This usually means pending migrations were not applied or the DB is out of sync with the Prisma schema.');
+      logger.error('Tip: run `npx prisma migrate deploy` on the target database and confirm migrations applied, then retry.');
+      logger.error('Prisma error details:', error.message, extra);
+    } else {
+      logger.error('❌ Setup failed:', error, extra);
+    }
     process.exit(1);
   } finally {
     try {

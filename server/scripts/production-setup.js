@@ -35,7 +35,11 @@ async function runProductionSetup() {
       execSync('npx prisma migrate deploy', { stdio: 'inherit' });
       logger.info('✅ All migrations applied');
     } catch (e) {
-      logger.error('⚠️  Migration warning (may be normal if DB is fresh):', e.message);
+      // Treat migration failures as fatal so we don't continue into demo setup
+      logger.error('❌ Database migrations failed. Please inspect migration output and ensure the database is up-to-date.');
+      logger.error('Migration error output:', e.message);
+      // Re-throw to terminate setup early and surface the migration error
+      throw new Error('Database migrations failed: ' + e.message);
     }
 
     // Step 3: Validate schema
