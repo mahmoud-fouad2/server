@@ -254,8 +254,8 @@ describe('LandingSections Components', () => {
       const egyptProps = { ...mockProps, activeCountry: 'eg' };
       const { rerender } = render(<LimitedTimeOffer {...egyptProps} />);
 
-      const { convertCurrency } = require('@/constants');
-      const expectedEgyptDiscounted = Math.round(convertCurrency(199, 'EGP') * 0.5);
+      // Calculate expected discounted price using the agreed EGP rate (13 EGP per SAR)
+      const expectedEgyptDiscounted = Math.round(Math.round(199 * 13) * 0.5);
       expect(screen.getByText(new RegExp(`خصم 50% ${expectedEgyptDiscounted} جنيه فقط`))).toBeInTheDocument();
 
       const uaeProps = { ...mockProps, activeCountry: 'ae' };
