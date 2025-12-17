@@ -5,7 +5,7 @@ import { validateChatMessage } from '../middleware/validation.js';
 import chatController from '../controllers/chat.controller.js';
 import asyncHandler from 'express-async-handler';
 import prisma from '../config/database.js';
-import aiService from '../services/ai.service.js';
+import * as aiService from '../services/ai.service.js';
 import vectorSearch from '../services/vector-search.service.js';
 const responseValidator = require('../services/response-validator.service');
 const logger = require('../utils/logger');
