@@ -95,11 +95,8 @@ class VectorSearchService {
       const chunksWithEmbeddings = await prisma.knowledgeChunk.count({
         where: {
           businessId,
-          // count by vector column when available
-          OR: [
-            { embedding: { not: null } },
-            { embedding_vector: { not: null } }
-          ]
+          // count by embedding field (vector search temporarily disabled)
+          embedding: { not: null }
         }
       });
 

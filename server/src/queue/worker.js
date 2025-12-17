@@ -63,11 +63,13 @@ async function startWorker() {
         // We pass the vector as a parameter and cast it to `vector` in SQL: ($1)::vector
         const vectorLiteral = `[${nums.join(',')}]`;
         try {
-          await prisma.$executeRaw`
-            UPDATE "KnowledgeChunk"
-            SET embedding_vector = ${vectorLiteral}::vector
-            WHERE id = ${chunkId}
-          `;
+          // Temporarily disabled due to pgvector issues
+          // await prisma.$executeRaw`
+          //   UPDATE "KnowledgeChunk"
+          //   SET embedding_vector = ${vectorLiteral}::vector
+          //   WHERE id = ${chunkId}
+          // `;
+          logger.info('Worker: skipping embedding_vector update (pgvector temporarily disabled)');
         } catch (e) {
           // If vector update fails (pgvector not installed or wrong dims), ignore and keep JSON embedding
           logger.warn('Worker: failed to persist embedding_vector (pgvector may be unavailable)', { message: e.message || e });
