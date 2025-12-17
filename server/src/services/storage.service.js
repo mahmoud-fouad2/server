@@ -8,6 +8,12 @@ let S3_PRESIGNER = null;
 // Support multiple env var names for compatibility and S3-compatible endpoints
 const S3_BUCKET = process.env.AWS_S3_BUCKET || process.env.S3_BUCKET;
 if (S3_BUCKET) {
+  logger.info('S3 configuration detected:', {
+    bucket: S3_BUCKET,
+    region: process.env.AWS_REGION || process.env.S3_REGION,
+    endpoint: process.env.S3_ENDPOINT,
+    hasCredentials: !!(process.env.S3_ACCESS_KEY_ID && process.env.S3_SECRET_ACCESS_KEY)
+  });
   try {
     // Lazy require so local dev without AWS SDK still works
     S3 = require('@aws-sdk/client-s3');
@@ -46,6 +52,12 @@ if (S3_BUCKET) {
 }
 
 const S3_ENABLED = !!(s3Client && S3_BUCKET);
+
+if (S3_ENABLED) {
+  logger.info('✅ S3 storage enabled successfully');
+} else {
+  logger.info('ℹ️ S3 storage not enabled, using local disk storage');
+}
 
 async function uploadToS3(localFilePath, destKey, contentType) {
   const fsPromises = fs.promises;
