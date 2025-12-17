@@ -1,7 +1,7 @@
-// Do NOT require the Prisma client at module load time — importing
+// Do NOT import the Prisma client at module load time — importing
 // `src/config/database.js` constructs a PrismaClient which may fail during
 // build-time hooks (Prisma v7 can require engine adapter options). We will
-// require it lazily only when needed (fallback path below).
+// import it lazily only when needed (fallback path below).
 let prisma = null;
 
 async function installPgVector() {
@@ -10,7 +10,7 @@ async function installPgVector() {
 
     if (process.env.DATABASE_URL) {
       // Use `pg` directly (safer in deploy scripts)
-      const { Client } = require('pg');
+      const { Client } = await import('pg');
       const client = new Client({ connectionString: process.env.DATABASE_URL, ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false });
       await client.connect();
       await client.query('CREATE EXTENSION IF NOT EXISTS vector;');
