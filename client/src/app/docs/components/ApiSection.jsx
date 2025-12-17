@@ -217,9 +217,42 @@ export default function ApiSection() {
 
               {/* Response */}
               <div>
+              {/* Usage & Policies */}
+              <div>
+                <h4 className="font-bold text-lg dark:text-white mb-3">المصادقة (Authentication)</h4>
+                <p className="text-sm">جميع endpoints المحمية تتطلب رأس HTTP: <code>Authorization: Bearer &lt;token&gt;</code>. احصل على التوكن عبر <code>POST /api/auth/login</code> ثم أرسله في كل طلب.</p>
+
+                <h4 className="font-bold text-lg dark:text-white mt-4 mb-3">الحدود ومعدل الطلبات (Rate Limits)</h4>
+                <p className="text-sm">نتبع سياسة قياسية لمعدل الطلبات لتوفير استقرار الخدمة. افتراضياً:</p>
+                <ul className="list-disc list-inside text-sm ml-4">
+                  <li>الخطة التجريبية: 100 طلب/دقيقة</li>
+                  <li>الخطط المدفوعة: 1000 طلب/دقيقة (قابلة للتخصيص حسب الاتفاق)</li>
+                </ul>
+                <p className="text-sm mt-2">التخطي عن الحدود قد يؤدي إلى استجابة 429. استخدم آلية إعادة المحاولة مع تأخير متزايد (exponential backoff).</p>
+
+                <h4 className="font-bold text-lg dark:text-white mt-4 mb-3">الاستخدام الممنوع</h4>
+                <ul className="list-disc list-inside text-sm ml-4">
+                  <li>المحتوى غير القانوني أو التحريضي على العنف أو الكراهية.</li>
+                  <li>محاولات استغلال أو تسريب بيانات المستخدمين أو تخريب الخدمات (exfiltration).</li>
+                  <li>استخدامات متعلقة بالبرمجيات الخبيثة أو التعدين غير المشروع.</li>
+                  <li>إرسال رسائل سبام أو إنشاء حسابات أو مراقبة المستخدمين بدون موافقة.</li>
+                </ul>
+
+                <h4 className="font-bold text-lg dark:text-white mt-4 mb-3">أفضل الممارسات</h4>
+                <ul className="list-disc list-inside text-sm ml-4">
+                  <li>أرسل دائمًا <code>sessionId</code> و<code>conversationId</code> لاستعادة سياق المحادثة.</li>
+                  <li>عالج الأخطاء بعقلانية: افترض أن الأخطاء المؤقتة قابلة للاستدعاء (Retry) لكن الأخطاء 4xx يجب الانتباه لها فوراً.</li>
+                  <li>حد من مقدار البيانات في كل طلب لتقليل التأخير واستهلاك التوكين.</li>
+                </ul>
+
+                <h4 className="font-bold text-lg dark:text-white mt-4 mb-3">مثال سريع (curl)</h4>
+                <pre className="bg-gray-900 text-gray-100 rounded-lg p-4 font-mono text-sm overflow-auto" dir="ltr">
+{`curl -X POST ${window.location.origin}/api/chat/message \
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="font-bold text-lg dark:text-white">Response</h4>
                   <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                </pre>
+              </div>
                     200 OK
                   </span>
                 </div>

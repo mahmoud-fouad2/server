@@ -41,7 +41,7 @@ export default function Footer() {
               />
             </div>
             <p className="text-xs leading-relaxed opacity-80">
-              أقوى شات بوت عربي بالذكاء الاصطناعي. 24/7 لخدمة عملاءك.
+              أقوى منصة شات بوت عربي مدعومة بالذكاء الاصطناعي. نساعدك تزيد مبيعاتك وترضي عملاءك 24/7.
             </p>
           </div>
 
@@ -75,6 +75,22 @@ export default function Footer() {
                   الأسعار
                 </Link>
               </li>
+                <li>
+                  <Link
+                    href="/solutions"
+                    className="hover:text-brand-500 transition-colors"
+                  >
+                    الحلول
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/examples"
+                    className="hover:text-brand-500 transition-colors"
+                  >
+                    الأمثلة
+                  </Link>
+                </li>
               <li>
                 <Link
                   href="/about"
@@ -89,34 +105,43 @@ export default function Footer() {
           {/* Links Column 2 */}
           <div>
             <h4 className="font-bold text-gray-900 dark:text-white mb-4 text-sm">
-              الدعم والقانون
+              المطورين والدعم
             </h4>
             <ul className="space-y-2 text-xs">
               <li>
-                <Link
-                  href="/privacy"
-                  className="hover:text-brand-500 transition-colors"
-                >
+                <Link href="/docs" className="hover:text-brand-500 transition-colors">
+                  التوثيق الشامل
+                </Link>
+              </li>
+              <li>
+                <Link href="/docs/api" className="hover:text-brand-500 transition-colors">
+                  مرجع API
+                </Link>
+              </li>
+              <li>
+                <Link href="/privacy" className="hover:text-brand-500 transition-colors">
                   سياسة الخصوصية
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/terms"
-                  className="hover:text-brand-500 transition-colors"
-                >
+                <Link href="/terms" className="hover:text-brand-500 transition-colors">
                   الشروط والأحكام
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/contact"
-                  className="hover:text-brand-500 transition-colors"
-                >
+                <Link href="/contact" className="hover:text-brand-500 transition-colors">
                   اتصل بنا
                 </Link>
               </li>
             </ul>
+
+            <h4 className="font-bold text-gray-900 dark:text-white mt-6 mb-2 text-sm">تواصل معنا</h4>
+            <div className="text-xs opacity-80">
+              <div>
+                <a href="mailto:info@faheemly.com" className="hover:underline">info@faheemly.com</a>
+              </div>
+              <div className="mt-1">الرياض، المملكة العربية السعودية</div>
+            </div>
           </div>
         </div>
 

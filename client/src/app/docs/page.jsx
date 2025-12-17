@@ -128,6 +128,23 @@ const sections = [
     ),
   },
   {
+    id: 'policies',
+    title: 'القواعد والسياسات',
+    icon: <FaCheck />,
+    content: (
+      <div className="space-y-6">
+        <h3 className="text-2xl font-bold mb-4">القواعد والسياسات</h3>
+        <p className="text-sm">نقدّم هنا ملخّصاً سريعاً للقواعد العامة وسياسات الاستخدام:</p>
+        <ul className="list-disc list-inside text-sm space-y-2">
+          <li><strong>الحدود:</strong> راجع قسم مرجع API لمعرفة حدود الطلبات وخطط الأسعار.</li>
+          <li><strong>الاستخدام الممنوع:</strong> لا يُسمح باستخدام النظام للأنشطة غير القانونية، السبام، أو استخراج بيانات المستخدم بدون موافقة.</li>
+          <li><strong>الخصوصية:</strong> راجع <a href="/privacy" className="text-brand-600 hover:underline">سياسة الخصوصية</a> لمعرفة كيفية تعاملنا مع البيانات.</li>
+          <li><strong>الشروط:</strong> تغييرات على الشروط قد تُطبّق بحسب الخطة — اطلع على <a href="/terms" className="text-brand-600 hover:underline">الشروط والأحكام</a>.</li>
+        </ul>
+      </div>
+    ),
+  },
+  {
     id: 'troubleshooting',
     title: 'استكشاف الأخطاء',
     icon: <FaExclamationCircle />,
