@@ -116,6 +116,10 @@ const DEMO_USER_EMAIL = 'hello@faheemly.com';
 const DEMO_USER_PASSWORD = 'FaheemlyDemo2025!';
 const DEMO_USER_NAME = 'Faheemly';
 
+const SECOND_USER_EMAIL = 'admin@faheemly.com';
+const SECOND_USER_PASSWORD = 'FaheemlyDemo2025!'; // Same password
+const SECOND_USER_NAME = 'Admin';
+
 /**
  * Retry logic with exponential backoff
  */
@@ -388,23 +392,101 @@ async function setupDemoUser() {
     }, 5, 2000);
     logger.info(`✅ Knowledge base populated with ${FAHEEMLY_KNOWLEDGE.length} articles`);
 
-    // 5. Ensure CRM features enabled
+    // 4. Create second admin user
+    let secondUser = await retryWithBackoff(async () => {
+      const hashedPassword = await bcryptjs.hash(SECOND_USER_PASSWORD, 10);
+      
+      let userData = await prisma.user.findUnique({
+        where: { email: SECOND_USER_EMAIL }
+      });
+
+      if (!userData) {
+        userData = await prisma.user.create({
+          data: {
+            email: SECOND_USER_EMAIL,
+            password: hashedPassword,
+            name: SECOND_USER_NAME,
+            fullName: 'Faheemly Admin',
+            role: 'SUPERADMIN',
+            isActive: true
+          }
+        });
+        logger.info(`✅ Second user created: ${SECOND_USER_EMAIL}`);
+      } else {
+        userData = await prisma.user.update({
+          where: { email: SECOND_USER_EMAIL },
+          data: {
+            password: hashedPassword,
+            role: 'SUPERADMIN',
+            isActive: true
+          }
+        });
+        logger.info(`✅ Second user updated: ${SECOND_USER_EMAIL}`);
+      }
+      
+      return userData;
+    }, 5, 2000);
+
+    // 5. Create business for second user
+    let secondBusiness = await retryWithBackoff(async () => {
+      let businessData = await prisma.business.findFirst({
+        where: { userId: secondUser.id }
+      });
+
+      if (!businessData) {
+        businessData = await prisma.business.create({
+          data: {
+            userId: secondUser.id,
+            name: 'Faheemly - Admin Business',
+            activityType: 'SOFTWARE',
+            language: 'ar',
+            status: 'ACTIVE',
+            planType: 'ENTERPRISE',
+            messageQuota: 999999999,
+            messagesUsed: 0,
+            botTone: 'professional',
+            primaryColor: '#6366F1',
+            crmLeadCollectionEnabled: true,
+            preChatFormEnabled: true
+          }
+        });
+        logger.info(`✅ Second business created: ${businessData.id}`);
+      } else {
+        businessData = await prisma.business.update({
+          where: { id: businessData.id },
+          data: {
+            status: 'ACTIVE',
+            planType: 'ENTERPRISE',
+            messageQuota: 999999999,
+            messagesUsed: 0,
+            crmLeadCollectionEnabled: true,
+            preChatFormEnabled: true
+          }
+        });
+        logger.info(`✅ Second business updated: ${businessData.id}`);
+      }
+      
+      return businessData;
+    }, 5, 2000);
+
+    // 6. Ensure CRM features enabled for second business
     await prisma.integration.deleteMany({
-      where: { businessId: business.id }
+      where: { businessId: secondBusiness.id }
     });
     
-    // Skip CRM integration for demo
-    logger.info(`✅ CRM features enabled via business settings`);
+    logger.info(`✅ CRM features enabled for second business`);
 
     // Summary
     logger.info('');
     logger.info('═══════════════════════════════════════════════════════');
-    logger.info('✨ FAHEEMLY MASTER DEMO USER SETUP COMPLETE');
+    logger.info('✨ FAHEEMLY MASTER DEMO USERS SETUP COMPLETE');
     logger.info('═══════════════════════════════════════════════════════');
     logger.info('');
-    logger.info('📧 Email:       hello@faheemly.com');
+    logger.info('📧 Email 1:     hello@faheemly.com');
+    logger.info('📧 Email 2:     admin@faheemly.com');
     logger.info('🔑 Password:    FaheemlyDemo2025!');
-    logger.info(`💼 Business ID: ${business.id}`);
+    logger.info(`💼 Business ID 1: ${business.id}`);
+    logger.info(`💼 Business ID 2: ${secondBusiness.id}`);
     logger.info('');
     logger.info('✅ Features Enabled:');
     logger.info('   ├─ Unlimited Messages');

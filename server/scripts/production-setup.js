@@ -28,18 +28,17 @@ async function runProductionSetup() {
       throw e;
     }
 
-    // Step 2: Run pending migrations
+    // Step 2: Reset and push schema to consolidate migrations
     logger.info('');
-    logger.info('🗄️  Step 2: Running database migrations...');
+    logger.info('🗄️  Step 2: Consolidating migrations by resetting DB to current schema...');
     try {
-      execSync('npx prisma migrate deploy', { stdio: 'inherit' });
-      logger.info('✅ All migrations applied');
+      execSync('npx prisma db push --force-reset', { stdio: 'inherit' });
+      logger.info('✅ Database reset and schema applied');
     } catch (e) {
-      // Treat migration failures as fatal so we don't continue into demo setup
-      logger.error('❌ Database migrations failed. Please inspect migration output and ensure the database is up-to-date.');
-      logger.error('Migration error output:', e.message);
-      // Re-throw to terminate setup early and surface the migration error
-      throw new Error('Database migrations failed: ' + e.message);
+      // Treat schema push failures as fatal
+      logger.error('❌ Database schema push failed. Please inspect output.');
+      logger.error('Schema push error output:', e.message);
+      throw new Error('Database schema push failed: ' + e.message);
     }
 
     // Step 3: Validate schema
