@@ -2,6 +2,20 @@ import { Industry, BotConfig, KnowledgeItem } from './types';
 
 export const APP_NAME = 'فهملي';
 
+// Currency Exchange Rates (SAR as base)
+export const CURRENCY_RATES = {
+  SAR: 1,
+  EGP: 13, // 1 SAR = 13 EGP (updated per request)
+  AED: 1.0, // 1 SAR = 1.0 AED (approximate parity)
+  KWD: 0.081, // 1 SAR = 0.081 KWD
+};
+
+// Convert price from SAR to target currency
+export const convertCurrency = (sarPrice, targetCurrency = 'SAR') => {
+  const rate = CURRENCY_RATES[targetCurrency] || 1;
+  return Math.round(sarPrice * rate);
+};
+
 // Comprehensive SEO Data for all regions and dialects
 export const SEO_DATA = {
   sa: {
@@ -147,20 +161,6 @@ export const DIALECT_OPTIONS = [
   { value: 'eg', label: 'مصري (عامية)' },
   { value: 'official', label: 'عربي فصحى (رسمي)' },
 ];
-
-// Currency Exchange Rates (SAR as base)
-export const CURRENCY_RATES = {
-  SAR: 1,
-  EGP: 13, // 1 SAR = 13 EGP (updated per request)
-  AED: 1.0, // 1 SAR = 1.0 AED (approximate parity)
-  KWD: 0.081, // 1 SAR = 0.081 KWD
-};
-
-// Convert price from SAR to target currency
-export const convertCurrency = (sarPrice, targetCurrency = 'SAR') => {
-  const rate = CURRENCY_RATES[targetCurrency] || 1;
-  return Math.round(sarPrice * rate);
-};
 
 export const REGIONAL_CONTENT = {
   sa: {
