@@ -8,7 +8,7 @@ import prisma from '../config/database.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { requirePermission } from '../middleware/authorization.js';
 import logger from '../utils/logger.js';
-import asyncHandler from 'express-async-handler.js';
+import asyncHandler from 'express-async-handler';
 
 // All routes require authentication
 router.use(authenticateToken);
