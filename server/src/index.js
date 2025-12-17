@@ -15,7 +15,7 @@ import redisCache from './services/cache.service.js';
 import { errorHandler, handleUnhandledRejections, handleUncaughtExceptions } from './middleware/errorHandler.js';
 import { authenticateToken } from './middleware/auth.js';
 import { validateEnv, getEnvSummary } from './config/env.validator.js';
-import socketIO from './socket.js';
+import socketIO from './socket/index.js';
 import { responseWrapperMiddleware } from './middleware/response-wrapper.js';
 import authRoutes from './routes/auth.routes.js';
 import passwordRoutes from './routes/password.routes.js';
