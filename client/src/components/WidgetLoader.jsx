@@ -32,7 +32,8 @@ export default function WidgetLoader() {
           return;
         }
       }
-      if (document.getElementById('fahimo-widget-script') || document.querySelector('script[src*="fahimo-widget"]') || document.querySelector(`#fahimo-widget-container[data-business-id="${bid}"]`)) return;
+      // Skip loading if this business already has a widget present (prevents duplicates per business)
+      if (document.getElementById(`fahimo-widget-script-${bid}`) || document.querySelector(`script[src*="fahimo-widget"][data-business-id="${bid}"]`) || document.querySelector(`#fahimo-widget-container[data-business-id="${bid}"]`)) return;
 
       // Prefer Render-hosted widget (same backend) to avoid broken static hosting on faheemly.com
       const externalWidget = process.env.NEXT_PUBLIC_WIDGET_URL || API_CONFIG.WIDGET_SCRIPT || 'https://fahimo-api.onrender.com/fahimo-widget.js';
@@ -42,7 +43,7 @@ export default function WidgetLoader() {
       // To allow a local fallback for development, set NEXT_PUBLIC_ALLOW_LOCAL_WIDGET=true.
       function loadScript(src) {
         const s = document.createElement('script');
-        s.id = 'fahimo-widget-script';
+        s.id = `fahimo-widget-script-${bid}`;
         s.async = true;
         s.defer = true;
         s.src = src;

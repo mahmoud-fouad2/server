@@ -23,11 +23,12 @@ const SalesBot = () => {
   useEffect(() => {
     if (shouldHide) return;
     
-    // Check if a fahimo widget script is already present (handle different IDs / variants)
-    if (document.getElementById('fahimo-widget-script') || document.querySelector('script[src*="fahimo-widget"]')) return;
+    // Check if the fahimo widget is already present for this business (prevent duplicates per business)
+    const existingScript = document.getElementById(`fahimo-widget-script-${WIDGET_CONFIG.BUSINESS_ID}`) || document.querySelector(`script[src*="fahimo-widget"][data-business-id="${WIDGET_CONFIG.BUSINESS_ID}"]`) || document.querySelector(`#fahimo-widget-container[data-business-id="${WIDGET_CONFIG.BUSINESS_ID}"]`);
+    if (existingScript) return;
 
     const script = document.createElement('script');
-    script.id = 'fahimo-widget-script';
+    script.id = `fahimo-widget-script-${WIDGET_CONFIG.BUSINESS_ID}`;
     // Use centralized configuration
     script.src = API_CONFIG.WIDGET_SCRIPT;
     script.setAttribute('data-business-id', WIDGET_CONFIG.BUSINESS_ID);
