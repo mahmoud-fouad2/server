@@ -91,6 +91,31 @@
                     document.head.appendChild(dynamicStyle);
                 }
 
+                // Apply custom icon URL update (new!)
+                if (config.customIconUrl || config.customIconData) {
+                    const avatarEl = document.getElementById('fahimo-bot-avatar');
+                    if (avatarEl) {
+                        const img = document.createElement('img');
+                        img.src = config.customIconData || config.customIconUrl;
+                        img.alt = 'Bot';
+                        img.style.width = '100%';
+                        img.style.height = '100%';
+                        img.style.borderRadius = '50%';
+                        img.style.objectFit = 'cover';
+                        img.style.display = 'block';
+                        img.onerror = function() {
+                            try { img.remove(); } catch (e) {}
+                            avatarEl.style.background = 'rgba(255,255,255,0.12)';
+                            avatarEl.innerText = (botName && botName[0]) ? botName[0] : 'F';
+                            console.warn('[Fahimo] custom icon update failed to load, using fallback');
+                        };
+                        avatarEl.innerHTML = '';
+                        avatarEl.appendChild(img);
+                        avatarEl.style.background = 'transparent';
+                        console.log('[Fahimo] Updated custom icon:', config.customIconUrl || config.customIconData);
+                    }
+                }
+
                 // Apply welcome message
                 if (config.welcomeMessage && messagesDiv && messagesDiv.children.length === 1) {
                     let welcome = config.welcomeMessage;
