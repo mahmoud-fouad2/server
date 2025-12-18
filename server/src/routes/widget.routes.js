@@ -158,6 +158,12 @@ router.post('/chat', widgetChatLimiter, asyncHandler(chatController.sendMessage)
 router.post('/config', authenticateToken, async (req, res) => {
   try {
     const businessId = req.user.businessId;
+
+    if (!businessId) {
+      logger.warn('Update Widget Config: no businessId in user', { user: req.user });
+      return res.status(400).json({ error: 'Invalid user session' });
+    }
+
     const widgetConfig = req.body;
 
     // Validate widget config structure

@@ -17,8 +17,8 @@ const resolveBusinessId = async (req, res, next) => {
         req.user.businessId = headerBusinessId;
         return next();
       }
-      logger.warn('resolveBusinessId: invalid business id provided in header', { headerBusinessId });
-      return res.status(400).json({ error: 'Invalid business id provided in request header.' });
+      logger.warn('resolveBusinessId: invalid business id provided in header, ignoring', { headerBusinessId });
+      // Continue to next steps instead of returning error
     }
 
     // 2) If businessId already exists in token, validate it exists and skip lookup
