@@ -1,6 +1,8 @@
 import prisma from '../config/database.js';
 import crypto from 'crypto';
-import UAParser from 'ua-parser-js';
+import * as UAParserLib from 'ua-parser-js';
+// ua-parser-js may be CommonJS; prefer its default export if present, otherwise use the namespace
+const UAParser = UAParserLib.default || UAParserLib;
 import logger from '../utils/logger.js';
 
 /**

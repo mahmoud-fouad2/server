@@ -1,6 +1,7 @@
 import express from 'express';
 const router = express.Router();
 import visitorService from '../services/visitor.service.js';
+import attachBusinessId from '../middleware/attachBusinessId.js';
 import { authenticateToken } from '../middleware/auth.js';
 import logger from '../utils/logger.js';
 
@@ -11,7 +12,7 @@ import logger from '../utils/logger.js';
  * POST /api/visitor/session
  * إنشاء أو استرجاع جلسة زائر
  */
-router.post('/session', async (req, res) => {
+router.post('/session', attachBusinessId, async (req, res) => {
   try {
     // Accept businessId from body, query, or header for widget clients
     const businessId = req.body.businessId || req.query.businessId || req.headers['x-business-id'] || req.headers['x_business_id'] || req.headers['businessid'];
@@ -50,7 +51,7 @@ router.post('/session', async (req, res) => {
  * POST /api/visitor/page-visit
  * تسجيل زيارة صفحة
  */
-router.post('/page-visit', async (req, res) => {
+router.post('/page-visit', attachBusinessId, async (req, res) => {
   try {
     const sessionId = req.body.sessionId || req.headers['x-session-id'] || req.cookies?.sessionId;
     const { url, title, path } = req.body;
@@ -103,7 +104,7 @@ router.put('/page-visit/:id', async (req, res) => {
  * POST /api/visitor/end-session
  * إنهاء جلسة
  */
-router.post('/end-session', async (req, res) => {
+router.post('/end-session', attachBusinessId, async (req, res) => {
   try {
     const sessionId = req.body.sessionId || req.headers['x-session-id'] || req.cookies?.sessionId;
 

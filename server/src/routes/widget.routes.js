@@ -3,12 +3,14 @@ const router = express.Router();
 import prisma from '../config/database.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { resolveBusinessId } from '../middleware/businessMiddleware.js';
+import attachBusinessId from '../middleware/attachBusinessId.js';
 import logger from '../utils/logger.js';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import rateLimit from 'express-rate-limit';
-import fetch from 'node-fetch';
+import * as _nodeFetch from 'node-fetch';
+const fetch = _nodeFetch.default || _nodeFetch;
 
 // Configure Multer for Icon Uploads
 const storage = multer.diskStorage({
@@ -40,7 +42,7 @@ const upload = multer({
 });
 
 // Get Widget Config (Public)
-router.get('/config/:businessId', async (req, res) => {
+router.get('/config/:businessId', attachBusinessId, async (req, res) => {
   try {
     const { businessId } = req.params;
     
@@ -153,7 +155,7 @@ const widgetChatLimiter = rateLimit({
   legacyHeaders: false
 });
 
-router.post('/chat', widgetChatLimiter, asyncHandler(chatController.sendMessage));
+router.post('/chat', attachBusinessId, widgetChatLimiter, asyncHandler(chatController.sendMessage));
 
 // Update Widget Config (Authenticated)
 router.post('/config', authenticateToken, resolveBusinessId, async (req, res) => {
