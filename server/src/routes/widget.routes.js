@@ -318,7 +318,7 @@ router.get('/exists/:businessId', async (req, res) => {
     if (!businessId) return res.status(400).json({ error: 'businessId required' });
 
     try {
-      const business = await prisma.business.findUnique({ where: { id: businessId }, select: { id: true, widgetConfig: true, updatedAt: true, name: true, active: true } });
+      const business = await prisma.business.findUnique({ where: { id: businessId }, select: { id: true, widgetConfig: true, updatedAt: true, name: true } });
       if (!business) return res.json({ exists: false, businessId });
 
       return res.json({
