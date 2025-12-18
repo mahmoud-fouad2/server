@@ -51,7 +51,7 @@ router.get('/config/:businessId', attachBusinessId, async (req, res) => {
     res.set('Pragma', 'no-cache');
     res.set('Expires', '0');
     
-    const business = await prisma.business.findUnique({
+    let business = await prisma.business.findUnique({
       where: { id: businessId }
     });
 
