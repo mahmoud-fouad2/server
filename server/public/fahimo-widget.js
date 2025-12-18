@@ -669,6 +669,11 @@
             .then(res => res.json())
             .then(data => {
                         const config = data.widgetConfig || {};
+
+                if (data && data.isDemo) {
+                    console.warn('[Fahimo] Widget config returned demo response — business not found or no config for businessId:', businessId);
+                }
+
                 // Support widgetVariant switching: if the business prefers the enhanced variant, dynamically load enhanced script
                 const serverVariant = (data.widgetVariant || (config.widgetVariant || 'standard')).toLowerCase();
                 if (serverVariant === 'enhanced' && !(scriptTag && scriptTag.src && scriptTag.src.indexOf('enhanced') !== -1)) {

@@ -56,7 +56,7 @@ router.get('/config/:businessId', attachBusinessId, async (req, res) => {
     });
 
     if (!business) {
-      // Return default config for non-existent businesses
+      // Return default config for non-existent businesses (mark as demo to make debugging obvious)
         return res.json({
         name: 'Demo Business',
         widgetConfig: {
@@ -67,7 +67,8 @@ router.get('/config/:businessId', attachBusinessId, async (req, res) => {
           avatar: "robot"
         },
         widgetVariant: 'standard',
-        configVersion: Date.now()
+        configVersion: Date.now(),
+        isDemo: true
       });
     }
 

@@ -812,6 +812,7 @@
                 const resp = await fetch(`${apiUrl}/api/widget/config/${businessId}`);
                 if (!resp.ok) return;
                 const d = await resp.json();
+                if (d && d.isDemo) console.warn('[Fahimo] Enhanced widget config returned demo response — business not found or no config for businessId:', businessId);
                 await applyConfigData(d);
             } catch (e) {}
         }
@@ -827,6 +828,7 @@
                 if (!r.ok) return;
                 const d = await r.json();
                 const nv = d.configVersion || null;
+                if (d && d.isDemo) console.warn('[Fahimo] Enhanced widget polling received demo response — business not found or no config for businessId:', businessId);
                 if (nv && nv !== currentConfigVersion) {
                     await applyConfigData(d);
                 }
