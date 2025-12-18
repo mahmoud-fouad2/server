@@ -1,6 +1,6 @@
 import express from 'express';
 const router = express.Router();
-import prisma from '../config/database.js';
+import prisma, { isPrismaConfigured, warnIfPrismaNotConfigured } from '../config/database.js';
 import { authenticateToken } from '../middleware/auth.js';
 import logger from '../utils/logger.js';
 import ConversationAnalyticsService from '../services/conversation-analytics.service.js';
@@ -159,6 +159,17 @@ router.get('/dashboard/:days', authenticateToken, async (req, res) => {
 // ✅ VECTOR STATS ENDPOINT
 router.get('/vector-stats', authenticateToken, async (req, res) => {
   try {
+    // Quick path: if Prisma is not configured, return safe defaults and log once
+    if (!isPrismaConfigured()) {
+      warnIfPrismaNotConfigured(logger);
+      return res.json({
+        totalDocuments: 0,
+        totalVectors: 0,
+        dimension: 1536,
+        indexStatus: 'unavailable'
+      });
+    }
+
     // Get business ID with fallback to database lookup
     let businessId = req.user.businessId;
     if (!businessId) {
@@ -166,6 +177,7 @@ router.get('/vector-stats', authenticateToken, async (req, res) => {
         const business = await prisma.business.findFirst({ where: { userId: req.user.userId } });
         businessId = business?.id;
       } catch (dbError) {
+        // Database unexpectedly failed despite being configured
         logger.warn('Database not available for business lookup in vector stats', { error: dbError.message });
         return res.status(503).json({ error: 'Database temporarily unavailable' });
       }

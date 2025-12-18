@@ -4,7 +4,7 @@ import visitorService from '../services/visitor.service.js';
 import attachBusinessId from '../middleware/attachBusinessId.js';
 import { authenticateToken } from '../middleware/auth.js';
 import logger from '../utils/logger.js';
-import prisma from '../config/database.js';
+import prisma, { isPrismaConfigured, warnIfPrismaNotConfigured } from '../config/database.js';
 
 /**
  * Visitor Routes - Track sessions, page visits, and user analytics
@@ -138,13 +138,17 @@ router.get('/active-sessions', authenticateToken, async (req, res) => {
       if (headerBusinessId) businessId = headerBusinessId;
     }
 
-    // Fallback: query database for user's business
+    // Fallback: try DB lookup only if Prisma is configured
     if (!businessId) {
-      try {
-        const business = await prisma.business.findFirst({ where: { userId: req.user.userId } });
-        businessId = business?.id;
-      } catch (dbError) {
-        logger.warn('Database not available for business lookup in active sessions', { error: dbError.message });
+      if (!isPrismaConfigured()) {
+        warnIfPrismaNotConfigured(logger);
+      } else {
+        try {
+          const business = await prisma.business.findFirst({ where: { userId: req.user.userId } });
+          businessId = business?.id;
+        } catch (dbError) {
+          logger.warn('Database not available for business lookup in active sessions', { error: dbError.message });
+        }
       }
     }
 
@@ -175,13 +179,17 @@ router.get('/analytics', authenticateToken, async (req, res) => {
       if (headerBusinessId) businessId = headerBusinessId;
     }
 
-    // Fallback: query database for user's business
+    // Fallback: try DB lookup only if Prisma is configured
     if (!businessId) {
-      try {
-        const business = await prisma.business.findFirst({ where: { userId: req.user.userId } });
-        businessId = business?.id;
-      } catch (dbError) {
-        logger.warn('Database not available for business lookup in visitor analytics', { error: dbError.message });
+      if (!isPrismaConfigured()) {
+        warnIfPrismaNotConfigured(logger);
+      } else {
+        try {
+          const business = await prisma.business.findFirst({ where: { userId: req.user.userId } });
+          businessId = business?.id;
+        } catch (dbError) {
+          logger.warn('Database not available for business lookup in visitor analytics', { error: dbError.message });
+        }
       }
     }
 

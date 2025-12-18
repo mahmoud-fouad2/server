@@ -131,6 +131,19 @@ const prisma = new Proxy({}, {
 });
 
 
+// Helper: check if Prisma is configured (DATABASE_URL or PGBOUNCER_URL)
+export function isPrismaConfigured() {
+  return !!(process.env.PGBOUNCER_URL || process.env.DATABASE_URL);
+}
+
+let __prismaMissingWarned = false;
+export function warnIfPrismaNotConfigured(customLogger = logger) {
+  if (!isPrismaConfigured() && !__prismaMissingWarned) {
+    __prismaMissingWarned = true;
+    customLogger.info('Prisma DATABASE_URL not configured; endpoints will return defaults or 503 until it is provided');
+  }
+}
+
 // Connection pool configuration
   // Note: Prisma automatically handles connection pooling with PostgreSQL.
   // For high-concurrency workloads, run a connection pooler such as pgBouncer
