@@ -34,11 +34,28 @@ export default function WidgetLoader() {
         s.defer = true;
         s.src = src;
         s.setAttribute('data-business-id', bid);
-        // Prefer an explicit API URL if provided via env at build time or fall back to the current origin
+        // Only set explicit data-api-url in safe cases:
+        // 1) If NEXT_PUBLIC_API_URL is provided at build-time (explicit override)
+        // 2) If running on localhost and NEXT_PUBLIC_ALLOW_LOCAL_WIDGET=true (local dev only)
         try {
-          const apiUrl = process.env.NEXT_PUBLIC_API_URL || window.location.origin;
-          if (apiUrl) s.setAttribute('data-api-url', apiUrl);
+          const explicitApi = process.env.NEXT_PUBLIC_API_URL;
+          const allowLocal = process.env.NEXT_PUBLIC_ALLOW_LOCAL_WIDGET === 'true';
+          const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
+
+          if (explicitApi) {
+            s.setAttribute('data-api-url', explicitApi);
+          } else if ((hostname === 'localhost' || hostname === '127.0.0.1') && allowLocal) {
+            s.setAttribute('data-api-url', window.location.origin);
+          } else {
+            // Avoid setting a default local API URL that could cause CSP violations when the widget
+            // is embedded on remote sites (e.g., faheemly.com). In production, recommend configuring
+            // NEXT_PUBLIC_API_URL to the correct API host.
+            if (process.env.NODE_ENV === 'production' && !explicitApi) {
+              console.warn('WidgetLoader: NEXT_PUBLIC_API_URL not set in production; widget will use script origin or default. Set NEXT_PUBLIC_API_URL to your API host to prevent CSP/localhost calls.');
+            }
+          }
         } catch (e) {}
+
         s.crossOrigin = 'anonymous';
         s.onload = () => console.debug('Fahimo widget script loaded:', src);
         s.onerror = () => console.error('Failed to load Fahimo widget from:', src);

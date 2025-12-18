@@ -30,6 +30,24 @@
         // Defensive: keep the default apiUrl
     }
 
+    // Sanitize apiUrl: don't let an explicit/local API (http://localhost...) be used when widget is embedded on a remote host
+    try {
+        const parsed = new URL(apiUrl);
+        const isLocalTarget = parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1';
+        const isPageLocal = window && window.location && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+        if (isLocalTarget && !isPageLocal) {
+            console.warn('[Fahimo] Ignoring local apiUrl (%s) because widget is embedded on remote host %s. Falling back to script origin or default.', apiUrl, window.location.hostname);
+            // Prefer script origin if available, otherwise default to canonical API
+            try {
+                apiUrl = scriptTag && scriptTag.src ? new URL(scriptTag.src).origin : 'https://fahimo-api.onrender.com';
+            } catch (ignore) {
+                apiUrl = 'https://fahimo-api.onrender.com';
+            }
+        }
+    } catch (e) {
+        // ignore URL parse errors
+    }
+
     // Warn if the widget is contacting a remote production API while embedded on a different host
     try {
         const apiHost = (new URL(apiUrl)).host;
