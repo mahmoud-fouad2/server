@@ -158,11 +158,24 @@ router.post('/chat', widgetChatLimiter, asyncHandler(chatController.sendMessage)
 router.post('/config', authenticateToken, async (req, res) => {
   try {
     const businessId = req.user.businessId;
+
+    if (!businessId) {
+      logger.warn('Update Widget Config: no businessId in user', { user: req.user });
+      return res.status(400).json({ error: 'Invalid user session' });
+    }
+
     const widgetConfig = req.body;
 
     // Validate widget config structure
     if (typeof widgetConfig !== 'object') {
       return res.status(400).json({ error: 'Invalid widget config format' });
+    }
+
+    // Ensure the business exists before attempting an update to avoid a Prisma "record not found" error
+    const existingBusiness = await prisma.business.findUnique({ where: { id: businessId } });
+    if (!existingBusiness) {
+      logger.warn('Update Widget Config: business not found', { businessId });
+      return res.status(404).json({ error: 'Business not found' });
     }
 
     // Update business widget config (this will update the updatedAt timestamp automatically)

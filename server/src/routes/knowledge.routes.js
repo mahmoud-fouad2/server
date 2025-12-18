@@ -103,6 +103,24 @@ router.post('/', authenticateToken, resolveBusinessId, async (req, res) => {
   }
 });
 
+// GET /api/knowledge - list knowledge bases for the business
+router.get('/', authenticateToken, resolveBusinessId, async (req, res) => {
+  try {
+    const businessId = req.businessId || req.user.businessId;
+    if (!businessId) return res.error('Business ID missing', 400);
+
+    const knowledgeBases = await prisma.knowledgeBase.findMany({
+      where: { businessId },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    return res.success(knowledgeBases, 'Knowledge bases retrieved');
+  } catch (err) {
+    logger.error('Knowledge base list failed', err);
+    return res.error('Failed to retrieve knowledge bases', 500, { message: err?.message || err });
+  }
+});
+
 // GET /api/knowledge/search?q=... - basic search wrapper
 router.get('/search', authenticateToken, resolveBusinessId, async (req, res) => {
   try {

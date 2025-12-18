@@ -196,6 +196,12 @@ export const bumpWidgetVersion = asyncHandler(async (req, res) => {
       return res.status(403).json({ error: 'Forbidden' });
     }
 
+    // Ensure business exists before updating
+    const existing = await prisma.business.findUnique({ where: { id: businessId } });
+    if (!existing) {
+      return res.status(404).json({ error: 'Business not found' });
+    }
+
     const updated = await prisma.business.update({ where: { id: businessId }, data: { updatedAt: new Date() } });
     return res.json({ success: true, message: 'Widget version bumped', configVersion: updated.updatedAt.getTime() });
   } catch (e) {

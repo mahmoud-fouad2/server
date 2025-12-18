@@ -81,6 +81,10 @@ router.put('/page-visit/:id', async (req, res) => {
       exitedAt
     });
 
+    if (!visit) {
+      return res.status(404).json({ success: false, error: 'Page visit not found' });
+    }
+
     res.json({ success: true, visit });
   } catch (error) {
     logger.error('Update page visit endpoint error', { visitId: req.params.id, error: error.message });
