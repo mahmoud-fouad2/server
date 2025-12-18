@@ -55,4 +55,6 @@ Render auto-deploys in 2-3 minutes.
 
 **Important:** Ensure the **client service** (frontend) has `NEXT_PUBLIC_API_URL` set to your API host (e.g. `https://fahimo-api.onrender.com`) in the environment variables before building/deploying the client. This prevents the widget from defaulting to `http://localhost:3001` and avoids CSP/connect-src errors when embedded on production sites.
 
+**After deploy:** Purge your CDN cache (e.g., Cloudflare, Fastly) for `/fahimo-widget.js` or use the `NEXT_PUBLIC_WIDGET_VERSION` env var to set a new widget URL (e.g., `?v=20251218-<commit>`) so browsers fetch the updated widget immediately.
+
 **Ready to deploy!** 🎉

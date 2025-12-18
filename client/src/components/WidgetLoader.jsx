@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from 'react';
+import { API_CONFIG } from '@/lib/config';
 
 export default function WidgetLoader() {
   useEffect(() => {
@@ -22,7 +23,7 @@ export default function WidgetLoader() {
       const bid = process.env.NEXT_PUBLIC_WIDGET_BUSINESS_ID || process.env.NEXT_PUBLIC_BUSINESS_ID || 'cmivd3c0z0003ulrrn7m1jtjf';
 
       // Prefer Render-hosted widget (same backend) to avoid broken static hosting on faheemly.com
-      const externalWidget = process.env.NEXT_PUBLIC_WIDGET_URL || 'https://fahimo-api.onrender.com/fahimo-widget.js';
+      const externalWidget = process.env.NEXT_PUBLIC_WIDGET_URL || API_CONFIG.WIDGET_SCRIPT || 'https://fahimo-api.onrender.com/fahimo-widget.js';
 
       // Load only the production/external widget by default. Local fallbacks are
       // disabled to prevent accidental loading from localhost in production.

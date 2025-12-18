@@ -41,6 +41,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { authApi, widgetApi, knowledgeApi, businessApi } from '@/lib/api';
+import { API_CONFIG } from '@/lib/config';
 // Confetti is lazy-loaded dynamically to reduce initial bundle size
 // and to avoid bundling heavy libs into the main vendor chunk.
 
@@ -409,7 +410,7 @@ export default function Wizard() {
     }
   };
 
-  const widgetCode = `<script src="/fahimo-widget.js" data-business-id="${businessId || formData.email?.split('@')[0] || 'your-business-id'}"></script>`;
+  const widgetCode = `<script src="${API_CONFIG.WIDGET_SCRIPT}" data-business-id="${businessId || formData.email?.split('@')[0] || 'your-business-id'}"></script>`;
 
   return (
     <div
