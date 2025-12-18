@@ -63,6 +63,46 @@
         return;
     }
 
+    // Define triggerConfigRefresh early so it can be called by event listeners
+    function triggerConfigRefresh() {
+        fetch(`${apiUrl}/api/widget/config/${businessId}?_=${Date.now()}`)
+            .then(res => res.json())
+            .then(data => {
+                const config = data.widgetConfig || {};
+                console.log('[Fahimo] Applying config update:', config);
+
+                // Apply primary color
+                if (config.primaryColor) {
+                    const color = config.primaryColor;
+                    const launcher = document.getElementById('fahimo-launcher');
+                    const header = document.getElementById('fahimo-header');
+                    const send = document.getElementById('fahimo-send');
+                    
+                    if (launcher) launcher.style.background = color;
+                    if (header) header.style.background = color;
+                    if (send) send.style.background = color;
+                    
+                    const dynamicStyle = document.createElement('style');
+                    dynamicStyle.setAttribute('data-fahimo-refresh', String(Date.now()));
+                    dynamicStyle.innerHTML = `
+                        .fahimo-msg.user { background: ${color} !important; }
+                        #fahimo-launcher { background: ${color} !important; }
+                    `;
+                    document.head.appendChild(dynamicStyle);
+                }
+
+                // Apply welcome message
+                if (config.welcomeMessage && messagesDiv && messagesDiv.children.length === 1) {
+                    let welcome = config.welcomeMessage;
+                    const msgDiv = document.createElement('div');
+                    msgDiv.className = 'fahimo-msg bot';
+                    msgDiv.innerText = welcome;
+                    messagesDiv.appendChild(msgDiv);
+                }
+            })
+            .catch(err => console.log('[Fahimo] Config refresh failed:', err));
+    }
+
     // Listen for config update signals from dashboard (via localStorage or BroadcastChannel)
     const updateChannelName = `fahimo-config-update-${businessId}`;
     let broadcastChannel = null;
@@ -885,46 +925,6 @@
                 // ignore
             }
         })();
-
-        // Function to trigger immediate config refresh (called by update signals)
-        function triggerConfigRefresh() {
-            fetch(`${apiUrl}/api/widget/config/${businessId}?_=${Date.now()}`)
-                .then(res => res.json())
-                .then(data => {
-                    const config = data.widgetConfig || {};
-                    console.log('[Fahimo] Applying config update:', config);
-
-                    // Apply primary color
-                    if (config.primaryColor) {
-                        const color = config.primaryColor;
-                        const launcher = document.getElementById('fahimo-launcher');
-                        const header = document.getElementById('fahimo-header');
-                        const send = document.getElementById('fahimo-send');
-                        
-                        if (launcher) launcher.style.background = color;
-                        if (header) header.style.background = color;
-                        if (send) send.style.background = color;
-                        
-                        const dynamicStyle = document.createElement('style');
-                        dynamicStyle.setAttribute('data-fahimo-refresh', String(Date.now()));
-                        dynamicStyle.innerHTML = `
-                            .fahimo-msg.user { background: ${color} !important; }
-                            #fahimo-launcher { background: ${color} !important; }
-                        `;
-                        document.head.appendChild(dynamicStyle);
-                    }
-
-                    // Apply welcome message
-                    if (config.welcomeMessage && messagesDiv && messagesDiv.children.length === 1) {
-                        let welcome = config.welcomeMessage;
-                        const msgDiv = document.createElement('div');
-                        msgDiv.className = 'fahimo-msg bot';
-                        msgDiv.innerText = welcome;
-                        messagesDiv.appendChild(msgDiv);
-                    }
-                })
-                .catch(err => console.log('[Fahimo] Config refresh failed:', err));
-        }
 
         // Send Message
         async function sendMessage() {

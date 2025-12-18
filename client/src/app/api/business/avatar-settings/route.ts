@@ -4,48 +4,32 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const businessId = request.headers.get('x-business-id');
+    const token = request.headers.get('authorization');
 
     if (!businessId) {
       return NextResponse.json({ error: 'Business ID is required' }, { status: 400 });
     }
 
-    const selectedAvatar = formData.get('selectedAvatar');
-    const selectedIcon = formData.get('selectedIcon');
-    const customAvatar = formData.get('customAvatar') as File | null;
-    const customIcon = formData.get('customIcon') as File | null;
-
-    const settings: any = {
-      businessId,
-      selectedAvatar,
-      selectedIcon,
-      updatedAt: new Date().toISOString(),
-    };
-
-    if (customAvatar) {
-      settings.customAvatarUrl = `custom-avatar-${Date.now()}`;
-    }
-
-    if (customIcon) {
-      settings.customIconUrl = `custom-icon-${Date.now()}`;
-    }
-
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/business/${businessId}/avatar-settings`, {
+    // Forward FormData directly to backend API (preserves file uploads)
+    const backendUrl = `${process.env.NEXT_PUBLIC_API_URL || 'https://fahimo-api.onrender.com'}/api/business/${businessId}/avatar-settings`;
+    
+    const response = await fetch(backendUrl, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${request.headers.get('authorization')}`,
+        'Authorization': token || '',
       },
-      body: JSON.stringify(settings),
+      body: formData, // Send FormData directly with files
     });
 
     if (!response.ok) {
-      throw new Error('Failed to save avatar settings');
+      const errorText = await response.text();
+      throw new Error(`Backend error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
-    return NextResponse.json({ success: true, data });
+    return NextResponse.json(data);
   } catch (error) {
     console.error('Error saving avatar settings:', error);
-    return NextResponse.json({ error: 'Failed to save avatar settings' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Failed to save avatar settings' }, { status: 500 });
   }
 }
