@@ -131,10 +131,13 @@ router.get('/config/:businessId', attachBusinessId, async (req, res) => {
     res.set('Expires', '0');
     res.json({
       name: business.name,
+      businessId: business.id,
       widgetConfig: config,
       preChatFormEnabled: business.preChatFormEnabled || false,
       widgetVariant: (business.widgetVariant || 'STANDARD').toLowerCase(),
-      configVersion: business.updatedAt?.getTime() || Date.now()
+      configVersion: business.updatedAt?.getTime() || Date.now(),
+      servedAt: Date.now(),
+      source: 'database'
     });
   } catch (error) {
     logger.error('Widget Config Error', error);
@@ -183,20 +186,27 @@ router.post('/config', authenticateToken, resolveBusinessId, async (req, res) =>
     }
 
     // Update business widget config (this will update the updatedAt timestamp automatically)
+    logger.info('Update Widget Config requested', { userId: req.user?.userId, businessId, incomingConfig: widgetConfig });
     const updatedBusiness = await prisma.business.update({
       where: { id: businessId },
       data: { widgetConfig: JSON.stringify(widgetConfig) }
     });
+
+    logger.info('Widget config updated in DB', { businessId: updatedBusiness.id, updatedAt: updatedBusiness.updatedAt });
 
     // Set cache-busting headers
     res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
     res.set('Pragma', 'no-cache');
     res.set('Expires', '0');
     
+    const parsedConfig = updatedBusiness.widgetConfig ? JSON.parse(updatedBusiness.widgetConfig) : {};
+    // Return the updated config and additional debug fields to help the client verify immediate effect
     res.json({ 
       message: 'Widget config updated successfully',
-      widgetConfig: JSON.parse(updatedBusiness.widgetConfig),
-      configVersion: updatedBusiness.updatedAt?.getTime() || Date.now()
+      businessId: updatedBusiness.id,
+      widgetConfig: parsedConfig,
+      configVersion: updatedBusiness.updatedAt?.getTime() || Date.now(),
+      servedAt: Date.now()
     });
   } catch (error) {
     logger.error('Update Widget Config Error', error);
