@@ -694,4 +694,37 @@ router.post('/update-demo-business', authenticateToken, isAdmin, async (req, res
   }
 });
 
+// Convert arbitrary business (ADMIN ONLY) - sets isDemo=false and applies default widgetConfig
+router.post('/convert-business', authenticateToken, isAdmin, async (req, res) => {
+  try {
+    const { businessId } = req.body || {};
+    if (!businessId) return res.status(400).json({ error: 'businessId required' });
+
+    const existing = await prisma.business.findUnique({ where: { id: businessId } });
+    if (!existing) return res.status(404).json({ error: 'Business not found' });
+
+    const defaultConfig = existing.widgetConfig ? JSON.parse(existing.widgetConfig) : {};
+    const updatedConfig = Object.assign({
+      welcomeMessage: defaultConfig.welcomeMessage || 'مرحباً! كيف يمكنني مساعدتك اليوم؟',
+      primaryColor: defaultConfig.primaryColor || '#0070f3',
+      personality: defaultConfig.personality || 'friendly',
+      showBranding: typeof defaultConfig.showBranding === 'boolean' ? defaultConfig.showBranding : true,
+      avatar: defaultConfig.avatar || 'robot'
+    }, defaultConfig);
+
+    const updated = await prisma.business.update({
+      where: { id: businessId },
+      data: { isDemo: false, widgetConfig: JSON.stringify(updatedConfig), updatedAt: new Date() }
+    });
+
+    // Broadcast change so widgets update immediately
+    try { const broadcaster = await import('../services/config-broadcaster.js'); broadcaster.default.send(businessId,'CONFIG_UPDATED',{configVersion: updated.updatedAt?.getTime()||Date.now()}); } catch(e) {}
+
+    res.json({ success: true, message: 'Business converted', businessId: updated.id });
+  } catch (error) {
+    logger.error('Convert business error:', error);
+    res.status(500).json({ error: 'Failed to convert business: ' + (error?.message || error) });
+  }
+});
+
 export default router;
