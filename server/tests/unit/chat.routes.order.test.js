@@ -1,5 +1,5 @@
-import express from 'express';
-import request from 'supertest';
+const express = require('express');
+const request = require('supertest');
 
 // Mock the auth middleware so requests appear authenticated
 jest.mock('../../src/middleware/auth.js', () => ({
@@ -12,17 +12,15 @@ jest.mock('../../src/middleware/auth.js', () => ({
 describe('Route ordering: /conversations and /handover-requests', () => {
   let app;
 
-  beforeAll(async () => {
+  beforeAll(() => {
     app = express();
     app.use(express.json());
 
     // Import the router after mocking auth
-    const chatRoutesModule = await import('../../src/routes/chat.routes.js');
-    const chatRoutes = chatRoutesModule.default || chatRoutesModule;
+    const chatRoutes = require('../../src/routes/chat.routes');
 
     // Stub the controller handlers to detect correct routing
-    const chatControllerModule = await import('../../src/controllers/chat.controller.js');
-    const chatController = chatControllerModule.default || chatControllerModule;
+    const chatController = require('../../src/controllers/chat.controller');
     chatController.getConversations = (req, res) => res.status(200).json({ ok: true, route: 'conversations' });
     chatController.getHandoverRequests = (req, res) => res.status(200).json({ ok: true, route: 'handover-requests' });
     chatController.getMessages = (req, res) => res.status(200).json({ ok: true, route: 'messages' });
