@@ -118,6 +118,8 @@ export const getSettings = asyncHandler(async (req, res) => {
  * @route   POST /api/business/:businessId/avatar-settings
  * @access  Private (Business Owner) or SUPERADMIN
  */
+import broadcaster from '../services/config-broadcaster.js';
+
 export const updateAvatarSettings = asyncHandler(async (req, res) => {
   try {
     const businessId = req.params.businessId;
@@ -168,6 +170,13 @@ export const updateAvatarSettings = asyncHandler(async (req, res) => {
       where: { id: businessId },
       data: updateData
     });
+
+    // Broadcast to subscribers so widgets update immediately
+    try {
+      broadcaster.send(businessId, 'CONFIG_UPDATED', { widgetConfig: updatedBusiness.widgetConfig ? JSON.parse(updatedBusiness.widgetConfig) : {} });
+    } catch (e) {
+      console.warn('Failed to broadcast avatar settings update', e?.message || e);
+    }
 
     res.json({
       success: true,
@@ -554,6 +563,13 @@ export const updatePreChatSettings = asyncHandler(async (req, res) => {
     where: { id: businessId },
     data: { preChatFormEnabled }
   });
+
+  // Broadcast prechat setting update immediately
+  try {
+    broadcaster.send(businessId, 'CONFIG_UPDATED', { preChatFormEnabled: updatedBusiness.preChatFormEnabled });
+  } catch (e) {
+    console.warn('Failed to broadcast prechat update', e?.message || e);
+  }
 
   res.json({
     message: `Pre-chat form ${preChatFormEnabled ? 'enabled' : 'disabled'}`,

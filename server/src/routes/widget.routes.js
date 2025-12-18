@@ -145,6 +145,27 @@ router.get('/config/:businessId', attachBusinessId, async (req, res) => {
   }
 });
 
+// SSE subscribe endpoint for real-time config updates
+import broadcaster from '../services/config-broadcaster.js';
+
+router.get('/subscribe', async (req, res) => {
+  const businessId = req.query.businessId;
+  if (!businessId) return res.status(400).json({ error: 'businessId required' });
+
+  // SSE headers
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+    'Access-Control-Allow-Origin': '*'
+  });
+
+  // initial comment
+  res.write(': connected\n\n');
+  broadcaster.addSubscriber(businessId, res);
+  req.on('close', () => broadcaster.removeSubscriber(businessId, res));
+});
+
 // Widget Chat Endpoint (Public) - delegate to central chat controller for unified behavior
 const chatControllerModule = await import('../controllers/chat.controller.js');
 const chatController = chatControllerModule?.default || chatControllerModule;
@@ -193,6 +214,13 @@ router.post('/config', authenticateToken, resolveBusinessId, async (req, res) =>
     });
 
     logger.info('Widget config updated in DB', { businessId: updatedBusiness.id, updatedAt: updatedBusiness.updatedAt });
+
+    // Broadcast to SSE subscribers so widgets update immediately
+    try {
+      broadcaster.send(updatedBusiness.id, 'CONFIG_UPDATED', { configVersion: updatedBusiness.updatedAt?.getTime() || Date.now() });
+    } catch (e) {
+      logger.warn('Failed to broadcast config update', e?.message || e);
+    }
 
     // Set cache-busting headers
     res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
@@ -264,6 +292,13 @@ router.post('/upload-icon', authenticateToken, resolveBusinessId, upload.single(
       where: { id: businessId },
       data: { widgetConfig: JSON.stringify(currentConfig) }
     });
+
+    // Broadcast to subscribers so widgets update immediately
+    try {
+      broadcaster.send(businessId, 'CONFIG_UPDATED', { customIconUrl: finalIconUrl });
+    } catch (e) {
+      logger.warn('Failed to broadcast icon upload', e?.message || e);
+    }
 
     // Return the updated config to ensure frontend gets the new icon
     const updatedBusiness = await prisma.business.findUnique({

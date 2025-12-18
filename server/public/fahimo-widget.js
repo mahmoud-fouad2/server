@@ -66,6 +66,7 @@
     // Declare variables that will be used across functions
     let messagesDiv = null;
     let botName = 'Faheemly Assistant';
+    let prechatEnabled = false;
 
     // Define triggerConfigRefresh early so it can be called by event listeners
     function triggerConfigRefresh() {
@@ -120,6 +121,30 @@
                     }
                 }
 
+                // Apply bot name update (new!)
+                if (config.name || data.name) {
+                    const newName = String(config.name || data.name || '');
+                    if (newName && newName !== botName) {
+                        botName = newName.replace(/demo/gi, '').replace(/\bBusiness\b/gi, '').trim();
+                        if (!botName) botName = 'Faheemly Assistant';
+                        const nameEl = document.getElementById('fahimo-bot-name');
+                        if (nameEl) {
+                            nameEl.innerText = botName;
+                            console.log('[Fahimo] Updated bot name:', botName);
+                        }
+                        window.__FAHIMO_WIDGET_BOT_NAME = botName;
+                    }
+                }
+
+                // Apply preChatFormEnabled update (new!)
+                if (typeof data.preChatFormEnabled !== 'undefined') {
+                    const newPrechatStatus = data.preChatFormEnabled || false;
+                    if (newPrechatStatus !== prechatEnabled) {
+                        prechatEnabled = newPrechatStatus;
+                        console.log('[Fahimo] Updated preChatFormEnabled:', prechatEnabled);
+                    }
+                }
+
                 // Apply welcome message
                 if (config.welcomeMessage && messagesDiv && messagesDiv.children.length === 1) {
                     let welcome = config.welcomeMessage;
@@ -155,6 +180,27 @@
             triggerConfigRefresh();
         }
     });
+
+    // Also subscribe to server-sent events (SSE) for cross-client immediate updates
+    try {
+        const sseUrl = `${apiUrl.replace(/\/$/, '')}/api/widget/subscribe?businessId=${businessId}`;
+        const evt = new EventSource(sseUrl);
+        evt.onmessage = function(e) {
+            // Generic message - trigger refresh
+            try { console.log('[Fahimo] SSE message received'); } catch (ignore) {}
+            triggerConfigRefresh();
+        };
+        evt.addEventListener('CONFIG_UPDATED', function(e) {
+            try { console.log('[Fahimo] SSE CONFIG_UPDATED event received: ', e.data); } catch (ignore) {}
+            triggerConfigRefresh();
+        });
+        evt.onerror = function(err) {
+            try { console.warn('[Fahimo] SSE connection error', err); } catch (ignore) {}
+            // EventSource will retry automatically; no further action required
+        };
+    } catch (e) {
+        // EventSource not supported or blocked
+    }
 
     // Session Management (from enhanced version)
     // Use safe storage helpers to gracefully handle Tracking Prevention (which may block localStorage)
@@ -719,7 +765,6 @@
         let storedMessages = [];
         let isLoadingStored = false;
         // Pre-chat form variables
-        let prechatEnabled = false;
         let prechatFormVisible = false;
 
         function storageKey() {
@@ -944,6 +989,21 @@
                                 avatarEl.innerHTML = '';
                                 avatarEl.appendChild(img);
                                 avatarEl.style.background = 'transparent';
+                            }
+                            // apply bot name updates
+                            if (cfg.name || d.name) {
+                                const newName = String(cfg.name || d.name || '');
+                                if (newName && newName !== botName) {
+                                    botName = newName.replace(/demo/gi, '').replace(/\bBusiness\b/gi, '').trim();
+                                    if (!botName) botName = 'Faheemly Assistant';
+                                    const nameEl = document.getElementById('fahimo-bot-name');
+                                    if (nameEl) nameEl.innerText = botName;
+                                    window.__FAHIMO_WIDGET_BOT_NAME = botName;
+                                }
+                            }
+                            // apply preChatFormEnabled updates
+                            if (typeof d.preChatFormEnabled !== 'undefined') {
+                                prechatEnabled = d.preChatFormEnabled || false;
                             }
                         }
                     } catch (e) {
