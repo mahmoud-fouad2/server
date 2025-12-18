@@ -166,14 +166,19 @@ class VisitorService {
         }
       });
 
-      // تحديث عدد الصفحات المزارة
-      await prisma.visitorSession.update({
-        where: { id: sessionId },
-        data: {
-          pageViews: { increment: 1 },
-          lastActivity: new Date()
-        }
-      });
+      // Try to update session stats; if session is missing (deleted/raced) log a warning but keep the visit
+      try {
+        await prisma.visitorSession.update({
+          where: { id: sessionId },
+          data: {
+            pageViews: { increment: 1 },
+            lastActivity: new Date()
+          }
+        });
+      } catch (err) {
+        // If update fails because the session no longer exists, avoid throwing - just warn so callers don't see a 500
+        logger.warn('Failed to update visitor session after tracking page visit', { sessionId, error: err?.message || err });
+      }
 
       return visit;
     } catch (error) {
@@ -187,6 +192,13 @@ class VisitorService {
    */
   async updatePageVisit(visitId, updates) {
     try {
+      // Ensure the visit exists before attempting an update to avoid Prisma P2025 (record not found)
+      const existing = await prisma.pageVisit.findUnique({ where: { id: visitId } });
+      if (!existing) {
+        logger.warn('Page visit not found for update', { visitId, updates });
+        return null;
+      }
+
       return await prisma.pageVisit.update({
         where: { id: visitId },
         data: {
