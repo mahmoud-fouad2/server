@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test';
 
+const FRONTEND_URL = process.env.TEST_FRONTEND_URL || process.env.FRONTEND_URL || 'http://localhost:3000';
+
 const logsMock = [
   { id: 'l1', action: 'USER_CREATE', createdAt: new Date().toISOString(), user: { name: 'Ali', email: 'ali@example.com' }, meta: { target: 'user', id: 'u1' } },
 ];
@@ -26,7 +28,7 @@ test.describe('Admin Audit Logs E2E', () => {
   });
 
   test('shows audit logs and supports filters', async ({ page }) => {
-    await page.goto('http://localhost:3000/admin');
+    await page.goto(`${FRONTEND_URL}/admin`);
 
     // Open Audit tab in sidebar
     await page.getByRole('button', { name: /سجل التدقيق|Audit/ }).click();

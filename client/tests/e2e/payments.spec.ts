@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test';
 
+const FRONTEND_URL = process.env.TEST_FRONTEND_URL || process.env.FRONTEND_URL || 'http://localhost:3000';
+
 const gatewayMock = [
   {
     id: 'gw_1',
@@ -47,8 +49,8 @@ test.describe('Admin Payments E2E', () => {
   });
 
   test('can open gateways list and edit a gateway', async ({ page }) => {
-    // Use absolute URL to avoid baseURL resolution issues when running locally
-    await page.goto('http://localhost:3000/admin');
+    // Use configurable FRONTEND_URL so tests don't hardcode localhost
+    await page.goto(`${FRONTEND_URL}/admin`);
 
     // Navigate to Payments tab to ensure the gateways section is visible
     await page.getByRole('button', { name: /المدفوعات|Payments|Payments/ }).click();
@@ -88,8 +90,8 @@ test.describe('Admin Payments E2E', () => {
   });
 
   test('can create a custom payment', async ({ page }) => {
-    // Use absolute URL to avoid baseURL resolution issues when running locally
-    await page.goto('http://localhost:3000/admin');
+    // Use configurable FRONTEND_URL so tests don't hardcode localhost
+    await page.goto(`${FRONTEND_URL}/admin`);
 
     // Open Payments tab
     await page.getByRole('button', { name: /المدفوعات|Payments|Payments/ }).click();

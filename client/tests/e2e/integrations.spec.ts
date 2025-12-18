@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test';
 
+const FRONTEND_URL = process.env.TEST_FRONTEND_URL || process.env.FRONTEND_URL || 'http://localhost:3000';
+
 const whatsappMock = { success: true, message: 'WhatsApp connection successful' };
 const telegramMock = { success: true, message: 'Telegram connection successful' };
 const infoseedMock = { success: true, message: 'Infoseed OK' };
@@ -28,7 +30,7 @@ test.describe('Admin Integrations E2E', () => {
   });
 
   test('can open integrations tab and test connections', async ({ page }) => {
-    await page.goto('http://localhost:3000/admin');
+    await page.goto(`${FRONTEND_URL}/admin`);
 
     // Open Integrations tab (use sidebar index to avoid locale label issues)
     const sidebarButtons = page.locator('aside button');
