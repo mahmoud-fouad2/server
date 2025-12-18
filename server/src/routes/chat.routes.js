@@ -113,7 +113,26 @@ router.post('/:conversationId/messages', async (req, res, next) => {
   }
 });
 
-// Get conversation with messages
+// NOTE: The single-conversation GET route is intentionally defined after
+// more specific admin listing routes to avoid Express matching '/conversations'
+// or '/handover-requests' as a conversationId parameter. See below where
+// this route is added after the admin endpoints.
+
+// Rate conversation (compat)
+router.post('/:conversationId/rate', authenticateToken, (req, res, next) => {
+  req.body.conversationId = req.params.conversationId;
+  return chatController.submitRating(req, res, next);
+});
+
+// Admin / Dashboard routes (require authentication)
+router.get('/conversations', authenticateToken, chatController.getConversations);
+router.get('/:conversationId/messages', authenticateToken, chatController.getMessages);
+router.get('/handover-requests', authenticateToken, chatController.getHandoverRequests);
+
+// Get conversation with messages (specific single conversation)
+// This must be after the admin listing routes so Express doesn't treat
+// the literal paths '/conversations' or '/handover-requests' as a
+// conversationId parameter.
 router.get('/:conversationId', authenticateToken, async (req, res) => {
   try {
     const conversation = await prisma.conversation.findUnique({ where: { id: req.params.conversationId }, include: { messages: { orderBy: { createdAt: 'asc' } } } });
@@ -129,16 +148,6 @@ router.get('/:conversationId', authenticateToken, async (req, res) => {
   }
 });
 
-// Rate conversation (compat)
-router.post('/:conversationId/rate', authenticateToken, (req, res, next) => {
-  req.body.conversationId = req.params.conversationId;
-  return chatController.submitRating(req, res, next);
-});
-
-// Admin / Dashboard routes (require authentication)
-router.get('/conversations', authenticateToken, chatController.getConversations);
-router.get('/:conversationId/messages', authenticateToken, chatController.getMessages);
-router.get('/handover-requests', authenticateToken, chatController.getHandoverRequests);
 // Mark conversation messages as read by business
 router.post('/:conversationId/mark-read', authenticateToken, asyncHandler(async (req, res) => {
   const conversationId = req.params.conversationId;
