@@ -310,4 +310,33 @@ router.post('/upload-icon-data', authenticateToken, async (req, res) => {
   }
 });
 
+// Diagnostic endpoint to quickly check if a business exists and whether it has a widget config
+// Public and lightweight; returns helpful fields for debugging widget embeds
+router.get('/exists/:businessId', async (req, res) => {
+  try {
+    const { businessId } = req.params;
+    if (!businessId) return res.status(400).json({ error: 'businessId required' });
+
+    try {
+      const business = await prisma.business.findUnique({ where: { id: businessId }, select: { id: true, widgetConfig: true, updatedAt: true, name: true, active: true } });
+      if (!business) return res.json({ exists: false, businessId });
+
+      return res.json({
+        exists: true,
+        businessId: business.id,
+        hasConfig: !!business.widgetConfig,
+        configVersion: business.updatedAt?.getTime() || null,
+        name: business.name || null,
+        active: typeof business.active === 'boolean' ? business.active : null
+      });
+    } catch (dbErr) {
+      logger.warn('Widget exists check DB error', { error: dbErr.message });
+      return res.status(503).json({ error: 'Database temporarily unavailable' });
+    }
+  } catch (err) {
+    logger.error('Widget exists endpoint error', err);
+    res.status(500).json({ error: 'Failed to check business' });
+  }
+});
+
 export default router;
