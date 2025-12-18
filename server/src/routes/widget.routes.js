@@ -63,7 +63,7 @@ router.get('/config/:businessId', attachBusinessId, async (req, res) => {
         const dummyUser = await prisma.user.create({
           data: {
             name: 'Demo User',
-            email: 'demo@example.com',
+            email: `demo-${Date.now()}@example.com`,
             password: '$2a$10$dummy.hash', // dummy hash
             role: 'CLIENT'
           }
