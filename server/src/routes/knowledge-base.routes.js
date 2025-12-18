@@ -64,5 +64,37 @@ router.get('/search', authenticateToken, resolveBusinessId, async (req, res) => 
   }
 });
 
+// GET /api/knowledge-base/:businessId/articles - get all articles for a business (for widget)
+router.get('/:businessId/articles', async (req, res) => {
+  try {
+    const { businessId } = req.params;
+    if (!businessId) {
+      return res.status(400).json({ success: false, error: 'Business ID required' });
+    }
+
+    const articles = await prisma.knowledgeBase.findMany({
+      where: { businessId },
+      select: {
+        id: true,
+        type: true,
+        content: true,
+        metadata: true,
+        createdAt: true
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    return res.json({
+      success: true,
+      businessId,
+      articles,
+      total: articles.length
+    });
+  } catch (err) {
+    logger.error('Get knowledge base articles failed', err);
+    return res.status(500).json({ success: false, error: 'Failed to get articles' });
+  }
+});
+
 // Backwards compatibility: keep compatibility endpoints above and export default router
 export default router;
