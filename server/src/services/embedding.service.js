@@ -371,7 +371,7 @@ async function generateEmbedding(text, options = {}) {
  * @param {number[]} vecB - Second vector
  * @returns {number} Similarity score (0-1)
  */
-export function cosineSimilarity(vecA, vecB) {
+function cosineSimilarity(vecA, vecB) {
   if (!vecA || !vecB || !Array.isArray(vecA) || !Array.isArray(vecB)) {
     return 0;
   }
@@ -412,7 +412,7 @@ export function cosineSimilarity(vecA, vecB) {
  * @param {number} limit - Max results (default 5)
  * @returns {Array} Similar items sorted by relevance
  */
-export function findSimilarItems(queryEmbedding, items, threshold = 0.5, limit = 5) {
+function findSimilarItems(queryEmbedding, items, threshold = 0.5, limit = 5) {
   if (!queryEmbedding || !Array.isArray(items) || items.length === 0) {
     return [];
   }
