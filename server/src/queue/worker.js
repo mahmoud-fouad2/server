@@ -140,8 +140,16 @@ async function stopWorker() {
 
 // Only auto-start the worker when running as a dedicated process (not when
 // imported by tests). This uses import.meta.url to detect entry script.
-const __filename = fileURLToPath(import.meta.url);
-if (process.argv[1] === __filename && process.env.NODE_ENV !== 'test') {
+let __filename = null;
+try {
+  // import.meta may not be available in certain test runtimes (CommonJS)
+  __filename = fileURLToPath(import.meta.url);
+} catch (e) {
+  // Fallback for test environments where import.meta is not defined
+  __filename = process.argv && process.argv[1] ? process.argv[1] : null;
+}
+
+if (__filename && process.argv[1] === __filename && process.env.NODE_ENV !== 'test') {
   startWorker().catch(err => logger.error('Failed to start worker:', err));
 }
 

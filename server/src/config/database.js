@@ -94,7 +94,7 @@ const prisma = new Proxy({}, {
     if (prop in target) return target[prop];
     const client = createPrismaClient();
     const val = client[prop];
-    if (typeof val === 'function') {
+      if (typeof val === 'function') {
       // Return a callable proxy that preserves both direct invocation and
       // nested property access. This ensures that `prisma.model.findMany`
       // is a function and invoking it will call through to the underlying
@@ -111,6 +111,16 @@ const prisma = new Proxy({}, {
 
       return surrogate;
     }
+      // If the underlying client does not expose the requested property (e.g.
+      // running without a configured DATABASE_URL), return a callable proxy
+      // surrogate so that code accessing `prisma.model.findMany` receives a
+      // function-like value and invoking it produces a clear error instead of
+      // throwing "Cannot read properties of undefined" during property access.
+      if (val === undefined) {
+        // Reuse the callable stub generator so nested access like
+        // prisma.someModel.findMany behaves as expected in tests.
+        return createPrismaStub(new Error('Prisma client is not available: DATABASE_URL not configured'));
+      }
     return val;
   },
   set(target, prop, value) {

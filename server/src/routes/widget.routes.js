@@ -2,6 +2,7 @@ import express from 'express';
 const router = express.Router();
 import prisma from '../config/database.js';
 import { authenticateToken } from '../middleware/auth.js';
+import { resolveBusinessId } from '../middleware/businessMiddleware.js';
 import logger from '../utils/logger.js';
 import multer from 'multer';
 import path from 'path';
@@ -155,7 +156,7 @@ const widgetChatLimiter = rateLimit({
 router.post('/chat', widgetChatLimiter, asyncHandler(chatController.sendMessage));
 
 // Update Widget Config (Authenticated)
-router.post('/config', authenticateToken, async (req, res) => {
+router.post('/config', authenticateToken, resolveBusinessId, async (req, res) => {
   try {
     const businessId = req.user.businessId;
 
@@ -203,7 +204,7 @@ router.post('/config', authenticateToken, async (req, res) => {
 // Upload Widget Icon (Authenticated)
 const storageService = (await import('../services/storage.service.js')).default;
 
-router.post('/upload-icon', authenticateToken, upload.single('icon'), async (req, res) => {
+router.post('/upload-icon', authenticateToken, resolveBusinessId, upload.single('icon'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });

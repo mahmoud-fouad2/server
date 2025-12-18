@@ -187,5 +187,11 @@ class IntentDetectionService {
   }
 }
 
-export default new IntentDetectionService();
+const _intentDetection = new IntentDetectionService();
+
+export default _intentDetection;
+export const detectIntent = _intentDetection.detectIntent.bind(_intentDetection);
+export const isGreeting = _intentDetection.isGreeting.bind(_intentDetection);
+export const isQuestion = _intentDetection.isQuestion.bind(_intentDetection);
+export const containsProfanity = _intentDetection.containsProfanity.bind(_intentDetection);
 

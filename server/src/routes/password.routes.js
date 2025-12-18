@@ -4,8 +4,7 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import prisma from '../config/database.js';
 import logger from '../utils/logger.js';
-const emailServiceModule = await import('../services/email.service.js');
-const emailService = emailServiceModule.default || emailServiceModule;
+import * as emailService from '../services/email.service.js';
 
 // Request password reset
 router.post('/forgot-password', async (req, res) => {

@@ -9,8 +9,8 @@ module.exports = {
   },
   // Ignore node_modules by default (can be customized to include certain packages)
   transformIgnorePatterns: ['/node_modules/'],
-  // Treat .js files as ESM sources so babel-jest runs for them when needed
-  extensionsToTreatAsEsm: ['.js'],
   moduleNameMapper: {},
   globals: {},
+  // Load test setup before running tests (mocks like @prisma/client are registered there)
+  setupFiles: ['<rootDir>/tests/jest.setup.js'],
 };

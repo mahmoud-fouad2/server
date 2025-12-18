@@ -1,18 +1,13 @@
 import asyncHandler from 'express-async-handler';
 import prisma from '../config/database.js';
 import sanitizeHtml from 'sanitize-html';
-const cacheServiceModule = await import('../services/cache.service.js');
-const cacheService = cacheServiceModule.default || cacheServiceModule;
-const visitorSessionModule = await import('../services/visitor-session.service.js');
-const visitorSession = visitorSessionModule.default || visitorSessionModule;
-const aiServiceModule = await import('../services/ai.service.js');
-const aiService = aiServiceModule.default || aiServiceModule;
-const vectorSearchModule = await import('../services/vector-search.service.js');
-const vectorSearch = vectorSearchModule.default || vectorSearchModule;
-const responseValidatorModule = await import('../services/response-validator.service.js');
-const responseValidator = responseValidatorModule.default || responseValidatorModule;
+import cacheService from '../services/cache.service.js';
+import visitorSession from '../services/visitor-session.service.js';
+import * as aiService from '../services/ai.service.js';
+import vectorSearch from '../services/vector-search.service.js';
+import responseValidator from '../services/response-validator.service.js';
 import logger from '../utils/logger.js';
-const socketModule = await import('../socket/index.js');
+import * as socketModule from '../socket/index.js';
 const getIO = (socketModule.default && socketModule.default.getIO) ? socketModule.default.getIO : socketModule.getIO;
 
 // Get all conversations for the business

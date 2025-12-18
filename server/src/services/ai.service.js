@@ -1,11 +1,8 @@
 import axios from 'axios';
 import logger from '../utils/logger.js';
-const intentDetectionModule = await import('./intent-detection.service.js');
-const intentDetection = intentDetectionModule.default || intentDetectionModule;
-const conversationStateModule = await import('./conversation-state.service.js');
-const conversationState = conversationStateModule.default || conversationStateModule;
-const kbPreparationModule = await import('./kb-preparation.service.js');
-const kbPreparation = kbPreparationModule.default || kbPreparationModule;
+import intentDetection from './intent-detection.service.js';
+import conversationState from './conversation-state.service.js';
+import kbPreparation from './kb-preparation.service.js';
 
 /**
  * Hybrid AI Service - Intelligent Load Balancing Across Free Tier Providers

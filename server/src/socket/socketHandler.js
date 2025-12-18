@@ -1,11 +1,8 @@
 import prisma from '../config/database.js';
 import logger from '../utils/logger.js';
-const aiServiceModule = await import('../services/ai.service.js');
-const aiService = aiServiceModule.default || aiServiceModule;
-const vectorSearchModule = await import('../services/vector-search.service.js');
-const vectorSearch = vectorSearchModule.default || vectorSearchModule;
-const responseValidatorModule = await import('../services/response-validator.service.js');
-const responseValidator = responseValidatorModule.default || responseValidatorModule;
+import * as aiService from '../services/ai.service.js';
+import vectorSearch from '../services/vector-search.service.js';
+import responseValidator from '../services/response-validator.service.js';
 
 /**
  * Initialize Socket.IO handlers

@@ -7,11 +7,9 @@ import asyncHandler from 'express-async-handler';
 import prisma from '../config/database.js';
 import * as aiService from '../services/ai.service.js';
 import vectorSearch from '../services/vector-search.service.js';
-
-// Import CommonJS modules using dynamic import compatibility
-const chatController = await import('../controllers/chat.controller.js');
-const responseValidator = (await import('../services/response-validator.service.js')).default;
-const logger = (await import('../utils/logger.js')).default;
+import * as chatController from '../controllers/chat.controller.js';
+import responseValidator from '../services/response-validator.service.js';
+import logger from '../utils/logger.js';
 
 // Rate limiter for public chat endpoint
 const chatLimiter = rateLimit({

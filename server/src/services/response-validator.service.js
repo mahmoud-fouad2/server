@@ -274,4 +274,15 @@ class ResponseValidator {
   }
 }
 
-export default new ResponseValidator();
+const _responseValidator = new ResponseValidator();
+
+// Default export for ESM consumers
+export default _responseValidator;
+
+// Named exports for CommonJS test compatibility (so `require(..)` works as expected)
+export const validateResponse = _responseValidator.validateResponse.bind(_responseValidator);
+export const validateSafety = _responseValidator.validateSafety.bind(_responseValidator);
+export const validateQuality = _responseValidator.validateQuality.bind(_responseValidator);
+export const validateContent = _responseValidator.validateContent.bind(_responseValidator);
+export const sanitizeResponse = _responseValidator.sanitizeResponse.bind(_responseValidator);
+export const getImprovementSuggestions = _responseValidator.getImprovementSuggestions.bind(_responseValidator);

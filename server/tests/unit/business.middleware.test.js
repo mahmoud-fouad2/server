@@ -1,13 +1,12 @@
-import { jest } from '@jest/globals';
-import { resolveBusinessId } from '../../src/middleware/businessMiddleware.js';
-
-// Mock prisma
+// Mock prisma (use doMock to avoid jest hoisting issues)
 const mockFindUnique = jest.fn();
-jest.unstable_mockModule('../../src/config/database.js', () => ({
-  default: { business: { findUnique: mockFindUnique }, user: { findUnique: jest.fn() } }
+jest.doMock('../../src/config/database.js', () => ({
+  business: { findUnique: mockFindUnique },
+  user: { findUnique: jest.fn() }
 }));
 
-const prismaModule = await import('../../src/config/database.js');
+const prismaModule = require('../../src/config/database.js');
+const { resolveBusinessId } = require('../../src/middleware/businessMiddleware.js');
 
 describe('resolveBusinessId middleware', () => {
   beforeEach(() => {
@@ -46,13 +45,14 @@ describe('resolveBusinessId middleware', () => {
     mockFindUnique.mockResolvedValueOnce(null);
 
     const req = { headers: { 'x-business-id': 'bad-id', authorization: 'Bearer token' }, query: {} };
-    const res = {};
+    const json = jest.fn();
+    const status = jest.fn(() => ({ json }));
+    const res = { status };
     const next = jest.fn();
 
     await resolveBusinessId(req, res, next);
     // should continue to other steps; middleware will not return early and will attempt user lookup (we haven't mocked users here)
-    // At minimum, it should call next() eventually or return a 400 from token/user lookup, but for this test we assert it didn't return 400 for header
+    // At minimum, it should call next() eventually or return a 400 from token/user lookup, but for this test we assert it didn't immediately return 400 solely because of the header being invalid
     expect(next).not.toHaveBeenCalled();
-    // Can't assert final next because user lookup will fail and return 400; what we assert is that header invalid didn't immediately send 400 when Authorization present
   });
 });
