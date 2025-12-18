@@ -8,17 +8,33 @@ import logger from '../utils/logger.js';
 const resolveBusinessId = async (req, res, next) => {
   try {
     // 1) Honor direct header if provided (helps SPA clients)
-    const headerBusinessId = req.headers && (req.headers['x-business-id'] || req.headers['x_business_id'] || req.headers['businessid']);
+    let headerBusinessId = req.headers && (req.headers['x-business-id'] || req.headers['x_business_id'] || req.headers['businessid']);
     if (headerBusinessId) {
-      // validate business exists
-      const business = await prisma.business.findUnique({ where: { id: headerBusinessId } });
-      if (business) {
-        req.user = req.user || {};
-        req.user.businessId = headerBusinessId;
-        return next();
+      // Normalize header value: trim, remove surrounding quotes
+      headerBusinessId = String(headerBusinessId).trim().replace(/^\"|\"$|^\'|\'$/g, '');
+
+      // If header looks like a malformed Bearer/token, ignore and let auth middleware handle it
+      if (/^Bearer\s+/i.test(headerBusinessId) || headerBusinessId.split('.').length === 3) {
+        logger.warn('resolveBusinessId: header contains a token-like value, ignoring as business id', { headerBusinessId: headerBusinessId.slice(0, 24) });
+      } else {
+        // validate business exists
+        const business = await prisma.business.findUnique({ where: { id: headerBusinessId } });
+        if (business) {
+          req.user = req.user || {};
+          req.user.businessId = headerBusinessId;
+          return next();
+        }
+
+        // If client provided a header business id but it's invalid and there is NO auth token,
+        // return a clear 400 to the client so the issue is surfaced (helps widget clients).
+        if (!req.headers || !req.headers.authorization) {
+          logger.warn('resolveBusinessId: invalid business id provided in header and no auth present', { headerBusinessId });
+          return res.status(400).json({ error: 'Invalid business id provided in header.' });
+        }
+
+        // If Authorization is present, ignore header and allow token-based resolution, but log once.
+        logger.warn('resolveBusinessId: invalid business id provided in header, ignoring in favor of Authorization', { headerBusinessId });
       }
-      logger.warn('resolveBusinessId: invalid business id provided in header, ignoring', { headerBusinessId });
-      // Continue to next steps instead of returning error
     }
 
     // 2) If businessId already exists in token, validate it exists and skip lookup

@@ -84,7 +84,10 @@ router.post('/:conversationId/messages', async (req, res, next) => {
 
     // Fetch conversation to validate ownership or businessId
     const conv = await prisma.conversation.findUnique({ where: { id: req.params.conversationId } });
-    if (!conv) return res.error('Conversation not found', 404);
+    if (!conv) {
+      logger.warn('Conversation not found (compat post message)', { conversationId: req.params.conversationId, headerBusinessId: req.body.businessId || null });
+      return res.error('Conversation not found', 404);
+    }
 
     // If Authorization header is present, enforce token validation and ownership
     if (req.headers && req.headers.authorization) {
@@ -114,7 +117,10 @@ router.post('/:conversationId/messages', async (req, res, next) => {
 router.get('/:conversationId', authenticateToken, async (req, res) => {
   try {
     const conversation = await prisma.conversation.findUnique({ where: { id: req.params.conversationId }, include: { messages: { orderBy: { createdAt: 'asc' } } } });
-    if (!conversation) return res.error('Conversation not found', 404);
+    if (!conversation) {
+      logger.warn('Conversation not found (get conversation)', { conversationId: req.params.conversationId, requestingBusinessId: req.user?.businessId });
+      return res.error('Conversation not found', 404);
+    }
     if (conversation.businessId !== req.user.businessId) return res.error('Forbidden', 403);
     res.success(conversation, 'Conversation fetched');
   } catch (err) {

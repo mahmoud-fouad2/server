@@ -1,6 +1,7 @@
 import express from 'express';
 const router = express.Router();
 import prisma from '../config/database.js';
+import logger from '../utils/logger.js';
 const chatControllerModule = await import('../controllers/chat.controller.js');
 const chatController = chatControllerModule?.default || chatControllerModule;
 import { authenticateToken } from '../middleware/auth.js';
@@ -24,7 +25,10 @@ router.post('/:conversationId/messages', async (req, res, next) => {
 
   // Fetch conversation to validate ownership or businessId
   const conv = await prisma.conversation.findUnique({ where: { id: req.params.conversationId } });
-  if (!conv) return res.status(404).json({ success: false, error: 'Conversation not found' });
+  if (!conv) {
+    logger.warn('Conversation not found (compat post message)', { conversationId: req.params.conversationId });
+    return res.status(404).json({ success: false, error: 'Conversation not found' });
+  }
 
   // If Authorization header is present, enforce token validation and ownership
   if (req.headers && req.headers.authorization) {
