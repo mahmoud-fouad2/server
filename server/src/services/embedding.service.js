@@ -364,5 +364,88 @@ async function generateEmbedding(text, options = {}) {
   return null;
 }
 
-export { generateEmbedding };
-export default { generateEmbedding };
+/**
+ * Calculate cosine similarity between two embedding vectors
+ * Used for semantic search without pgvector (free tier compatible)
+ * @param {number[]} vecA - First vector
+ * @param {number[]} vecB - Second vector
+ * @returns {number} Similarity score (0-1)
+ */
+export function cosineSimilarity(vecA, vecB) {
+  if (!vecA || !vecB || !Array.isArray(vecA) || !Array.isArray(vecB)) {
+    return 0;
+  }
+
+  if (vecA.length === 0 || vecB.length === 0 || vecA.length !== vecB.length) {
+    return 0;
+  }
+
+  // Calculate dot product
+  let dotProduct = 0;
+  for (let i = 0; i < vecA.length; i++) {
+    dotProduct += vecA[i] * vecB[i];
+  }
+
+  // Calculate magnitudes
+  let magnitudeA = 0;
+  let magnitudeB = 0;
+  for (let i = 0; i < vecA.length; i++) {
+    magnitudeA += vecA[i] * vecA[i];
+    magnitudeB += vecB[i] * vecB[i];
+  }
+
+  magnitudeA = Math.sqrt(magnitudeA);
+  magnitudeB = Math.sqrt(magnitudeB);
+
+  if (magnitudeA === 0 || magnitudeB === 0) {
+    return 0;
+  }
+
+  return dotProduct / (magnitudeA * magnitudeB);
+}
+
+/**
+ * Find semantically similar items from a list
+ * @param {number[]} queryEmbedding - Query embedding vector
+ * @param {Array} items - Items array with 'embedding' field
+ * @param {number} threshold - Minimum similarity (0-1, default 0.5)
+ * @param {number} limit - Max results (default 5)
+ * @returns {Array} Similar items sorted by relevance
+ */
+export function findSimilarItems(queryEmbedding, items, threshold = 0.5, limit = 5) {
+  if (!queryEmbedding || !Array.isArray(items) || items.length === 0) {
+    return [];
+  }
+
+  const similarities = items
+    .map(item => {
+      let itemEmbedding = item.embedding;
+      
+      // Parse embedding if stored as JSON string
+      if (typeof itemEmbedding === 'string') {
+        try {
+          itemEmbedding = JSON.parse(itemEmbedding);
+        } catch {
+          return { ...item, similarityScore: 0 };
+        }
+      }
+
+      const score = Array.isArray(itemEmbedding) 
+        ? cosineSimilarity(queryEmbedding, itemEmbedding) 
+        : 0;
+      
+      return { ...item, similarityScore: score };
+    })
+    .filter(item => item.similarityScore >= threshold)
+    .sort((a, b) => b.similarityScore - a.similarityScore)
+    .slice(0, limit)
+    .map(({ similarityScore, ...item }) => ({
+      ...item,
+      relevance: Math.round(similarityScore * 100) // Percentage (0-100)
+    }));
+
+  return similarities;
+}
+
+export { generateEmbedding, cosineSimilarity, findSimilarItems };
+export default { generateEmbedding, cosineSimilarity, findSimilarItems };

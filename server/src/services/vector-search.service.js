@@ -1,5 +1,5 @@
 import prisma from '../config/database.js';
-import { generateEmbedding } from './embedding.service.js';
+import { generateEmbedding, cosineSimilarity, findSimilarItems } from './embedding.service.js';
 import { rerankCandidates } from './rerank.service.js';
 import logger from '../utils/logger.js';
 
@@ -22,6 +22,7 @@ const STOP_WORDS = new Set([
 class VectorSearchService {
   /**
    * Search for relevant knowledge chunks using vector similarity
+   * Uses embeddings + cosine similarity (free tier compatible, no pgvector needed)
    * 
    * @param {string} query - User's question/message
    * @param {string} businessId - Business ID to filter results
@@ -31,20 +32,21 @@ class VectorSearchService {
   async searchKnowledge(query, businessId, limit = 5, threshold = null) {
     const originalQuery = query;
     
-    // Try vector search first if available
     try {
-      // Check if pgvector is available by testing a simple query
-      const testVector = await prisma.$queryRaw`SELECT '[1,2,3]'::vector(3) as test;`;
-      if (testVector) {
-        logger.info('pgvector extension available, attempting vector search', { businessId });
-        return await this.vectorSearch(query, businessId, limit, threshold);
-      }
+      logger.info('Starting vector search with embeddings', { businessId, queryLength: query.length });
+      
+      // Use embedding-based vector search (works without pgvector)
+      const similarityThreshold = threshold || parseFloat(process.env.VECTOR_SIMILARITY_THRESHOLD || '0.5');
+      return await this.vectorSearch(query, businessId, limit, similarityThreshold);
     } catch (vectorError) {
-      logger.info('pgvector not available, using enhanced keyword search', { businessId, error: vectorError.message });
+      logger.warn('Vector search with embeddings failed, using enhanced keyword search', { 
+        businessId, 
+        error: vectorError.message 
+      });
+      
+      // Fallback to enhanced keyword search
+      return await this.enhancedKeywordSearch(query, businessId, limit);
     }
-    
-    // Fallback to enhanced keyword search
-    return await this.enhancedKeywordSearch(query, businessId, limit);
   }
 
   /**
@@ -62,16 +64,21 @@ class VectorSearchService {
   }
 
   /**
-   * Check if pgvector extension is available
+   * Check if vector search is available
+   * On free tier, always returns true (uses embeddings + cosine similarity)
    * 
-   * @returns {Promise<boolean>} - True if pgvector is installed
+   * @returns {Promise<boolean>} - True if vector search is available
    */
   async isPgVectorAvailable() {
+    // On free tier, we use embedding-based search which doesn't require pgvector
+    // This always returns true, but we could check for embedding availability
     try {
-      await prisma.$queryRaw`SELECT '[1,2,3]'::vector(3) as test;`;
-      return true;
+      const testChunk = await prisma.knowledgeChunk.findFirst({
+        select: { embedding: true }
+      });
+      return true; // Embedding service is available
     } catch (error) {
-      logger.debug('pgvector not available', { error: error.message });
+      logger.debug('Vector search not available', { error: error.message });
       return false;
     }
   }
@@ -87,6 +94,7 @@ class VectorSearchService {
 
   /**
    * Get statistics about vector search performance
+   * For free tier: shows embedding coverage instead of pgvector coverage
    *
    * @param {string} businessId - Business ID
    * @returns {Promise<Object>} - Stats object
@@ -97,10 +105,11 @@ class VectorSearchService {
         where: { businessId }
       });
 
+      // Count chunks with embeddings (our free-tier vector search method)
       const chunksWithEmbeddings = await prisma.knowledgeChunk.count({
         where: {
           businessId,
-          embedding_vector: { not: null }
+          embedding: { not: null }
         }
       });
 
@@ -112,7 +121,9 @@ class VectorSearchService {
         totalChunks,
         chunksWithEmbeddings,
         coveragePercentage: parseFloat(coverage),
-        isPgVectorAvailable: await this.isPgVectorAvailable()
+        isPgVectorAvailable: false, // Free tier doesn't use pgvector
+        usingEmbeddingBasedSearch: true, // Using Gemini embeddings + cosine similarity
+        method: 'embedding-based (free tier compatible)'
       };
     } catch (error) {
       logger.error('Failed to get vector search statistics', { businessId, error: error.message });
@@ -121,9 +132,10 @@ class VectorSearchService {
   }
 
   /**
-   * Perform vector similarity search
+   * Perform vector similarity search using embeddings + cosine similarity
+   * Works on free tier without pgvector extension
    */
-  async vectorSearch(query, businessId, limit = 5, threshold = 0.7) {
+  async vectorSearch(query, businessId, limit = 5, threshold = 0.5) {
     try {
       // Generate embedding for the query
       const queryEmbedding = await generateEmbedding(query);
@@ -133,44 +145,82 @@ class VectorSearchService {
         return await this.enhancedKeywordSearch(query, businessId, limit);
       }
 
-      // Perform vector similarity search
-      const results = await prisma.$queryRaw`
-        SELECT 
-          kc.id,
-          kc."businessId",
-          kc.content,
-          kc.metadata,
-          kc."createdAt",
-          1 - (embedding_vector <=> ${queryEmbedding}::vector(1536)) as similarity
-        FROM "KnowledgeChunk" kc
-        WHERE kc."businessId" = ${businessId}
-          AND kc.embedding_vector IS NOT NULL
-          AND 1 - (embedding_vector <=> ${queryEmbedding}::vector(1536)) > ${threshold}
-        ORDER BY embedding_vector <=> ${queryEmbedding}::vector(1536)
-        LIMIT ${limit}
-      `;
+      logger.debug('Query embedding generated', { businessId, embeddingLength: queryEmbedding.length });
 
-      logger.debug('Vector search completed', { businessId, resultsCount: results.length, threshold });
-      
+      // Fetch all knowledge chunks for this business
+      // On free tier, this is more practical than database-level vector search
+      const allChunks = await prisma.knowledgeChunk.findMany({
+        where: { businessId },
+        select: {
+          id: true,
+          businessId: true,
+          content: true,
+          metadata: true,
+          embedding: true,
+          createdAt: true
+        },
+        take: 1000 // Limit to prevent memory issues
+      });
+
+      if (allChunks.length === 0) {
+        logger.debug('No knowledge chunks found, falling back to keyword search', { businessId });
+        return await this.enhancedKeywordSearch(query, businessId, limit);
+      }
+
+      // Calculate cosine similarity for each chunk
+      const chunksWithSimilarity = allChunks
+        .map(chunk => {
+          let chunkEmbedding = chunk.embedding;
+          
+          // Parse embedding if it's stored as JSON string
+          if (typeof chunkEmbedding === 'string') {
+            try {
+              chunkEmbedding = JSON.parse(chunkEmbedding);
+            } catch (e) {
+              logger.warn('Failed to parse chunk embedding', { chunkId: chunk.id });
+              return null;
+            }
+          }
+
+          // Calculate cosine similarity
+          const similarity = Array.isArray(chunkEmbedding) 
+            ? cosineSimilarity(queryEmbedding, chunkEmbedding)
+            : 0;
+
+          return {
+            ...chunk,
+            similarity
+          };
+        })
+        .filter(chunk => chunk !== null && chunk.similarity >= threshold)
+        .sort((a, b) => b.similarity - a.similarity)
+        .slice(0, limit);
+
+      logger.debug('Vector search completed using embeddings', { 
+        businessId, 
+        resultsCount: chunksWithSimilarity.length, 
+        threshold 
+      });
+
       // Apply LLM-based reranking if available
       try {
-        if (results.length > 1) {
-          const rerankedResults = await rerankCandidates(query, results);
+        if (chunksWithSimilarity.length > 1) {
+          const rerankedResults = await rerankCandidates(query, chunksWithSimilarity);
           if (rerankedResults && rerankedResults.length > 0) {
-            logger.debug('Reranking applied successfully', { businessId, originalCount: results.length });
-            results = rerankedResults;
+            logger.debug('Reranking applied successfully', { businessId, originalCount: chunksWithSimilarity.length });
+            return rerankedResults;
           }
         }
       } catch (rerankError) {
         logger.warn('Reranking failed, using original order', { error: rerankError.message, businessId });
       }
 
-      return results.map(row => ({
+      return chunksWithSimilarity.map(row => ({
         id: row.id,
         businessId: row.businessId,
         content: row.content,
         metadata: row.metadata,
-        similarity: parseFloat(row.similarity)
+        similarity: parseFloat((row.similarity * 100).toFixed(2)) // Convert to percentage
       }));
 
     } catch (error) {
