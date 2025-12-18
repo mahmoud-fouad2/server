@@ -1,6 +1,7 @@
-const prisma = require('../config/database');
-const UAParser = require('ua-parser-js');
-const logger = require('../utils/logger');
+import prisma from '../config/database.js';
+const UAParserModule = await import('ua-parser-js');
+const UAParser = UAParserModule?.UAParser || UAParserModule?.default || UAParserModule;
+import logger from '../utils/logger.js';
 
 class VisitorService {
   /**
@@ -402,4 +403,4 @@ class VisitorService {
   }
 }
 
-module.exports = new VisitorService();
+export default new VisitorService();

@@ -8,7 +8,7 @@
  * @module config/env.validator
  */
 
-const logger = require('../utils/logger');
+import logger from '../utils/logger.js';
 
 /**
  * Required environment variables for production
@@ -250,7 +250,4 @@ function getEnvSummary() {
   };
 }
 
-module.exports = {
-  validateEnv,
-  getEnvSummary
-};
+export { validateEnv, getEnvSummary };

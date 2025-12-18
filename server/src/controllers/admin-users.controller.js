@@ -7,18 +7,18 @@
  * @requires prisma
  */
 
-const asyncHandler = require('express-async-handler');
-const adminUserService = require('../services/admin-users.service');
-const logger = require('../utils/logger');
-const prisma = require('../config/database');
-const bcrypt = require('bcryptjs');
+import asyncHandler from 'express-async-handler';
+import adminUserService from '../services/admin-users.service.js';
+import logger from '../utils/logger.js';
+import prisma from '../config/database.js';
+import bcrypt from 'bcryptjs';
 
 /**
  * @desc    Get all users with pagination, filtering, and search
  * @route   GET /api/admin/users
  * @access  Private (SUPERADMIN only)
  */
-exports.getAllUsers = asyncHandler(async (req, res) => {
+export const getAllUsers = asyncHandler(async (req, res) => {
   const result = await adminUserService.getAllUsers(req.query);
   res.json(result);
 });
@@ -28,7 +28,7 @@ exports.getAllUsers = asyncHandler(async (req, res) => {
  * @route   GET /api/admin/users/:id
  * @access  Private (SUPERADMIN only)
  */
-exports.getUserById = asyncHandler(async (req, res) => {
+export const getUserById = asyncHandler(async (req, res) => {
   const user = await adminUserService.getUserById(req.params.id);
 
   if (!user) {
@@ -49,7 +49,7 @@ exports.getUserById = asyncHandler(async (req, res) => {
  * @route   POST /api/admin/users
  * @access  Private (SUPERADMIN only)
  */
-exports.createUser = asyncHandler(async (req, res) => {
+export const createUser = asyncHandler(async (req, res) => {
   const { email, password, name, role = 'CLIENT' } = req.body;
 
   // Validate input
@@ -117,7 +117,7 @@ exports.createUser = asyncHandler(async (req, res) => {
  * @route   PUT /api/admin/users/:id
  * @access  Private (SUPERADMIN only)
  */
-exports.updateUser = asyncHandler(async (req, res) => {
+export const updateUser = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { email, name, role, isActive } = req.body;
 
@@ -188,7 +188,7 @@ exports.updateUser = asyncHandler(async (req, res) => {
  * @route   PUT /api/admin/users/:id/password
  * @access  Private (SUPERADMIN only)
  */
-exports.changeUserPassword = asyncHandler(async (req, res) => {
+export const changeUserPassword = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { newPassword } = req.body;
 
@@ -247,7 +247,7 @@ exports.changeUserPassword = asyncHandler(async (req, res) => {
  * @route   PUT /api/admin/users/:id/status
  * @access  Private (SUPERADMIN only)
  */
-exports.toggleUserStatus = asyncHandler(async (req, res) => {
+export const toggleUserStatus = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { isActive } = req.body;
 
@@ -298,7 +298,7 @@ exports.toggleUserStatus = asyncHandler(async (req, res) => {
  * @route   DELETE /api/admin/users/:id
  * @access  Private (SUPERADMIN only)
  */
-exports.deleteUser = asyncHandler(async (req, res) => {
+export const deleteUser = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { reason, restoreUntil: restoreUntilRaw } = req.body || {};
   const restoreUntil = restoreUntilRaw ? new Date(restoreUntilRaw) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
@@ -366,7 +366,7 @@ exports.deleteUser = asyncHandler(async (req, res) => {
  * @route   DELETE /api/admin/users/:id/permanent
  * @access  Private (SUPERADMIN only)
  */
-exports.hardDeleteUser = asyncHandler(async (req, res) => {
+export const hardDeleteUser = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { confirmation } = req.body;
 
@@ -410,7 +410,7 @@ exports.hardDeleteUser = asyncHandler(async (req, res) => {
  * @route   POST /api/admin/users/:id/restore
  * @access  Private (SUPERADMIN only)
  */
-exports.restoreUser = asyncHandler(async (req, res) => {
+export const restoreUser = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
   // Restore user by re-activating the account
@@ -464,7 +464,7 @@ exports.restoreUser = asyncHandler(async (req, res) => {
  * @route   GET /api/admin/users/:id/audit-log
  * @access  Private (SUPERADMIN only)
  */
-exports.getUserAuditLog = asyncHandler(async (req, res) => {
+export const getUserAuditLog = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { page = 1, limit = 20 } = req.query;
 
@@ -516,7 +516,7 @@ exports.getUserAuditLog = asyncHandler(async (req, res) => {
  * @route   GET /api/admin/users/:id/export
  * @access  Private (SUPERADMIN only)
  */
-exports.exportUserData = asyncHandler(async (req, res) => {
+export const exportUserData = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
   const user = await prisma.user.findUnique({
@@ -571,17 +571,17 @@ exports.exportUserData = asyncHandler(async (req, res) => {
   });
 });
 
-// Export all controller functions
-module.exports = {
-  getAllUsers: exports.getAllUsers,
-  getUserById: exports.getUserById,
-  createUser: exports.createUser,
-  updateUser: exports.updateUser,
-  changeUserPassword: exports.changeUserPassword,
-  toggleUserStatus: exports.toggleUserStatus,
-  deleteUser: exports.deleteUser,
-  hardDeleteUser: exports.hardDeleteUser,
-  restoreUser: exports.restoreUser,
-  getUserAuditLog: exports.getUserAuditLog,
-  exportUserData: exports.exportUserData
+// Default export for compatibility
+export default {
+  getAllUsers,
+  getUserById,
+  createUser,
+  updateUser,
+  changeUserPassword,
+  toggleUserStatus,
+  deleteUser,
+  hardDeleteUser,
+  restoreUser,
+  getUserAuditLog,
+  exportUserData
 };

@@ -3,7 +3,7 @@
  * Provides consistent error responses across the API
  */
 
-const logger = require('../utils/logger');
+import logger from '../utils/logger.js';
 
 class AppError extends Error {
   constructor(message, statusCode = 500, isOperational = true) {
@@ -141,7 +141,7 @@ function sanitizeLogData(data) {
   return sanitized;
 }
 
-module.exports = {
+export {
   AppError,
   errorHandler,
   catchAsync,

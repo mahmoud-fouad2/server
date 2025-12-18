@@ -1,8 +1,9 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const prisma = require('../config/database');
-const chatController = require('../controllers/chat.controller');
-const { authenticateToken } = require('../middleware/auth');
+import prisma from '../config/database.js';
+const chatControllerModule = await import('../controllers/chat.controller.js');
+const chatController = chatControllerModule?.default || chatControllerModule;
+import { authenticateToken } from '../middleware/auth.js';
 
 // Create conversation (compatibility with older public API used in tests)
 router.post('/', async (req, res) => {
@@ -27,7 +28,6 @@ router.post('/:conversationId/messages', async (req, res, next) => {
 
   // If Authorization header is present, enforce token validation and ownership
   if (req.headers && req.headers.authorization) {
-    const { authenticateToken } = require('../middleware/auth');
     try {
       await new Promise((resolve, reject) => authenticateToken(req, res, (err) => err ? reject(err) : resolve()));
     } catch (err) {
@@ -64,5 +64,5 @@ router.post('/:conversationId/rate', authenticateToken, (req, res, next) => {
   return chatController.submitRating(req, res, next);
 });
 
-// Backwards compatibility: forward to main chat routes
-module.exports = require('./chat.routes');
+// Backwards compatibility: keep compatibility endpoints above and export default router
+export default router; 

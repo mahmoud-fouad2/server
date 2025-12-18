@@ -1,15 +1,16 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const prisma = require('../config/database');
-const aiService = require('../services/ai.service');
-const whatsappService = require('../services/whatsappService');
+import prisma from '../config/database.js';
+import aiService from '../services/ai.service.js';
+import whatsappService from '../services/whatsappService.js';
+import crypto from 'crypto';
+import logger from '../utils/logger.js';
 
 // Fahimo Insight: WhatsApp Integration (Meta Cloud API)
 // This is a placeholder structure. To make this live, you need to:
 // 1. Verify a Meta Developer Account
 // 2. Configure the Webhook URL in Meta Dashboard to point here
 // 3. Set WHATSAPP_VERIFY_TOKEN and WHATSAPP_APP_SECRET in your environment
-const crypto = require('crypto');
 
 router.get('/webhook', (req, res) => {
   // Meta verification challenge
@@ -20,14 +21,12 @@ router.get('/webhook', (req, res) => {
   const verifyToken = process.env.WHATSAPP_VERIFY_TOKEN;
 
   if (!verifyToken) {
-    const logger = require('../utils/logger');
     logger.error('WHATSAPP_VERIFY_TOKEN not configured - cannot verify webhook');
     return res.sendStatus(500);
   }
 
   if (mode && token) {
     if (mode === 'subscribe' && token === verifyToken) {
-      const logger = require('../utils/logger');
       logger.info('WhatsApp webhook verified successfully');
       return res.status(200).send(challenge);
     }
@@ -40,7 +39,6 @@ router.post('/webhook', async (req, res) => {
     const body = req.body;
 
     // Verify webhook signature if app secret is configured
-    const logger = require('../utils/logger');
     const appSecret = process.env.WHATSAPP_APP_SECRET;
     if (appSecret) {
       const signatureHeader = req.get('x-hub-signature-256') || req.get('x-hub-signature');
@@ -77,8 +75,7 @@ router.post('/webhook', async (req, res) => {
         const from = body.entry[0].changes[0].value.messages[0].from;
         const msgBody = body.entry[0].changes[0].value.messages[0].text.body;
 
-        const logger = require('../utils/logger');
-        logger.info('WhatsApp message received', { from, messageLength: msgBody.length });
+          logger.info('WhatsApp message received', { from, messageLength: msgBody.length });
 
         // Find the bot associated with this WhatsApp Phone Number ID
         const whatsappAccount = await prisma.whatsAppAccount.findFirst({
@@ -87,9 +84,8 @@ router.post('/webhook', async (req, res) => {
         });
 
         if (!whatsappAccount || !whatsappAccount.business || whatsappAccount.business.bots.length === 0) {
-            const logger = require('../utils/logger');
-            logger.error('WhatsApp bot not found', { phoneNumberId });
-            return res.sendStatus(200); // Return 200 to stop Meta from retrying
+          logger.error('WhatsApp bot not found', { phoneNumberId });
+          return res.sendStatus(200); // Return 200 to stop Meta from retrying
         }
 
         // For MVP, pick the first active bot (unused variable removed if not needed)
@@ -111,11 +107,9 @@ router.post('/webhook', async (req, res) => {
     } else {
       res.sendStatus(404);
     }
-  } catch (error) {
-    const logger = require('../utils/logger');
+    } catch (error) {
     logger.error('WhatsApp webhook error', { error: error.message, stack: error.stack });
     res.sendStatus(500);
   }
 });
-
-module.exports = router;
+export default router;

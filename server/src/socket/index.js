@@ -1,10 +1,10 @@
-const { Server } = require('socket.io');
-const logger = require('../utils/logger');
-const initializeSocket = require('./socketHandler');
+import { Server } from 'socket.io';
+import logger from '../utils/logger.js';
+import initializeSocket from './socketHandler.js';
 
 let io;
 
-exports.init = (httpServer) => {
+const init = (httpServer) => {
   io = new Server(httpServer, {
     cors: {
       origin: process.env.CLIENT_URL || '*',
@@ -18,9 +18,11 @@ exports.init = (httpServer) => {
   return io;
 };
 
-exports.getIO = () => {
+const getIO = () => {
   if (!io) {
     throw new Error('Socket.io not initialized!');
   }
   return io;
 };
+
+export default { init, getIO };

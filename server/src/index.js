@@ -3,6 +3,9 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 import http from 'http';
 import helmet from 'helmet';
 
@@ -11,48 +14,84 @@ process.env.PRISMA_CLIENT_ENGINE_TYPE = 'binary';
 
 import prisma from './config/database.js';
 import logger from './utils/logger.js';
-import redisCache from './services/cache.service.js';
+const redisCacheModule = await import('./services/cache.service.js');
+const redisCache = redisCacheModule.default || redisCacheModule;
 import { errorHandler, handleUnhandledRejections, handleUncaughtExceptions } from './middleware/errorHandler.js';
 import { authenticateToken } from './middleware/auth.js';
 import { validateEnv, getEnvSummary } from './config/env.validator.js';
 import socketIO from './socket/index.js';
 import { responseWrapperMiddleware } from './middleware/response-wrapper.js';
-import authRoutes from './routes/auth.routes.js';
-import passwordRoutes from './routes/password.routes.js';
-import chatRoutes from './routes/chat.routes.js';
-import businessRoutes from './routes/business.routes.js';
-import notificationsRoutes from './routes/notifications.routes.js';
-import contactRoutes from './routes/contact.routes.js';
-import knowledgeRoutes from './routes/knowledge.routes.js';
-import teamRoutes from './routes/team.routes.js';
-import adminRoutes from './routes/admin.routes.js';
-import adminBusinessRoutes from './routes/admin-business.routes.js';
-import adminConversationsRoutes from './routes/admin-conversations.routes.js';
-import adminKnowledgeRoutes from './routes/admin-knowledge.routes.js';
-import paymentRoutes from './routes/payment.routes.js';
-import paymentWebhookRoutes from './routes/payment-webhooks.routes.js';
-import adminPaymentRoutes from './routes/admin-payment.routes.js';
-import adminCrmRoutes from './routes/admin-crm.routes.js';
-import internalRoutes from './routes/internal.routes.js';
-import adminExtendedRoutes from './routes/admin-extended.routes.js';
-import ticketsRoutes from './routes/tickets.routes.js';
-import multiLanguageRoutes from './routes/multi-language.routes.js';
-import continuousImprovementRoutes from './routes/continuous-improvement.routes.js';
-import proxyRoutes from './routes/proxy.routes.js';
-import widgetRoutes from './routes/widget.routes.js';
-import uploadsRoutes from './routes/uploads.routes.js';
-import healthRoutes from './routes/health.routes.js';
-import analyticsRoutes from './routes/analytics.routes.js';
-import visitorRoutes from './routes/visitor.routes.js';
-import ratingRoutes from './routes/rating.routes.js';
-import crmRoutes from './routes/crm.routes.js';
-import convRoutes from './routes/conversations.routes.js';
-import kbCompat from './routes/knowledge-base.routes.js';
+const authRoutesModule = await import('./routes/auth.routes.js');
+const authRoutes = authRoutesModule.default || authRoutesModule;
+const passwordRoutesModule = await import('./routes/password.routes.js');
+const passwordRoutes = passwordRoutesModule.default || passwordRoutesModule;
+const chatRoutesModule = await import('./routes/chat.routes.js');
+const chatRoutes = chatRoutesModule.default || chatRoutesModule;
+const businessRoutesModule = await import('./routes/business.routes.js');
+const businessRoutes = businessRoutesModule.default || businessRoutesModule;
+const notificationsRoutesModule = await import('./routes/notifications.routes.js');
+const notificationsRoutes = notificationsRoutesModule.default || notificationsRoutesModule;
+const contactRoutesModule = await import('./routes/contact.routes.js');
+const contactRoutes = contactRoutesModule.default || contactRoutesModule;
+const knowledgeRoutesModule = await import('./routes/knowledge.routes.js');
+const knowledgeRoutes = knowledgeRoutesModule.default || knowledgeRoutesModule;
+const teamRoutesModule = await import('./routes/team.routes.js');
+const teamRoutes = teamRoutesModule.default || teamRoutesModule;
+const adminRoutesModule = await import('./routes/admin.routes.js');
+const adminRoutes = adminRoutesModule.default || adminRoutesModule;
+const adminBusinessRoutesModule = await import('./routes/admin-business.routes.js');
+const adminBusinessRoutes = adminBusinessRoutesModule.default || adminBusinessRoutesModule;
+const adminConversationsRoutesModule = await import('./routes/admin-conversations.routes.js');
+const adminConversationsRoutes = adminConversationsRoutesModule.default || adminConversationsRoutesModule;
+const adminKnowledgeRoutesModule = await import('./routes/admin-knowledge.routes.js');
+const adminKnowledgeRoutes = adminKnowledgeRoutesModule.default || adminKnowledgeRoutesModule;
+const paymentRoutesModule = await import('./routes/payment.routes.js');
+const paymentRoutes = paymentRoutesModule.default || paymentRoutesModule;
+const paymentWebhookRoutesModule = await import('./routes/payment-webhooks.routes.js');
+const paymentWebhookRoutes = paymentWebhookRoutesModule.default || paymentWebhookRoutesModule;
+const adminPaymentRoutesModule = await import('./routes/admin-payment.routes.js');
+const adminPaymentRoutes = adminPaymentRoutesModule.default || adminPaymentRoutesModule;
+const adminCrmRoutesModule = await import('./routes/admin-crm.routes.js');
+const adminCrmRoutes = adminCrmRoutesModule.default || adminCrmRoutesModule;
+const internalRoutesModule = await import('./routes/internal.routes.js');
+const internalRoutes = internalRoutesModule.default || internalRoutesModule;
+const adminExtendedRoutesModule = await import('./routes/admin-extended.routes.js');
+const adminExtendedRoutes = adminExtendedRoutesModule.default || adminExtendedRoutesModule;
+const ticketsRoutesModule = await import('./routes/tickets.routes.js');
+const ticketsRoutes = ticketsRoutesModule.default || ticketsRoutesModule;
+const multiLanguageRoutesModule = await import('./routes/multi-language.routes.js');
+const multiLanguageRoutes = multiLanguageRoutesModule.default || multiLanguageRoutesModule;
+const continuousImprovementRoutesModule = await import('./routes/continuous-improvement.routes.js');
+const continuousImprovementRoutes = continuousImprovementRoutesModule.default || continuousImprovementRoutesModule;
+const proxyRoutesModule = await import('./routes/proxy.routes.js');
+const proxyRoutes = proxyRoutesModule.default || proxyRoutesModule;
+const widgetRoutesModule = await import('./routes/widget.routes.js');
+const widgetRoutes = widgetRoutesModule.default || widgetRoutesModule;
+const uploadsRoutesModule = await import('./routes/uploads.routes.js');
+const uploadsRoutes = uploadsRoutesModule.default || uploadsRoutesModule;
+const healthRoutesModule = await import('./routes/health.routes.js');
+const healthRoutes = healthRoutesModule.default || healthRoutesModule;
+const analyticsRoutesModule = await import('./routes/analytics.routes.js');
+const analyticsRoutes = analyticsRoutesModule.default || analyticsRoutesModule;
+const visitorRoutesModule = await import('./routes/visitor.routes.js');
+const visitorRoutes = visitorRoutesModule.default || visitorRoutesModule;
+const ratingRoutesModule = await import('./routes/rating.routes.js');
+const ratingRoutes = ratingRoutesModule.default || ratingRoutesModule;
+const crmRoutesModule = await import('./routes/crm.routes.js');
+const crmRoutes = crmRoutesModule.default || crmRoutesModule;
+const convRoutesModule = await import('./routes/conversations.routes.js');
+const convRoutes = convRoutesModule.default || convRoutesModule;
+const kbCompatModule = await import('./routes/knowledge-base.routes.js');
+const kbCompat = kbCompatModule.default || kbCompatModule;
 import { validateEnvironment } from './config/env.js';
-import monitor from './utils/monitor.js';
-import continuousImprovement from './services/continuous-improvement.service.js';
-import cacheService from './services/cache.service.js';
-import queueService from './queue/queue.js';
+const monitorModule = await import('./utils/monitor.js');
+const monitor = monitorModule.default || monitorModule;
+const continuousImprovementModule = await import('./services/continuous-improvement.service.js');
+const continuousImprovement = continuousImprovementModule.default || continuousImprovementModule;
+const cacheServiceModule = await import('./services/cache.service.js');
+const cacheService = cacheServiceModule.default || cacheServiceModule;
+const queueServiceModule = await import('./queue/queue.js');
+const queueService = queueServiceModule.default || queueServiceModule;
 import bcrypt from 'bcryptjs';
 import vectorSearch from './services/vector-search.service.js';
 
@@ -99,26 +138,120 @@ if (!isTestEnvironment) {
   logger.info('Environment configured', envSummary);
 }
 
-// Test database connection after environment is loaded
+// Test database + Redis connection after environment is loaded
+let isDatabaseConnected = false;
+let isRedisConnected = false;
+let dbReconnectInterval = null;
+
+function startDbReconnectLoop(intervalMs = 10000) {
+  if (dbReconnectInterval) return;
+  let attempt = 0;
+  logger.info('Starting DB reconnection loop (every ' + (intervalMs/1000) + 's)');
+  dbReconnectInterval = setInterval(async () => {
+    attempt += 1;
+    try {
+      await prisma.$connect();
+      isDatabaseConnected = true;
+      logger.info(`Database reconnection successful (attempt ${attempt})`);
+      try {
+        // Run post-connection tasks; only stop reconnection loop if these succeed
+        await onDbConnected();
+        logger.info('Post-DB connection tasks completed successfully');
+        stopDbReconnectLoop();
+      } catch (e) {
+        // If post-connection tasks fail, keep reconnection loop running so we can retry
+        logger.warn('Post-DB-connection tasks failed, will continue reconnection attempts', e?.message || e);
+        isDatabaseConnected = false;
+        try { await prisma.$disconnect(); } catch (ignore) {}
+      }
+    } catch (e) {
+      logger.warn(`Database reconnection attempt ${attempt} failed`, { message: e?.message || e });
+    }
+  }, intervalMs);
+}
+
+function stopDbReconnectLoop() {
+  if (dbReconnectInterval) {
+    clearInterval(dbReconnectInterval);
+    dbReconnectInterval = null;
+    logger.info('Stopped DB reconnection loop');
+  }
+}
+
+async function onDbConnected() {
+  // Run tasks that rely on the DB being available
+  // Don't throw if these fail - server can run in degraded mode
+  logger.info('Running post-DB connection startup tasks');
+  
+  try {
+    if (process.env.NODE_ENV !== 'production' || process.env.ALLOW_AUTO_ADMIN === 'true') {
+      await ensureAdminExists();
+      logger.info('Admin user initialization completed');
+    }
+  } catch (e) {
+    logger.warn('Failed to initialize admin user', e?.message || e);
+  }
+  
+  try {
+    if (queueService && queueService.initQueues) {
+      queueService.initQueues();
+      logger.info('Job queues initialized');
+    }
+  } catch (e) {
+    logger.warn('Queue init after DB connect failed', e?.message || e);
+  }
+}
 const testDatabaseConnection = async () => {
+  // Try DB connection first
   try {
     await prisma.$connect();
+    isDatabaseConnected = true;
     logger.info('Database connected successfully');
 
     // Run a simple query to verify vector extension
-    await prisma.$queryRaw`SELECT 1`;
-    logger.info('Vector extension available');
-
-    // Connect to Redis
-    await redisCache.connect();
-
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+      logger.info('Vector extension available');
+    } catch (qErr) {
+      logger.warn('Vector extension check failed (non-fatal in dev)', { error: qErr?.message || qErr });
+      // keep going; some environments (test mocks) may not support this
+    }
   } catch (error) {
+    isDatabaseConnected = false;
     logger.error('Database connection failed', error);
+    // If the DB is unavailable, start a reconnection loop in non-production modes
     if (isTestEnvironment) {
       throw error;
     }
-    process.exit(1);
+    if (process.env.NODE_ENV === 'production') {
+      // In production we must fail fast
+      process.exit(1);
+    }
+    logger.warn('Continuing in development mode without database connection (degraded mode). Some features may be disabled.');
+    // Start periodic reconnect attempts
+    startDbReconnectLoop();
   }
+
+  // Try Redis connection separately
+  try {
+    await redisCache.connect();
+    isRedisConnected = true;
+    logger.info('Redis connected successfully');
+  } catch (error) {
+    isRedisConnected = false;
+    logger.error('Redis connection failed', { message: error?.message || error });
+    if (isTestEnvironment) {
+      throw error;
+    }
+    if (process.env.NODE_ENV === 'production') {
+      process.exit(1);
+    }
+    logger.warn('Continuing in development mode without Redis (degraded mode). Queue and caching will be disabled.');
+  }
+
+  // Expose flags for runtime checks
+  app.locals.isDatabaseConnected = isDatabaseConnected;
+  app.locals.isRedisConnected = isRedisConnected;
 };
 const app = express();
 
@@ -606,6 +739,11 @@ process.on('SIGTERM', () => shutdown(0));
 
 // Auto-create admin on startup
 async function ensureAdminExists() {
+  if (!isDatabaseConnected) {
+    logger.warn('DB unavailable - deferring admin creation until DB is connected');
+    return;
+  }
+
   try {
     const adminEmail = 'admin@faheemly.com';
     
@@ -651,7 +789,12 @@ async function ensureAdminExists() {
       logger.info('Admin account already exists', { email: adminEmail });
     }
   } catch (error) {
+    // If the DB dropped while performing these ops, mark it and start reconnect loop
     logger.error('Failed to ensure admin exists', error);
+    if (error && String(error).includes('Server has closed the connection')) {
+      isDatabaseConnected = false;
+      startDbReconnectLoop();
+    }
   }
 }
 
@@ -661,9 +804,10 @@ async function checkServicesStatus() {
     try {
       await prisma.$queryRaw`SELECT 1`;
       logger.info('✅ Database is CONNECTED');
+      isDatabaseConnected = true;
     } catch (dbError) {
-      logger.error('❌ Database connection FAILED:', dbError.message);
-      logger.warn('⚠️  WARNING: Database connection issues!');
+      isDatabaseConnected = false;
+      logger.debug('Database query check failed (non-blocking)', { message: dbError?.message || dbError });
     }
 
     // Check Redis
@@ -692,7 +836,8 @@ async function checkServicesStatus() {
   }
 }
 
-module.exports = app;
+export default app;
+export { app };
 
 if (!isTestEnvironment) {
   // Test database connection before starting server
@@ -712,13 +857,6 @@ if (!isTestEnvironment) {
         // Validate environment before starting
         validateEnvironment();
 
-        // Ensure admin only in non-production unless explicitly allowed
-        if (process.env.NODE_ENV !== 'production' || process.env.ALLOW_AUTO_ADMIN === 'true') {
-          await ensureAdminExists();
-        } else {
-          logger.info('Skipping automatic admin creation in production (set ALLOW_AUTO_ADMIN=true to override)');
-        }
-
         // Try to connect to Redis if configured
         try {
           if (redisCache.isEnabled && !redisCache.isConnected) {
@@ -734,8 +872,25 @@ if (!isTestEnvironment) {
           logger.warn('Redis connect attempt failed:', e?.message || e);
         }
 
-        await checkServicesStatus();
+        // Run service status check (informational, non-blocking)
+        try {
+          await checkServicesStatus();
+        } catch (e) {
+          logger.warn('Service status check failed', e?.message || e);
+        }
+
         logger.info('✅ Startup functions completed');
+
+        // Run DB-dependent initialization if DB is available
+        if (isDatabaseConnected) {
+          try {
+            await onDbConnected();
+          } catch (e) {
+            logger.warn('Post-DB initialization failed', e?.message || e);
+          }
+        } else {
+          logger.info('Database not available - deferred initialization will run when DB reconnects');
+        }
 
         // Start continuous improvement tasks now the server is ready
         try {
@@ -772,8 +927,30 @@ if (!isTestEnvironment) {
       await shutdown(1);
     }
   }).catch(async err => {
-    logger.error('Failed to connect to database', err);
-    await shutdown(1);
+    logger.error('Database setup failed - server will continue in degraded mode', err);
+    logger.info('Attempting server startup without database');
+    // In development, try to start server anyway in degraded mode
+    if (process.env.NODE_ENV === 'development') {
+      try {
+        const { server, port } = await startServerWithRetries(PORT, 20);
+        serverInstance = server;
+        logger.info(`Fahimo Server started on port ${port} (degraded mode - no database)`);
+        logger.info('"The one who understands you" is ready (limited functionality).');
+        
+        // Start monitoring (will continue reconnection attempts)
+        monitor.startPeriodicMonitoring(5);
+        process.stdin.resume();
+        setInterval(() => {}, 60000);
+        
+        logger.info('🚀 Server operational in degraded mode');
+      } catch (e) {
+        logger.error('Failed to start server even in degraded mode', e);
+        await shutdown(1);
+      }
+    } else {
+      logger.error('Database required in production - aborting startup');
+      await shutdown(1);
+    }
   });
 } else {
   logger.info('Test environment detected - skipping automatic server start');

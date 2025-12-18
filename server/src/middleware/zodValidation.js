@@ -1,4 +1,4 @@
-const { z, ZodError } = require('zod');
+import { z, ZodError } from 'zod';
 
 // User Schemas
 const registerSchema = z.object({
@@ -137,7 +137,7 @@ const validateQuerySchema = (schema) => {
   };
 };
 
-module.exports = {
+export {
   // Schemas
   registerSchema,
   loginSchema,
@@ -156,15 +156,28 @@ module.exports = {
   validateQuerySchema,
   
   // Specific validators
-  validateRegister: validateSchema(registerSchema),
-  validateLogin: validateSchema(loginSchema),
-  validateUpdateProfile: validateSchema(updateProfileSchema),
-  validateChatMessage: validateSchema(chatMessageSchema),
-  validateRating: validateSchema(ratingSchema),
-  validateAddTextKnowledge: validateSchema(addTextKnowledgeSchema),
-  validateAddUrlKnowledge: validateSchema(addUrlKnowledgeSchema),
-  validateUpdateKnowledge: validateSchema(updateKnowledgeSchema),
-  validateUpdateBusiness: validateSchema(updateBusinessSchema),
-  validateUpdateBusinessPlan: validateSchema(updateBusinessPlanSchema),
-  validatePagination: validateQuerySchema(paginationSchema)
+  validateRegister,
+  validateLogin,
+  validateUpdateProfile,
+  validateChatMessage,
+  validateRating,
+  validateAddTextKnowledge,
+  validateAddUrlKnowledge,
+  validateUpdateKnowledge,
+  validateUpdateBusiness,
+  validateUpdateBusinessPlan,
+  validatePagination
 };
+
+// Create convenience exports
+const validateRegister = validateSchema(registerSchema);
+const validateLogin = validateSchema(loginSchema);
+const validateUpdateProfile = validateSchema(updateProfileSchema);
+const validateChatMessage = validateSchema(chatMessageSchema);
+const validateRating = validateSchema(ratingSchema);
+const validateAddTextKnowledge = validateSchema(addTextKnowledgeSchema);
+const validateAddUrlKnowledge = validateSchema(addUrlKnowledgeSchema);
+const validateUpdateKnowledge = validateSchema(updateKnowledgeSchema);
+const validateUpdateBusiness = validateSchema(updateBusinessSchema);
+const validateUpdateBusinessPlan = validateSchema(updateBusinessPlanSchema);
+const validatePagination = validateQuerySchema(paginationSchema);

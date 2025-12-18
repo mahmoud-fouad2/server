@@ -615,4 +615,4 @@ class IntegrationDashboardService {
   }
 }
 
-module.exports = new IntegrationDashboardService();
+export default new IntegrationDashboardService();

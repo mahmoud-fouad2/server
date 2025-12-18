@@ -1,8 +1,8 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-// const { authenticateToken } = require('../middleware/auth');
-const MultiLanguageService = require('../services/multi-language.service');
-const logger = require('../utils/logger');
+// import { authenticateToken } from '../middleware/auth.js';
+import MultiLanguageService from '../services/multi-language.service.js';
+import logger from '../utils/logger.js';
 
 /**
  * @route GET /api/multi-language/dialects
@@ -264,4 +264,4 @@ router.get('/dialect/:code', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

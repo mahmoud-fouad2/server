@@ -1,8 +1,8 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const { authenticateToken } = require('../middleware/auth');
-const SentimentAnalysisService = require('../services/sentiment-analysis.service');
-const logger = require('../utils/logger');
+import { authenticateToken } from '../middleware/auth.js';
+import SentimentAnalysisService from '../services/sentiment-analysis.service.js';
+import logger from '../utils/logger.js';
 
 /**
  * @route POST /api/sentiment/analyze
@@ -200,4 +200,4 @@ router.post('/track-feedback', authenticateToken, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

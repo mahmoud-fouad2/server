@@ -1,7 +1,7 @@
 // Adapter to keep legacy routes working while using the unified hybrid AI service
 // Prefer requiring ai.service.js directly in new code.
 
-const aiService = require('./ai.service');
+import aiService from './ai.service.js';
 
 // Legacy signature used by routes: messages array + options
 async function generateResponse(messages, options = {}) {
@@ -34,9 +34,5 @@ async function healthCheck() {
   return aiService.healthCheck();
 }
 
-module.exports = {
-  generateResponse,
-  generateChatResponse,
-  getProviderStatus,
-  healthCheck
-};
+export { generateResponse, generateChatResponse, getProviderStatus, healthCheck };
+export default { generateResponse, generateChatResponse, getProviderStatus, healthCheck };

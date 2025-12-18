@@ -1,7 +1,8 @@
-const axios = require('axios');
-const cheerio = require('cheerio');
-const { URL } = require('url');
-const logger = require('../utils/logger');
+import axios from 'axios';
+const cheerioModule = await import('cheerio');
+const cheerio = cheerioModule?.default || cheerioModule;
+import { URL } from 'url';
+import logger from '../utils/logger.js';
 
 /**
  * Advanced Web Crawler Service
@@ -243,7 +244,4 @@ async function scrapeSinglePage(url) {
   return result.pages[0] || null;
 }
 
-module.exports = {
-  WebCrawler,
-  scrapeSinglePage
-};
+export { WebCrawler, scrapeSinglePage };

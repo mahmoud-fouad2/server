@@ -1,4 +1,5 @@
 import express from 'express';
+const router = express.Router();
 import prisma from '../config/database.js';
 import { authenticateToken } from '../middleware/auth.js';
 import logger from '../utils/logger.js';
@@ -459,7 +460,8 @@ router.post('/ai-models', authenticateToken, isAdmin, async (req, res) => {
 router.post('/ai-providers/:id/test', authenticateToken, isAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    const aiService = require('../services/ai.service');
+    const aiServiceModule = await import('../services/ai.service.js');
+    const aiService = aiServiceModule?.default || aiServiceModule;
 
     // Simple test message
     const testMessage = "مرحباً، هل أنت تعمل؟";
@@ -476,7 +478,8 @@ router.post('/ai-providers/:id/test', authenticateToken, isAdmin, async (req, re
     ];
 
     const result = await aiService.generateResponseWithProvider(providerKey, messages);
-    const responseValidator = require('../services/response-validator.service');
+    const responseValidatorModule = await import('../services/response-validator.service.js');
+    const responseValidator = responseValidatorModule?.default || responseValidatorModule;
     const sanitized = responseValidator.sanitizeResponse(result.response || '');
     
     res.json({
@@ -564,7 +567,8 @@ router.put('/business/:id/plan', authenticateToken, isAdmin, async (req, res) =>
 // Get System Monitoring Dashboard
 router.get('/monitoring', authenticateToken, isAdmin, async (req, res) => {
   try {
-    const monitor = require('../utils/monitor');
+    const monitorModule = await import('../utils/monitor.js');
+    const monitor = monitorModule?.default || monitorModule;
     const report = await monitor.getSystemReport();
     
     res.json({
@@ -582,7 +586,8 @@ router.get('/monitoring', authenticateToken, isAdmin, async (req, res) => {
 // Clear System Alerts
 router.delete('/monitoring/alerts', authenticateToken, isAdmin, async (req, res) => {
   try {
-    const monitor = require('../utils/monitor');
+    const monitorModule = await import('../utils/monitor.js');
+    const monitor = monitorModule?.default || monitorModule;
     monitor.clearOldAlerts(0); // Clear all alerts
     res.json({ success: true, message: 'Alerts cleared' });
   } catch (error) {
@@ -597,7 +602,8 @@ router.delete('/monitoring/alerts', authenticateToken, isAdmin, async (req, res)
 router.post('/run-seed', authenticateToken, isAdmin, async (req, res) => {
   try {
     // Load the seed helper and run it
-    const seed = require('../../prisma/seed-faheemly');
+    const seedModule = await import('../../prisma/seed-faheemly.js');
+    const seed = seedModule?.default || seedModule;
     if (!seed || typeof seed.seedFaheemly !== 'function') {
       return res.status(500).json({ error: 'Seed script not available' });
     }

@@ -3,6 +3,8 @@
  * Ensures all required environment variables are present and valid
  */
 
+import logger from '../utils/logger.js';
+
 const requiredEnvVars = [
   'DATABASE_URL',
   'JWT_SECRET',
@@ -54,7 +56,6 @@ function validateEnvironment() {
 
   if (missing.length > 0) {
     const message = `❌ FATAL: Missing required environment variables: ${missing.join(', ')}`;
-    const logger = require('../utils/logger');
     logger.error(message, null, { missing });
     missing.forEach(varName => logger.error(`Missing: ${varName}`));
     logger.error('Copy .env.example to .env and fill in the values');
@@ -63,17 +64,11 @@ function validateEnvironment() {
   }
 
   if (warnings.length > 0) {
-    const logger = require('../utils/logger');
     logger.warn('Environment warnings', { warnings });
     warnings.forEach(warning => logger.warn(warning));
   }
 
-  const logger = require('../utils/logger');
   logger.info('Environment validation passed');
 }
 
-module.exports = {
-  validateEnvironment,
-  requiredEnvVars,
-  optionalEnvVars
-};
+export { validateEnvironment, requiredEnvVars, optionalEnvVars };

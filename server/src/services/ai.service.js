@@ -1,8 +1,11 @@
-const axios = require('axios');
-const logger = require('../utils/logger');
-const intentDetection = require('./intent-detection.service');
-const conversationState = require('./conversation-state.service');
-const kbPreparation = require('./kb-preparation.service');
+import axios from 'axios';
+import logger from '../utils/logger.js';
+const intentDetectionModule = await import('./intent-detection.service.js');
+const intentDetection = intentDetectionModule.default || intentDetectionModule;
+const conversationStateModule = await import('./conversation-state.service.js');
+const conversationState = conversationStateModule.default || conversationStateModule;
+const kbPreparationModule = await import('./kb-preparation.service.js');
+const kbPreparation = kbPreparationModule.default || kbPreparationModule;
 
 /**
  * Hybrid AI Service - Intelligent Load Balancing Across Free Tier Providers
@@ -304,7 +307,6 @@ function convertGeminiResponse(geminiResponse, modelName) {
  */
 async function callProvider(providerKey, providerConfig, messages, options = {}) {
   const startTime = Date.now();
-  const logger = require('../utils/logger');
   // Perform a single attempt using the given providerConfig (may contain apiKey)
   async function performCall(cfg) {
     logger.debug('AI provider call initiated', { provider: cfg.name });
@@ -588,7 +590,8 @@ async function generateResponseWithProvider(providerKey, messages, options = {})
   const result = await callProvider(key, provider, messages, options);
   // Sanitize provider responses to avoid leaking model/provider identity
   try {
-    const responseValidator = require('./response-validator.service');
+    const responseValidatorModule = await import('./response-validator.service.js');
+    const responseValidator = responseValidatorModule?.default || responseValidatorModule;
     result.response = responseValidator.sanitizeResponse(result.response || '');
   } catch (e) {
     logger.warn('Failed to sanitize provider response', { error: e.message || e });
@@ -1319,7 +1322,7 @@ ${knowledgeContext}
   return result;
 }
 
-module.exports = {
+export {
   generateChatResponse,
   generateResponse,
   generateResponseWithProvider,
@@ -1330,8 +1333,7 @@ module.exports = {
   resetProviderState,
   getProviders,
   getProviderConfig,
-  PROVIDER_DEFINITIONS
-  ,
+  PROVIDER_DEFINITIONS,
   // Expose some internals for tests/health checks
   getTokenCount,
   providerState,

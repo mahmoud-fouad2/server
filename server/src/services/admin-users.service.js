@@ -1,5 +1,5 @@
-const prisma = require('../config/database');
-const bcrypt = require('bcryptjs');
+import prisma from '../config/database.js';
+import bcrypt from 'bcryptjs';
 
 class AdminUserService {
   /**
@@ -149,4 +149,4 @@ class AdminUserService {
   }
 }
 
-module.exports = new AdminUserService();
+export default new AdminUserService();

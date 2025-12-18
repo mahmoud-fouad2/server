@@ -1,9 +1,9 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const twilio = require('twilio');
-const prisma = require('../config/database');
-const groqService = require('../services/groq.service');
-const logger = require('../utils/logger');
+import twilio from 'twilio';
+import prisma from '../config/database.js';
+import groqService from '../services/groq.service.js';
+import logger from '../utils/logger.js';
 
 // Helper to get Twilio Client dynamically
 const getTwilioClient = async () => {
@@ -120,8 +120,9 @@ router.post('/webhook', async (req, res) => {
     } catch (e) { logger.warn('Failed to parse widgetConfig', { error: e.message }); }
 
     // Get knowledge base context (same as chat controller)
-    const vectorSearch = require('../services/vector-search.service');
-    const responseValidator = require('../services/response-validator.service');
+    // services
+    const vectorSearch = (await import('../services/vector-search.service.js')).default || (await import('../services/vector-search.service.js'));
+    const responseValidator = (await import('../services/response-validator.service.js')).default || (await import('../services/response-validator.service.js'));
     
     let knowledgeContext = [];
     try {
@@ -209,4 +210,4 @@ router.post('/webhook', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

@@ -1,12 +1,12 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const prisma = require('../config/database');
-const logger = require('../utils/logger');
-const telegramService = require('../services/telegram.service');
-const groqService = require('../services/groq.service');
-const vectorSearch = require('../services/vector-search.service');
-const responseValidator = require('../services/response-validator.service');
-const { authenticateToken } = require('../middleware/auth');
+import prisma from '../config/database.js';
+import logger from '../utils/logger.js';
+import telegramService from '../services/telegram.service.js';
+import groqService from '../services/groq.service.js';
+import vectorSearch from '../services/vector-search.service.js';
+import responseValidator from '../services/response-validator.service.js';
+import { authenticateToken } from '../middleware/auth.js';
 
 // Setup Telegram Bot (Client Action)
 router.post('/setup', authenticateToken, async (req, res) => {
@@ -260,4 +260,4 @@ router.post('/webhook/:integrationId', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

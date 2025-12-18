@@ -1,6 +1,6 @@
-const axios = require('axios');
-const crypto = require('crypto');
-const logger = require('../utils/logger');
+import axios from 'axios';
+import crypto from 'crypto';
+import logger from '../utils/logger.js';
 
 /**
  * Integrations Service
@@ -727,4 +727,4 @@ class IntegrationsService {
   }
 }
 
-module.exports = new IntegrationsService();
+export default new IntegrationsService();

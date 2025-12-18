@@ -1,6 +1,6 @@
-const { body, validationResult } = require('express-validator');
+import { body, validationResult } from 'express-validator';
 
-const validateUser = [
+export const validateUser = [
   body('email').isEmail().withMessage('Please provide a valid email'),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long'),
   body('name').notEmpty().withMessage('Name is required'),
@@ -14,6 +14,4 @@ const validateUser = [
   }
 ];
 
-module.exports = {
-  validateUser
-};
+export default { validateUser }; 

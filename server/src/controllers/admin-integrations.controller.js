@@ -1,15 +1,15 @@
-const asyncHandler = require('express-async-handler');
-const prisma = require('../config/database');
-const crypto = require('crypto');
-const logger = require('../utils/logger');
-const integrationsService = require('../services/integrations.service');
+import asyncHandler from 'express-async-handler';
+import prisma from '../config/database.js';
+import crypto from 'crypto';
+import logger from '../utils/logger.js';
+import integrationsService from '../services/integrations.service.js';
 
 /**
  * @desc    List integration status for available integrations (global statuses)
  * @route   GET /api/admin/integrations
  * @access  SUPERADMIN
  */
-exports.getIntegrations = asyncHandler(async (req, res) => {
+export const getIntegrations = asyncHandler(async (req, res) => {
   const statuses = integrationsService.getAllIntegrationsStatus();
   res.json({ data: statuses });
 });
@@ -19,7 +19,7 @@ exports.getIntegrations = asyncHandler(async (req, res) => {
  * @route   GET /api/admin/integrations/:type
  * @access  SUPERADMIN
  */
-exports.getIntegrationForBusiness = asyncHandler(async (req, res) => {
+export const getIntegrationForBusiness = asyncHandler(async (req, res) => {
   const { type } = req.params;
   const { businessId } = req.query;
 
@@ -57,7 +57,7 @@ exports.getIntegrationForBusiness = asyncHandler(async (req, res) => {
  * @route   PUT /api/admin/integrations/:type
  * @access  SUPERADMIN
  */
-exports.upsertIntegration = asyncHandler(async (req, res) => {
+export const upsertIntegration = asyncHandler(async (req, res) => {
   const { type } = req.params;
   const { businessId, config = {}, isActive = true } = req.body;
 
@@ -138,7 +138,7 @@ exports.upsertIntegration = asyncHandler(async (req, res) => {
  * @route   POST /api/admin/integrations/:type/test
  * @access  SUPERADMIN
  */
-exports.testIntegration = asyncHandler(async (req, res) => {
+export const testIntegration = asyncHandler(async (req, res) => {
   const { type } = req.params;
   const config = req.body || {};
 

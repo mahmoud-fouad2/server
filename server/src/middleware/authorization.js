@@ -11,8 +11,8 @@
  * @module middleware/authorization
  */
 
-const prisma = require('../config/database');
-const logger = require('../utils/logger');
+import prisma from '../config/database.js';
+import logger from '../utils/logger.js';
 
 // ============================================================================
 // GLOBAL RBAC PERMISSIONS
@@ -609,7 +609,7 @@ const teamRoleHasPermission = (role, permission) => {
 // EXPORTS
 // ============================================================================
 
-module.exports = {
+export {
   // Global RBAC
   requirePermission,
   requireRole,

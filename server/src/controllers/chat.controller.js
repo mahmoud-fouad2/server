@@ -1,16 +1,22 @@
-const asyncHandler = require('express-async-handler');
-const prisma = require('../config/database');
-const sanitizeHtml = require('sanitize-html');
-const cacheService = require('../services/cache.service');
-const visitorSession = require('../services/visitor-session.service');
-const aiService = require('../services/ai.service');
-const vectorSearch = require('../services/vector-search.service');
-const responseValidator = require('../services/response-validator.service');
-const logger = require('../utils/logger');
-const { getIO } = require('../socket');
+import asyncHandler from 'express-async-handler';
+import prisma from '../config/database.js';
+import sanitizeHtml from 'sanitize-html';
+const cacheServiceModule = await import('../services/cache.service.js');
+const cacheService = cacheServiceModule.default || cacheServiceModule;
+const visitorSessionModule = await import('../services/visitor-session.service.js');
+const visitorSession = visitorSessionModule.default || visitorSessionModule;
+const aiServiceModule = await import('../services/ai.service.js');
+const aiService = aiServiceModule.default || aiServiceModule;
+const vectorSearchModule = await import('../services/vector-search.service.js');
+const vectorSearch = vectorSearchModule.default || vectorSearchModule;
+const responseValidatorModule = await import('../services/response-validator.service.js');
+const responseValidator = responseValidatorModule.default || responseValidatorModule;
+import logger from '../utils/logger.js';
+const socketModule = await import('../socket/index.js');
+const getIO = (socketModule.default && socketModule.default.getIO) ? socketModule.default.getIO : socketModule.getIO;
 
 // Get all conversations for the business
-exports.getConversations = asyncHandler(async (req, res) => {
+export const getConversations = asyncHandler(async (req, res) => {
   const { businessId } = req.user;
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 20;
@@ -38,7 +44,7 @@ exports.getConversations = asyncHandler(async (req, res) => {
 });
 
 // Get messages for a conversation
-exports.getMessages = asyncHandler(async (req, res) => {
+export const getMessages = asyncHandler(async (req, res) => {
   const { conversationId } = req.params;
   const limit = parseInt(req.query.limit) || 50;
   const cursor = req.query.cursor;
@@ -61,7 +67,7 @@ exports.getMessages = asyncHandler(async (req, res) => {
 });
 
 // Get Handover Requests
-exports.getHandoverRequests = asyncHandler(async (req, res) => {
+export const getHandoverRequests = asyncHandler(async (req, res) => {
   const { businessId } = req.user;
   
   const conversations = await prisma.conversation.findMany({
@@ -87,7 +93,7 @@ exports.getHandoverRequests = asyncHandler(async (req, res) => {
 });
 
 // Agent Reply
-exports.agentReply = asyncHandler(async (req, res) => {
+export const agentReply = asyncHandler(async (req, res) => {
   const { conversationId, message } = req.body;
   
   const newMessage = await prisma.message.create({
@@ -118,7 +124,7 @@ exports.agentReply = asyncHandler(async (req, res) => {
 });
 
 // Submit Rating
-exports.submitRating = asyncHandler(async (req, res) => {
+export const submitRating = asyncHandler(async (req, res) => {
   const { conversationId, rating, feedback } = req.body;
   
   if (!conversationId || !rating) {
@@ -138,7 +144,7 @@ exports.submitRating = asyncHandler(async (req, res) => {
 });
 
 // Public Chat Message Handler
-exports.sendMessage = asyncHandler(async (req, res) => {
+export const sendMessage = asyncHandler(async (req, res) => {
   let { message, businessId, conversationId, sessionId } = req.body;
 
   // Debug logging for 400 errors
@@ -181,12 +187,14 @@ exports.sendMessage = asyncHandler(async (req, res) => {
         if (existingBusiness) return existingBusiness;
 
         // Upsert default user to prevent duplicates
+        const bcryptModule = await import('bcryptjs');
+        const bcrypt = bcryptModule?.default || bcryptModule;
         const defaultUser = await tx.user.upsert({
           where: { email: 'default@faheemly.com' },
           update: {},
           create: {
             email: 'default@faheemly.com',
-            password: await require('bcryptjs').hash('default123', 10),
+            password: await bcrypt.hash('default123', 10),
             name: 'Default User',
             role: 'CLIENT'
           }
@@ -670,7 +678,7 @@ exports.sendMessage = asyncHandler(async (req, res) => {
  * @route   GET /api/chat/pre-chat/:businessId
  * @access  Public
  */
-exports.getPreChatForm = asyncHandler(async (req, res) => {
+export const getPreChatForm = asyncHandler(async (req, res) => {
   const { businessId } = req.params;
 
   const business = await prisma.business.findUnique({
@@ -693,7 +701,8 @@ exports.getPreChatForm = asyncHandler(async (req, res) => {
   }
 
   // Generate dynamic request summary placeholder
-  const crmService = require('../services/crm.service');
+  const crmServiceModule = await import('../services/crm.service.js');
+  const crmService = crmServiceModule?.default || crmServiceModule;
   const requestSummaryPlaceholder = crmService.generateRequestSummary(business.activityType);
 
   res.json({
@@ -713,7 +722,7 @@ exports.getPreChatForm = asyncHandler(async (req, res) => {
  * @route   POST /api/chat/pre-chat/:businessId
  * @access  Public
  */
-exports.submitPreChatForm = asyncHandler(async (req, res) => {
+export const submitPreChatForm = asyncHandler(async (req, res) => {
   const { businessId } = req.params;
   const { name, email, phone, requestSummary, sessionId } = req.body;
 
@@ -757,7 +766,8 @@ exports.submitPreChatForm = asyncHandler(async (req, res) => {
 
   // Create CRM lead if CRM is enabled
   if (business.crmLeadCollectionEnabled) {
-    const crmService = require('../services/crm.service');
+    const crmServiceModule = await import('../services/crm.service.js');
+    const crmService = crmServiceModule?.default || crmServiceModule;
     await crmService.createLead(businessId, {
       name,
       email,

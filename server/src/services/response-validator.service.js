@@ -274,4 +274,4 @@ class ResponseValidator {
   }
 }
 
-module.exports = new ResponseValidator();
+export default new ResponseValidator();

@@ -1,5 +1,5 @@
-const fs = require('fs');
-const logger = require('../utils/logger');
+import fs from 'fs';
+import logger from '../utils/logger.js';
 
 // Optional S3 support using AWS SDK v3. If S3 env vars present, we'll use S3.
 let s3Client = null;
@@ -15,35 +15,35 @@ if (S3_BUCKET) {
     hasCredentials: !!(process.env.S3_ACCESS_KEY_ID && process.env.S3_SECRET_ACCESS_KEY)
   });
   try {
-    // Lazy require so local dev without AWS SDK still works
-    S3 = require('@aws-sdk/client-s3');
-    const { S3Client } = S3;
+    // Lazy import so local dev without AWS SDK still works
+    const S3Module = await import('@aws-sdk/client-s3').catch(() => null);
+    if (S3Module) {
+      S3 = S3Module;
+      const { S3Client } = S3;
 
-    const s3Config = {
-      region: process.env.AWS_REGION || process.env.S3_REGION || 'us-east-1'
-    };
-
-    // Support custom S3-compatible endpoints (e.g., Supabase)
-    if (process.env.S3_ENDPOINT) {
-      s3Config.endpoint = process.env.S3_ENDPOINT;
-      // Use path style for some S3-compatible providers if needed
-      s3Config.forcePathStyle = true;
-    }
-
-    // Support explicit access key/secret (for S3-compatible providers)
-    if (process.env.S3_ACCESS_KEY_ID && process.env.S3_SECRET_ACCESS_KEY) {
-      s3Config.credentials = {
-        accessKeyId: process.env.S3_ACCESS_KEY_ID,
-        secretAccessKey: process.env.S3_SECRET_ACCESS_KEY
+      const s3Config = {
+        region: process.env.AWS_REGION || process.env.S3_REGION || 'us-east-1'
       };
-    }
 
-    s3Client = new S3Client(s3Config);
-    try {
-      S3_PRESIGNER = require('@aws-sdk/s3-request-presigner').getSignedUrl;
-    } catch (e) {
-      // optional - signed URL support won't be available without this package
-      S3_PRESIGNER = null;
+      // Support custom S3-compatible endpoints (e.g., Supabase)
+      if (process.env.S3_ENDPOINT) {
+        s3Config.endpoint = process.env.S3_ENDPOINT;
+        // Use path style for some S3-compatible providers if needed
+        s3Config.forcePathStyle = true;
+      }
+
+      // Support explicit access key/secret (for S3-compatible providers)
+      if (process.env.S3_ACCESS_KEY_ID && process.env.S3_SECRET_ACCESS_KEY) {
+        s3Config.credentials = {
+          accessKeyId: process.env.S3_ACCESS_KEY_ID,
+          secretAccessKey: process.env.S3_SECRET_ACCESS_KEY
+        };
+      }
+
+      s3Client = new S3Client(s3Config);
+
+      const presignerModule = await import('@aws-sdk/s3-request-presigner').catch(() => null);
+      S3_PRESIGNER = presignerModule ? presignerModule.getSignedUrl : null;
     }
   } catch (e) {
     logger.warn('AWS SDK not available or failed to init - falling back to local disk storage');
@@ -111,7 +111,7 @@ async function getSignedUrlForKey(key, expiresIn = 3600) {
   }
 }
 
-module.exports = {
+export default {
   isS3Enabled: () => S3_ENABLED,
 
   uploadIcon: async (localFilePath, filename, contentType) => {
@@ -124,8 +124,7 @@ module.exports = {
     try { if (fs.existsSync(localFilePath)) await fs.promises.unlink(localFilePath); } catch (e) { /* ignore */ }
 
     return url;
-  }
-  ,
+  },
   // Expose generic upload & presign functions for migration and signed downloads
   uploadFile: uploadFile,
   getSignedUrl: getSignedUrlForKey

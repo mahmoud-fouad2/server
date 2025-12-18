@@ -1,9 +1,9 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const prisma = require('../config/database');
-const { authenticateToken } = require('../middleware/auth');
-const logger = require('../utils/logger');
-const ConversationAnalyticsService = require('../services/conversation-analytics.service');
+import prisma from '../config/database.js';
+import { authenticateToken } from '../middleware/auth.js';
+import logger from '../utils/logger.js';
+import ConversationAnalyticsService from '../services/conversation-analytics.service.js';
 
 // Fix for BigInt serialization in JSON (Prisma COUNT returns BigInt)
 BigInt.prototype.toJSON = function() { return Number(this) }
@@ -619,7 +619,7 @@ router.post('/track-event', authenticateToken, async (req, res) => {
     logger.info('[Conversation Analytics] Event tracked', analyticsEvent);
 
     try {
-      await require('../config/database').userAnalytics.create({ data: analyticsEvent });
+      await prisma.userAnalytics.create({ data: analyticsEvent });
       logger.info('[Conversation Analytics] Event persisted to DB');
     } catch (dbErr) {
       logger.warn('[Conversation Analytics] Failed to persist analytics event:', { message: dbErr?.message || dbErr });
@@ -650,7 +650,7 @@ router.post('/public/track-event', async (req, res) => {
     logger.info('[Conversation Analytics - Public] Event tracked', { eventRecord });
 
     try {
-      await require('../config/database').userAnalytics.create({
+      await prisma.userAnalytics.create({
         data: {
           businessId: eventRecord.businessId,
           userId: null,
@@ -671,4 +671,4 @@ router.post('/public/track-event', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

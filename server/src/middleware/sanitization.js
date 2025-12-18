@@ -1,5 +1,5 @@
-const validator = require('validator');
-const sanitizeHtml = require('sanitize-html');
+import validator from 'validator';
+import sanitizeHtml from 'sanitize-html';
 
 /**
  * Input sanitization middleware
@@ -63,6 +63,5 @@ function sanitizeObject(obj) {
   });
 }
 
-module.exports = {
-  sanitizeInput
-};
+export { sanitizeInput };
+export default { sanitizeInput }; 

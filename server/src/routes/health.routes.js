@@ -6,9 +6,12 @@
  */
 
 import express from 'express';
-import monitor from '../utils/monitor.js';
+const router = express.Router();
+import * as monitorModule from '../utils/monitor.js';
+const monitor = monitorModule && monitorModule.default ? monitorModule.default : monitorModule;
 
-const rateLimit = require('express-rate-limit');
+const rateLimitModule = await import('express-rate-limit');
+const rateLimit = rateLimitModule?.default || rateLimitModule;
 
 // Rate limiter for health endpoint to mitigate DoS-style bursts in tests
 const healthLimiter = rateLimit({

@@ -1,5 +1,5 @@
-const EventEmitter = require('events');
-const logger = require('../utils/logger');
+import EventEmitter from 'events';
+import logger from '../utils/logger.js';
 
 /**
  * Agent Handoff Service
@@ -513,4 +513,4 @@ class AgentHandoffService extends EventEmitter {
   }
 }
 
-module.exports = new AgentHandoffService();
+export default new AgentHandoffService();

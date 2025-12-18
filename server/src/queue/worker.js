@@ -1,8 +1,9 @@
-const { Worker } = require('bullmq');
-const prisma = require('../config/database');
-const { summarizeText } = require('../services/summarizer.service');
-const { generateEmbedding } = require('../services/embedding.service');
-const logger = require('../utils/logger');
+import { Worker } from 'bullmq';
+import prisma from '../config/database.js';
+import { summarizeText } from '../services/summarizer.service.js';
+import { generateEmbedding } from '../services/embedding.service.js';
+import logger from '../utils/logger.js';
+import { fileURLToPath } from 'url';
 
 const REDIS_URL = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
 
@@ -138,10 +139,11 @@ async function stopWorker() {
 }
 
 // Only auto-start the worker when running as a dedicated process (not when
-// required by tests). This allows the code to be required for processing logic
-// without creating background connections during unit tests.
-if (require.main === module && process.env.NODE_ENV !== 'test') {
+// imported by tests). This uses import.meta.url to detect entry script.
+const __filename = fileURLToPath(import.meta.url);
+if (process.argv[1] === __filename && process.env.NODE_ENV !== 'test') {
   startWorker().catch(err => logger.error('Failed to start worker:', err));
 }
 
-module.exports = { startWorker, stopWorker };
+export { startWorker, stopWorker };
+export default { startWorker, stopWorker }; 

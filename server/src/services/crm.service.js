@@ -3,7 +3,7 @@
  * Handles Customer Relationship Management operations
  */
 
-const prisma = require('../config/database');
+import prisma from '../config/database.js';
 
 class CrmService {
   /**
@@ -420,4 +420,4 @@ class CrmService {
   }
 }
 
-module.exports = new CrmService();
+export default new CrmService();

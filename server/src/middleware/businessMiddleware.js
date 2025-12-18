@@ -1,5 +1,5 @@
-const prisma = require('../config/database');
-const logger = require('../utils/logger');
+import prisma from '../config/database.js';
+import logger from '../utils/logger.js';
 
 /**
  * Middleware to resolve and attach businessId to req.user
@@ -86,7 +86,4 @@ const requireBusinessId = (req, res, next) => {
   next();
 };
 
-module.exports = {
-  resolveBusinessId,
-  requireBusinessId
-};
+export { resolveBusinessId, requireBusinessId };

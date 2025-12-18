@@ -1,6 +1,6 @@
-const prisma = require('../config/database');
-const vectorSearchService = require('./vector-search.service');
-const logger = require('../utils/logger');
+import prisma from '../config/database.js';
+import vectorSearchService from './vector-search.service.js';
+import logger from '../utils/logger.js';
 
 class KnowledgeBaseService {
   /**
@@ -219,4 +219,4 @@ class KnowledgeBaseService {
   }
 }
 
-module.exports = new KnowledgeBaseService();
+export default new KnowledgeBaseService();

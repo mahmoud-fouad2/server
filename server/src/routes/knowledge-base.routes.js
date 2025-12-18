@@ -1,11 +1,13 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const { authenticateToken } = require('../middleware/auth');
-const { resolveBusinessId } = require('../middleware/businessMiddleware');
-const prisma = require('../config/database');
-const vectorSearch = require('../services/vector-search.service');
-const knowledgeBaseService = require('../services/knowledge-base.service');
-const logger = require('../utils/logger');
+import { authenticateToken } from '../middleware/auth.js';
+import { resolveBusinessId } from '../middleware/businessMiddleware.js';
+import prisma from '../config/database.js';
+const vectorSearchModule = await import('../services/vector-search.service.js');
+const vectorSearch = vectorSearchModule?.default || vectorSearchModule;
+const knowledgeBaseServiceModule = await import('../services/knowledge-base.service.js');
+const knowledgeBaseService = knowledgeBaseServiceModule?.default || knowledgeBaseServiceModule;
+import logger from '../utils/logger.js';
 
 // POST /api/knowledge-base - simple compatibility endpoint for tests
 router.post('/', authenticateToken, resolveBusinessId, async (req, res) => {
@@ -13,7 +15,6 @@ router.post('/', authenticateToken, resolveBusinessId, async (req, res) => {
     let businessId = req.businessId || req.user.businessId;
     // Fallback: try to resolve business from user identity if middleware didn't attach it
     if (!businessId && req.user) {
-      const logger = require('../utils/logger');
       logger.info('kbCompat: resolving businessId', { user: req.user });
       const userId = req.user.userId || req.user.id || null;
       if (userId) {
@@ -65,5 +66,5 @@ router.get('/search', authenticateToken, resolveBusinessId, async (req, res) => 
   }
 });
 
-// Backwards compatibility: forward to main knowledge routes
-module.exports = require('./knowledge.routes');
+// Backwards compatibility: keep compatibility endpoints above and export default router
+export default router;

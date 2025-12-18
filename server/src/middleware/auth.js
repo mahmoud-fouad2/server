@@ -48,7 +48,6 @@ export const authenticateToken = async (req, res, next) => {
 
     next();
   } catch (error) {
-    const logger = require('../utils/logger');
     // Distinguish JWT errors to avoid noisy stack traces for client-side token issues
     if (error && (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError')) {
       // invalid signature, malformed token, or expired

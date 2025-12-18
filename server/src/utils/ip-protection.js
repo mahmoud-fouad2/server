@@ -28,8 +28,8 @@
  * Version: {VERSION}
  */
 
-const crypto = require('crypto');
-const logger = require('../utils/logger');
+import crypto from 'crypto';
+import logger from '../utils/logger.js';
 
 // Unique build signature (generated at build time)
 const FAHEEMLY_BUILD_ID = process.env.BUILD_ID || 'OFFICIAL_v2.0.0';
@@ -106,7 +106,7 @@ async function verifySaasIntegrity() {
 
   // Check 3: Verify database connection
   try {
-    const prisma = require('../config/database');
+    const prisma = (await import('../config/database.js')).default || (await import('../config/database.js'));
     await prisma.$queryRaw`SELECT 1`;
     checks.database = true;
   } catch (error) {
@@ -144,17 +144,17 @@ async function verifySaasIntegrity() {
 /**
  * Check if system is tampered
  */
-function checkTamperProtection() {
+async function checkTamperProtection() {
   // Check if critical files have been modified
   const criticalModules = [
-    '../config/database',
-    '../services/ai.service',
-    '../middleware/auth'
+    '../config/database.js',
+    '../services/ai.service.js',
+    '../middleware/auth.js'
   ];
 
   try {
-    for (const module of criticalModules) {
-      require.resolve(module);
+    for (const modulePath of criticalModules) {
+      await import(modulePath);
     }
     return { valid: true };
   } catch (error) {
@@ -215,7 +215,7 @@ function getAiReadableMetadata() {
   };
 }
 
-module.exports = {
+export {
   generateSignature,
   verifySignature,
   getFaheemlyFingerprint,

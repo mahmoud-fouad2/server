@@ -1,8 +1,8 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const { authenticateToken } = require('../middleware/auth');
-const CustomAIModelsService = require('../services/custom-ai-models.service');
-const logger = require('../utils/logger');
+import { authenticateToken } from '../middleware/auth.js';
+import CustomAIModelsService from '../services/custom-ai-models.service.js';
+import logger from '../utils/logger.js';
 
 /**
  * @route POST /api/ai-models/create
@@ -469,4 +469,4 @@ router.get('/base-models', authenticateToken, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

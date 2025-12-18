@@ -10,20 +10,26 @@
  * @module routes/admin-extended
  */
 
-const express = require('express');
+import express from 'express';
 const router = express.Router();
 
 // Controllers
-const adminUsersController = require('../controllers/admin-users.controller');
-const systemController = require('../controllers/system.controller');
-const adminIntegrationsController = require('../controllers/admin-integrations.controller');
-const adminAnalyticsController = require('../controllers/admin-analytics.controller');
-const adminMediaController = require('../controllers/admin-media.controller');
+const adminUsersControllerModule = await import('../controllers/admin-users.controller.js');
+const adminUsersController = adminUsersControllerModule?.default || adminUsersControllerModule;
+const systemControllerModule = await import('../controllers/system.controller.js');
+const systemController = systemControllerModule?.default || systemControllerModule;
+const adminIntegrationsControllerModule = await import('../controllers/admin-integrations.controller.js');
+const adminIntegrationsController = adminIntegrationsControllerModule?.default || adminIntegrationsControllerModule;
+const adminAnalyticsControllerModule = await import('../controllers/admin-analytics.controller.js');
+const adminAnalyticsController = adminAnalyticsControllerModule?.default || adminAnalyticsControllerModule;
+const adminMediaControllerModule = await import('../controllers/admin-media.controller.js');
+const adminMediaController = adminMediaControllerModule?.default || adminMediaControllerModule;
+import prisma from '../config/database.js';
 
 // Middleware
-const { authenticateToken } = require('../middleware/auth');
+import { authenticateToken } from '../middleware/auth.js';
 // Use unified authorization middleware (replace deprecated permission wrapper)
-const { requirePermission } = require('../middleware/authorization');
+import { requirePermission } from '../middleware/authorization.js';
 
 // ============================================
 // 🔐 AUTHENTICATION REQUIRED FOR ALL ROUTES
@@ -543,7 +549,8 @@ router.get(
   requirePermission('system:read'),
   async (req, res) => {
     try {
-      const ipProtection = require('../utils/ip-protection');
+      const ipProtectionModule = await import('../utils/ip-protection.js');
+      const ipProtection = ipProtectionModule?.default || ipProtectionModule;
       const integrityCheck = await ipProtection.verifySaasIntegrity();
       const fingerprint = ipProtection.getFaheemlyFingerprint();
       const copyright = ipProtection.getCopyrightNotice();
@@ -586,7 +593,7 @@ router.get(
   requirePermission('system:read'),
   async (req, res) => {
     try {
-      const prisma = require('../config/database');
+      // prisma is imported at module top
       const { page = 1, limit = 50, action, userId, startDate, endDate } = req.query;
       
       const where = {};
@@ -642,7 +649,6 @@ router.get(
   requirePermission('system:read'),
   async (req, res) => {
     try {
-      const prisma = require('../config/database');
       
       const [
         totalUsers,
@@ -695,4 +701,4 @@ router.use((req, res) => {
   });
 });
 
-module.exports = router;
+export default router;

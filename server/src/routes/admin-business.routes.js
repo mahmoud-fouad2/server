@@ -9,6 +9,7 @@ import { authenticateToken } from '../middleware/auth.js';
 import { requirePermission } from '../middleware/authorization.js';
 import logger from '../utils/logger.js';
 import asyncHandler from 'express-async-handler';
+const router = express.Router();
 
 // All routes require authentication
 router.use(authenticateToken);
@@ -198,7 +199,6 @@ router.put(
         userAgent: req.get('user-agent')
       }
     }).catch((err) => { // Log but don't fail request if audits are not available
-      const logger = require('../utils/logger');
       logger.warn('Failed to create audit log for business update', { error: err && err.message });
     });
 

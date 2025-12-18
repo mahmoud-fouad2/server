@@ -1,8 +1,8 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const multer = require('multer');
-const path = require('path');
-const { authenticateToken } = require('../middleware/auth');
+import multer from 'multer';
+import path from 'path';
+import { authenticateToken } from '../middleware/auth.js';
 
 // Multer config: keep small limits for security tests
 const upload = multer({
@@ -48,4 +48,4 @@ router.post('/', authenticateToken, (req, res) => {
   });
 });
 
-module.exports = router;
+export default router;

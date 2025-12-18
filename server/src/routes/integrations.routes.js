@@ -1,8 +1,8 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const { authenticateToken } = require('../middleware/auth');
-const logger = require('../utils/logger');
-const IntegrationsService = require('../services/integrations.service');
+import { authenticateToken } from '../middleware/auth.js';
+import logger from '../utils/logger.js';
+import IntegrationsService from '../services/integrations.service.js';
 
 /**
  * @route GET /api/integrations
@@ -346,4 +346,4 @@ router.get('/logs/:integrationId', authenticateToken, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

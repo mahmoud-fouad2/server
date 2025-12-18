@@ -1,5 +1,5 @@
-const natural = require('natural');
-const logger = require('../utils/logger');
+import natural from 'natural';
+import logger from '../utils/logger.js';
 const SentimentAnalyzer = natural.SentimentAnalyzer;
 const stemmer = natural.PorterStemmer;
 
@@ -385,4 +385,4 @@ class SentimentAnalysisService {
   }
 }
 
-module.exports = new SentimentAnalysisService();
+export default new SentimentAnalysisService();

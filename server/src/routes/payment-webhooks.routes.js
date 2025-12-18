@@ -3,11 +3,11 @@
  * Handle webhooks from payment gateways
  */
 
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const paymentService = require('../services/payment.service');
-const prisma = require('../config/database');
-const asyncHandler = require('express-async-handler');
+import paymentService from '../services/payment.service.js';
+import prisma from '../config/database.js';
+import asyncHandler from 'express-async-handler';
 
 // Middleware to capture raw body for webhook verification
 router.use(express.raw({ type: 'application/json' }));
@@ -175,5 +175,5 @@ router.post(
   })
 );
 
-module.exports = router;
+export default router;
 

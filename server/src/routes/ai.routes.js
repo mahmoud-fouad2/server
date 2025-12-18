@@ -1,8 +1,9 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const { authenticateToken } = require('../middleware/auth');
-const aiService = require('../services/ai.service');
-const logger = require('../utils/logger');
+import { authenticateToken } from '../middleware/auth.js';
+const aiServiceModule = await import('../services/ai.service.js');
+const aiService = aiServiceModule?.default || aiServiceModule;
+import logger from '../utils/logger.js';
 
 /**
  * Get AI Provider Status and Usage Statistics
@@ -95,4 +96,4 @@ router.post('/test', authenticateToken, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

@@ -1,14 +1,14 @@
-const fs = require('fs');
-const path = require('path');
-const prisma = require('../config/database');
-const storage = require('../services/storage.service');
-const logger = require('../utils/logger');
+import fs from 'fs';
+import path from 'path';
+import prisma from '../config/database.js';
+import storage from '../services/storage.service.js';
+import logger from '../utils/logger.js';
 
 /**
  * List media files for admin panel.
  * Combines widget icons and knowledge original files for now.
  */
-exports.getMediaList = async (req, res) => {
+export const getMediaList = async (req, res) => {
   try {
     const files = [];
 
@@ -44,7 +44,7 @@ exports.getMediaList = async (req, res) => {
 /**
  * Delete a media file (safe: only allow deleting local uploads under /public/uploads or S3 objects managed by app)
  */
-exports.deleteMedia = async (req, res) => {
+export const deleteMedia = async (req, res) => {
   const { url } = req.body || {};
   if (!url) return res.status(400).json({ success: false, error: 'url is required' });
 
@@ -59,10 +59,16 @@ exports.deleteMedia = async (req, res) => {
       // Try to derive key from URL (best-effort)
       let key = url.split(process.env.S3_PUBLIC_URL || process.env.AWS_S3_BUCKET || '').pop();
       key = key.startsWith('/') ? key.slice(1) : key;
-      const { DeleteObjectCommand } = require('@aws-sdk/client-s3');
-      const client = require('@aws-sdk/client-s3').S3Client ? new (require('@aws-sdk/client-s3').S3Client)({ region: process.env.AWS_REGION }) : null;
-      if (client) {
-        await client.send(new DeleteObjectCommand({ Bucket: process.env.AWS_S3_BUCKET, Key: key }));
+      try {
+        const s3mod = await import('@aws-sdk/client-s3');
+        const DeleteObjectCommand = s3mod.DeleteObjectCommand;
+        const S3Client = s3mod.S3Client;
+        const client = S3Client ? new S3Client({ region: process.env.AWS_REGION }) : null;
+        if (client && DeleteObjectCommand) {
+          await client.send(new DeleteObjectCommand({ Bucket: process.env.AWS_S3_BUCKET, Key: key }));
+        }
+      } catch (e) {
+        logger.warn('admin-media.deleteMedia: AWS SDK not available or delete failed', { error: e?.message || e });
       }
       return res.json({ success: true, message: 'Deleted (S3) if present' });
     }
@@ -83,7 +89,8 @@ exports.deleteMedia = async (req, res) => {
   }
 };
 
-module.exports = {
-  getMediaList: exports.getMediaList,
-  deleteMedia: exports.deleteMedia
+export default {
+  getMediaList,
+  deleteMedia
 };
+// Named exports omitted; use default export for controller compatibility

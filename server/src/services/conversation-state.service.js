@@ -3,8 +3,8 @@
  * Tracks conversation stage, context, and user goals
  */
 
-const prisma = require('../config/database');
-const logger = require('../utils/logger');
+import prisma from '../config/database.js';
+import logger from '../utils/logger.js';
 
 class ConversationStateService {
   /**
@@ -186,5 +186,5 @@ class ConversationStateService {
   }
 }
 
-module.exports = new ConversationStateService();
+export default new ConversationStateService();
 

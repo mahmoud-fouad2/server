@@ -5,8 +5,8 @@
  * ═══════════════════════════════════════════════════
  */
 
-const prisma = require('../config/database');
-const logger = require('./logger');
+import prisma from '../config/database.js';
+import logger from './logger.js';
 
 class SystemMonitor {
   constructor() {
@@ -115,8 +115,9 @@ class SystemMonitor {
    */
   async checkAIProvidersHealth() {
     try {
-      const aiService = require('../services/ai.service');
-      const summary = aiService.checkProvidersHealth();
+      const aiModule = await import('../services/ai.service.js');
+      const aiService = aiModule?.default || aiModule;
+      const summary = await (typeof aiService.checkProvidersHealth === 'function' ? aiService.checkProvidersHealth() : Promise.resolve({ totalAvailable: 0, totalConfigured: 0, providers: [] }));
 
       return {
         healthy: summary.totalAvailable > 0,
@@ -219,7 +220,6 @@ class SystemMonitor {
         }
       };
     } catch (error) {
-      const logger = require('./logger');
       logger.error('Error fetching business metrics', { error });
       return null;
     }
@@ -239,7 +239,6 @@ class SystemMonitor {
     };
 
     // Log alert
-    const logger = require('./logger');
     logger.error(`🚨 ALERT [${alert.severity}]: ${type} - ${message}`);
 
     // In production, send to external monitoring service
@@ -307,4 +306,4 @@ class SystemMonitor {
 // Singleton instance
 const monitor = new SystemMonitor();
 
-module.exports = monitor;
+export default monitor;

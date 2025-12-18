@@ -1,9 +1,9 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const prisma = require('../config/database');
-const logger = require('../utils/logger');
-const { authenticateToken } = require('../middleware/auth');
-const bcrypt = require('bcryptjs');
+import prisma from '../config/database.js';
+import logger from '../utils/logger.js';
+import { authenticateToken } from '../middleware/auth.js';
+import bcrypt from 'bcryptjs';
 
 // Get all employees for the business
 router.get('/', authenticateToken, async (req, res) => {
@@ -101,4 +101,4 @@ router.delete('/:id', authenticateToken, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

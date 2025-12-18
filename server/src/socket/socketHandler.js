@@ -1,8 +1,11 @@
-const prisma = require('../config/database');
-const logger = require('../utils/logger');
-const aiService = require('../services/ai.service');
-const vectorSearch = require('../services/vector-search.service');
-const responseValidator = require('../services/response-validator.service');
+import prisma from '../config/database.js';
+import logger from '../utils/logger.js';
+const aiServiceModule = await import('../services/ai.service.js');
+const aiService = aiServiceModule.default || aiServiceModule;
+const vectorSearchModule = await import('../services/vector-search.service.js');
+const vectorSearch = vectorSearchModule.default || vectorSearchModule;
+const responseValidatorModule = await import('../services/response-validator.service.js');
+const responseValidator = responseValidatorModule.default || responseValidatorModule;
 
 /**
  * Initialize Socket.IO handlers
@@ -222,4 +225,4 @@ function initializeSocket(io) {
   });
 }
 
-module.exports = initializeSocket;
+export default initializeSocket;

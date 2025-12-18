@@ -1,15 +1,15 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const multer = require('multer');
-const path = require('path');
-const { authenticateToken } = require('../middleware/auth');
-const { resolveBusinessId } = require('../middleware/businessMiddleware');
-const { validateAddTextKnowledge, validateAddUrlKnowledge, validateUpdateKnowledge } = require('../middleware/zodValidation');
-const knowledgeController = require('../controllers/knowledge.controller');
-const prisma = require('../config/database');
-const vectorSearch = require('../services/vector-search.service');
-const knowledgeBaseService = require('../services/knowledge-base.service');
-const logger = require('../utils/logger');
+import multer from 'multer';
+import path from 'path';
+import { authenticateToken } from '../middleware/auth.js';
+import { resolveBusinessId } from '../middleware/businessMiddleware.js';
+import { validateAddTextKnowledge, validateAddUrlKnowledge, validateUpdateKnowledge } from '../middleware/zodValidation.js';
+const knowledgeController = await import('../controllers/knowledge.controller.js');
+const prisma = (await import('../config/database.js')).default || (await import('../config/database.js'));
+const vectorSearch = (await import('../services/vector-search.service.js')).default || (await import('../services/vector-search.service.js'));
+const knowledgeBaseService = (await import('../services/knowledge-base.service.js')).default || (await import('../services/knowledge-base.service.js'));
+import logger from '../utils/logger.js';
 
 // Configure Multer with security limits
 const upload = multer({ 
@@ -117,4 +117,4 @@ router.get('/search', authenticateToken, resolveBusinessId, async (req, res) => 
   }
 });
 
-module.exports = router;
+export default router;

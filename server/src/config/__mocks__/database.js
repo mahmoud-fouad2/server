@@ -53,4 +53,4 @@ jest.mock('@prisma/client', () => ({
   PrismaClient: jest.fn(() => mockPrisma),
 }));
 
-module.exports = mockPrisma;
+export default mockPrisma;

@@ -5,7 +5,7 @@
  * @module middleware/response-wrapper
  */
 
-const logger = require('../utils/logger');
+import logger from '../utils/logger.js';
 
 /**
  * Success Response Format
@@ -140,7 +140,4 @@ function responseWrapperMiddleware() {
   };
 }
 
-module.exports = {
-  responseWrapperMiddleware,
-  attachResponseHelpers
-};
+export { responseWrapperMiddleware, attachResponseHelpers };

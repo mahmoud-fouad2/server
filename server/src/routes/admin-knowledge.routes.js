@@ -4,11 +4,14 @@
  */
 
 import express from 'express';
+const router = express.Router();
 import prisma from '../config/database.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { requirePermission } from '../middleware/authorization.js';
-const logger = require('../utils/logger');
-const asyncHandler = require('express-async-handler');
+import logger from '../utils/logger.js';
+import asyncHandler from 'express-async-handler';
+import fs from 'fs';
+import path from 'path';
 
 
 // ------------------------------------------------------------------
@@ -170,8 +173,7 @@ router.post('/knowledge/pgvector-migrate', requirePermission('system:write'), as
 // Admin endpoint to check last async migration status
 router.get('/knowledge/pgvector-migrate/status', requirePermission('system:read'), asyncHandler(async (req, res) => {
   try {
-    const fs = require('fs');
-    const p = require('path').join(__dirname, '../../tmp/pgvector_migrate_status.json');
+    const p = path.join(process.cwd(), 'tmp', 'pgvector_migrate_status.json');
     if (!fs.existsSync(p)) return res.json({ success: true, status: null, message: 'No migration status found' });
     const raw = fs.readFileSync(p, 'utf8');
     const status = JSON.parse(raw);

@@ -1,5 +1,5 @@
-const { createClient } = require('redis');
-const logger = require('../utils/logger');
+import { createClient } from 'redis';
+import logger from '../utils/logger.js';
 
 class CsrfStore {
   constructor() {
@@ -50,4 +50,4 @@ class CsrfStore {
   }
 }
 
-module.exports = new CsrfStore();
+export default new CsrfStore();

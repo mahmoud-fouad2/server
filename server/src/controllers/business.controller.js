@@ -3,17 +3,18 @@
  * Handles all business-related operations including settings, stats, plans, and integrations
  */
 
-const asyncHandler = require('express-async-handler');
-const prisma = require('../config/database');
-const cacheService = require('../services/cache.service');
-const logger = require('../utils/logger');
+import asyncHandler from 'express-async-handler';
+import prisma from '../config/database.js';
+const cacheServiceModule = await import('../services/cache.service.js');
+const cacheService = cacheServiceModule.default || cacheServiceModule;
+import logger from '../utils/logger.js';
 
 /**
  * @desc    Get Dashboard Statistics
  * @route   GET /api/business/stats
  * @access  Private (Business Owner)
  */
-exports.getDashboardStats = asyncHandler(async (req, res) => {
+export const getDashboardStats = asyncHandler(async (req, res) => {
   const businessId = req.user.businessId;
 
   // 1. Total Conversations
@@ -85,7 +86,7 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
  * @route   GET /api/business/settings
  * @access  Private (Business Owner)
  */
-exports.getSettings = asyncHandler(async (req, res) => {
+export const getSettings = asyncHandler(async (req, res) => {
   const business = await prisma.business.findUnique({
     where: { id: req.user.businessId }
   });
@@ -117,7 +118,7 @@ exports.getSettings = asyncHandler(async (req, res) => {
  * @route   POST /api/business/:businessId/avatar-settings
  * @access  Private (Business Owner) or SUPERADMIN
  */
-exports.updateAvatarSettings = asyncHandler(async (req, res) => {
+export const updateAvatarSettings = asyncHandler(async (req, res) => {
   try {
     const businessId = req.params.businessId;
 
@@ -186,7 +187,7 @@ exports.updateAvatarSettings = asyncHandler(async (req, res) => {
  * @route   POST /api/business/:businessId/bump-widget-version
  * @access  Private (Business Owner) or SUPERADMIN
  */
-exports.bumpWidgetVersion = asyncHandler(async (req, res) => {
+export const bumpWidgetVersion = asyncHandler(async (req, res) => {
   try {
     const businessId = req.params.businessId;
 
@@ -208,7 +209,7 @@ exports.bumpWidgetVersion = asyncHandler(async (req, res) => {
  * @route   PUT /api/business/settings
  * @access  Private (Business Owner)
  */
-exports.updateSettings = asyncHandler(async (req, res) => {
+export const updateSettings = asyncHandler(async (req, res) => {
   const { name, activityType, botTone, widgetVariant } = req.body;
   let businessId = req.user.businessId;
 
@@ -231,7 +232,6 @@ exports.updateSettings = asyncHandler(async (req, res) => {
 
   try {
     if (!businessId) {
-      const logger = require('../utils/logger');
       logger.info('updateSettings: resolving businessId', { user: req.user });
     }
     if (!businessId) {
@@ -301,7 +301,7 @@ exports.updateSettings = asyncHandler(async (req, res) => {
  * @route   GET /api/business/plan
  * @access  Private (Business Owner)
  */
-exports.getPlan = asyncHandler(async (req, res) => {
+export const getPlan = asyncHandler(async (req, res) => {
   const businessId = req.user.businessId;
 
   const business = await prisma.business.findUnique({
@@ -329,7 +329,7 @@ exports.getPlan = asyncHandler(async (req, res) => {
  * @route   PUT /api/business/plan
  * @access  Private (Business Owner)
  */
-exports.updatePlan = asyncHandler(async (req, res) => {
+export const updatePlan = asyncHandler(async (req, res) => {
   const { planType } = req.body;
   const businessId = req.user.businessId;
 
@@ -384,7 +384,7 @@ exports.updatePlan = asyncHandler(async (req, res) => {
  * @route   GET /api/business/conversations
  * @access  Private (Business Owner)
  */
-exports.getConversations = asyncHandler(async (req, res) => {
+export const getConversations = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10 } = req.query;
   const skip = (parseInt(page) - 1) * parseInt(limit);
 
@@ -428,7 +428,7 @@ exports.getConversations = asyncHandler(async (req, res) => {
  * @route POST /api/business/cache/invalidate
  * @access Private (Business Owner)
  */
-exports.invalidateCache = asyncHandler(async (req, res) => {
+export const invalidateCache = asyncHandler(async (req, res) => {
   const businessId = req.user && req.user.businessId;
   if (!businessId) return res.status(400).json({ error: 'Business ID required' });
 
@@ -447,7 +447,7 @@ exports.invalidateCache = asyncHandler(async (req, res) => {
  * @route   GET /api/business/conversations/:id
  * @access  Private (Business Owner)
  */
-exports.getConversationById = asyncHandler(async (req, res) => {
+export const getConversationById = asyncHandler(async (req, res) => {
   const conversation = await prisma.conversation.findUnique({
     where: { id: req.params.id },
     include: {
@@ -475,7 +475,7 @@ exports.getConversationById = asyncHandler(async (req, res) => {
  * @route   GET /api/business/chart-data
  * @access  Private (Business Owner)
  */
-exports.getChartData = asyncHandler(async (req, res) => {
+export const getChartData = asyncHandler(async (req, res) => {
   const businessId = req.user.businessId;
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -522,7 +522,7 @@ exports.getChartData = asyncHandler(async (req, res) => {
  * @route   GET /api/business/integrations
  * @access  Private (Business Owner)
  */
-exports.getIntegrations = asyncHandler(async (req, res) => {
+export const getIntegrations = asyncHandler(async (req, res) => {
   const integrations = await prisma.integration.findMany({
     where: { businessId: req.user.businessId }
   });
@@ -535,7 +535,7 @@ exports.getIntegrations = asyncHandler(async (req, res) => {
  * @route   PUT /api/business/pre-chat-settings
  * @access  Private (Business Owner)
  */
-exports.updatePreChatSettings = asyncHandler(async (req, res) => {
+export const updatePreChatSettings = asyncHandler(async (req, res) => {
   const businessId = req.user.businessId;
   const { preChatFormEnabled } = req.body;
 
@@ -562,7 +562,7 @@ exports.updatePreChatSettings = asyncHandler(async (req, res) => {
  * @route   POST /api/business/update-demo
  * @access  Private (Admin)
  */
-exports.updateDemoBusiness = asyncHandler(async (req, res) => {
+export const updateDemoBusiness = asyncHandler(async (req, res) => {
   // Only allow for hello@faheemly.com user
   if (req.user.email !== 'hello@faheemly.com') {
     res.status(403);

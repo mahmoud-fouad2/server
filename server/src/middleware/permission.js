@@ -7,12 +7,12 @@
  * `require()` this module, we delegate to the new implementation.
  */
 
-const logger = require('../utils/logger');
-const authorization = require('./authorization');
+import logger from '../utils/logger.js';
+import * as authorization from './authorization.js';
 
 logger.warn('Deprecated: require("middleware/permission") is deprecated - use middleware/authorization.js instead');
 
-module.exports = {
+export default {
   requirePermission: (perm) => authorization.requirePermission(perm),
   requireRole: (roles) => authorization.requireRole(roles),
   requireOwnership: (check) => authorization.requireTeamRole ? authorization.requireTeamRole(check) : (req, res, next) => next(),

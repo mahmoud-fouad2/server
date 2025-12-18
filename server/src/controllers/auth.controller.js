@@ -1,9 +1,10 @@
-const prisma = require('../config/database');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const logger = require('../utils/logger');
+import prisma from '../config/database.js';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import logger from '../utils/logger.js';
+import { sanitizeInput } from '../utils/sanitize.js';
 
-exports.register = async (req, res) => {
+export const register = async (req, res) => {
   try {
     const { name, email, password, businessName, activityType } = req.body;
 
@@ -54,7 +55,6 @@ exports.register = async (req, res) => {
     }
 
     // Sanitize inputs to prevent XSS
-    const { sanitizeInput } = require('../utils/sanitize');
     const safeName = sanitizeInput(name);
     const safeBusinessName = sanitizeInput(businessName || `${name}'s Business`);
 
@@ -103,7 +103,7 @@ exports.register = async (req, res) => {
   }
 };
 
-exports.login = async (req, res) => {
+export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -147,7 +147,7 @@ exports.login = async (req, res) => {
   }
 };
 
-exports.demoLogin = async (req, res) => {
+export const demoLogin = async (req, res) => {
   try {
     // ✅ USE ENVIRONMENT VARIABLES INSTEAD OF HARDCODED
     const demoEmail = process.env.DEMO_USER_EMAIL || 'hello@faheemly.com';
@@ -216,7 +216,7 @@ exports.demoLogin = async (req, res) => {
   }
 };
 
-exports.updateProfile = async (req, res) => {
+export const updateProfile = async (req, res) => {
   try {
     const { name, email, password } = req.body;
     const userId = req.user.userId;
@@ -238,7 +238,7 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
-exports.getProfile = async (req, res) => {
+export const getProfile = async (req, res) => {
   try {
     const payload = req.user || {};
     if (!payload.userId) return res.status(401).json({ error: 'Unauthorized' });

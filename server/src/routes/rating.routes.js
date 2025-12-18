@@ -1,7 +1,7 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const prisma = require('../config/database');
-const logger = require('../utils/logger');
+import prisma from '../config/database.js';
+import logger from '../utils/logger.js';
 
 /**
  * POST /api/rating/conversation
@@ -183,4 +183,4 @@ router.get('/recent/:businessId', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

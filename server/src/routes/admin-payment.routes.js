@@ -3,15 +3,15 @@
  * SUPERADMIN only - Manage payment gateways
  */
 
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const { authenticateToken } = require('../middleware/auth');
-const { requirePermission } = require('../middleware/authorization');
-const prisma = require('../config/database');
-const paymentService = require('../services/payment.service');
-const logger = require('../utils/logger');
-const asyncHandler = require('express-async-handler');
-const crypto = require('crypto');
+import { authenticateToken } from '../middleware/auth.js';
+import { requirePermission } from '../middleware/authorization.js';
+import prisma from '../config/database.js';
+import paymentService from '../services/payment.service.js';
+import logger from '../utils/logger.js';
+import asyncHandler from 'express-async-handler';
+import crypto from 'crypto';
 
 // All routes require authentication
 router.use(authenticateToken);
@@ -479,5 +479,5 @@ router.get(
   })
 );
 
-module.exports = router;
+export default router;
 

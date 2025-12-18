@@ -208,4 +208,4 @@ class ResponseFormatter {
   }
 }
 
-module.exports = new ResponseFormatter();
+export default new ResponseFormatter();

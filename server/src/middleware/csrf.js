@@ -1,11 +1,10 @@
-const crypto = require('crypto');
+import crypto from 'crypto';
 
 /**
  * CSRF Protection Middleware
  * Generates and validates CSRF tokens for state-changing operations
  */
-
-const csrfStore = require('../services/csrfStore');
+import csrfStore from '../services/csrfStore.js';
 const TOKEN_EXPIRY = 60 * 60 * 1000; // 1 hour
 
 /**
@@ -75,7 +74,5 @@ function cleanupExpiredTokens() {
   }
 }
 
-module.exports = {
-  generateCSRFToken,
-  validateCSRFToken
-};
+export { generateCSRFToken, validateCSRFToken };
+export default { generateCSRFToken, validateCSRFToken }; 

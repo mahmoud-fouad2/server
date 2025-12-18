@@ -1,7 +1,7 @@
-const prisma = require('../config/database');
-const logger = require('../utils/logger');
+import prisma from '../config/database.js';
+import logger from '../utils/logger.js';
 
-exports.getUnreadCount = async (req, res) => {
+export const getUnreadCount = async (req, res) => {
   try {
     const businessId = req.user && req.user.businessId;
     if (!businessId) return res.status(400).json({ error: 'Business ID required' });
@@ -36,7 +36,7 @@ exports.getUnreadCount = async (req, res) => {
   }
 };
 
-exports.listNotifications = async (req, res) => {
+export const listNotifications = async (req, res) => {
   try {
     const businessId = req.user && req.user.businessId;
     if (!businessId) return res.status(400).json({ error: 'Business ID required' });
@@ -49,7 +49,7 @@ exports.listNotifications = async (req, res) => {
   }
 };
 
-exports.markAsRead = async (req, res) => {
+export const markAsRead = async (req, res) => {
   try {
     const businessId = req.user && req.user.businessId;
     const id = req.params.id;
@@ -64,7 +64,7 @@ exports.markAsRead = async (req, res) => {
   }
 };
 
-exports.markAllRead = async (req, res) => {
+export const markAllRead = async (req, res) => {
   try {
     const businessId = req.user && req.user.businessId;
     if (!businessId) return res.status(400).json({ error: 'Business ID required' });

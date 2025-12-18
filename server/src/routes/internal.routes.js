@@ -1,7 +1,7 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const prisma = require('../config/database');
-const { authenticateToken } = require('../middleware/auth');
+import prisma from '../config/database.js';
+import { authenticateToken } from '../middleware/auth.js';
 
 // Protected internal endpoint to fix NULL User.name values when shell access
 // is not available. Requires ADMIN_MIGRATION_SECRET header to match env.
@@ -54,4 +54,4 @@ router.post('/run-user-name-fix-auth', authenticateToken, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

@@ -1,4 +1,4 @@
-const natural = require('natural');
+import natural from 'natural';
 const TfIdf = natural.TfIdf;
 
 /**
@@ -517,4 +517,4 @@ class ConversationAnalyticsService {
   }
 }
 
-module.exports = new ConversationAnalyticsService();
+export default new ConversationAnalyticsService();

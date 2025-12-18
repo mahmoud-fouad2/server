@@ -1,7 +1,8 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const prisma = require('../config/database');
-const { authenticateToken } = require('../middleware/auth');
+import prisma from '../config/database.js';
+import { authenticateToken } from '../middleware/auth.js';
+import logger from '../utils/logger.js';
 
 /**
  * Team Permissions & Role Management
@@ -110,7 +111,6 @@ router.get('/permissions/:businessId/:userId', authenticateToken, async (req, re
     });
 
   } catch (error) {
-    const logger = require('../utils/logger');
     logger.error('Get permissions error', { error: error.message, stack: error.stack });
     res.status(500).json({ error: 'فشل جلب الصلاحيات' });
   }
@@ -165,7 +165,6 @@ router.put('/role/:businessId/:userId', authenticateToken, async (req, res) => {
     });
 
   } catch (error) {
-    const logger = require('../utils/logger');
     logger.error('Update role error', { error: error.message, stack: error.stack });
     res.status(500).json({ error: 'فشل تحديث الدور' });
   }
@@ -217,7 +216,6 @@ router.get('/activity-logs/:businessId', authenticateToken, async (req, res) => 
     });
 
   } catch (error) {
-    const logger = require('../utils/logger');
     logger.error('Activity logs error', { error: error.message, stack: error.stack });
     res.status(500).json({ error: 'فشل جلب سجل النشاطات' });
   }
@@ -260,7 +258,6 @@ function hasPermission(permission) {
 
       next();
     } catch (error) {
-      const logger = require('../utils/logger');
       logger.error('Permission check error', { error: error.message, stack: error.stack });
       res.status(500).json({ error: 'فشل التحقق من الصلاحيات' });
     }
@@ -270,7 +267,6 @@ function hasPermission(permission) {
 // Activity logging helper
 async function logActivity({ businessId, userId, action, targetUserId, details }) {
   try {
-    const logger = require('../utils/logger');
     logger.info('Team activity', {
       businessId,
       userId,
@@ -282,11 +278,9 @@ async function logActivity({ businessId, userId, action, targetUserId, details }
     
     // Future: Create ActivityLog table in schema for persistent storage
   } catch (error) {
-    const logger = require('../utils/logger');
     logger.error('Activity log error', { error: error.message });
   }
 }
 
-module.exports = router;
-module.exports.hasPermission = hasPermission;
-module.exports.PERMISSIONS = PERMISSIONS;
+export default router;
+export { hasPermission, PERMISSIONS };

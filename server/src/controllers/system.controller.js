@@ -6,9 +6,9 @@
  * @requires prisma
  */
 
-const asyncHandler = require('express-async-handler');
-const prisma = require('../config/database');
-const logger = require('../utils/logger');
+import asyncHandler from 'express-async-handler';
+import prisma from '../config/database.js';
+import logger from '../utils/logger.js';
 
 // ==========================================
 // AI PROVIDERS MANAGEMENT
@@ -19,7 +19,7 @@ const logger = require('../utils/logger');
  * @route   GET /api/admin/system/ai-providers
  * @access  Private (SUPERADMIN only)
  */
-exports.getAiProviders = asyncHandler(async (req, res) => {
+export const getAiProviders = asyncHandler(async (req, res) => {
   const providers = await prisma.aiProviderConfig.findMany({
     orderBy: [
       { enabled: 'desc' },
@@ -50,7 +50,7 @@ exports.getAiProviders = asyncHandler(async (req, res) => {
  * @route   PUT /api/admin/system/ai-providers/:provider
  * @access  Private (SUPERADMIN only)
  */
-exports.updateAiProvider = asyncHandler(async (req, res) => {
+export const updateAiProvider = asyncHandler(async (req, res) => {
   const { provider } = req.params;
   const { enabled, priority, model, rateLimit, maxTokens, temperature } = req.body;
 
@@ -97,7 +97,7 @@ exports.updateAiProvider = asyncHandler(async (req, res) => {
  * @route   POST /api/admin/system/ai-providers/:provider/test
  * @access  Private (SUPERADMIN only)
  */
-exports.testAiProvider = asyncHandler(async (req, res) => {
+export const testAiProvider = asyncHandler(async (req, res) => {
   const { provider } = req.params;
 
   const providerConfig = await prisma.aiProviderConfig.findUnique({
@@ -110,7 +110,8 @@ exports.testAiProvider = asyncHandler(async (req, res) => {
   }
 
   // Test the provider (implement actual test based on your aiService)
-  const aiService = require('../services/ai.service');
+  const aiServiceModule = await import('../services/ai.service.js');
+  const aiService = aiServiceModule?.default || aiServiceModule;
   const testMessage = "Hello, this is a test message.";
 
   try {
@@ -137,7 +138,8 @@ exports.testAiProvider = asyncHandler(async (req, res) => {
       }
     });
 
-    const responseValidator = require('../services/response-validator.service');
+    const responseValidatorModule = await import('../services/response-validator.service.js');
+    const responseValidator = responseValidatorModule?.default || responseValidatorModule;
     const sanitized = responseValidator.sanitizeResponse(response.response || '');
     res.json({
       success: true,
@@ -175,7 +177,7 @@ exports.testAiProvider = asyncHandler(async (req, res) => {
  * @route   GET /api/admin/system/prompts
  * @access  Private (SUPERADMIN only)
  */
-exports.getSystemPrompts = asyncHandler(async (req, res) => {
+export const getSystemPrompts = asyncHandler(async (req, res) => {
   const { category, active } = req.query;
 
   const where = {};
@@ -198,7 +200,7 @@ exports.getSystemPrompts = asyncHandler(async (req, res) => {
  * @route   POST /api/admin/system-settings
  * @access  Private (SUPERADMIN only)
  */
-exports.updateSystemSettings = asyncHandler(async (req, res) => {
+export const updateSystemSettings = asyncHandler(async (req, res) => {
   const { key, value } = req.body;
   if (!key) {
     return res.status(400).json({ success: false, error: 'Key is required' });
@@ -218,7 +220,7 @@ exports.updateSystemSettings = asyncHandler(async (req, res) => {
  * @route   POST /api/admin/system/prompts
  * @access  Private (SUPERADMIN only)
  */
-exports.createSystemPrompt = asyncHandler(async (req, res) => {
+export const createSystemPrompt = asyncHandler(async (req, res) => {
   const { name, category, content, description, variables } = req.body;
 
   if (!name || !category || !content) {
@@ -284,7 +286,7 @@ exports.createSystemPrompt = asyncHandler(async (req, res) => {
  * @route   PUT /api/admin/system/prompts/:id
  * @access  Private (SUPERADMIN only)
  */
-exports.updateSystemPrompt = asyncHandler(async (req, res) => {
+export const updateSystemPrompt = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { content, description, active } = req.body;
 
@@ -347,7 +349,7 @@ exports.updateSystemPrompt = asyncHandler(async (req, res) => {
  * @route   POST /api/admin/system/prompts/:name/rollback
  * @access  Private (SUPERADMIN only)
  */
-exports.rollbackSystemPrompt = asyncHandler(async (req, res) => {
+export const rollbackSystemPrompt = asyncHandler(async (req, res) => {
   const { name } = req.params;
   const { version } = req.body;
 
@@ -412,7 +414,7 @@ exports.rollbackSystemPrompt = asyncHandler(async (req, res) => {
  * @route   GET /api/admin/system/api-config
  * @access  Private (SUPERADMIN only)
  */
-exports.getApiConfiguration = asyncHandler(async (req, res) => {
+export const getApiConfiguration = asyncHandler(async (req, res) => {
   const configs = await prisma.apiConfiguration.findMany({
     orderBy: { endpoint: 'asc' }
   });
@@ -425,7 +427,7 @@ exports.getApiConfiguration = asyncHandler(async (req, res) => {
  * @route   PUT /api/admin/system/api-config/:endpoint
  * @access  Private (SUPERADMIN only)
  */
-exports.updateApiConfiguration = asyncHandler(async (req, res) => {
+export const updateApiConfiguration = asyncHandler(async (req, res) => {
   const { endpoint } = req.params;
   const { enabled, rateLimit, requireAuth, allowedRoles, corsOrigins, deprecated } = req.body;
 
@@ -464,7 +466,7 @@ exports.updateApiConfiguration = asyncHandler(async (req, res) => {
  * @route   GET /api/admin/system/feature-flags
  * @access  Private (SUPERADMIN only)
  */
-exports.getFeatureFlags = asyncHandler(async (req, res) => {
+export const getFeatureFlags = asyncHandler(async (req, res) => {
   const flags = await prisma.featureFlag.findMany({
     orderBy: { name: 'asc' }
   });
@@ -477,7 +479,7 @@ exports.getFeatureFlags = asyncHandler(async (req, res) => {
  * @route   PUT /api/admin/system/feature-flags/:name
  * @access  Private (SUPERADMIN only)
  */
-exports.upsertFeatureFlag = asyncHandler(async (req, res) => {
+export const upsertFeatureFlag = asyncHandler(async (req, res) => {
   const { name } = req.params;
   const { description, enabled, rollout, businesses, roles, metadata } = req.body;
 
@@ -523,7 +525,7 @@ exports.upsertFeatureFlag = asyncHandler(async (req, res) => {
  * @route   POST /api/admin/system/feature-flags/:name/toggle
  * @access  Private (SUPERADMIN only)
  */
-exports.toggleFeatureFlag = asyncHandler(async (req, res) => {
+export const toggleFeatureFlag = asyncHandler(async (req, res) => {
   const { name } = req.params;
 
   const currentFlag = await prisma.featureFlag.findUnique({
@@ -557,7 +559,7 @@ exports.toggleFeatureFlag = asyncHandler(async (req, res) => {
  * @route   GET /api/admin/system/settings
  * @access  Private (SUPERADMIN only)
  */
-exports.getSystemSettings = asyncHandler(async (req, res) => {
+export const getSystemSettings = asyncHandler(async (req, res) => {
   const settings = await prisma.systemSetting.findMany();
 
   // Convert to object
@@ -580,7 +582,7 @@ exports.getSystemSettings = asyncHandler(async (req, res) => {
  * @route   PUT /api/admin/system/settings/:key
  * @access  Private (SUPERADMIN only)
  */
-exports.updateSystemSetting = asyncHandler(async (req, res) => {
+export const updateSystemSetting = asyncHandler(async (req, res) => {
   const { key } = req.params;
   const { value, description } = req.body;
 
@@ -643,7 +645,7 @@ exports.updateSystemSetting = asyncHandler(async (req, res) => {
  * @route   GET /api/admin/system/health
  * @access  Private (SUPERADMIN only)
  */
-exports.getSystemHealth = asyncHandler(async (req, res) => {
+export const getSystemHealth = asyncHandler(async (req, res) => {
   const { hours = 24 } = req.query;
   const since = new Date(Date.now() - hours * 60 * 60 * 1000);
 
@@ -671,7 +673,7 @@ exports.getSystemHealth = asyncHandler(async (req, res) => {
  * @route   POST /api/admin/system/health
  * @access  Private (SUPERADMIN only)
  */
-exports.recordHealthMetric = asyncHandler(async (req, res) => {
+export const recordHealthMetric = asyncHandler(async (req, res) => {
   const { name, value, unit, category, severity, metadata } = req.body;
 
   const metric = await prisma.healthMetric.create({
@@ -697,7 +699,7 @@ exports.recordHealthMetric = asyncHandler(async (req, res) => {
  * @route   GET /api/admin/system/versions
  * @access  Private (SUPERADMIN only)
  */
-exports.getSystemVersions = asyncHandler(async (req, res) => {
+export const getSystemVersions = asyncHandler(async (req, res) => {
   const versions = await prisma.systemVersion.findMany({
     orderBy: { releaseDate: 'desc' }
   });
@@ -710,7 +712,7 @@ exports.getSystemVersions = asyncHandler(async (req, res) => {
  * @route   POST /api/admin/system/versions
  * @access  Private (SUPERADMIN only)
  */
-exports.createSystemVersion = asyncHandler(async (req, res) => {
+export const createSystemVersion = asyncHandler(async (req, res) => {
   const { version, changelog, migrations } = req.body;
 
   const newVersion = await prisma.systemVersion.create({
@@ -731,38 +733,33 @@ exports.createSystemVersion = asyncHandler(async (req, res) => {
   });
 });
 
-// Export all controller functions
-module.exports = {
-  // AI Providers
-  getAiProviders: exports.getAiProviders,
-  updateAiProvider: exports.updateAiProvider,
-  testAiProvider: exports.testAiProvider,
-  
-  // System Prompts
-  getSystemPrompts: exports.getSystemPrompts,
-  createSystemPrompt: exports.createSystemPrompt,
-  updateSystemPrompt: exports.updateSystemPrompt,
-  rollbackSystemPrompt: exports.rollbackSystemPrompt,
-  
-  // API Configuration
-  getApiConfiguration: exports.getApiConfiguration,
-  updateApiConfiguration: exports.updateApiConfiguration,
-  
-  // Feature Flags
-  getFeatureFlags: exports.getFeatureFlags,
-  upsertFeatureFlag: exports.upsertFeatureFlag,
-  toggleFeatureFlag: exports.toggleFeatureFlag,
-  
-  // System Settings
-  getSystemSettings: exports.getSystemSettings,
-  updateSystemSetting: exports.updateSystemSetting,
-  updateSystemSettings: exports.updateSystemSettings,
-  
-  // Health Monitoring
-  getSystemHealth: exports.getSystemHealth,
-  recordHealthMetric: exports.recordHealthMetric,
-  
-  // System Versions
-  getSystemVersions: exports.getSystemVersions,
-  createSystemVersion: exports.createSystemVersion
+// Export all controller functions as named exports and a default object for compatibility
+export default {
+  getAiProviders,
+  updateAiProvider,
+  testAiProvider,
+
+  getSystemPrompts,
+  createSystemPrompt,
+  updateSystemPrompt,
+  rollbackSystemPrompt,
+
+  getApiConfiguration,
+  updateApiConfiguration,
+
+  getFeatureFlags,
+  upsertFeatureFlag,
+  toggleFeatureFlag,
+
+  getSystemSettings,
+  updateSystemSetting,
+  updateSystemSettings,
+
+  getSystemHealth,
+  recordHealthMetric,
+
+  getSystemVersions,
+  createSystemVersion
 };
+
+// Named exports intentionally omitted to avoid duplicate export issues with the default export object above.

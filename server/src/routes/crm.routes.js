@@ -1,9 +1,9 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const { authenticateToken } = require('../middleware/auth');
-const crmService = require('../services/crm.service');
-const prisma = require('../config/database');
-const logger = require('../utils/logger');
+import { authenticateToken } from '../middleware/auth.js';
+import crmService from '../services/crm.service.js';
+import prisma from '../config/database.js';
+import logger from '../utils/logger.js';
 
 // Get CRM leads for business
 router.get('/leads', authenticateToken, async (req, res) => {
@@ -453,4 +453,4 @@ router.get('/admin/stats', authenticateToken, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

@@ -1,4 +1,4 @@
-const logger = require('../utils/logger');
+import logger from '../utils/logger.js';
 
 /**
  * Continuous Improvement Service
@@ -710,4 +710,4 @@ class ContinuousImprovementService {
   }
 }
 
-module.exports = new ContinuousImprovementService();
+export default new ContinuousImprovementService();

@@ -1,5 +1,5 @@
-const { Queue, JobScheduler } = require('bullmq');
-const logger = require('../utils/logger');
+import { Queue, JobScheduler } from 'bullmq';
+import logger from '../utils/logger.js';
 
 const REDIS_URL = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
 
@@ -52,4 +52,5 @@ async function closeQueues() {
 
 // Backwards compatible export: `chunkQueue` will be null in test env, and lazily
 // initialized in non-test environments.
-module.exports = { getChunkQueue, initQueues, closeQueues, chunkQueue: getChunkQueue() };
+export { getChunkQueue, initQueues, closeQueues };
+export default { getChunkQueue, initQueues, closeQueues, chunkQueue: getChunkQueue() };

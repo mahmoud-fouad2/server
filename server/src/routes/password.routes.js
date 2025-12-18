@@ -1,9 +1,11 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const bcrypt = require('bcryptjs');
-const crypto = require('crypto');
-const prisma = require('../config/database');
-const emailService = require('../services/email.service');
+import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
+import prisma from '../config/database.js';
+import logger from '../utils/logger.js';
+const emailServiceModule = await import('../services/email.service.js');
+const emailService = emailServiceModule.default || emailServiceModule;
 
 // Request password reset
 router.post('/forgot-password', async (req, res) => {
@@ -48,14 +50,12 @@ router.post('/forgot-password', async (req, res) => {
 
       await emailService.sendEmail({ to: email, subject: emailSubject, text: emailText, html: emailHtml });
     } catch (sendError) {
-      const logger = require('../utils/logger');
-      logger.warn('Failed to send password reset email', { error: sendError.message, email });
+
     }
 
     // Always return generic message (don't expose reset URL in response)
     res.json({ message: 'إذا كان البريد موجودًا، سيتم إرسال رابط الاسترجاع' });
   } catch (error) {
-    const logger = require('../utils/logger');
     logger.error('Forgot password error:', error);
     res.status(500).json({ error: 'حدث خطأ في النظام' });
   }
@@ -106,10 +106,9 @@ router.post('/reset-password', async (req, res) => {
 
     res.json({ message: 'تم إعادة تعيين كلمة المرور بنجاح' });
   } catch (error) {
-    const logger = require('../utils/logger');
     logger.error('Reset password error:', error);
     res.status(500).json({ error: 'حدث خطأ في النظام' });
   }
 });
 
-module.exports = router;
+export default router;

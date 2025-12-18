@@ -1,7 +1,7 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const nodemailer = require('nodemailer');
-const logger = require('../utils/logger');
+import nodemailer from 'nodemailer';
+import logger from '../utils/logger.js';
 
 // Configure transporter
 // Note: In production, use environment variables for credentials
@@ -66,4 +66,4 @@ router.post('/', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

@@ -3,10 +3,10 @@
  * Handles payment processing for Stripe, Paymob, Paytabs, and PayPal
  */
 
-const axios = require('axios');
-const crypto = require('crypto');
-const logger = require('../utils/logger');
-const prisma = require('../config/database');
+import axios from 'axios';
+import crypto from 'crypto';
+import logger from '../utils/logger.js';
+import prisma from '../config/database.js';
 
 class PaymentService {
   constructor() {
@@ -141,7 +141,6 @@ class PaymentService {
     let secretKey = gateway.secretKey;
     try {
       if (secretKey && !secretKey.startsWith('sk_')) {
-        const crypto = require('crypto');
         const algorithm = 'aes-256-cbc';
         const key = crypto.scryptSync(process.env.ENCRYPTION_KEY || 'default-key-change-in-production', 'salt', 32);
         const parts = secretKey.split(':');
@@ -158,7 +157,9 @@ class PaymentService {
       logger.warn('Failed to decrypt secret key, using as-is');
     }
 
-    const stripe = require('stripe')(secretKey);
+    const stripePkg = await import('stripe');
+    const Stripe = stripePkg?.default || stripePkg;
+    const stripe = Stripe(secretKey);
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -302,7 +303,6 @@ class PaymentService {
     let apiKey = gateway.apiKey;
     let secretKey = gateway.secretKey;
     try {
-      const crypto = require('crypto');
       const algorithm = 'aes-256-cbc';
       const key = crypto.scryptSync(process.env.ENCRYPTION_KEY || 'default-key-change-in-production', 'salt', 32);
       
@@ -333,7 +333,8 @@ class PaymentService {
       logger.warn('Failed to decrypt PayPal keys, using as-is');
     }
 
-    const paypal = require('@paypal/checkout-server-sdk');
+    const paypalPkg = await import('@paypal/checkout-server-sdk');
+    const paypal = paypalPkg.default || paypalPkg;
     
     const environment = gateway.config?.sandbox 
       ? new paypal.core.SandboxEnvironment(apiKey, secretKey)
@@ -388,8 +389,10 @@ class PaymentService {
   /**
    * Verify Stripe webhook
    */
-  verifyStripeWebhook(payload, signature, gateway) {
-    const stripe = require('stripe')(gateway.secretKey);
+  async verifyStripeWebhook(payload, signature, gateway) {
+    const stripePkg = await import('stripe');
+    const Stripe = stripePkg.default || stripePkg;
+    const stripe = Stripe(gateway.secretKey);
     try {
       const event = stripe.webhooks.constructEvent(
         payload,
@@ -519,5 +522,5 @@ class PaymentService {
   }
 }
 
-module.exports = new PaymentService();
+export default new PaymentService();
 

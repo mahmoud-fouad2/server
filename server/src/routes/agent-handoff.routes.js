@@ -1,8 +1,9 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const { authenticateToken } = require('../middleware/auth');
-const AgentHandoffService = require('../services/agent-handoff.service');
-const logger = require('../utils/logger');
+import { authenticateToken } from '../middleware/auth.js';
+const AgentHandoffServiceModule = await import('../services/agent-handoff.service.js');
+const AgentHandoffService = AgentHandoffServiceModule?.default || AgentHandoffServiceModule;
+import logger from '../utils/logger.js';
 
 /**
  * @route POST /api/handoff/evaluate
@@ -335,4 +336,4 @@ router.post('/cancel/:handoffId', authenticateToken, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

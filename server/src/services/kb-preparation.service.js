@@ -93,5 +93,5 @@ class KBPreparationService {
   }
 }
 
-module.exports = new KBPreparationService();
+export default new KBPreparationService();
 

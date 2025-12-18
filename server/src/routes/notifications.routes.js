@@ -1,11 +1,11 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const { authenticateToken } = require('../middleware/auth');
-const notificationsController = require('../controllers/notifications.controller');
+import { authenticateToken } from '../middleware/auth.js';
+const notificationsController = await import('../controllers/notifications.controller.js');
 
 router.get('/unread-count', authenticateToken, notificationsController.getUnreadCount);
 router.get('/', authenticateToken, notificationsController.listNotifications);
 router.post('/:id/mark-read', authenticateToken, notificationsController.markAsRead);
 router.post('/mark-all-read', authenticateToken, notificationsController.markAllRead);
 
-module.exports = router;
+export default router;

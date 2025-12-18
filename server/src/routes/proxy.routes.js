@@ -1,6 +1,6 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const logger = require('../utils/logger');
+import logger from '../utils/logger.js';
 
 /**
  * Simple proxy endpoints to forward requests to external APIs and avoid CORS
@@ -41,4 +41,4 @@ router.post('/chat/message', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

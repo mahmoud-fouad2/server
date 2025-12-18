@@ -1,4 +1,5 @@
 import express from 'express';
+const router = express.Router();
 import rateLimit from 'express-rate-limit';
 import { authenticateToken } from '../middleware/auth.js';
 import { validateChatMessage } from '../middleware/validation.js';
@@ -8,7 +9,7 @@ import * as aiService from '../services/ai.service.js';
 import vectorSearch from '../services/vector-search.service.js';
 
 // Import CommonJS modules using dynamic import compatibility
-const chatController = (await import('../controllers/chat.controller.js')).default;
+const chatController = await import('../controllers/chat.controller.js');
 const responseValidator = (await import('../services/response-validator.service.js')).default;
 const logger = (await import('../utils/logger.js')).default;
 
@@ -87,16 +88,15 @@ router.post('/:conversationId/messages', async (req, res, next) => {
 
     // If Authorization header is present, enforce token validation and ownership
     if (req.headers && req.headers.authorization) {
-      const { authenticateToken } = require('../middleware/auth');
-      try {
-        await new Promise((resolve, reject) => authenticateToken(req, res, (err) => err ? reject(err) : resolve()));
-      } catch (err) {
-        // authenticateToken already sent response; just return
-        return;
-      }
+        try {
+          await new Promise((resolve, reject) => authenticateToken(req, res, (err) => err ? reject(err) : resolve()));
+        } catch (err) {
+          // authenticateToken already sent response; just return
+          return;
+        }
 
-      if (req.user && conv.businessId !== req.user.businessId) return res.error('Forbidden', 403);
-    } else {
+        if (req.user && conv.businessId !== req.user.businessId) return res.error('Forbidden', 403);
+      } else {
       // No auth: require businessId in body to match conversation (widget compatibility)
       if (!req.body.businessId || req.body.businessId !== conv.businessId) {
         return res.error('Forbidden', 403);

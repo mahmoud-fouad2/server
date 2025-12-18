@@ -9,4 +9,4 @@ function sanitizeInput(input) {
   return s;
 }
 
-module.exports = { sanitizeInput };
+export { sanitizeInput };

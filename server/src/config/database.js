@@ -26,8 +26,18 @@ function createPrismaClient() {
     // Initialize adapter for PostgreSQL in Prisma v7+
     // This replaces the need for PRISMA_CLIENT_ENGINE_TYPE env variable
     // The adapter handles connection pooling and ensures binary engine is used
+    
+    let connectionString = effectiveDbUrl;
+    
+    // In development, if no sslmode is specified, disable SSL to avoid requiring TLS
+    if (process.env.NODE_ENV === 'development' && !connectionString.includes('sslmode')) {
+      const separator = connectionString.includes('?') ? '&' : '?';
+      connectionString = `${connectionString}${separator}sslmode=disable`;
+      logger.info('SSL disabled for development database connection');
+    }
+    
     const adapter = new PrismaPg({
-      connectionString: effectiveDbUrl
+      connectionString
     });
 
     // Construct PrismaClient with adapter for Prisma v7+

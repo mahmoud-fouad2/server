@@ -4,10 +4,11 @@
  */
 
 import express from 'express';
+const router = express.Router();
 import { authenticateToken } from '../middleware/auth.js';
 import paymentService from '../services/payment.service.js';
 import prisma from '../config/database.js';
-const asyncHandler = require('express-async-handler');
+import asyncHandler from 'express-async-handler';
 
 // NOTE: initialization of payment gateways is deferred until after DB connectivity
 // to avoid running DB-dependent code during module load. See `index.js` startup sequence.

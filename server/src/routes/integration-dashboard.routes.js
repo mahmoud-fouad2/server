@@ -1,8 +1,8 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const { authenticateToken } = require('../middleware/auth');
-const IntegrationDashboardService = require('../services/integration-dashboard.service');
-const logger = require('../utils/logger');
+import { authenticateToken } from '../middleware/auth.js';
+import IntegrationDashboardService from '../services/integration-dashboard.service.js';
+import logger from '../utils/logger.js';
 
 /**
  * @route GET /api/dashboard/integrations
@@ -344,4 +344,4 @@ router.post('/share', authenticateToken, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

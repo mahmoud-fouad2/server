@@ -1,13 +1,13 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const prisma = require('../config/database');
-const { authenticateToken } = require('../middleware/auth');
-const logger = require('../utils/logger');
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
-const rateLimit = require('express-rate-limit');
-const fetch = require('node-fetch');
+import prisma from '../config/database.js';
+import { authenticateToken } from '../middleware/auth.js';
+import logger from '../utils/logger.js';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+import rateLimit from 'express-rate-limit';
+import fetch from 'node-fetch';
 
 // Configure Multer for Icon Uploads
 const storage = multer.diskStorage({
@@ -139,8 +139,9 @@ router.get('/config/:businessId', async (req, res) => {
 });
 
 // Widget Chat Endpoint (Public) - delegate to central chat controller for unified behavior
-const chatController = require('../controllers/chat.controller');
-const asyncHandler = require('express-async-handler');
+const chatControllerModule = await import('../controllers/chat.controller.js');
+const chatController = chatControllerModule?.default || chatControllerModule;
+import asyncHandler from 'express-async-handler';
 
 // Rate limiter for public widget chat to prevent abuse and excessive AI calls
 const widgetChatLimiter = rateLimit({
@@ -187,7 +188,7 @@ router.post('/config', authenticateToken, async (req, res) => {
 });
 
 // Upload Widget Icon (Authenticated)
-const storageService = require('../services/storage.service');
+const storageService = (await import('../services/storage.service.js')).default;
 
 router.post('/upload-icon', authenticateToken, upload.single('icon'), async (req, res) => {
   try {
@@ -282,4 +283,4 @@ router.post('/upload-icon-data', authenticateToken, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

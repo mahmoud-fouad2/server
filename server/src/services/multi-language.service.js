@@ -1,4 +1,4 @@
-const logger = require('../utils/logger');
+import logger from '../utils/logger.js';
 
 /**
  * Multi-Language & Dialect Support Service
@@ -247,4 +247,4 @@ class MultiLanguageService {
   }
 }
 
-module.exports = new MultiLanguageService();
+export default new MultiLanguageService();

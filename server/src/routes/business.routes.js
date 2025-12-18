@@ -1,16 +1,16 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const asyncHandler = require('express-async-handler');
-const { authenticateToken } = require('../middleware/auth');
-const businessController = require('../controllers/business.controller');
-const { 
+import asyncHandler from 'express-async-handler';
+import { authenticateToken } from '../middleware/auth.js';
+const businessController = await import('../controllers/business.controller.js');
+import { 
   validateUpdateBusiness, 
   validateUpdateBusinessPlan,
   validatePagination 
-} = require('../middleware/zodValidation');
-const multer = require('multer');
-const fs = require('fs');
-const path = require('path');
+} from '../middleware/zodValidation.js';
+import multer from 'multer';
+import fs from 'fs';
+import path from 'path';
 
 // Multer for avatar/icon uploads in business settings
 const storage = multer.diskStorage({
@@ -62,4 +62,4 @@ router.post('/:businessId/avatar-settings', authenticateToken, upload.fields([{ 
 // Force bump widget version (updates updatedAt) - useful to trigger refreshes/cache-busts
 router.post('/:businessId/bump-widget-version', authenticateToken, businessController.bumpWidgetVersion);
 
-module.exports = router;
+export default router;

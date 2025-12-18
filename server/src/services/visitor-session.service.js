@@ -1,6 +1,8 @@
-const prisma = require('../config/database');
-const UAParser = require('ua-parser-js');
-const logger = require('../utils/logger');
+import prisma from '../config/database.js';
+import crypto from 'crypto';
+const UAParserModule = await import('ua-parser-js');
+const UAParser = UAParserModule.default || UAParserModule;
+import logger from '../utils/logger.js';
 
 /**
  * 🎯 نظام إدارة جلسات الزوار - Visitor Session Management
@@ -397,10 +399,9 @@ class VisitorSessionService {
    * إنشاء fingerprint للزائر
    */
   generateFingerprint(visitorInfo) {
-    const crypto = require('crypto');
     const data = `${visitorInfo.ipAddress}-${visitorInfo.userAgent}-${visitorInfo.browser}-${visitorInfo.os}`;
     return crypto.createHash('md5').update(data).digest('hex');
   }
 }
 
-module.exports = new VisitorSessionService();
+export default new VisitorSessionService();

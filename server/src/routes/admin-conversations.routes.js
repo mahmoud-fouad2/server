@@ -4,11 +4,12 @@
  */
 
 import express from 'express';
+const router = express.Router();
 import prisma from '../config/database.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { requirePermission } from '../middleware/authorization.js';
-const logger = require('../utils/logger');
-const asyncHandler = require('express-async-handler');
+import logger from '../utils/logger.js';
+import asyncHandler from 'express-async-handler';
 
 // All routes require authentication
 router.use(authenticateToken);

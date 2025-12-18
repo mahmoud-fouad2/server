@@ -1,5 +1,5 @@
-const axios = require('axios');
-const logger = require('../utils/logger');
+import axios from 'axios';
+import logger from '../utils/logger.js';
 
 const TELEGRAM_API_BASE = 'https://api.telegram.org/bot';
 
@@ -55,4 +55,4 @@ class TelegramService {
   }
 }
 
-module.exports = new TelegramService();
+export default new TelegramService();

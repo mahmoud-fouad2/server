@@ -1,10 +1,11 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const rateLimit = require('express-rate-limit');
-const { authenticateToken } = require('../middleware/auth');
-const asyncHandler = require('express-async-handler');
-const { validateRegister, validateLogin } = require('../middleware/zodValidation');
-const authController = require('../controllers/auth.controller');
+import rateLimit from 'express-rate-limit';
+import { authenticateToken } from '../middleware/auth.js';
+import asyncHandler from 'express-async-handler';
+import { validateRegister, validateLogin } from '../middleware/zodValidation.js';
+const authControllerModule = await import('../controllers/auth.controller.js');
+const authController = authControllerModule.default || authControllerModule;
 
 // Rate limiter for login attempts (prevent brute force)
 const loginLimiter = rateLimit({
@@ -39,4 +40,4 @@ router.put('/profile', authenticateToken, asyncHandler(authController.updateProf
 // Get current profile
 router.get('/profile', authenticateToken, asyncHandler(authController.getProfile));
 
-module.exports = router;
+export default router;

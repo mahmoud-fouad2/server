@@ -1,8 +1,9 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const { authenticateToken } = require('../middleware/auth');
-const ContinuousImprovementService = require('../services/continuous-improvement.service');
-const logger = require('../utils/logger');
+import { authenticateToken } from '../middleware/auth.js';
+const ContinuousImprovementServiceModule = await import('../services/continuous-improvement.service.js');
+const ContinuousImprovementService = ContinuousImprovementServiceModule?.default || ContinuousImprovementServiceModule;
+import logger from '../utils/logger.js';
 
 /**
  * @route GET /api/improvement/gaps
@@ -499,4 +500,4 @@ router.get('/goals/progress', authenticateToken, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

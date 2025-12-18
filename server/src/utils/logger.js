@@ -10,18 +10,8 @@ const LOG_LEVELS = {
   DEBUG: 'DEBUG'
 };
 
-// Cache whether @sentry/node is available to avoid noisy require errors
-let _sentryAvailable = null;
-function isSentryAvailable() {
-  if (_sentryAvailable !== null) return _sentryAvailable;
-  try {
-    require.resolve('@sentry/node');
-    _sentryAvailable = true;
-  } catch (e) {
-    _sentryAvailable = false;
-  }
-  return _sentryAvailable;
-}
+// Note: We avoid synchronous require() of optional packages to stay ESM-compatible.
+// When SENTRY_DSN is set we attempt to dynamically import @sentry/node in a non-blocking microtask.
 
 class Logger {
   constructor() {
@@ -54,23 +44,20 @@ class Logger {
 
     // Send to Sentry in production (if configured)
     if (process.env.SENTRY_DSN && error) {
-      if (!isSentryAvailable()) {
-        // Avoid spamming logs when Sentry is configured but the package isn't installed
-        if (process.env.NODE_ENV !== 'test') {
-          console.warn('[logger] SENTRY_DSN is set but @sentry/node is not installed. Skipping Sentry reporting.');
-        }
-      } else {
+      // Do not block the main flow for Sentry reporting; attempt dynamic import
+      (async () => {
         try {
-          // Lazy load Sentry only if DSN is set and package is available
-          const Sentry = require('@sentry/node');
+          const Sentry = (await import('@sentry/node')).default || (await import('@sentry/node'));
           if (!Sentry.getCurrentHub().getClient()) {
             Sentry.init({ dsn: process.env.SENTRY_DSN });
           }
           Sentry.captureException(error, { extra: context });
         } catch (sentryError) {
-          console.error('Failed to send error to Sentry:', sentryError.message);
+          if (process.env.NODE_ENV !== 'test') {
+            console.warn('[logger] SENTRY_DSN is set but @sentry/node failed to load. Skipping Sentry reporting.');
+          }
         }
-      }
+      })();
     }
   }
 

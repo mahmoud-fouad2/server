@@ -187,5 +187,5 @@ class IntentDetectionService {
   }
 }
 
-module.exports = new IntentDetectionService();
+export default new IntentDetectionService();
 

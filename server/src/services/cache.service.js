@@ -1,6 +1,6 @@
-const { createClient } = require('redis');
-const crypto = require('crypto');
-const logger = require('../utils/logger');
+import { createClient } from 'redis';
+import crypto from 'crypto';
+import logger from '../utils/logger.js';
 
 /**
  * Redis Cache Service for AI Responses
@@ -308,4 +308,4 @@ const redisCache = new RedisCacheService();
 //   console.error('[RedisCache] Auto-connect failed:', err);
 // });
 
-module.exports = redisCache;
+export default redisCache;

@@ -1,5 +1,5 @@
-const prisma = require('../config/database');
-const logger = require('../utils/logger');
+import prisma from '../config/database.js';
+import logger from '../utils/logger.js';
 
 class AdminAnalyticsService {
   /**
@@ -143,4 +143,4 @@ class AdminAnalyticsService {
   }
 }
 
-module.exports = new AdminAnalyticsService();
+export default new AdminAnalyticsService();

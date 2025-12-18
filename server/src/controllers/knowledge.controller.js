@@ -1,15 +1,21 @@
-const pdf = require('pdf-parse');
-const fs = require('fs');
-const axios = require('axios');
-const cheerio = require('cheerio');
+import pdf from 'pdf-parse';
+import fs from 'fs';
+import axios from 'axios';
+const cheerioModule = await import('cheerio');
+const cheerio = cheerioModule?.default || cheerioModule;
 // path not used directly; keep minimal imports
-const prisma = require('../config/database');
-const logger = require('../utils/logger');
-const { generateEmbedding } = require('../services/embedding.service');
-const { WebCrawler } = require('../services/crawler.service');
-const redisCache = require('../services/cache.service');
-const { summarizeText } = require('../services/summarizer.service');
-const storageService = require('../services/storage.service');
+import prisma from '../config/database.js';
+import logger from '../utils/logger.js';
+import { Prisma } from '@prisma/client';
+import { generateEmbedding } from '../services/embedding.service.js';
+const crawlerModule = await import('../services/crawler.service.js');
+const WebCrawler = crawlerModule?.default?.WebCrawler || crawlerModule.WebCrawler || crawlerModule.WebCrawler || (crawlerModule.default && crawlerModule.default.WebCrawler);
+const redisCacheModule = await import('../services/cache.service.js');
+const redisCache = redisCacheModule?.default || redisCacheModule;
+const summarizerModule = await import('../services/summarizer.service.js');
+const summarizeText = summarizerModule?.summarizeText || summarizerModule?.default?.summarizeText || summarizerModule.summarizeText;
+const storageServiceModule = await import('../services/storage.service.js');
+const storageService = storageServiceModule?.default || storageServiceModule;
 
 // --- Helper Functions ---
 
@@ -105,9 +111,14 @@ async function createChunksForKB(kb) {
       let chunkQueue = null;
       if (hasRedis) {
         try {
-          const queueService = require('../queue/queue');
-          // Prefer explicit getter; fall back to legacy export for compatibility
-          chunkQueue = (queueService.getChunkQueue && queueService.getChunkQueue()) || queueService.chunkQueue || null;
+              let chunkQueue = null;
+          try {
+            const queueServiceModule = await import('../queue/queue.js');
+            const queueService = queueServiceModule?.default || queueServiceModule;
+            chunkQueue = (queueService.getChunkQueue && queueService.getChunkQueue()) || queueService.chunkQueue || null;
+          } catch (e) {
+            chunkQueue = null;
+          }
         } catch (e) {
           chunkQueue = null;
         }
@@ -141,7 +152,7 @@ async function createChunksForKB(kb) {
 
 // --- Controller Methods ---
 
-exports.uploadKnowledge = async (req, res) => {
+export const uploadKnowledge = async (req, res) => {
   logger.info('POST /upload called');
   try {
     if (!req.file) {
@@ -220,7 +231,7 @@ exports.uploadKnowledge = async (req, res) => {
 
 
 
-exports.addTextKnowledge = async (req, res) => {
+export const addTextKnowledge = async (req, res) => {
   logger.info('POST /text called', { body: req.body, user: req.user });
   try {
     let { text, title } = req.body || {};
@@ -283,7 +294,7 @@ exports.addTextKnowledge = async (req, res) => {
   }
 };
 
-exports.addUrlKnowledge = async (req, res) => {
+export const addUrlKnowledge = async (req, res) => {
   logger.info('POST /url called');
   try {
     let { url, deepCrawl = false } = req.body;
@@ -424,7 +435,7 @@ exports.addUrlKnowledge = async (req, res) => {
   }
 };
 
-exports.getKnowledge = async (req, res) => {
+export const getKnowledge = async (req, res) => {
   try {
     const businessId = req.user && req.user.businessId;
     if (!businessId) {
@@ -461,7 +472,7 @@ exports.getKnowledge = async (req, res) => {
   }
 };
 
-exports.updateKnowledge = async (req, res) => {
+export const updateKnowledge = async (req, res) => {
   try {
     const { id } = req.params;
     const { content, title } = req.body;
@@ -497,7 +508,7 @@ exports.updateKnowledge = async (req, res) => {
   }
 };
 
-exports.deleteKnowledge = async (req, res) => {
+export const deleteKnowledge = async (req, res) => {
   try {
     const { id } = req.params;
     const businessId = req.user.businessId;
@@ -512,7 +523,7 @@ exports.deleteKnowledge = async (req, res) => {
   }
 };
 
-exports.embedChunks = async (req, res) => {
+export const embedChunks = async (req, res) => {
   try {
     const tokenBusinessId = req.user.businessId;
     const { knowledgeBaseId, limit = 50 } = req.body;
@@ -520,7 +531,7 @@ exports.embedChunks = async (req, res) => {
 
     // Find chunks where embedding is null (not yet embedded)
     // Use Prisma.DbNull to match SQL NULL on JSON column
-    const { Prisma } = require('@prisma/client');
+    // Prisma error class can be used if needed; imported at module level for ESM compatibility
     const where = { businessId: tokenBusinessId, embedding: { equals: Prisma.DbNull } };
     if (knowledgeBaseId) where.knowledgeBaseId = knowledgeBaseId;
 
@@ -536,7 +547,8 @@ exports.embedChunks = async (req, res) => {
     // Prefer queue when available in production; in tests prefer synchronous processing to return processed count
     let chunkQueue = null;
     try {
-      const queueService = require('../queue/queue');
+      const queueServiceModule = await import('../queue/queue.js');
+      const queueService = queueServiceModule?.default || queueServiceModule;
       chunkQueue = (queueService.getChunkQueue && queueService.getChunkQueue()) || queueService.chunkQueue || null;
     } catch (e) {
       chunkQueue = null;
@@ -570,7 +582,7 @@ exports.embedChunks = async (req, res) => {
     res.status(500).json({ error: 'Failed to embed chunks' });
   }
 };
-exports.regenerateChunks = async (req, res) => {
+export const regenerateChunks = async (req, res) => {
   try {
     const businessId = await resolveBusinessId(req);
     if (!businessId) return res.status(400).json({ error: 'Business ID missing or invalid' });
@@ -594,7 +606,7 @@ exports.regenerateChunks = async (req, res) => {
   }
 };
 
-exports.reindexEmbeddings = async (req, res) => {
+export const reindexEmbeddings = async (req, res) => {
   let businessId = null;
   let lockKey = null;
 
@@ -604,7 +616,6 @@ exports.reindexEmbeddings = async (req, res) => {
 
     const { knowledgeBaseId, enqueue = true } = req.body || {};
     // Find chunks where embedding is null (not yet embedded)
-    const { Prisma } = require('@prisma/client');
     const where = { businessId, embedding: { equals: Prisma.DbNull } };
     if (knowledgeBaseId) where.knowledgeBaseId = knowledgeBaseId;
 
@@ -633,7 +644,8 @@ exports.reindexEmbeddings = async (req, res) => {
     let chunkQueue = null;
     if (process.env.REDIS_URL) {
       try {
-        const queueService = require('../queue/queue');
+        const queueServiceModule = await import('../queue/queue.js');
+        const queueService = queueServiceModule?.default || queueServiceModule;
         chunkQueue = (queueService.getChunkQueue && queueService.getChunkQueue()) || queueService.chunkQueue || null;
       } catch (e) {
         chunkQueue = null;

@@ -1,8 +1,8 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const visitorService = require('../services/visitor.service');
-const { authenticateToken } = require('../middleware/auth');
-const logger = require('../utils/logger');
+import visitorService from '../services/visitor.service.js';
+import { authenticateToken } from '../middleware/auth.js';
+import logger from '../utils/logger.js';
 
 /**
  * Visitor Routes - Track sessions, page visits, and user analytics
@@ -229,4 +229,4 @@ router.get('/user-activities', authenticateToken, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

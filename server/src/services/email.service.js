@@ -1,10 +1,11 @@
-const logger = require('../utils/logger');
+import logger from '../utils/logger.js';
 
 let transporter = null;
-function getTransporter() {
+async function getTransporter() {
   if (transporter) return transporter;
   try {
-    const nodemailer = require('nodemailer');
+    const nodemailerModule = await import('nodemailer');
+    const nodemailer = nodemailerModule?.default || nodemailerModule;
     const smtpHost = process.env.SMTP_HOST;
     const smtpPort = process.env.SMTP_PORT;
     const smtpUser = process.env.SMTP_USER;
@@ -43,7 +44,7 @@ function getTransporter() {
 
 async function sendEmail({ to, subject, text, html }) {
   try {
-    const tx = getTransporter();
+    const tx = await getTransporter();
     const message = {
       from: process.env.EMAIL_FROM || `no-reply@${process.env.FRONTEND_DOMAIN || 'faheemly.com'}`,
       to,
@@ -60,4 +61,4 @@ async function sendEmail({ to, subject, text, html }) {
   }
 }
 
-module.exports = { sendEmail };
+export { sendEmail };

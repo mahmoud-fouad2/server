@@ -3,13 +3,13 @@
  * SUPERADMIN only - Full control over CRM system
  */
 
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const { authenticateToken } = require('../middleware/auth');
-const { requirePermission } = require('../middleware/authorization');
-const prisma = require('../config/database');
-const logger = require('../utils/logger');
-const asyncHandler = require('express-async-handler');
+import { authenticateToken } from '../middleware/auth.js';
+import { requirePermission } from '../middleware/authorization.js';
+import prisma from '../config/database.js';
+import logger from '../utils/logger.js';
+import asyncHandler from 'express-async-handler';
 
 // All routes require authentication
 router.use(authenticateToken);
@@ -346,5 +346,5 @@ router.post(
   })
 );
 
-module.exports = router;
+export default router;
 
