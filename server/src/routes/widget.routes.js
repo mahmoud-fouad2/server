@@ -51,53 +51,13 @@ router.get('/config/:businessId', attachBusinessId, async (req, res) => {
     res.set('Pragma', 'no-cache');
     res.set('Expires', '0');
     
-    let business = await prisma.business.findUnique({
+    const business = await prisma.business.findUnique({
       where: { id: businessId }
     });
 
-    // TEMPORARY: Create test business if it doesn't exist (for demo purposes)
-    if (!business && businessId === 'cmjbhwcae00016wi1d9iaff8p') {
-      try {
-        logger.info('Creating test business for demo:', businessId);
-        // Create a dummy user first
-        const dummyUser = await prisma.user.create({
-          data: {
-            name: 'Demo User',
-            email: `demo-${Date.now()}@example.com`,
-            password: '$2a$10$dummy.hash', // dummy hash
-            role: 'CLIENT'
-          }
-        });
-
-        const newBusiness = await prisma.business.create({
-          data: {
-            id: businessId,
-            userId: dummyUser.id,
-            name: 'Demo Business',
-            activityType: 'COMPANY',
-            planType: 'TRIAL',
-            trialEndsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-            widgetConfig: JSON.stringify({
-              welcomeMessage: "مرحباً! كيف يمكنني مساعدتك اليوم؟",
-              primaryColor: "#003366",
-              personality: "friendly",
-              showBranding: true,
-              avatar: "robot"
-            })
-          }
-        });
-        logger.info('Created demo business:', newBusiness.id);
-        // Continue with the new business
-        var business = newBusiness;
-      } catch (createError) {
-        logger.error('Failed to create demo business:', createError);
-        // Fall back to demo config
-      }
-    }
-
     if (!business) {
-      // Return default config for non-existent businesses (mark as demo to make debugging obvious)
-        return res.json({
+      // Return default config for non-existent businesses
+      return res.json({
         name: 'Demo Business',
         widgetConfig: {
           welcomeMessage: "مرحباً! كيف يمكنني مساعدتك اليوم؟",
@@ -348,11 +308,6 @@ router.post('/upload-icon-data', authenticateToken, async (req, res) => {
     logger.error('Upload Icon Data Error', err);
     res.status(500).json({ error: 'Failed to save icon data' });
   }
-});
-
-// TEMPORARY: Test endpoint to verify deployment
-router.get('/test-deploy', (req, res) => {
-  res.json({ deployed: true, timestamp: Date.now() });
 });
 
 // Diagnostic endpoint to quickly check if a business exists and whether it has a widget config
