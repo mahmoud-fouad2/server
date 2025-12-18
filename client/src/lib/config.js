@@ -61,7 +61,7 @@ export const isDevelopment = () => {
 };
 
 export const WIDGET_CONFIG = {
-  BUSINESS_ID: process.env.NEXT_PUBLIC_BUSINESS_ID || 'cmivd3c0z0003ulrrn7m1jtjf',
+  BUSINESS_ID: process.env.NEXT_PUBLIC_BUSINESS_ID || 'cmjbkfqmn00016wef957p6hjk',
 };
 
 export const APP_CONFIG = {

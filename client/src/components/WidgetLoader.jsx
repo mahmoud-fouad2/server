@@ -20,7 +20,7 @@ export default function WidgetLoader() {
 
       if (document.getElementById('fahimo-widget-script') || document.querySelector('script[src*="fahimo-widget"]')) return;
 
-      const bid = process.env.NEXT_PUBLIC_WIDGET_BUSINESS_ID || process.env.NEXT_PUBLIC_BUSINESS_ID || 'cmivd3c0z0003ulrrn7m1jtjf';
+      const bid = process.env.NEXT_PUBLIC_WIDGET_BUSINESS_ID || process.env.NEXT_PUBLIC_BUSINESS_ID || 'cmjbkfqmn00016wef957p6hjk';
 
       // Prefer Render-hosted widget (same backend) to avoid broken static hosting on faheemly.com
       const externalWidget = process.env.NEXT_PUBLIC_WIDGET_URL || API_CONFIG.WIDGET_SCRIPT || 'https://fahimo-api.onrender.com/fahimo-widget.js';
