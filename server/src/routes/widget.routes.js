@@ -354,6 +354,10 @@ router.post('/upload-icon-data', authenticateToken, async (req, res) => {
 router.get('/test-deploy', (req, res) => {
   res.json({ deployed: true, timestamp: Date.now() });
 });
+
+// Diagnostic endpoint to quickly check if a business exists and whether it has a widget config
+// Public and lightweight; returns helpful fields for debugging widget embeds
+router.get('/exists/:businessId', async (req, res) => {
   try {
     const { businessId } = req.params;
     if (!businessId) return res.status(400).json({ error: 'businessId required' });
