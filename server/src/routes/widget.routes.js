@@ -339,4 +339,31 @@ router.get('/exists/:businessId', async (req, res) => {
   }
 });
 
+// System diagnostics endpoint for quick DB availability and Prisma configuration checks (non-sensitive)
+router.get('/diag/system', async (req, res) => {
+  try {
+    const { isPrismaConfigured, warnIfPrismaNotConfigured } = await import('../config/database.js');
+
+    // Non-sensitive info only: whether env is present and a quick connectivity check
+    const configured = isPrismaConfigured();
+    if (!configured) {
+      warnIfPrismaNotConfigured(logger);
+      return res.json({ dbConfigured: false, reachable: false, note: 'Prisma DATABASE_URL/PGBOUNCER_URL not configured' });
+    }
+
+    // Try a lightweight DB query to confirm reachability
+    try {
+      const client = prisma;
+      await client.$queryRaw`SELECT 1`;
+      return res.json({ dbConfigured: true, reachable: true });
+    } catch (dbErr) {
+      logger.warn('System diag db connectivity failed', { error: dbErr.message });
+      return res.status(503).json({ dbConfigured: true, reachable: false, error: dbErr.message });
+    }
+  } catch (err) {
+    logger.error('System diag error', err);
+    res.status(500).json({ error: 'Failed to run diagnostics' });
+  }
+});
+
 export default router;
