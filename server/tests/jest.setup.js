@@ -1,6 +1,7 @@
 // Jest setup file: ensure minimal DATABASE_URL for tests that construct PrismaClient directly
 // Provide sensible defaults for test environment
-process.env.DATABASE_URL = process.env.DATABASE_URL || 'postgresql://localhost/test';
+// Default to empty DATABASE_URL in tests to avoid creating a real Prisma client unless explicitly configured
+process.env.DATABASE_URL = process.env.DATABASE_URL || '';
 process.env.PGBOUNCER_URL = process.env.PGBOUNCER_URL || '';
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-secret-key-which-is-very-long-and-secure-12345';
 process.env.GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'fake-gemini-key-for-tests';
