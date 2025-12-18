@@ -159,7 +159,17 @@ router.get('/dashboard/:days', authenticateToken, async (req, res) => {
 // ✅ VECTOR STATS ENDPOINT
 router.get('/vector-stats', authenticateToken, async (req, res) => {
   try {
-    const businessId = req.user.businessId || (await prisma.business.findFirst({ where: { userId: req.user.userId } }))?.id;
+    // Get business ID with fallback to database lookup
+    let businessId = req.user.businessId;
+    if (!businessId) {
+      try {
+        const business = await prisma.business.findFirst({ where: { userId: req.user.userId } });
+        businessId = business?.id;
+      } catch (dbError) {
+        logger.warn('Database not available for business lookup in vector stats', { error: dbError.message });
+        return res.status(503).json({ error: 'Database temporarily unavailable' });
+      }
+    }
     
     if (!businessId) return res.status(404).json({ error: 'Business not found' });
 

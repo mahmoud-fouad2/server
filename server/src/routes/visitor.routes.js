@@ -4,6 +4,7 @@ import visitorService from '../services/visitor.service.js';
 import attachBusinessId from '../middleware/attachBusinessId.js';
 import { authenticateToken } from '../middleware/auth.js';
 import logger from '../utils/logger.js';
+import prisma from '../config/database.js';
 
 /**
  * Visitor Routes - Track sessions, page visits, and user analytics
@@ -137,6 +138,16 @@ router.get('/active-sessions', authenticateToken, async (req, res) => {
       if (headerBusinessId) businessId = headerBusinessId;
     }
 
+    // Fallback: query database for user's business
+    if (!businessId) {
+      try {
+        const business = await prisma.business.findFirst({ where: { userId: req.user.userId } });
+        businessId = business?.id;
+      } catch (dbError) {
+        logger.warn('Database not available for business lookup in active sessions', { error: dbError.message });
+      }
+    }
+
     if (!businessId) {
       return res.status(400).json({ success: false, message: 'Business ID is required or user has no associated business' });
     }
@@ -162,6 +173,16 @@ router.get('/analytics', authenticateToken, async (req, res) => {
     if (!businessId) {
       const headerBusinessId = req.headers['x-business-id'] || req.headers['x_business_id'];
       if (headerBusinessId) businessId = headerBusinessId;
+    }
+
+    // Fallback: query database for user's business
+    if (!businessId) {
+      try {
+        const business = await prisma.business.findFirst({ where: { userId: req.user.userId } });
+        businessId = business?.id;
+      } catch (dbError) {
+        logger.warn('Database not available for business lookup in visitor analytics', { error: dbError.message });
+      }
     }
 
     if (!businessId) {
