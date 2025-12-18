@@ -74,6 +74,17 @@ export default function WidgetSettingsView({
       if (typeof widgetConfig.preChatFormEnabled === 'boolean') {
         try {
           await businessApi.updatePreChatSettings({ preChatFormEnabled: widgetConfig.preChatFormEnabled });
+          // Broadcast again after updating business-level setting so widget picks it up immediately
+          const businessId = user?.businessId;
+          if (businessId) {
+            try {
+              const bc2 = new BroadcastChannel(`fahimo-config-update-${businessId}`);
+              bc2.postMessage({ type: 'CONFIG_UPDATED', timestamp: Date.now() });
+              bc2.close();
+            } catch (e) {
+              localStorage.setItem(`fahimo-config-update-${businessId}-notify`, Date.now());
+            }
+          }
         } catch (err) {
           // ignore here - widget API update was the main payload; show a notification
           addNotification('فشل تحديث حالة نموذج ما قبل المحادثة', 'error');
