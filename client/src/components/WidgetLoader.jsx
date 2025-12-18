@@ -19,7 +19,11 @@ export default function WidgetLoader() {
       if (blockedPaths.some(p => path.startsWith(p))) return;
 
       // If a widget script or already-rendered widget container exists for this business, avoid injecting another
-      const bid = process.env.NEXT_PUBLIC_WIDGET_BUSINESS_ID || process.env.NEXT_PUBLIC_BUSINESS_ID || 'cmjbp7ew000016xf96ail1m8w';
+      const bid = process.env.NEXT_PUBLIC_WIDGET_BUSINESS_ID || process.env.NEXT_PUBLIC_BUSINESS_ID;
+      if (!bid) {
+        console.warn('No business ID configured for widget. Set NEXT_PUBLIC_WIDGET_BUSINESS_ID or NEXT_PUBLIC_BUSINESS_ID.');
+        return;
+      }
       if (document.getElementById('fahimo-widget-script') || document.querySelector('script[src*="fahimo-widget"]') || document.querySelector(`#fahimo-widget-container[data-business-id="${bid}"]`)) return;
 
       // Prefer Render-hosted widget (same backend) to avoid broken static hosting on faheemly.com
