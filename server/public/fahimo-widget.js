@@ -63,6 +63,10 @@
         return;
     }
 
+    // Declare variables that will be used across functions
+    let messagesDiv = null;
+    let botName = 'Faheemly Assistant';
+
     // Define triggerConfigRefresh early so it can be called by event listeners
     function triggerConfigRefresh() {
         fetch(`${apiUrl}/api/widget/config/${businessId}?_=${Date.now()}`)
@@ -703,7 +707,7 @@
         const closeBtn = document.getElementById('fahimo-close');
         const input = document.getElementById('fahimo-input');
         const sendBtn = document.getElementById('fahimo-send');
-        const messagesDiv = document.getElementById('fahimo-messages');
+        messagesDiv = document.getElementById('fahimo-messages');
         const ratingContainer = document.getElementById('fahimo-rating-container');
         const stars = document.querySelectorAll('.fahimo-star');
         const endSessionBtn = document.getElementById('fahimo-end-session');
@@ -809,7 +813,7 @@
                 // Allow script author to override displayed name via data-business-name attribute
                 const scriptName = scriptTag && scriptTag.getAttribute && scriptTag.getAttribute('data-business-name');
                 const rawName = scriptName || data.name || config.name || "Faheemly Assistant";
-                let botName = String(rawName || '');
+                botName = String(rawName || '');
                 botName = botName.replace(/demo/gi, '').replace(/\bBusiness\b/gi, '').trim();
                 if (!botName) botName = 'Faheemly Assistant';
                 document.getElementById('fahimo-bot-name').innerText = botName;
