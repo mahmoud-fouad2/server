@@ -30,7 +30,9 @@ const getBaseApiUrl = () => {
 export const API_CONFIG = {
   BASE_URL: getBaseApiUrl(),
   TIMEOUT: 30000, // 30 seconds
-  WIDGET_SCRIPT: `${getBaseApiUrl()}/fahimo-widget.js`,
+  // Append a build-time version to the widget URL to allow easy cache-busting
+  // Set NEXT_PUBLIC_WIDGET_VERSION in CI/CD or use a commit SHA. Falls back to 'v1'.
+  WIDGET_SCRIPT: `${getBaseApiUrl()}/fahimo-widget.js?v=${process.env.NEXT_PUBLIC_WIDGET_VERSION || process.env.NEXT_PUBLIC_COMMIT_SHA || 'v1'}`,
 };
 
 export const getApiUrl = endpoint => {

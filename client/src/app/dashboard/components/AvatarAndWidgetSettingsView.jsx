@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Upload, Save, Loader2, Copy, Check } from 'lucide-react';
+import { API_CONFIG } from '@/lib/config';
 
 const AVATAR_PRESETS = [
   { id: 'avatar1', name: 'أحمد - موظف', emoji: '👨‍💼', color: '#3B82F6' },
@@ -134,9 +135,10 @@ export default function AvatarAndWidgetSettingsView({
 
   const copyEmbedCode = () => {
     const businessId = user?.businessId;
-    const scriptName = selectedVariant === 'enhanced' ? 'fahimo-widget-enhanced.js' : 'fahimo-widget.js';
-    const qu = latestConfigVersion ? `?v=${latestConfigVersion}` : '';
-    const embedCode = `<script src="https://fahimo-api.onrender.com/${scriptName}${qu}" data-business-id="${businessId}" data-api-url="https://fahimo-api.onrender.com"></script>`;
+    // Use API_CONFIG.WIDGET_SCRIPT (includes build-time version) and respect latest config version if present
+    const baseWidget = API_CONFIG.WIDGET_SCRIPT || `https://fahimo-api.onrender.com/${selectedVariant === 'enhanced' ? 'fahimo-widget-enhanced.js' : 'fahimo-widget.js'}`;
+    const qu = latestConfigVersion ? `&v=${latestConfigVersion}` : '';
+    const embedCode = `<script src="${baseWidget}${qu}" data-business-id="${businessId}" data-api-url="https://fahimo-api.onrender.com"></script>`;
     
     navigator.clipboard.writeText(embedCode).then(() => {
       setCopied(true);

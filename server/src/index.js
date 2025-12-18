@@ -419,6 +419,21 @@ app.use(express.json({ verify: rawBodySaver }));
 // Response wrapper middleware for standardized responses
 app.use(responseWrapperMiddleware());
 
+// Serve the widget with conservative caching to make deployments easier to roll out
+app.get('/fahimo-widget.js', (req, res) => {
+  try {
+    const widgetPath = path.join(__dirname, '../public/fahimo-widget.js');
+    res.set('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.set('Access-Control-Allow-Origin', '*');
+    // Short caching to avoid stale widgets being served for too long
+    res.set('Cache-Control', 'public, max-age=0, must-revalidate');
+    return res.sendFile(widgetPath);
+  } catch (e) {
+    logger.warn('Failed to serve fahimo-widget.js via explicit route, falling back to static middleware', { error: e?.message || e });
+    return res.status(500).send('Widget not available');
+  }
+});
+
 app.use(express.static(path.join(__dirname, '../public'), {
   setHeaders: (res, _path, _stat) => {
     // Allow cross-origin loading of static assets (scripts, images)
