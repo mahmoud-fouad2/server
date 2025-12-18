@@ -164,8 +164,15 @@ router.get('/vector-stats', authenticateToken, async (req, res) => {
     if (!businessId) return res.status(404).json({ error: 'Business not found' });
 
     // Count documents and knowledge base items
-    const documentCount = await prisma.document?.count({ where: { businessId } }) || 0;
-    const knowledgeCount = await prisma.knowledgeBase?.count({ where: { businessId } }) || 0;
+    let documentCount = 0;
+    let knowledgeCount = 0;
+    try {
+      documentCount = await prisma.document?.count({ where: { businessId } }) || 0;
+      knowledgeCount = await prisma.knowledgeBase?.count({ where: { businessId } }) || 0;
+    } catch (dbError) {
+      // Database not available, return default values
+      logger.warn('Database not available for vector stats, returning defaults', { error: dbError.message });
+    }
     
     // Mock vector dimension info (since we can't easily query it without raw SQL on vector column)
     res.json({

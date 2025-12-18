@@ -129,12 +129,7 @@ router.post('/end-session', attachBusinessId, async (req, res) => {
 router.get('/active-sessions', authenticateToken, async (req, res) => {
   try {
     // Determine business ID with proper null checks
-    let businessId;
-    if (req.user.role === 'SUPERADMIN') {
-      businessId = req.query.businessId;
-    } else {
-      businessId = req.user.businessId || (Array.isArray(req.user.businesses) && req.user.businesses.length > 0 ? req.user.businesses[0]?.id : null);
-    }
+    let businessId = req.query.businessId || req.user.businessId || (Array.isArray(req.user.businesses) && req.user.businesses.length > 0 ? req.user.businesses[0]?.id : null);
 
     if (!businessId) {
       // Also accept business id from headers for admin widgets
@@ -162,12 +157,7 @@ router.get('/active-sessions', authenticateToken, async (req, res) => {
 router.get('/analytics', authenticateToken, async (req, res) => {
   try {
     // Determine business ID with proper null checks
-    let businessId;
-    if (req.user.role === 'SUPERADMIN') {
-      businessId = req.query.businessId;
-    } else {
-      businessId = req.user.businessId || (Array.isArray(req.user.businesses) && req.user.businesses.length > 0 ? req.user.businesses[0]?.id : null);
-    }
+    let businessId = req.query.businessId || req.user.businessId || (Array.isArray(req.user.businesses) && req.user.businesses.length > 0 ? req.user.businesses[0]?.id : null);
 
     if (!businessId) {
       const headerBusinessId = req.headers['x-business-id'] || req.headers['x_business_id'];
