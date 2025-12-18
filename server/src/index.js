@@ -92,7 +92,8 @@ const cacheServiceModule = await import('./services/cache.service.js');
 const cacheService = cacheServiceModule.default || cacheServiceModule;
 const queueServiceModule = await import('./queue/queue.js');
 const queueService = queueServiceModule.default || queueServiceModule;
-import bcrypt from 'bcryptjs';
+import * as _bcrypt from 'bcryptjs';
+const bcrypt = _bcrypt.default || _bcrypt;
 import vectorSearch from './services/vector-search.service.js';
 
 // Initialize environment variables

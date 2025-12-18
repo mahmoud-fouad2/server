@@ -1,6 +1,7 @@
 import express from 'express';
 const router = express.Router();
-import bcrypt from 'bcryptjs';
+import * as _bcrypt from 'bcryptjs';
+const bcrypt = _bcrypt.default || _bcrypt;
 import crypto from 'crypto';
 import prisma from '../config/database.js';
 import logger from '../utils/logger.js';

@@ -1,7 +1,9 @@
-import pdf from 'pdf-parse';
+import * as _pdfParse from 'pdf-parse';
+const pdf = _pdfParse.default || _pdfParse;
 import fs from 'fs';
 import axios from 'axios';
-import cheerio from 'cheerio';
+import * as _cheerio from 'cheerio';
+const cheerio = _cheerio.default || _cheerio;
 // path not used directly; keep minimal imports
 import prisma from '../config/database.js';
 import logger from '../utils/logger.js';

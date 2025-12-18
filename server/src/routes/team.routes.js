@@ -3,7 +3,8 @@ const router = express.Router();
 import prisma from '../config/database.js';
 import logger from '../utils/logger.js';
 import { authenticateToken } from '../middleware/auth.js';
-import bcrypt from 'bcryptjs';
+import * as _bcrypt from 'bcryptjs';
+const bcrypt = _bcrypt.default || _bcrypt;
 
 // Get all employees for the business
 router.get('/', authenticateToken, async (req, res) => {

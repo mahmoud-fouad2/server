@@ -11,7 +11,8 @@ import asyncHandler from 'express-async-handler';
 import adminUserService from '../services/admin-users.service.js';
 import logger from '../utils/logger.js';
 import prisma from '../config/database.js';
-import bcrypt from 'bcryptjs';
+import * as _bcrypt from 'bcryptjs';
+const bcrypt = _bcrypt.default || _bcrypt;
 
 /**
  * @desc    Get all users with pagination, filtering, and search

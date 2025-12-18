@@ -1,5 +1,6 @@
 import prisma from '../config/database.js';
-import bcrypt from 'bcryptjs';
+import * as _bcrypt from 'bcryptjs';
+const bcrypt = _bcrypt.default || _bcrypt;
 
 class AdminUserService {
   /**
