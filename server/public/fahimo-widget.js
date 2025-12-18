@@ -63,6 +63,30 @@
         return;
     }
 
+    // Listen for config update signals from dashboard (via localStorage or BroadcastChannel)
+    const updateChannelName = `fahimo-config-update-${businessId}`;
+    let broadcastChannel = null;
+    try {
+        broadcastChannel = new BroadcastChannel(updateChannelName);
+        broadcastChannel.onmessage = (event) => {
+            if (event.data && event.data.type === 'CONFIG_UPDATED') {
+                // Force immediate refresh
+                console.log('[Fahimo] Received config update signal, refreshing...');
+                triggerConfigRefresh();
+            }
+        };
+    } catch (e) {
+        // BroadcastChannel not supported, will fall back to polling
+    }
+
+    // Also listen via storage events (cross-tab)
+    window.addEventListener('storage', (event) => {
+        if (event.key === `${updateChannelName}-notify`) {
+            console.log('[Fahimo] Received storage update signal');
+            triggerConfigRefresh();
+        }
+    });
+
     // Session Management (from enhanced version)
     // Use safe storage helpers to gracefully handle Tracking Prevention (which may block localStorage)
     const _inMemoryStorage = new Map();
@@ -861,6 +885,46 @@
                 // ignore
             }
         })();
+
+        // Function to trigger immediate config refresh (called by update signals)
+        function triggerConfigRefresh() {
+            fetch(`${apiUrl}/api/widget/config/${businessId}?_=${Date.now()}`)
+                .then(res => res.json())
+                .then(data => {
+                    const config = data.widgetConfig || {};
+                    console.log('[Fahimo] Applying config update:', config);
+
+                    // Apply primary color
+                    if (config.primaryColor) {
+                        const color = config.primaryColor;
+                        const launcher = document.getElementById('fahimo-launcher');
+                        const header = document.getElementById('fahimo-header');
+                        const send = document.getElementById('fahimo-send');
+                        
+                        if (launcher) launcher.style.background = color;
+                        if (header) header.style.background = color;
+                        if (send) send.style.background = color;
+                        
+                        const dynamicStyle = document.createElement('style');
+                        dynamicStyle.setAttribute('data-fahimo-refresh', String(Date.now()));
+                        dynamicStyle.innerHTML = `
+                            .fahimo-msg.user { background: ${color} !important; }
+                            #fahimo-launcher { background: ${color} !important; }
+                        `;
+                        document.head.appendChild(dynamicStyle);
+                    }
+
+                    // Apply welcome message
+                    if (config.welcomeMessage && messagesDiv && messagesDiv.children.length === 1) {
+                        let welcome = config.welcomeMessage;
+                        const msgDiv = document.createElement('div');
+                        msgDiv.className = 'fahimo-msg bot';
+                        msgDiv.innerText = welcome;
+                        messagesDiv.appendChild(msgDiv);
+                    }
+                })
+                .catch(err => console.log('[Fahimo] Config refresh failed:', err));
+        }
 
         // Send Message
         async function sendMessage() {

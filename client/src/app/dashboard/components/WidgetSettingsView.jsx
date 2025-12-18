@@ -57,6 +57,19 @@ export default function WidgetSettingsView({
     setSavingConfig(true);
     try {
       await widgetApi.updateConfig(widgetConfig);
+      
+      // Broadcast config update to widget (immediate refresh without waiting 30s)
+      const businessId = user?.businessId;
+      if (businessId) {
+        try {
+          const bc = new BroadcastChannel(`fahimo-config-update-${businessId}`);
+          bc.postMessage({ type: 'CONFIG_UPDATED', timestamp: Date.now() });
+          bc.close();
+        } catch (e) {
+          localStorage.setItem(`fahimo-config-update-${businessId}-notify`, Date.now());
+        }
+      }
+      
       // Update business pre-chat form setting separately if present
       if (typeof widgetConfig.preChatFormEnabled === 'boolean') {
         try {
@@ -114,6 +127,18 @@ export default function WidgetSettingsView({
         customIconUrl: iconUrl,
         avatar: 'custom',
       });
+      
+      // Broadcast config update to widget
+      const businessId = user?.businessId;
+      if (businessId) {
+        try {
+          const bc = new BroadcastChannel(`fahimo-config-update-${businessId}`);
+          bc.postMessage({ type: 'CONFIG_UPDATED', timestamp: Date.now() });
+          bc.close();
+        } catch (e) {
+          localStorage.setItem(`fahimo-config-update-${businessId}-notify`, Date.now());
+        }
+      }
       
       addNotification('تم رفع الأيقونة بنجاح وحفظها');
     } catch (err) {

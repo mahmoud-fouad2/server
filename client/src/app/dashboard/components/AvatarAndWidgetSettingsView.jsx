@@ -107,6 +107,20 @@ export default function AvatarAndWidgetSettingsView({
       if (response.ok) {
         const data = await response.json();
         addNotification(`تم حفظ إعدادات الأفاتار والأيقونة (config v:${data.configVersion})`, 'success');
+        
+        // Broadcast config update to widget (immediate refresh without waiting 30s)
+        const businessId = user?.businessId;
+        if (businessId) {
+          try {
+            const bc = new BroadcastChannel(`fahimo-config-update-${businessId}`);
+            bc.postMessage({ type: 'CONFIG_UPDATED', timestamp: Date.now() });
+            bc.close();
+          } catch (e) {
+            // BroadcastChannel not supported, fallback to localStorage
+            localStorage.setItem(`fahimo-config-update-${businessId}-notify`, Date.now());
+          }
+        }
+        
         // update previews and variant
         if (data.widgetConfig) {
           try {
