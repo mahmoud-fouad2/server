@@ -486,7 +486,10 @@
 
         // Load Config
         fetch(`${apiUrl}/api/widget/config/${businessId}`)
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) throw new Error('Widget config fetch failed: ' + res.status);
+                return res.json();
+            })
             .then(data => {
                 const config = data.widgetConfig || {};
                 // Prefer API/Config name but sanitize to remove any 'Demo' branding
@@ -518,6 +521,14 @@
                 if (!conversationId && messagesDiv) {
                     // Sanitize welcome message to remove 'Demo' mentions
                     let welcome = config.welcomeMessage || "Hello! How can I help?";
+            })
+            .catch(err => {
+                // Handle network/config fetch errors gracefully with defaults
+                console.warn('Widget config fetch failed for businessId', businessId, err);
+                const botName = 'Faheemly Assistant';
+                document.getElementById('fahimo-bot-name').innerText = botName;
+                // use default minimal styling
+            });
                     welcome = String(welcome || '').replace(/demo/gi, '').replace(/\bBusiness\b/gi, '').trim();
                     if (!welcome) welcome = "Hello! How can I help?";
                     addMessage(welcome, 'bot');

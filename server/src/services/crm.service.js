@@ -183,10 +183,18 @@ class CrmService {
    * Enable/disable CRM for a business (Super Admin only)
    */
   async toggleCrm(businessId, enabled) {
-    return await prisma.business.update({
-      where: { id: businessId },
-      data: { crmLeadCollectionEnabled: enabled }
-    });
+    try {
+      return await prisma.business.update({
+        where: { id: businessId },
+        data: { crmLeadCollectionEnabled: enabled }
+      });
+    } catch (e) {
+      if (e && e.code === 'P2025') {
+        logger.warn('toggleCrm: business not found', { businessId });
+        return null;
+      }
+      throw e;
+    }
   }
 
   /**

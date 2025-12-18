@@ -482,15 +482,25 @@ class PaymentService {
 
       // Update business quota and plan
       if (payment.messageQuota) {
-        await prisma.business.update({
-          where: { id: payment.businessId },
-          data: {
-            messageQuota: {
-              increment: payment.messageQuota
-            },
-            ...(payment.planType && { planType: payment.planType })
+        try {
+          await prisma.business.update({
+            where: { id: payment.businessId },
+            data: {
+              messageQuota: {
+                increment: payment.messageQuota
+              },
+              ...(payment.planType && { planType: payment.planType })
+            }
+          });
+        } catch (e) {
+          // If the business was removed concurrently, log a warning rather than failing the whole payment processing
+          if (e && e.code === 'P2025') {
+            logger.warn('Payment processing: business not found when updating quota', { businessId: payment.businessId });
+          } else {
+            logger.error('Payment processing: unexpected error updating business quota', e);
+            throw e; // Re-throw unexpected errors so they can be handled upstream
           }
-        });
+        }
       }
 
       // Create subscription if plan type is provided

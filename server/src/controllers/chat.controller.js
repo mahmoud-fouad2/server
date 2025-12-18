@@ -574,7 +574,12 @@ export const sendMessage = asyncHandler(async (req, res) => {
         data: { messagesUsed: { increment: 1 } }
       });
     } catch (e) {
-      logger.warn('Failed to update business usage:', e);
+      // Prisma P2025 = Record to update not found
+      if (e && e.code === 'P2025') {
+        logger.warn('Failed to update business usage: business not found', { businessId });
+      } else {
+        logger.error('Unexpected error updating business usage', e);
+      }
     }
 
     // Sanitize response to remove provider/model signatures
