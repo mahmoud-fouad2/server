@@ -217,7 +217,8 @@ router.post('/config', authenticateToken, resolveBusinessId, async (req, res) =>
 
     // Broadcast to SSE subscribers so widgets update immediately
     try {
-      broadcaster.send(updatedBusiness.id, 'CONFIG_UPDATED', { configVersion: updatedBusiness.updatedAt?.getTime() || Date.now() });
+      const parsedConfig = updatedBusiness.widgetConfig ? JSON.parse(updatedBusiness.widgetConfig) : {};
+      broadcaster.send(updatedBusiness.id, 'CONFIG_UPDATED', { configVersion: updatedBusiness.updatedAt?.getTime() || Date.now(), widgetConfig: parsedConfig });
     } catch (e) {
       logger.warn('Failed to broadcast config update', e?.message || e);
     }
@@ -293,9 +294,11 @@ router.post('/upload-icon', authenticateToken, resolveBusinessId, upload.single(
       data: { widgetConfig: JSON.stringify(currentConfig) }
     });
 
-    // Broadcast to subscribers so widgets update immediately
+    // Broadcast to subscribers so widgets update immediately (include full parsed config when possible)
     try {
-      broadcaster.send(businessId, 'CONFIG_UPDATED', { customIconUrl: finalIconUrl });
+      const updatedBiz = await prisma.business.findUnique({ where: { id: businessId }, select: { widgetConfig: true } });
+      const parsed = updatedBiz?.widgetConfig ? JSON.parse(updatedBiz.widgetConfig) : { customIconUrl: finalIconUrl };
+      broadcaster.send(businessId, 'CONFIG_UPDATED', { customIconUrl: finalIconUrl, widgetConfig: parsed });
     } catch (e) {
       logger.warn('Failed to broadcast icon upload', e?.message || e);
     }

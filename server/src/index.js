@@ -710,7 +710,7 @@ app.use('/api', (req, res) => {
 // Error handling middleware (must be last)
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 3002;
+const PORT = process.env.PORT || process.env.RENDER_PORT || 3002;
 
 // Validate environment variables on startup
 

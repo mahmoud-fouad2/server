@@ -1,10 +1,22 @@
 (function() {
     // Fahimo Widget - Enhanced Version with Tabs, Audio, and Avatar Support
-    if (window.__FAHIMO_WIDGET_ENHANCED_LOADED) return;
-    window.__FAHIMO_WIDGET_ENHANCED_LOADED = true;
+    // Lightweight global marker - real per-business guard applied after businessId is determined
+    if (!window.__FAHIMO_WIDGET_LOADER) window.__FAHIMO_WIDGET_LOADER = { initialized: true };
 
     const scriptTag = document.currentScript;
     const businessId = scriptTag && scriptTag.getAttribute && scriptTag.getAttribute('data-business-id');
+
+    // Prevent multiple instances per business id
+    window.__FAHIMO_WIDGET_LOADED_FOR = window.__FAHIMO_WIDGET_LOADED_FOR || {};
+    if (!businessId) {
+        console.error('Fahimo: Business ID is missing.');
+        return;
+    }
+    if (window.__FAHIMO_WIDGET_LOADED_FOR[businessId]) {
+        console.warn('[Fahimo] Enhanced widget already initialized for businessId:', businessId);
+        return;
+    }
+    window.__FAHIMO_WIDGET_LOADED_FOR[businessId] = true;
 
     // Determine API URL via data attribute / global override / script origin / fallback
     let apiUrl = 'https://fahimo-api.onrender.com';
@@ -838,6 +850,53 @@
 
         // initial load
         loadOnce();
+
+        // SSE subscribe for immediate updates from backend
+        try {
+            const sseUrl = `${apiUrl.replace(/\/$/, '')}/api/widget/subscribe?businessId=${businessId}`;
+            let _sseBackoff = 1000;
+            function _attachSSE() {
+                try {
+                    const evt = new EventSource(sseUrl);
+                    evt.onopen = function() { _sseBackoff = 1000; console.debug('[Fahimo] Enhanced SSE connected'); };
+                    evt.onmessage = function(e) {
+                        try { console.log('[Fahimo] Enhanced SSE message', e.data); } catch (ignore) {}
+                        try {
+                            if (e.data) {
+                                const parsed = JSON.parse(e.data);
+                                if (parsed && parsed.widgetConfig) {
+                                    applyConfigData({ widgetConfig: parsed.widgetConfig, name: parsed.name, configVersion: parsed.configVersion });
+                                    return;
+                                }
+                            }
+                        } catch(err) {}
+                        // fallback: trigger a fresh load
+                        loadOnce();
+                    };
+                    evt.addEventListener('CONFIG_UPDATED', (e) => {
+                        try { console.log('[Fahimo] Enhanced SSE CONFIG_UPDATED', e.data); } catch (ignore) {}
+                        try {
+                            if (e.data) {
+                                const parsed = JSON.parse(e.data);
+                                if (parsed && parsed.widgetConfig) {
+                                    applyConfigData({ widgetConfig: parsed.widgetConfig, name: parsed.name, configVersion: parsed.configVersion });
+                                    return;
+                                }
+                            }
+                        } catch (err) {}
+                        loadOnce();
+                    });
+                    evt.onerror = function(err) {
+                        try { console.warn('[Fahimo] Enhanced SSE error', err); } catch (ignore) {}
+                        try { evt.close(); } catch (e) {}
+                        setTimeout(() => { _sseBackoff = Math.min(60000, _sseBackoff * 2); _attachSSE(); }, _sseBackoff);
+                    };
+                } catch (e) {
+                    // ignore - fall back to polling
+                }
+            }
+            _attachSSE();
+        } catch (e) {}
 
         // polling
         const pollMs = 30 * 1000;

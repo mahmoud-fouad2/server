@@ -1,0 +1,37 @@
+name: E2E: Widget Tests
+
+on:
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch: {}
+
+jobs:
+  test-widget-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies (client)
+        working-directory: ./client
+        run: |
+          npm ci
+
+      - name: Install Playwright browsers
+        working-directory: ./client
+        run: |
+          npx playwright install --with-deps
+
+      - name: Run Playwright E2E tests
+        working-directory: ./client
+        env:
+          # Override FRONTEND_URL in CI to point to a deployed staging URL when available
+          FRONTEND_URL: ${{ secrets.TEST_FRONTEND_URL || '' }}
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 'false'
+        run: |
+          npm run test:e2e --forbid-only

@@ -1,12 +1,23 @@
 (function() {
     // Fahimo Widget - Unified and Enhanced Version
-    // Single-instance loader with session tracking, rating, and analytics
-    if (window.__FAHIMO_WIDGET_LOADED) return;
-    window.__FAHIMO_WIDGET_LOADED = true;
+    // Lightweight global marker - real per-business guard applied after businessId is determined
+    if (!window.__FAHIMO_WIDGET_LOADER) window.__FAHIMO_WIDGET_LOADER = { initialized: true };
 
     // Configuration
     const scriptTag = document.currentScript;
     const businessId = scriptTag && scriptTag.getAttribute && scriptTag.getAttribute('data-business-id');
+
+    // Prevent multiple instances per business id (idempotent if widget script is included more than once or different variants are loaded)
+    window.__FAHIMO_WIDGET_LOADED_FOR = window.__FAHIMO_WIDGET_LOADED_FOR || {};
+    if (!businessId) {
+        console.error('Fahimo: Business ID is missing.');
+        return;
+    }
+    if (window.__FAHIMO_WIDGET_LOADED_FOR[businessId]) {
+        console.warn('[Fahimo] Widget already initialized for businessId:', businessId);
+        return;
+    }
+    window.__FAHIMO_WIDGET_LOADED_FOR[businessId] = true;
 
     // Determine API URL with multiple override options (data attribute, global override, script origin, fallback)
     let apiUrl = 'https://fahimo-api.onrender.com'; // default fallback
@@ -67,6 +78,73 @@
     let messagesDiv = null;
     let botName = 'Faheemly Assistant';
     let prechatEnabled = false;
+
+    // Lightweight applyConfig helper (can be invoked when we get payloads over SSE)
+    function applyConfig(config) {
+        try {
+            if (!config || typeof config !== 'object') return;
+
+            // Apply primary color
+            if (config.primaryColor) {
+                const color = config.primaryColor;
+                const launcher = document.getElementById('fahimo-launcher');
+                const header = document.getElementById('fahimo-header');
+                const send = document.getElementById('fahimo-send');
+                if (launcher) launcher.style.background = color;
+                if (header) header.style.background = color;
+                if (send) send.style.background = color;
+                const dynamicStyle = document.createElement('style');
+                dynamicStyle.setAttribute('data-fahimo-refresh', String(Date.now()));
+                dynamicStyle.innerHTML = `
+                    .fahimo-msg.user { background: ${color} !important; }
+                    #fahimo-launcher { background: ${color} !important; }
+                `;
+                document.head.appendChild(dynamicStyle);
+            }
+
+            // Apply custom icon data/url
+            if (config.customIconData || config.customIconUrl) {
+                const avatarEl = document.getElementById('fahimo-bot-avatar');
+                if (avatarEl) {
+                    const img = document.createElement('img');
+                    img.src = config.customIconData || config.customIconUrl;
+                    img.alt = 'Bot';
+                    img.style.width = '100%'; img.style.height = '100%'; img.style.borderRadius = '50%'; img.style.objectFit = 'cover'; img.style.display = 'block';
+                    img.onerror = function() { try{ img.remove(); } catch(e){}; avatarEl.style.background='rgba(255,255,255,0.12)'; avatarEl.innerText = (botName && botName[0]) ? botName[0] : 'F'; };
+                    avatarEl.innerHTML = '';
+                    avatarEl.appendChild(img);
+                    avatarEl.style.background = 'transparent';
+                }
+            }
+
+            // Apply bot name
+            if (config.name) {
+                const newName = String(config.name || '') .replace(/demo/gi, '').replace(/\bBusiness\b/gi, '').trim();
+                if (newName && newName !== botName) {
+                    botName = newName || 'Faheemly Assistant';
+                    const nameEl = document.getElementById('fahimo-bot-name');
+                    if (nameEl) nameEl.innerText = botName;
+                    window.__FAHIMO_WIDGET_BOT_NAME = botName;
+                }
+            }
+
+            // preChat toggle
+            if (typeof config.preChatFormEnabled !== 'undefined') {
+                prechatEnabled = config.preChatFormEnabled || false;
+            }
+
+            // welcome message: only add if there is exactly one child (initial state)
+            if (config.welcomeMessage && messagesDiv && messagesDiv.children.length === 1) {
+                let welcome = config.welcomeMessage;
+                const msgDiv = document.createElement('div');
+                msgDiv.className = 'fahimo-msg bot';
+                msgDiv.innerText = welcome;
+                messagesDiv.appendChild(msgDiv);
+            }
+        } catch (err) {
+            console.warn('[Fahimo] applyConfig error', err);
+        }
+    }
 
     // Define triggerConfigRefresh early so it can be called by event listeners
     function triggerConfigRefresh() {
@@ -184,20 +262,57 @@
     // Also subscribe to server-sent events (SSE) for cross-client immediate updates
     try {
         const sseUrl = `${apiUrl.replace(/\/$/, '')}/api/widget/subscribe?businessId=${businessId}`;
-        const evt = new EventSource(sseUrl);
-        evt.onmessage = function(e) {
-            // Generic message - trigger refresh
-            try { console.log('[Fahimo] SSE message received'); } catch (ignore) {}
-            triggerConfigRefresh();
-        };
-        evt.addEventListener('CONFIG_UPDATED', function(e) {
-            try { console.log('[Fahimo] SSE CONFIG_UPDATED event received: ', e.data); } catch (ignore) {}
-            triggerConfigRefresh();
-        });
-        evt.onerror = function(err) {
-            try { console.warn('[Fahimo] SSE connection error', err); } catch (ignore) {}
-            // EventSource will retry automatically; no further action required
-        };
+        // Robust SSE handling with direct payload application and reconnect/backoff fallback
+        let _sseBackoff = 1000; // start 1s
+        let _sseAlive = false;
+        function _attachSSE() {
+            try {
+                const evt = new EventSource(sseUrl);
+                evt.onopen = function() { _sseAlive = true; _sseBackoff = 1000; console.debug('[Fahimo] SSE connected'); };
+                evt.onmessage = function(e) {
+                    try { console.log('[Fahimo] SSE message received', e.data); } catch (ignore) {}
+                    // Some broadcasts include widgetConfig payload - apply immediately when present
+                    try {
+                        if (e.data) {
+                            const parsed = JSON.parse(e.data);
+                            if (parsed && parsed.widgetConfig) {
+                                try { applyConfig(parsed.widgetConfig); } catch (err) { triggerConfigRefresh(); }
+                                return;
+                            }
+                        }
+                    } catch (err) {
+                        // not JSON or parse failed - fallback to trigger refresh
+                    }
+
+                    triggerConfigRefresh();
+                };
+                evt.addEventListener('CONFIG_UPDATED', function(e) {
+                    try { console.log('[Fahimo] SSE CONFIG_UPDATED event received: ', e.data); } catch (ignore) {}
+                    try {
+                        if (e.data) {
+                            const parsed = JSON.parse(e.data);
+                            if (parsed && parsed.widgetConfig) {
+                                try { applyConfig(parsed.widgetConfig); } catch (err) { triggerConfigRefresh(); }
+                                return;
+                            }
+                        }
+                    } catch (err) {}
+                    triggerConfigRefresh();
+                });
+                evt.onerror = function(err) {
+                    try { console.warn('[Fahimo] SSE connection error', err); } catch (ignore) {}
+                    _sseAlive = false;
+                    try { evt.close(); } catch (e) {}
+                    setTimeout(() => {
+                        _sseBackoff = Math.min(60000, _sseBackoff * 2);
+                        _attachSSE();
+                    }, _sseBackoff);
+                };
+            } catch (e) {
+                // EventSource not available or blocked; fall back to polling (already enabled)
+            }
+        }
+        _attachSSE();
     } catch (e) {
         // EventSource not supported or blocked
     }
@@ -671,9 +786,16 @@
     `;
     document.head.appendChild(style);
 
+    // Ensure we don't create duplicate DOM for the same business
+    if (document.querySelector(`#fahimo-widget-container[data-business-id="${businessId}"]`)) {
+        console.warn('[Fahimo] Widget DOM already present for businessId:', businessId);
+        return;
+    }
+
     // Create Widget HTML (with rating added)
     const container = document.createElement('div');
     container.id = 'fahimo-widget-container';
+    container.setAttribute('data-business-id', String(businessId));
     container.innerHTML = `
         <div id="fahimo-chat-window">
             <div id="fahimo-header">
