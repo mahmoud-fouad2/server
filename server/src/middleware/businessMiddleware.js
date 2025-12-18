@@ -17,6 +17,7 @@ const resolveBusinessId = async (req, res, next) => {
         req.user.businessId = headerBusinessId;
         return next();
       }
+      logger.warn('resolveBusinessId: invalid business id provided in header', { headerBusinessId });
       return res.status(400).json({ error: 'Invalid business id provided in request header.' });
     }
 
