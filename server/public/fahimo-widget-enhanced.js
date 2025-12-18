@@ -812,7 +812,26 @@
                 const resp = await fetch(`${apiUrl}/api/widget/config/${businessId}`);
                 if (!resp.ok) return;
                 const d = await resp.json();
-                if (d && d.isDemo) console.warn('[Fahimo] Enhanced widget config returned demo response — business not found or no config for businessId:', businessId);
+                if (d && d.isDemo) {
+                    console.warn('[Fahimo] Enhanced widget config returned demo response — business not found or no config for businessId:', businessId);
+                    try {
+                        const badge = document.createElement('div');
+                        badge.id = 'fahimo-demo-badge-enhanced';
+                        badge.innerText = 'Demo widget (no business config)';
+                        badge.style.position = 'fixed';
+                        badge.style.bottom = '120px';
+                        badge.style.right = '20px';
+                        badge.style.padding = '6px 10px';
+                        badge.style.background = 'rgba(220,38,38,0.95)';
+                        badge.style.color = 'white';
+                        badge.style.fontSize = '12px';
+                        badge.style.borderRadius = '6px';
+                        badge.style.zIndex = '100000';
+                        badge.style.boxShadow = '0 6px 20px rgba(0,0,0,0.2)';
+                        badge.title = 'Widget is using demo/default config because business record was not found on the API';
+                        if (!document.getElementById('fahimo-demo-badge-enhanced')) document.body.appendChild(badge);
+                    } catch (e) {}
+                }
                 await applyConfigData(d);
             } catch (e) {}
         }
