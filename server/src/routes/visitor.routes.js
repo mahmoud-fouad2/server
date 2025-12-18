@@ -13,12 +13,17 @@ import logger from '../utils/logger.js';
  */
 router.post('/session', async (req, res) => {
   try {
-    const { businessId, fingerprint } = req.body;
+    // Accept businessId from body, query, or header for widget clients
+    const businessId = req.body.businessId || req.query.businessId || req.headers['x-business-id'] || req.headers['x_business_id'] || req.headers['businessid'];
+    // Fingerprint may come from body or a cookie/header from the widget
+    const fingerprint = req.body.fingerprint || req.headers['x-fingerprint'] || req.cookies?.fingerprint;
 
     if (!businessId || !fingerprint) {
+      // Provide helpful debug hint to the client
+      logger.debug('Visitor session missing parameters', { businessId: !!businessId, fingerprint: !!fingerprint });
       return res.status(400).json({ 
         success: false, 
-        message: 'businessId and fingerprint are required' 
+        message: 'businessId and fingerprint are required. Provide in body, query or headers (x-business-id, x-fingerprint).' 
       });
     }
 
@@ -36,7 +41,7 @@ router.post('/session', async (req, res) => {
       }
     });
   } catch (error) {
-    logger.error('Visitor session endpoint error', { error: error.message });
+    logger.error('Visitor session endpoint error', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
@@ -47,12 +52,14 @@ router.post('/session', async (req, res) => {
  */
 router.post('/page-visit', async (req, res) => {
   try {
-    const { sessionId, url, title, path } = req.body;
+    const sessionId = req.body.sessionId || req.headers['x-session-id'] || req.cookies?.sessionId;
+    const { url, title, path } = req.body;
 
     if (!sessionId || !url || !path) {
+      logger.debug('Page visit missing parameters', { sessionId: !!sessionId, url: !!url, path: !!path });
       return res.status(400).json({ 
         success: false, 
-        message: 'sessionId, url, and path are required' 
+        message: 'sessionId (body/header), url, and path are required.' 
       });
     }
 
@@ -60,7 +67,7 @@ router.post('/page-visit', async (req, res) => {
 
     res.json({ success: true, visitId: visit.id });
   } catch (error) {
-    logger.error('Page visit endpoint error', { error: error.message });
+    logger.error('Page visit endpoint error', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
@@ -87,7 +94,7 @@ router.put('/page-visit/:id', async (req, res) => {
 
     res.json({ success: true, visit });
   } catch (error) {
-    logger.error('Update page visit endpoint error', { visitId: req.params.id, error: error.message });
+    logger.error('Update page visit endpoint error', error, { visitId: req.params.id });
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
@@ -98,17 +105,18 @@ router.put('/page-visit/:id', async (req, res) => {
  */
 router.post('/end-session', async (req, res) => {
   try {
-    const { sessionId } = req.body;
+    const sessionId = req.body.sessionId || req.headers['x-session-id'] || req.cookies?.sessionId;
 
     if (!sessionId) {
-      return res.status(400).json({ success: false, message: 'sessionId is required' });
+      logger.debug('End session missing sessionId');
+      return res.status(400).json({ success: false, message: 'sessionId is required (body or x-session-id header).' });
     }
 
     const session = await visitorService.endSession(sessionId);
 
     res.json({ success: true, session });
   } catch (error) {
-    logger.error('End session endpoint error', { error: error.message });
+    logger.error('End session endpoint error', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
@@ -128,6 +136,12 @@ router.get('/active-sessions', authenticateToken, async (req, res) => {
     }
 
     if (!businessId) {
+      // Also accept business id from headers for admin widgets
+      const headerBusinessId = req.headers['x-business-id'] || req.headers['x_business_id'];
+      if (headerBusinessId) businessId = headerBusinessId;
+    }
+
+    if (!businessId) {
       return res.status(400).json({ success: false, message: 'Business ID is required or user has no associated business' });
     }
 
@@ -135,7 +149,7 @@ router.get('/active-sessions', authenticateToken, async (req, res) => {
 
     res.json({ success: true, sessions });
   } catch (error) {
-    logger.error('Active sessions endpoint error', { error: error.message });
+    logger.error('Active sessions endpoint error', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
@@ -155,6 +169,11 @@ router.get('/analytics', authenticateToken, async (req, res) => {
     }
 
     if (!businessId) {
+      const headerBusinessId = req.headers['x-business-id'] || req.headers['x_business_id'];
+      if (headerBusinessId) businessId = headerBusinessId;
+    }
+
+    if (!businessId) {
       return res.status(400).json({ success: false, message: 'Business ID is required or user has no associated business' });
     }
 
@@ -166,7 +185,7 @@ router.get('/analytics', authenticateToken, async (req, res) => {
 
     res.json({ success: true, analytics });
   } catch (error) {
-    logger.error('Visitor analytics endpoint error', { error: error.message });
+    logger.error('Visitor analytics endpoint error', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
@@ -201,7 +220,7 @@ router.post('/track-user', authenticateToken, async (req, res) => {
 
     res.json({ success: true, activity });
   } catch (error) {
-    logger.error('Track user activity endpoint error', { error: error.message });
+    logger.error('Track user activity endpoint error', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
@@ -228,7 +247,7 @@ router.get('/user-activities', authenticateToken, async (req, res) => {
 
     res.json({ success: true, activities });
   } catch (error) {
-    logger.error('User activities endpoint error', { error: error.message });
+    logger.error('User activities endpoint error', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });

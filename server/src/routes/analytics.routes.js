@@ -78,7 +78,7 @@ router.get('/dashboard', authenticateToken, async (req, res) => {
     });
 
   } catch (error) {
-    logger.error('Dashboard custom range error', { error });
+    logger.error('Dashboard custom range error', error);
     res.status(500).json({ error: 'Failed to fetch dashboard stats' });
   }
 });
@@ -151,7 +151,7 @@ router.get('/dashboard/:days', authenticateToken, async (req, res) => {
     });
 
   } catch (error) {
-    logger.error('Dashboard stats error', { error });
+    logger.error('Dashboard stats error', error);
     res.status(500).json({ error: 'Failed to fetch dashboard stats' });
   }
 });
@@ -176,7 +176,19 @@ router.get('/vector-stats', authenticateToken, async (req, res) => {
     });
 
   } catch (error) {
-    logger.error('Vector stats error', { error });
+    // Ensure we log an Error instance so the stack is included in logs
+    let errToLog = null;
+    if (error instanceof Error) errToLog = error;
+    else if (error && error.error instanceof Error) errToLog = error.error;
+    else {
+      try {
+        errToLog = new Error('Vector stats error: ' + (typeof error === 'string' ? error : JSON.stringify(error)));
+      } catch (e) {
+        errToLog = new Error('Vector stats error (unserializable)');
+      }
+    }
+
+    logger.error('Vector stats error', errToLog, { raw: error });
     res.status(500).json({ error: 'Failed to fetch vector stats' });
   }
 });
@@ -293,7 +305,7 @@ router.get('/stats/overview/:businessId', authenticateToken, async (req, res) =>
     });
 
   } catch (error) {
-    logger.error('Analytics error', { error });
+    logger.error('Analytics error', error);
     res.status(500).json({ error: 'فشل جلب الإحصائيات' });
   }
 });
@@ -334,7 +346,7 @@ router.get('/stats/top-questions/:businessId', authenticateToken, async (req, re
     res.json({ topQuestions });
 
   } catch (error) {
-    logger.error('Top questions error', { error });
+    logger.error('Top questions error', error);
     res.status(500).json({ error: 'فشل جلب الأسئلة الشائعة' });
   }
 });

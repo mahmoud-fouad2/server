@@ -1,6 +1,5 @@
 import prisma from '../config/database.js';
-const UAParserModule = await import('ua-parser-js');
-const UAParser = UAParserModule?.UAParser || UAParserModule?.default || UAParserModule;
+import UAParser from 'ua-parser-js';
 import logger from '../utils/logger.js';
 
 class VisitorService {

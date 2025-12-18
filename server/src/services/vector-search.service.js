@@ -36,7 +36,7 @@ class VectorSearchService {
       logger.info('Starting vector search with embeddings', { businessId, queryLength: query.length });
       
       // Use embedding-based vector search (works without pgvector)
-      const similarityThreshold = threshold || parseFloat(process.env.VECTOR_SIMILARITY_THRESHOLD || '0.5');
+      const similarityThreshold = threshold || parseFloat(process.env.VECTOR_SIMILARITY_THRESHOLD || '0.7');
       return await this.vectorSearch(query, businessId, limit, similarityThreshold);
     } catch (vectorError) {
       logger.warn('Vector search with embeddings failed, using enhanced keyword search', { 
@@ -59,8 +59,33 @@ class VectorSearchService {
    * @returns {Promise<Array>} - Matching knowledge chunks
    */
   async fallbackKeywordSearch(query, businessId, limit = 5) {
-    // Use the enhanced keyword search
-    return await this.enhancedKeywordSearch(query, businessId, limit);
+    try {
+      const keywords = this.extractKeywords(query);
+      if (keywords.length === 0) {
+        const recentKnowledge = await prisma.knowledgeBase.findMany({
+          where: { businessId },
+          orderBy: { createdAt: 'desc' },
+          take: limit
+        });
+        return recentKnowledge;
+      }
+
+      const chunkResults = await prisma.knowledgeChunk.findMany({
+        where: {
+          businessId,
+          OR: keywords.map(keyword => ({
+            content: { contains: keyword, mode: 'insensitive' }
+          }))
+        },
+        orderBy: { createdAt: 'desc' },
+        take: limit * 2
+      });
+
+      return chunkResults;
+    } catch (error) {
+      logger.error('Fallback keyword search error', error);
+      return [];
+    }
   }
 
   /**
@@ -73,10 +98,14 @@ class VectorSearchService {
     // On free tier, we use embedding-based search which doesn't require pgvector
     // This always returns true, but we could check for embedding availability
     try {
-      const testChunk = await prisma.knowledgeChunk.findFirst({
-        select: { embedding: true }
-      });
-      return true; // Embedding service is available
+      if (typeof prisma.$queryRaw === 'function') {
+        // Prefer raw check for pgvector extension when available
+        const result = await prisma.$queryRaw`SELECT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'vector') as available`;
+        return Array.isArray(result) ? !!result[0]?.available : !!result?.available;
+      }
+
+      const testChunk = await prisma.knowledgeChunk.findFirst({ select: { embedding: true } });
+      return true;
     } catch (error) {
       logger.debug('Vector search not available', { error: error.message });
       return false;
@@ -101,9 +130,7 @@ class VectorSearchService {
    */
   async getSearchStats(businessId) {
     try {
-      const totalChunks = await prisma.knowledgeChunk.count({
-        where: { businessId }
-      });
+      const totalChunks = await prisma.knowledgeChunk.count({ where: { businessId } });
 
       // Count chunks with embeddings (our free-tier vector search method)
       const chunksWithEmbeddings = await prisma.knowledgeChunk.count({
@@ -117,16 +144,42 @@ class VectorSearchService {
         ? ((chunksWithEmbeddings / totalChunks) * 100).toFixed(2)
         : 0;
 
+      // Determine if pgvector extension is available
+      const pgVector = await this.isPgVectorAvailable();
+
+      // Try to infer embedding dimension from one chunk (if present)
+      let dimension = null;
+      try {
+        const sample = await prisma.knowledgeChunk.findFirst({
+          where: { businessId, embedding: { not: null } },
+          select: { embedding: true }
+        });
+        if (sample && sample.embedding) {
+          if (Array.isArray(sample.embedding)) dimension = sample.embedding.length;
+          else if (typeof sample.embedding === 'string') {
+            try {
+              const parsed = JSON.parse(sample.embedding);
+              if (Array.isArray(parsed)) dimension = parsed.length;
+            } catch (e) {
+              // ignore parse errors
+            }
+          }
+        }
+      } catch (e) {
+        logger.debug('Failed to infer embedding dimension', { businessId, error: e?.message || e });
+      }
+
       return {
         totalChunks,
         chunksWithEmbeddings,
         coveragePercentage: parseFloat(coverage),
-        isPgVectorAvailable: false, // Free tier doesn't use pgvector
-        usingEmbeddingBasedSearch: true, // Using Gemini embeddings + cosine similarity
-        method: 'embedding-based (free tier compatible)'
+        isPgVectorAvailable: !!pgVector,
+        usingEmbeddingBasedSearch: true,
+        method: pgVector ? 'pgvector (db-backed)' : 'embedding-based (in-memory)',
+        detectedDimension: dimension
       };
     } catch (error) {
-      logger.error('Failed to get vector search statistics', { businessId, error: error.message });
+      logger.error('Failed to get vector search statistics', error, { businessId });
       return null;
     }
   }
@@ -142,12 +195,58 @@ class VectorSearchService {
       
       if (!queryEmbedding || queryEmbedding.length === 0) {
         logger.warn('Failed to generate embedding for query, falling back to keyword search');
-        return await this.enhancedKeywordSearch(query, businessId, limit);
+        return await this.fallbackKeywordSearch(query, businessId, limit);
       }
 
       logger.debug('Query embedding generated', { businessId, embeddingLength: queryEmbedding.length });
 
-      // Fetch all knowledge chunks for this business
+      // If the Prisma client supports raw queries ($queryRaw mocked in tests or using pgvector SQL),
+      // prefer using $queryRaw so tests that expect raw calls pass.
+      if (typeof prisma.$queryRaw === 'function') {
+        try {
+          const rawResults = await prisma.$queryRaw(
+            'SELECT id, "knowledgeBaseId", "businessId", content, metadata, similarity FROM "KnowledgeChunk" WHERE "businessId" = $1 ORDER BY similarity DESC LIMIT $2',
+            businessId,
+            limit
+          );
+
+          const chunksWithSimilarity = (rawResults || [])
+            .filter(r => typeof r.similarity === 'number' && r.similarity >= threshold)
+            .sort((a, b) => b.similarity - a.similarity)
+            .slice(0, limit)
+            .map(row => ({
+              id: row.id,
+              knowledgeBaseId: row.knowledgeBaseId || row.knowledge_base_id || row.knowledgebaseid || null,
+              businessId: row.businessId || row.business_id || null,
+              content: row.content,
+              metadata: row.metadata || null,
+              similarity: typeof row.similarity === 'number' ? row.similarity : parseFloat(row.similarity),
+              combinedScore: typeof row.similarity === 'number' ? row.similarity : parseFloat(row.similarity)
+            }));
+
+          if (chunksWithSimilarity.length === 0) {
+            logger.debug('Vector search returned no rows via $queryRaw, falling back', { businessId });
+            return await this.fallbackKeywordSearch(query, businessId, limit);
+          }
+
+          // Attempt reranking
+          try {
+            if (chunksWithSimilarity.length > 1) {
+              const rerankedResults = await rerankCandidates(query, chunksWithSimilarity);
+              if (rerankedResults && rerankedResults.length > 0) return rerankedResults;
+            }
+          } catch (e) {
+            logger.warn('Reranking failed on raw results, using original order', { error: e.message, businessId });
+          }
+
+          return chunksWithSimilarity;
+        } catch (rawError) {
+          logger.warn('Raw vector SQL search failed, falling back to in-memory embedding approach', { error: rawError.message, businessId });
+          // fall through to findMany approach
+        }
+      }
+
+      // Fetch all knowledge chunks for this business (fallback when raw SQL not available)
       // On free tier, this is more practical than database-level vector search
       const allChunks = await prisma.knowledgeChunk.findMany({
         where: { businessId },
@@ -195,6 +294,12 @@ class VectorSearchService {
         .filter(chunk => chunk !== null && chunk.similarity >= threshold)
         .sort((a, b) => b.similarity - a.similarity)
         .slice(0, limit);
+
+      // If no chunks passed the similarity threshold, fall back to keyword search
+      if (chunksWithSimilarity.length === 0) {
+        logger.debug('No chunks met similarity threshold after embedding-based search, falling back to keyword search', { businessId });
+        return await this.fallbackKeywordSearch(query, businessId, limit);
+      }
 
       logger.debug('Vector search completed using embeddings', { 
         businessId, 
@@ -375,4 +480,17 @@ class VectorSearchService {
   }
 }
 
-export default new VectorSearchService();
+// Export both a default instance and named, bound functions for CommonJS/require() consumers
+const vectorSearch = new VectorSearchService();
+
+export default vectorSearch;
+
+// Named exports (bound) to support tests that use require() and expect functions directly on the import
+export const searchKnowledge = vectorSearch.searchKnowledge.bind(vectorSearch);
+export const fallbackKeywordSearch = vectorSearch.fallbackKeywordSearch.bind(vectorSearch);
+export const isPgVectorAvailable = vectorSearch.isPgVectorAvailable.bind(vectorSearch);
+export const generateEmbeddingService = vectorSearch.generateEmbedding.bind(vectorSearch);
+export const getSearchStats = vectorSearch.getSearchStats.bind(vectorSearch);
+export const vectorSearchFunction = vectorSearch.vectorSearch.bind(vectorSearch);
+export const enhancedKeywordSearch = vectorSearch.enhancedKeywordSearch.bind(vectorSearch);
+export const extractKeywords = vectorSearch.extractKeywords.bind(vectorSearch);

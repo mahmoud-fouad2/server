@@ -3,10 +3,8 @@ const router = express.Router();
 import { authenticateToken } from '../middleware/auth.js';
 import { resolveBusinessId } from '../middleware/businessMiddleware.js';
 import prisma from '../config/database.js';
-const vectorSearchModule = await import('../services/vector-search.service.js');
-const vectorSearch = vectorSearchModule?.default || vectorSearchModule;
-const knowledgeBaseServiceModule = await import('../services/knowledge-base.service.js');
-const knowledgeBaseService = knowledgeBaseServiceModule?.default || knowledgeBaseServiceModule;
+import vectorSearch from '../services/vector-search.service.js';
+import knowledgeBaseService from '../services/knowledge-base.service.js';
 import logger from '../utils/logger.js';
 
 // POST /api/knowledge-base - simple compatibility endpoint for tests

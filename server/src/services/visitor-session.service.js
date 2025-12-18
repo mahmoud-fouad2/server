@@ -1,7 +1,6 @@
 import prisma from '../config/database.js';
 import crypto from 'crypto';
-const UAParserModule = await import('ua-parser-js');
-const UAParser = UAParserModule.default || UAParserModule;
+import UAParser from 'ua-parser-js';
 import logger from '../utils/logger.js';
 
 /**

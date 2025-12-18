@@ -5,10 +5,10 @@ import path from 'path';
 import { authenticateToken } from '../middleware/auth.js';
 import { resolveBusinessId } from '../middleware/businessMiddleware.js';
 import { validateAddTextKnowledge, validateAddUrlKnowledge, validateUpdateKnowledge } from '../middleware/zodValidation.js';
-const knowledgeController = await import('../controllers/knowledge.controller.js');
-const prisma = (await import('../config/database.js')).default || (await import('../config/database.js'));
-const vectorSearch = (await import('../services/vector-search.service.js')).default || (await import('../services/vector-search.service.js'));
-const knowledgeBaseService = (await import('../services/knowledge-base.service.js')).default || (await import('../services/knowledge-base.service.js'));
+import * as knowledgeController from '../controllers/knowledge.controller.js';
+import prisma from '../config/database.js';
+import vectorSearch from '../services/vector-search.service.js';
+import knowledgeBaseService from '../services/knowledge-base.service.js';
 import logger from '../utils/logger.js';
 
 // Configure Multer with security limits

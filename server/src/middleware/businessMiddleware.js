@@ -32,8 +32,9 @@ const resolveBusinessId = async (req, res, next) => {
           return res.status(400).json({ error: 'Invalid business id provided in header.' });
         }
 
-        // If Authorization is present, ignore header and allow token-based resolution, but log once.
-        logger.warn('resolveBusinessId: invalid business id provided in header, ignoring in favor of Authorization', { headerBusinessId });
+        // If Authorization is present, ignore header and allow token-based resolution.
+        // Lower this to debug to avoid noisy repeated warnings from widget clients.
+        logger.debug('resolveBusinessId: invalid business id in header ignored (authorization present)', { headerBusinessId });
       }
     }
 

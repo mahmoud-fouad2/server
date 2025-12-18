@@ -1,21 +1,16 @@
 import pdf from 'pdf-parse';
 import fs from 'fs';
 import axios from 'axios';
-const cheerioModule = await import('cheerio');
-const cheerio = cheerioModule?.default || cheerioModule;
+import cheerio from 'cheerio';
 // path not used directly; keep minimal imports
 import prisma from '../config/database.js';
 import logger from '../utils/logger.js';
 import { Prisma } from '@prisma/client';
 import { generateEmbedding } from '../services/embedding.service.js';
-const crawlerModule = await import('../services/crawler.service.js');
-const WebCrawler = crawlerModule?.default?.WebCrawler || crawlerModule.WebCrawler || crawlerModule.WebCrawler || (crawlerModule.default && crawlerModule.default.WebCrawler);
-const redisCacheModule = await import('../services/cache.service.js');
-const redisCache = redisCacheModule?.default || redisCacheModule;
-const summarizerModule = await import('../services/summarizer.service.js');
-const summarizeText = summarizerModule?.summarizeText || summarizerModule?.default?.summarizeText || summarizerModule.summarizeText;
-const storageServiceModule = await import('../services/storage.service.js');
-const storageService = storageServiceModule?.default || storageServiceModule;
+import { WebCrawler } from '../services/crawler.service.js';
+import redisCache from '../services/cache.service.js';
+import { summarizeText } from '../services/summarizer.service.js';
+import storageService from '../services/storage.service.js';
 
 // --- Helper Functions ---
 

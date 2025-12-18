@@ -17,6 +17,7 @@ class Logger {
   constructor() {
     this.isDevelopment = process.env.NODE_ENV !== 'production';
     this.logLevel = process.env.LOG_LEVEL || (this.isDevelopment ? 'DEBUG' : 'INFO');
+    this._sentryWarned = false;
   }
 
   _shouldLog(level) {
@@ -33,28 +34,53 @@ class Logger {
   error(message, error = null, context = {}) {
     if (!this._shouldLog(LOG_LEVELS.ERROR)) return;
 
-    const errorDetails = error ? {
-      message: error.message,
-      // Include stack always to aid remote debugging (safe because we sanitize payloads elsewhere)
-      stack: error.stack,
-      ...context
-    } : context;
+    // Support calls in two shapes:
+    // 1) logger.error(message, ErrorInstance, context)
+    // 2) logger.error(message, { error: ErrorInstance, ...context })
+    let errInstance = null;
+    let ctx = context || {};
 
-    console.error(this._formatMessage('ERROR', message, errorDetails));
+    if (error && error instanceof Error) {
+      errInstance = error;
+    } else if (error && typeof error === 'object' && !(error instanceof Error)) {
+      // If second arg is an object that may contain { error }
+      if (error.error instanceof Error) {
+        errInstance = error.error;
+        const copy = { ...error };
+        delete copy.error;
+        ctx = { ...copy, ...ctx };
+      } else {
+        // It's plain context
+        ctx = { ...error, ...ctx };
+      }
+    }
 
-    // Send to Sentry in production (if configured)
-    if (process.env.SENTRY_DSN && error) {
-      // Do not block the main flow for Sentry reporting; attempt dynamic import
+    const errorDetails = errInstance ? {
+      message: errInstance.message,
+      stack: errInstance.stack,
+      ...ctx
+    } : (Object.keys(ctx || {}).length ? ctx : { raw: error });
+
+    // Print formatted message and attach the structured error details as a second arg
+    console.error(this._formatMessage('ERROR', message), errorDetails);
+
+    // Send to Sentry in production (if configured). Determine what to report.
+    const self = this;
+    const reportCandidate = errInstance || (Object.keys(ctx || {}).length ? ctx : (error ? error : null));
+    if (process.env.SENTRY_DSN && reportCandidate) {
       (async () => {
         try {
-          const Sentry = (await import('@sentry/node')).default || (await import('@sentry/node'));
+          const SentryModule = await import('@sentry/node');
+          const Sentry = SentryModule.default || SentryModule;
           if (!Sentry.getCurrentHub().getClient()) {
             Sentry.init({ dsn: process.env.SENTRY_DSN });
           }
-          Sentry.captureException(error, { extra: context });
+          // Prefer Error instance when available
+          Sentry.captureException(errInstance || reportCandidate, { extra: ctx });
         } catch (sentryError) {
-          if (process.env.NODE_ENV !== 'test') {
+          if (process.env.NODE_ENV !== 'test' && !self._sentryWarned) {
             console.warn('[logger] SENTRY_DSN is set but @sentry/node failed to load. Skipping Sentry reporting.');
+            self._sentryWarned = true;
           }
         }
       })();
