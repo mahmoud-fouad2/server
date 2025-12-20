@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { AnalyticsService } from '../services/analytics.service';
-import { AuthRequest } from '../middleware/auth';
+import { AnalyticsService } from '../services/analytics.service.js';
+import { AuthRequest } from '../middleware/auth.js';
 
 const analyticsService = new AnalyticsService();
 

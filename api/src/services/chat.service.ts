@@ -251,10 +251,12 @@ export class ChatService {
           },
           {
             visitor: {
-              OR: [
-                { name: { contains: query, mode: 'insensitive' } },
-                { email: { contains: query, mode: 'insensitive' } },
-              ]
+              is: {
+                OR: [
+                  { name: { contains: query, mode: 'insensitive' } },
+                  { email: { contains: query, mode: 'insensitive' } },
+                ]
+              }
             }
           }
         ]

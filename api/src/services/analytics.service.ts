@@ -1,4 +1,4 @@
-import prisma from '../config/database';
+import prisma from '../config/database.js';
 
 export class AnalyticsService {
   async getDashboardStats(businessId: string, startDate: Date, endDate: Date) {
@@ -25,7 +25,7 @@ export class AnalyticsService {
     });
 
     const trendsMap: Record<string, number> = {};
-    messages.forEach((msg) => {
+    messages.forEach((msg: any) => {
       const date = msg.createdAt.toISOString().split('T')[0];
       trendsMap[date] = (trendsMap[date] || 0) + 1;
     });

@@ -2,6 +2,7 @@ import AWS from 'aws-sdk';
 import fs from 'fs';
 import path from 'path';
 import logger from '../utils/logger.js';
+import { Request } from 'express';
 
 class StorageService {
   private s3: AWS.S3 | null = null;

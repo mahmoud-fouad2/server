@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { IntegrationService } from '../services/integration.service';
-import { AuthRequest } from '../middleware/auth';
+import { IntegrationService } from '../services/integration.service.js';
+import { AuthRequest } from '../middleware/auth.js';
 
 const integrationService = new IntegrationService();
 

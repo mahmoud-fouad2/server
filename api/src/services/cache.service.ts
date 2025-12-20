@@ -1,4 +1,4 @@
-import Redis, { type Redis as RedisClient } from 'ioredis';
+import { Redis, type Redis as RedisClient } from 'ioredis';
 import { LRUCache } from 'lru-cache';
 import logger from '../utils/logger.js';
 
@@ -36,7 +36,7 @@ class CacheService {
       if (redisUrl) {
         this.redis = new Redis(redisUrl, {
           maxRetriesPerRequest: 3,
-          retryStrategy: (times) => {
+          retryStrategy: (times: number) => {
             if (times > 3) {
               logger.error('Redis connection failed after 3 retries');
               return null;
@@ -50,7 +50,7 @@ class CacheService {
           port: redisPort,
           password: redisPassword,
           maxRetriesPerRequest: 3,
-          retryStrategy: (times) => {
+          retryStrategy: (times: number) => {
             if (times > 3) {
               logger.error('Redis connection failed after 3 retries');
               return null;
@@ -60,17 +60,17 @@ class CacheService {
         });
       }
 
-      this.redis.on('connect', () => {
+      this.redis?.on('connect', () => {
         this.isRedisConnected = true;
         logger.info('✅ Redis connected successfully');
       });
 
-      this.redis.on('error', (error) => {
+      this.redis?.on('error', (error) => {
         this.isRedisConnected = false;
         logger.error('Redis connection error:', error);
       });
 
-      this.redis.on('close', () => {
+      this.redis?.on('close', () => {
         this.isRedisConnected = false;
         logger.warn('Redis connection closed');
       });

@@ -1,5 +1,5 @@
 import { PrismaClient, User, Role } from '@prisma/client';
-import prisma from '../config/database';
+import prisma from '../config/database.js';
 import bcrypt from 'bcryptjs';
 
 export class TeamService {

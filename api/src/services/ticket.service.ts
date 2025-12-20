@@ -1,5 +1,5 @@
 import { PrismaClient, Ticket, TicketMessage, TicketStatus, TicketPriority } from '@prisma/client';
-import prisma from '../config/database';
+import prisma from '../config/database.js';
 
 export class TicketService {
   async createTicket(

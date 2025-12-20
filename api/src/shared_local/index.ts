@@ -63,7 +63,9 @@ export const CreateKnowledgeSchema = z.object({
   question: z.string().min(3),
   answer: z.string().min(1),
   category: z.string().optional(),
-  tags: z.array(z.string()).optional()
+  tags: z.array(z.string()).optional(),
+  source: z.string().optional(),
+  metadata: z.any().optional()
 });
 
 export type CreateLeadInput = z.infer<typeof CreateLeadSchema>;

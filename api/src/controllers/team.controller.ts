@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { TeamService } from '../services/team.service';
-import { AuthRequest } from '../middleware/auth';
+import { TeamService } from '../services/team.service.js';
+import { AuthRequest } from '../middleware/auth.js';
 
 const teamService = new TeamService();
 

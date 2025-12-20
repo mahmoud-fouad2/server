@@ -93,11 +93,16 @@ class VectorSearchService {
     content: string,
     businessId: string,
     knowledgeBaseId: string,
-    metadata: any = {}
+    metadata: any = {},
+    existingEmbedding?: number[]
   ): Promise<boolean> {
     try {
-      // Generate embedding
-      const { embedding } = await embeddingService.generateEmbedding(content);
+      // Generate embedding if not provided
+      let embedding = existingEmbedding;
+      if (!embedding) {
+        const result = await embeddingService.generateEmbedding(content);
+        embedding = result.embedding;
+      }
 
       // Store in database with pgvector
       await prisma.$executeRaw`

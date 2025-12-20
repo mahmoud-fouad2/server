@@ -1,6 +1,6 @@
-import prisma from '../config/database';
-import cacheService from './cache.service';
-import queueService from './queue.service';
+import prisma from '../config/database.js';
+import cacheService from './cache.service.js';
+import queueService from './queue.service.js';
 
 export class AdminService {
   /**
@@ -33,15 +33,15 @@ export class AdminService {
       select: { amount: true, createdAt: true },
     });
 
-    const totalRevenue = payments.reduce((sum, p) => sum + p.amount, 0);
+    const totalRevenue = payments.reduce((sum: number, p: any) => sum + p.amount, 0);
     
     // Calculate MRR (approximate based on last 30 days)
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     
     const lastMonthRevenue = payments
-      .filter(p => p.createdAt >= thirtyDaysAgo)
-      .reduce((sum, p) => sum + p.amount, 0);
+      .filter((p: any) => p.createdAt >= thirtyDaysAgo)
+      .reduce((sum: number, p: any) => sum + p.amount, 0);
 
     return {
       totalRevenue,

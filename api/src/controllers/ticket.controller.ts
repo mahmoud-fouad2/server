@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { TicketService } from '../services/ticket.service';
-import { AuthRequest } from '../middleware/auth';
+import { TicketService } from '../services/ticket.service.js';
+import { AuthRequest } from '../middleware/auth.js';
 
 const ticketService = new TicketService();
 

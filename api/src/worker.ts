@@ -23,13 +23,19 @@ logger.info('🏭 Starting Background Workers...');
 
 // Worker: Generate Embeddings
 queueService.createWorker('embeddings', async (job) => {
-  const { knowledgeChunkId, text, businessId } = job.data;
+  const { knowledgeChunkId, text, businessId, knowledgeBaseId } = job.data;
   
   logger.info(`Processing embedding job for chunk ${knowledgeChunkId}`);
   
   try {
     // Index in vector database (generates embedding internally)
-    await vectorSearchService.indexKnowledgeChunk(knowledgeChunkId, text, businessId, knowledgeChunkId, {});
+    await vectorSearchService.indexKnowledgeChunk(
+      knowledgeChunkId, 
+      text, 
+      businessId, 
+      knowledgeBaseId || knowledgeChunkId, // Fallback if not provided
+      {}
+    );
     
     logger.info(`✅ Successfully indexed chunk ${knowledgeChunkId}`);
     
@@ -101,6 +107,7 @@ queueService.createWorker('crawling', async (job) => {
           knowledgeChunkId: chunk.id,
           text: page.content,
           businessId,
+          knowledgeBaseId: knowledgeBase.id,
         }, {
           priority: 5,
           delay: 1000,
@@ -274,7 +281,8 @@ queueService.createWorker('batch-embeddings', async (job) => {
         knowledgeChunks[i].content,
         businessId,
         knowledgeChunks[i].knowledgeBaseId || '',
-        knowledgeChunks[i].metadata ? JSON.parse(knowledgeChunks[i].metadata as string) : {}
+        knowledgeChunks[i].metadata ? JSON.parse(knowledgeChunks[i].metadata as string) : {},
+        embeddings[i].embedding
       );
     }
     
