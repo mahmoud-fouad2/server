@@ -41,14 +41,14 @@ class QueueService {
       const queue = new Queue(name, {
         connection: this.connection,
         defaultJobOptions: {
-          attempts: 3,
+          attempts: 5, // Increased attempts
           backoff: {
             type: 'exponential',
-            delay: 2000,
+            delay: 1000,
           },
           removeOnComplete: {
             count: 100,
-            age: 24 * 3600, // 24 hours
+            age: 3600, // 1 hour cleanup
           },
           removeOnFail: {
             age: 7 * 24 * 3600, // 7 days

@@ -11,42 +11,81 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import axios from 'axios';
 
 interface AIProvider {
-  name: string;
-  available: boolean;
-  requestCount: number;
-  errorCount: number;
-  lastError?: string;
-  rateLimit?: { remaining: number; resetAt: Date };
+  generateResponse(prompt: string, options?: any): Promise<{ response: string, usage: { tokens: number } }>;
+  healthCheck(): Promise<boolean>;
 }
 
-type AIProviderName = 'groq' | 'gemini' | 'deepseek' | 'cerebras';
+class GroqProvider implements AIProvider {
+  private client: Groq;
+  constructor(apiKey: string) { this.client = new Groq({ apiKey }); }
+  
+  async generateResponse(prompt: string, options?: any) {
+    const completion = await this.client.chat.completions.create({
+      messages: [{ role: 'user', content: prompt }],
+      model: options?.model || 'mixtral-8x7b-32768',
+    });
+    return {
+      response: completion.choices[0]?.message?.content || '',
+      usage: { tokens: completion.usage?.total_tokens || 0 }
+    };
+  }
 
-interface AIOptions {
-  provider?: AIProviderName;
-  maxTokens?: number;
-  temperature?: number;
-  stream?: boolean;
+  async healthCheck() { return true; } // Implement real check
+}
+
+class GeminiProvider implements AIProvider {
+  private client: GoogleGenerativeAI;
+  constructor(apiKey: string) { this.client = new GoogleGenerativeAI(apiKey); }
+
+  async generateResponse(prompt: string, options?: any) {
+    const model = this.client.getGenerativeModel({ model: options?.model || 'gemini-pro' });
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+    return {
+      response: response.text(),
+      usage: { tokens: 0 } // Gemini doesn't always return usage easily
+    };
+  }
+
+  async healthCheck() { return true; }
 }
 
 export class AIService {
-  private providers: Map<AIProviderName, AIProvider> = new Map();
-  private groqClient?: Groq;
-  private geminiClient?: GoogleGenerativeAI;
+  private providers: Map<string, AIProvider> = new Map();
   
   constructor() {
-    // Initialize providers
-    this.providers.set('groq', { name: 'Groq', available: !!process.env.GROQ_API_KEY, requestCount: 0, errorCount: 0 });
-    this.providers.set('gemini', { name: 'Google Gemini', available: !!process.env.GEMINI_API_KEY, requestCount: 0, errorCount: 0 });
-    this.providers.set('deepseek', { name: 'DeepSeek', available: !!process.env.DEEPSEEK_API_KEY, requestCount: 0, errorCount: 0 });
-    this.providers.set('cerebras', { name: 'Cerebras', available: !!process.env.CEREBRAS_API_KEY, requestCount: 0, errorCount: 0 });
+    if (process.env.GROQ_API_KEY) this.providers.set('groq', new GroqProvider(process.env.GROQ_API_KEY));
+    if (process.env.GEMINI_API_KEY) this.providers.set('gemini', new GeminiProvider(process.env.GEMINI_API_KEY));
+  }
 
-    // Initialize clients
-    if (process.env.GROQ_API_KEY) {
-      this.groqClient = new Groq({ apiKey: process.env.GROQ_API_KEY });
+  async generateResponse(businessId: string, prompt: string) {
+    // Fetch tenant config
+    const business = await prisma.business.findUnique({ 
+      where: { id: businessId }, 
+      select: { aiProviderConfig: true } 
+    });
+
+    const config = business?.aiProviderConfig as any;
+    let providerType = config?.type || 'groq';
+    let provider = this.providers.get(providerType);
+
+    // Intelligent Failover
+    if (!provider || !(await provider.healthCheck())) {
+      console.warn(`Provider ${providerType} unavailable, failing over to Gemini`);
+      provider = this.providers.get('gemini');
     }
-    if (process.env.GEMINI_API_KEY) {
-      this.geminiClient = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    }
+
+    if (!provider) throw new Error('No AI providers available');
+
+    const { response, usage } = await provider.generateResponse(prompt);
+    
+    // Async billing update
+    prisma.business.update({
+      where: { id: businessId },
+      data: { messagesUsed: { increment: 1 } } // Simplified billing
+    }).catch(console.error);
+
+    return response;
   }
   
   // CRUD for Custom Models
