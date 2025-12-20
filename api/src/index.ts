@@ -122,6 +122,15 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Root Route (Fixes 404 errors in logs)
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Fahimo API V2 is running',
+    docs: '/api-docs', // If you have docs
+    health: '/health'
+  });
+});
+
 // 404 Handler
 app.use(notFound);
 
@@ -132,7 +141,7 @@ app.use(errorHandler);
 server.listen(PORT, () => {
   logger.info(`✅ Server V2 running on port ${PORT}`);
   logger.info(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-  logger.info(`🔒 CORS enabled for: ${process.env.CORS_ORIGIN || '*'}`);
+  logger.info(`🔒 CORS enabled for: ${process.env.CORS_ORIGINS || '*'}`);
 });
 
 // Graceful shutdown
