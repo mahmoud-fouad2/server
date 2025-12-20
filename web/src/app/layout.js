@@ -166,8 +166,13 @@ export default function RootLayout({ children }) {
 
             const apiOrigin = apiHost.replace(/\/api$/, '');
             const apiWs = apiOrigin.replace(/^http/, 'ws');
+            
+            // Allow localhost in development
+            const connectSrc = process.env.NODE_ENV === 'production' 
+              ? `'self' ${apiOrigin} ${apiWs}`
+              : `'self' ${apiOrigin} ${apiWs} http://localhost:3001 ws://localhost:3001`;
 
-            const csp = `default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://fonts.googleapis.com ${apiOrigin}; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; img-src 'self' data: https:; font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; connect-src 'self' ${apiOrigin} ${apiWs}; frame-src 'self';`;
+            const csp = `default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://fonts.googleapis.com ${apiOrigin}; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; img-src 'self' data: https:; font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; connect-src ${connectSrc}; frame-src 'self';`;
             return <meta httpEquiv="Content-Security-Policy" content={csp} />;
           })()
         }

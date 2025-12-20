@@ -87,7 +87,6 @@ export const LandingPage = ({
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    setMounted(true);
     // Set page title based on country
     const seoData = SEO_DATA[activeCountry] || SEO_DATA['sa'];
     document.title = seoData.home.title;

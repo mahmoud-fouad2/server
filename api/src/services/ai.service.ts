@@ -8,6 +8,7 @@ import vectorSearchService from './vector-search.service.js';
 import intentDetectionService from './intent-detection.service.js';
 import sentimentAnalysisService from './sentiment-analysis.service.js';
 import multiLanguageService from './multi-language.service.js';
+import { dialectService } from './dialect.service.js';
 import queueService from './queue.service.js';
 import cacheService from './cache.service.js';
 import logger from '../utils/logger.js';
@@ -75,6 +76,7 @@ export class AIService {
       detectIntent?: boolean;
       analyzeSentiment?: boolean;
       detectLanguage?: boolean;
+      country?: string; // Added for geo-aware dialect detection
     } = {}
   ) {
     const { 
@@ -83,7 +85,8 @@ export class AIService {
       useVectorSearch = true, 
       detectIntent = true,
       analyzeSentiment = true,
-      detectLanguage = true 
+      detectLanguage = true,
+      country
     } = options;
 
     try {
@@ -99,22 +102,24 @@ export class AIService {
       if (!business) throw new Error('Business not found');
 
       // 2. Parallel Processing: Intent, Sentiment, Language Detection
-      const [intentResult, sentimentResult, languageResult] = await Promise.all([
+      const [intentResult, sentimentResult, dialectResult] = await Promise.all([
         detectIntent ? intentDetectionService.detectIntent(userMessage) : null,
         analyzeSentiment && conversationId ? 
           queueService.addJob('sentiment', 'analyze-sentiment', { conversationId, messageId, text: userMessage })
             .then(() => sentimentAnalysisService.analyzeSentiment(userMessage))
             .catch(() => null) : null,
         detectLanguage && conversationId ? 
-          queueService.addJob('language-detection', 'detect-language', { conversationId, messageId, text: userMessage })
-            .then(() => multiLanguageService.detectLanguage(userMessage))
+          dialectService.detectDialect(userMessage, { country, conversationId })
+            .catch(() => multiLanguageService.detectLanguage(userMessage))
             .catch(() => null) : null,
       ]);
 
       logger.info('AI Analysis:', { 
         intent: intentResult?.intent, 
         sentiment: sentimentResult?.sentiment,
-        language: languageResult?.language 
+        dialect: dialectResult?.dialect,
+        dialectConfidence: dialectResult?.confidence,
+        dialectMethod: (dialectResult as any)?.method
       });
 
       // 3. Vector Search for Relevant Knowledge (Enhanced RAG)
@@ -160,16 +165,17 @@ export class AIService {
 **User Context:**
 ${intentResult ? `- Intent: ${intentResult.intent}` : ''}
 ${sentimentResult ? `- Sentiment: ${sentimentResult.sentiment} (Confidence: ${sentimentResult.confidence})` : ''}
-${languageResult ? `- Language: ${languageResult.language}` : ''}
+${dialectResult ? `- Dialect: ${dialectResult.dialect} (Confidence: ${(dialectResult.confidence * 100).toFixed(1)}%${(dialectResult as any)?.method ? `, Method: ${(dialectResult as any).method}` : ''})` : ''}
 ${intentResult?.entities && intentResult.entities.length > 0 ? `- Entities: ${intentResult.entities.join(', ')}` : ''}
 
 **Instructions:**
-1. Respond in ${business.language || 'the user\'s language'}
+1. Respond in ${dialectResult?.dialect || business.language || 'the user\'s language'} dialect/language
 2. Use a ${business.botTone || 'professional'} tone
 3. Be helpful, accurate, and concise
 4. If you don't know the answer, say so clearly
 ${intentResult?.intent === 'complaint' ? '5. Show empathy and offer solutions' : ''}
 ${sentimentResult?.sentiment === 'NEGATIVE' ? '6. Be extra supportive and understanding' : ''}
+${dialectResult ? `7. Match the user's detected dialect (${dialectResult.dialect}) in your response` : ''}
 `;
 
       // 5. Add Knowledge Context
@@ -209,6 +215,8 @@ ${sentimentResult?.sentiment === 'NEGATIVE' ? '6. Be extra supportive and unders
         tokensUsed: usage.tokens,
         intent: intentResult?.intent,
         sentiment: sentimentResult?.sentiment,
+        dialect: dialectResult?.dialect,
+        dialectConfidence: dialectResult?.confidence,
       });
 
       return response;

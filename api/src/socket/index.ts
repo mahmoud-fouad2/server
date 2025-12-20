@@ -126,7 +126,20 @@ export class SocketService {
 
       // 3. Generate AI Response (if message is from visitor)
       if (senderType === 'visitor') {
-          const responseText = await aiService.generateResponse(businessId, content);
+          // Extract country from socket handshake (set by geo middleware if available)
+          const country = (socket as any).handshake?.headers?.['x-geo-country'] || undefined;
+          
+          const responseText = await aiService.generateResponse(
+            businessId, 
+            content, 
+            [], // history
+            { 
+              conversationId: targetConversationId,
+              country: country,
+              detectLanguage: true,
+              useVectorSearch: true
+            }
+          );
 
           // Save Bot Message
           await prisma.message.create({

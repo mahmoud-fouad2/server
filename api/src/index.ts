@@ -21,6 +21,7 @@ import {
 } from './middleware/errorHandler.js';
 import { globalLimiter, apiLimiter } from './middleware/rateLimiter.js';
 import { sanitizeInput } from './middleware/sanitization.js';
+import { geoDetect, getGeoLocation } from './middleware/geo.middleware.js';
 
 // Import routes
 import widgetRoutes from './routes/widget.routes.js';
@@ -76,6 +77,9 @@ app.use(globalLimiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Geo detection middleware
+app.use(geoDetect);
+
 // Sanitization
 app.use(sanitizeInput);
 
@@ -96,6 +100,7 @@ app.get('/fahimo-widget.js', (req, res) => {
 });
 
 // API Routes
+app.get('/api/geo', getGeoLocation); // Geo detection endpoint
 app.use('/api/widget', widgetRoutes);
 app.use('/api/chat', apiLimiter, chatRoutes);
 app.use('/api/auth', authRoutes);
