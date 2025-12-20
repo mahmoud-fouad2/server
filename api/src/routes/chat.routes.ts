@@ -10,5 +10,7 @@ router.post('/send', chatController.sendMessage.bind(chatController));
 
 router.get('/conversations', authenticateToken, chatController.getConversations.bind(chatController));
 router.get('/conversations/:conversationId/messages', authenticateToken, chatController.getMessages.bind(chatController));
+router.post('/conversations/:conversationId/handoff', authenticateToken, chatController.requestHandoff.bind(chatController));
+router.get('/conversations/:conversationId/analytics', authenticateToken, chatController.getAnalytics.bind(chatController));
 
 export default router;

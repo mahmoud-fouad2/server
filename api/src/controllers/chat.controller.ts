@@ -55,4 +55,28 @@ export class ChatController {
       res.status(500).json({ error: 'Failed to send message' });
     }
   }
+
+  async requestHandoff(req: Request, res: Response) {
+    try {
+      const { conversationId } = req.params;
+      const { reason, priority } = req.body;
+      
+      const result = await chatService.requestAgentHandoff(conversationId, reason, priority);
+      res.json(result);
+    } catch (error) {
+      console.error('Request Handoff Error:', error);
+      res.status(500).json({ error: 'Failed to request handoff' });
+    }
+  }
+
+  async getAnalytics(req: Request, res: Response) {
+    try {
+      const { conversationId } = req.params;
+      const analytics = await chatService.getConversationAnalytics(conversationId);
+      res.json(analytics);
+    } catch (error) {
+      console.error('Analytics Error:', error);
+      res.status(500).json({ error: 'Failed to fetch analytics' });
+    }
+  }
 }
