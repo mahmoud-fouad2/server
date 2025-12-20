@@ -7,10 +7,11 @@ import { Upload, Save, Loader2, Copy, Check } from 'lucide-react';
 import { API_CONFIG } from '@/lib/config';
 
 const AVATAR_PRESETS = [
-  { id: 'avatar1', name: 'أحمد - موظف', emoji: '👨‍💼', color: '#3B82F6' },
-  { id: 'avatar2', name: 'فاطمة - خدمة عملاء', emoji: '👩‍💼', color: '#EC4899' },
-  { id: 'avatar3', name: 'محمد - تقني', emoji: '👨‍💻', color: '#10B981' },
-  { id: 'avatar4', name: 'روبوت', emoji: '🤖', color: '#8B5CF6' },
+  { id: 'avatar1', name: 'أحمد - موظف', emoji: '👨‍💼', color: '#3B82F6', url: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&h=100&fit=crop' },
+  { id: 'avatar2', name: 'سارة - خدمة عملاء', emoji: '👩‍💼', color: '#EC4899', url: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop' },
+  { id: 'avatar3', name: 'خالد - تقني', emoji: '👨‍💻', color: '#10B981', url: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop' },
+  { id: 'avatar4', name: 'نور - مساعدة', emoji: '👩‍💻', color: '#8B5CF6', url: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop' },
+  { id: 'avatar5', name: 'روبوت', emoji: '🤖', color: '#6366F1', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Felix' },
 ];
 
 const WIDGET_ICONS = [
@@ -179,7 +180,7 @@ export default function AvatarAndWidgetSettingsView({
               <h3 className="text-sm font-semibold mb-3 text-gray-700 dark:text-gray-300">
                 اختر أفاتار مدمج
               </h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 {AVATAR_PRESETS.map((avatar) => (
                   <motion.button
                     key={avatar.id}
@@ -193,7 +194,11 @@ export default function AvatarAndWidgetSettingsView({
                     whileTap={{ scale: 0.95 }}
                   >
                     <div className="flex flex-col items-center gap-2">
-                      <span className="text-4xl">{avatar.emoji}</span>
+                      {avatar.url ? (
+                        <img src={avatar.url} alt={avatar.name} className="w-12 h-12 rounded-full object-cover" />
+                      ) : (
+                        <span className="text-4xl">{avatar.emoji}</span>
+                      )}
                       <span className="text-xs font-medium text-gray-700 dark:text-gray-300 text-center">
                         {avatar.name}
                       </span>

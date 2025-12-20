@@ -9,10 +9,10 @@
   },
   "dependencies": {
     "preact": "^10.19.3",
-    "@preact/signals": "^1.2.2"
-  },
-  "devDependencies": {
+    "@preact/signals": "^1.2.2",
     "typescript": "^5.2.2",
     "vite": "^5.0.0"
+  },
+  "devDependencies": {
   }
 }
