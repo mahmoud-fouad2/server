@@ -133,10 +133,13 @@ export default function Navbar() {
 
         {/* Sidebar */}
         <div
-          className={`absolute top-0 right-0 h-full w-80 max-w-[85vw] bg-white dark:bg-cosmic-900 shadow-2xl transform transition-transform duration-300 ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}
+          className={`absolute top-0 right-0 h-full w-80 max-w-[85vw] shadow-2xl transform transition-transform duration-300 ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}
+          style={{ backgroundColor: '#f8f8fa' }}
         >
           {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-white/10">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-white/10"
+              style={{ backgroundColor: '#f8f8fa' }}
+            >
             <Image src="/logo2.png" alt="فهملي" width={120} height={60} className="h-16 w-auto" />
             <button
               onClick={() => setMobileMenuOpen(false)}
