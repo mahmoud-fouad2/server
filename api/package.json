@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
-    "start:prod": "npx prisma migrate deploy && node dist/index.js",
+    "start:prod": "npx prisma migrate deploy && node dist/scripts/seed.js && node dist/index.js",
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "worker": "node dist/worker.js",
     "worker:dev": "ts-node-dev --respawn --transpile-only src/worker.ts",
@@ -14,12 +14,13 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
-    "db:seed": "ts-node prisma/seed.ts",
+    "db:seed": "ts-node src/scripts/seed.ts",
     "lint": "eslint src --ext .ts",
     "format": "prettier --write \"src/**/*.ts\"",
     "test": "jest",
     "clean": "node -e \"require('fs').rmSync('dist', {recursive:true,force:true})\"",
-    "prebuild": "npm run clean",
+    "build:widget": "cd ../widget && npm install && npm run build",
+    "prebuild": "npm run clean && npm run build:widget",
     "postinstall": "prisma generate"
   },
   "dependencies": {
