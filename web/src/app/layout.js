@@ -9,6 +9,7 @@ const beiruti = Beiruti({
 import ErrorBoundary from '@/components/ErrorBoundary';
 import '@/lib/fetch-proxy';
 import ClientLayout from './ClientLayout';
+import { AppProvider } from '@/context/AppContext';
 import { getOrganizationSchema } from '@/lib/structured-data';
 // WidgetLoader is a client component that appends the widget script when appropriate.
 // Import it directly — Next will render this as a client component at runtime.
@@ -357,7 +358,9 @@ export default function RootLayout({ children }) {
         className={`${beiruti.className} overflow-x-hidden bg-gray-50 dark:bg-cosmic-950 text-gray-900 dark:text-gray-100 transition-colors duration-300 selection:bg-brand-500/30`}
       >
         <ErrorBoundary>
-          <ClientLayout>{children}</ClientLayout>
+          <AppProvider>
+            <ClientLayout>{children}</ClientLayout>
+          </AppProvider>
         </ErrorBoundary>
         {/* Client-only widget loader (will no-op on blocked routes like /wizard) */}
         <WidgetLoader />

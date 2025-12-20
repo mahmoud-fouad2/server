@@ -10,8 +10,8 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Save, Loader2 } from 'lucide-react';
-import { authApi, businessApi } from '@/lib/api';
+import { Save, Loader2, Key, Trash2, Copy } from 'lucide-react';
+import { authApi, businessApi, apiKeyApi } from '@/lib/api';
 
 export default function SettingsView({ user, addNotification }) {
   const [profileData, setProfileData] = useState({
@@ -25,11 +25,14 @@ export default function SettingsView({ user, addNotification }) {
     botTone: '',
   });
   const [savingProfile, setSavingProfile] = useState(false);
+  const [apiKeys, setApiKeys] = useState([]);
+  const [newKeyName, setNewKeyName] = useState('');
 
   useEffect(() => {
     if (user) {
       setProfileData({ name: user.name, email: user.email, password: '' });
       fetchBusinessSettings();
+      fetchApiKeys();
     }
   }, [user]);
 
@@ -45,6 +48,38 @@ export default function SettingsView({ user, addNotification }) {
       }
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const fetchApiKeys = async () => {
+    try {
+      const keys = await apiKeyApi.list();
+      setApiKeys(keys);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleCreateKey = async () => {
+    if (!newKeyName.trim()) return;
+    try {
+      const key = await apiKeyApi.create({ name: newKeyName });
+      setApiKeys([key, ...apiKeys]);
+      setNewKeyName('');
+      addNotification('تم إنشاء مفتاح API بنجاح');
+    } catch (err) {
+      addNotification('فشل إنشاء مفتاح API', 'error');
+    }
+  };
+
+  const handleDeleteKey = async (id) => {
+    if (!confirm('هل أنت متأكد من حذف هذا المفتاح؟ سيتوقف أي تطبيق يستخدمه عن العمل.')) return;
+    try {
+      await apiKeyApi.delete(id);
+      setApiKeys(apiKeys.filter(k => k.id !== id));
+      addNotification('تم حذف مفتاح API بنجاح');
+    } catch (err) {
+      addNotification('فشل حذف مفتاح API', 'error');
     }
   };
 
@@ -256,6 +291,47 @@ export default function SettingsView({ user, addNotification }) {
             حفظ التغييرات
           </Button>
         </CardFooter>
+      </Card>
+
+      <Card className="md:col-span-2">
+        <CardHeader>
+          <CardTitle>مفاتيح API</CardTitle>
+          <CardDescription>إدارة مفاتيح الوصول للواجهة البرمجية</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex gap-2">
+            <Input
+              placeholder="اسم المفتاح (مثلاً: تطبيق الجوال)"
+              value={newKeyName}
+              onChange={e => setNewKeyName(e.target.value)}
+              className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            />
+            <Button onClick={handleCreateKey}>
+                <Key className="ml-2 w-4 h-4" />
+                إنشاء مفتاح
+            </Button>
+          </div>
+          
+          <div className="space-y-2">
+            {apiKeys.map(key => (
+              <div key={key.id} className="flex items-center justify-between p-3 border rounded-lg bg-gray-50 dark:bg-gray-900 dark:border-gray-700">
+                <div>
+                  <div className="font-bold text-gray-900 dark:text-white">{key.name}</div>
+                  <div className="text-xs font-mono text-gray-500 flex items-center gap-2">
+                    {key.key}
+                    <button onClick={() => navigator.clipboard.writeText(key.key)} className="hover:text-brand-500" title="نسخ">
+                        <Copy size={12} />
+                    </button>
+                  </div>
+                </div>
+                <Button variant="destructive" size="sm" onClick={() => handleDeleteKey(key.id)}>
+                    <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
+            ))}
+            {apiKeys.length === 0 && <div className="text-center text-gray-500 py-4">لا توجد مفاتيح API</div>}
+          </div>
+        </CardContent>
       </Card>
     </motion.div>
   );

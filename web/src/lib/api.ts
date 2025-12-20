@@ -99,6 +99,12 @@ export const paymentApi = {
   getPayments: (params: any) => fetchAPI('/payments'), // Simplified
 };
 
+export const apiKeyApi = {
+  list: () => fetchAPI('/api-keys'),
+  create: (data: any) => fetchAPI('/api-keys', { method: 'POST', body: JSON.stringify(data) }),
+  delete: (id: string) => fetchAPI(`/api-keys/${id}`, { method: 'DELETE' }),
+};
+
 export const aiApi = {
   getModels: () => fetchAPI('/ai/models'),
   createModel: (data: any) => fetchAPI('/ai/models', { method: 'POST', body: JSON.stringify(data) }),

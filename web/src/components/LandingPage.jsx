@@ -49,6 +49,7 @@ import FaheemAnimatedLogo from './FaheemAnimatedLogo';
 import { motion, AnimatePresence } from 'framer-motion';
 import LoadingScreen from './LoadingScreen';
 import { useRouter } from 'next/navigation';
+import { useApp } from '@/context/AppContext';
 
 // Import the section components
 import {
@@ -63,28 +64,14 @@ import {
   LimitedTimeOffer,
 } from './landing/LandingSections';
 
-import Navigation from './landing/Navigation';
-
 export const LandingPage = ({
-  lang: initialLang = 'ar',
-  setLang: externalSetLang,
   country = 'sa',
 }) => {
   const router = useRouter();
-  const [lang, setLangState] = useState(initialLang);
-
-  const setLang = newLang => {
-    setLangState(newLang);
-    if (externalSetLang) externalSetLang(newLang);
-  };
+  const { lang, changeLang: setLang, isDark, toggleTheme, mounted } = useApp();
 
   const t = TRANSLATIONS[lang];
   const activeCountry = country;
-
-  const changeCountry = code => {
-    if (code === 'sa') router.push('/');
-    else router.push(`/${code}`);
-  };
 
   const regionContent =
     lang === 'en'
@@ -95,11 +82,8 @@ export const LandingPage = ({
         }
       : REGIONAL_CONTENT[activeCountry] || REGIONAL_CONTENT['sa'];
 
-  const [isDark, setIsDark] = useTheme(true);
   const [selectedIndustry, setSelectedIndustry] = useState(null);
-  const [mounted, setMounted] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -115,10 +99,6 @@ export const LandingPage = ({
       window.removeEventListener('scroll', handleScroll);
     };
   }, [activeCountry]);
-
-  const toggleTheme = () => {
-    setIsDark(!isDark);
-  };
 
   const FlagIcon = ({ code }) => {
     if (code === 'sa')
@@ -157,19 +137,6 @@ export const LandingPage = ({
           ></div>
         </div>
       )}
-
-      <Navigation
-        lang={lang}
-        setLang={setLang}
-        activeCountry={activeCountry}
-        changeCountry={changeCountry}
-        isDark={isDark}
-        toggleTheme={toggleTheme}
-        scrolled={scrolled}
-        mobileMenuOpen={mobileMenuOpen}
-        setMobileMenuOpen={setMobileMenuOpen}
-        t={t}
-      />
 
       {/* Hero Section */}
       <HeroSection

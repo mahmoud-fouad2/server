@@ -21,7 +21,7 @@ class EmbeddingService {
       this.providers.set('VOYAGE', {
         endpoint: 'https://api.voyageai.com/v1/embeddings',
         apiKey: process.env.VOYAGE_API_KEY,
-        model: 'voyage-2',
+        model: 'voyage-multilingual-2',
         dimensions: 1024,
       });
     }

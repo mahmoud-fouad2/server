@@ -16,7 +16,7 @@ import {
   FaArrowRight,
   FaArrowLeft,
 } from 'react-icons/fa';
-import Navigation from '@/components/landing/Navigation';
+import Navbar from '@/components/layout/Navbar';
 import useTheme from '@/lib/theme';
 import { TRANSLATIONS } from '@/constants';
 import { useRouter } from 'next/navigation';
@@ -154,17 +154,11 @@ export default function ExamplesPage() {
 
   return (
     <div className={`min-h-screen ${isDark ? 'bg-cosmic-950 text-white' : 'bg-gradient-to-br from-slate-50 via-white to-blue-50 text-gray-900'}`}>
-      <Navigation
+      <Navbar
         lang={lang}
         setLang={setLang}
-        activeCountry="sa"
-        changeCountry={changeCountry}
         isDark={isDark}
         toggleTheme={toggleTheme}
-        scrolled={scrolled}
-        mobileMenuOpen={mobileMenuOpen}
-        setMobileMenuOpen={setMobileMenuOpen}
-        t={TRANSLATIONS[lang]}
       />
 
       {/* Hero Section */}

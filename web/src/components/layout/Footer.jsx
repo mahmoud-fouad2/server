@@ -26,17 +26,17 @@ export default function Footer() {
     <footer
       className={`border-t ${isDark ? 'border-white/5 bg-black/40 text-gray-400' : 'border-gray-200 bg-gray-50 text-gray-600'}`}
     >
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="max-w-7xl mx-auto px-6 py-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Brand Column */}
           <div className="col-span-1">
-            <div className="flex items-center justify-center md:justify-start mb-4">
+            <div className="flex items-center justify-center md:justify-start mb-3">
               <Image
                 src="/logo2.png"
                 alt="فهملي"
-                width={100}
-                height={100}
-                className="w-20 h-20 object-contain"
+                width={80}
+                height={80}
+                className="w-16 h-16 object-contain"
                 loading="lazy"
               />
             </div>
@@ -47,10 +47,10 @@ export default function Footer() {
 
           {/* Links Column 1 */}
           <div>
-            <h4 className="font-bold text-gray-900 dark:text-white mb-4 text-sm">
+            <h4 className="font-bold text-gray-900 dark:text-white mb-3 text-sm">
               الشركة
             </h4>
-            <ul className="space-y-2 text-xs">
+            <ul className="space-y-1.5 text-xs">
               <li>
                 <Link
                   href="/"
@@ -104,10 +104,10 @@ export default function Footer() {
 
           {/* Links Column 2 */}
           <div>
-            <h4 className="font-bold text-gray-900 dark:text-white mb-4 text-sm">
+            <h4 className="font-bold text-gray-900 dark:text-white mb-3 text-sm">
               المطورين والدعم
             </h4>
-            <ul className="space-y-2 text-xs">
+            <ul className="space-y-1.5 text-xs">
               <li>
                 <Link href="/docs" className="hover:text-brand-500 transition-colors">
                   التوثيق الشامل
@@ -135,7 +135,7 @@ export default function Footer() {
               </li>
             </ul>
 
-            <h4 className="font-bold text-gray-900 dark:text-white mt-6 mb-2 text-sm">تواصل معنا</h4>
+            <h4 className="font-bold text-gray-900 dark:text-white mt-4 mb-2 text-sm">تواصل معنا</h4>
             <div className="text-xs opacity-80">
               <div>
                 <a href="mailto:info@faheemly.com" className="hover:underline">info@faheemly.com</a>
@@ -145,21 +145,21 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-gray-200 dark:border-white/5 mt-6 pt-4 flex flex-col md:flex-row justify-between items-center gap-3">
-          <p className="text-xs opacity-60">
+        <div className="border-t border-gray-200 dark:border-white/5 mt-4 pt-3 flex flex-col md:flex-row justify-between items-center gap-2">
+          <p className="text-[10px] opacity-60">
             © 2025 جميع الحقوق محفوظة لشركة فهملي
           </p>
           <a
             href="https://ma-fo.info"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 opacity-70 hover:opacity-100 transition-opacity group text-xs"
+            className="flex items-center gap-1.5 opacity-70 hover:opacity-100 transition-opacity group text-[10px]"
           >
             <Image
               src="https://ma-fo.info/logo2.png"
               alt="Ma-Fo Logo"
-              width={12}
-              height={12}
+              width={10}
+              height={10}
               className="object-contain"
               unoptimized
             />

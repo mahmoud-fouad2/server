@@ -19,7 +19,7 @@
     "format": "prettier --write \"src/**/*.ts\"",
     "test": "jest",
     "clean": "node -e \"require('fs').rmSync('dist', {recursive:true,force:true})\"",
-    "build:widget": "cd ../widget && npm install && npm run build",
+    "build:widget": "cd ../widget && rm -rf node_modules package-lock.json && npm install && npm run build",
     "prebuild": "npm run clean && npm run build:widget",
     "postinstall": "prisma generate"
   },

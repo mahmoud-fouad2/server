@@ -62,6 +62,8 @@ model Business {
   updatedAt                DateTime                @updatedAt
   crmLeadCollectionEnabled Boolean                 @default(false)
   preChatFormEnabled       Boolean                 @default(false)
+  crmFields                Json?                   // { name: true, email: true, phone: true, custom: [] }
+  apiKeys                  ApiKey[]
   apiIntegrations          APIIntegration[]
   user                     User                    @relation(fields: [userId], references: [id])
   crmIntegrations          CRMIntegration[]
@@ -92,6 +94,22 @@ model Business {
   @@index([createdAt])
   @@index([userId, status])
   @@index([userId, createdAt])
+}
+
+model ApiKey {
+  id          String    @id @default(cuid())
+  businessId  String
+  name        String
+  key         String    @unique // Hashed
+  prefix      String    // First 8 chars for display
+  scopes      String[]  // ['read', 'write']
+  lastUsedAt  DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+  business    Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([key])
 }
 
 model Ticket {

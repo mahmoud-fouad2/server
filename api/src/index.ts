@@ -41,6 +41,7 @@ import analyticsRoutes from './routes/analytics.routes.js';
 import visitorRoutes from './routes/visitor.routes.js';
 import continuousImprovementRoutes from './routes/continuous-improvement.routes.js';
 import customAIModelRoutes from './routes/custom-ai-model.routes.js';
+import apiKeyRoutes from './routes/api-key.routes.js';
 
 dotenv.config();
 
@@ -98,6 +99,7 @@ app.get('/fahimo-widget.js', (req, res) => {
 app.use('/api/widget', widgetRoutes);
 app.use('/api/chat', apiLimiter, chatRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/api-keys', apiKeyRoutes);
 app.use('/api/business', apiLimiter, businessRoutes);
 app.use('/api/crm', apiLimiter, crmRoutes);
 app.use('/api/knowledge', apiLimiter, knowledgeRoutes);

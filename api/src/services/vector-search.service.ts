@@ -16,11 +16,14 @@ class VectorSearchService {
       const { embedding } = await embeddingService.generateEmbedding(query);
 
       // Search using pgvector
-      const results = await embeddingService.searchSimilar(embedding, businessId, limit * 2);
+      const results = await embeddingService.searchSimilar(embedding, businessId, limit * 4);
+
+      // Rerank results
+      const reranked = await this.rerankResults(query, results);
 
       // Filter by minimum similarity and limit
-      const filtered = results
-        .filter((r: any) => r.similarity >= minSimilarity)
+      const filtered = reranked
+        .filter((r: any) => (r.similarity ?? r.rerank_score) >= minSimilarity)
         .slice(0, limit);
 
       logger.info(`Found ${filtered.length} relevant knowledge chunks for query`);
@@ -36,7 +39,34 @@ class VectorSearchService {
     if (results.length === 0) return results;
 
     try {
-      // Simple reranking based on text similarity
+      // Use Voyage AI Rerank if available
+      if (process.env.VOYAGE_API_KEY) {
+        const response = await axios.post(
+          'https://api.voyageai.com/v1/rerank',
+          {
+            model: 'rerank-2-lite',
+            query: query,
+            documents: results.map(r => r.content)
+          },
+          {
+            headers: {
+              'Authorization': `Bearer ${process.env.VOYAGE_API_KEY}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+
+        // Map scores back to results
+        const reranked = response.data.data.map((item: any) => ({
+          ...results[item.index],
+          similarity: item.relevance_score
+        }));
+        
+        // Sort by new score
+        return reranked.sort((a: any, b: any) => b.similarity - a.similarity);
+      }
+
+      // Fallback to simple local reranking
       const scored = results.map((result) => {
         const content = result.content || '';
         const queryLower = query.toLowerCase();

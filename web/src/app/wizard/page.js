@@ -42,6 +42,7 @@ import {
 } from 'lucide-react';
 import { authApi, widgetApi, knowledgeApi, businessApi } from '@/lib/api';
 import { API_CONFIG } from '@/lib/config';
+import PageLayout from '@/components/layout/PageLayout';
 // Confetti is lazy-loaded dynamically to reduce initial bundle size
 // and to avoid bundling heavy libs into the main vendor chunk.
 
@@ -413,8 +414,9 @@ export default function Wizard() {
   const widgetCode = `<script src="${API_CONFIG.WIDGET_SCRIPT}" data-business-id="${businessId || formData.email?.split('@')[0] || 'your-business-id'}"></script>`;
 
   return (
+    <PageLayout>
     <div
-      className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-cosmic-950 dark:to-cosmic-900 p-4 font-sans relative overflow-hidden transition-colors duration-300"
+      className="min-h-[calc(100vh-80px)] flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-cosmic-950 dark:to-cosmic-900 p-4 font-sans relative overflow-hidden transition-colors duration-300"
       dir="rtl"
     >
       {showConfetti && ConfettiComp && (
@@ -426,26 +428,7 @@ export default function Wizard() {
         />
       )}
 
-      {/* Navigation & Theme Toggle */}
-      <div className="absolute top-6 left-6 flex gap-3 z-50">
-        <Button
-          variant="outline"
-          size="icon"
-          className="rounded-full bg-white/80 dark:bg-white/5 backdrop-blur-sm border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10"
-          onClick={() => setIsDark(!isDark)}
-        >
-          {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-        </Button>
-        <Link href="/">
-          <Button
-            variant="outline"
-            size="icon"
-            className="rounded-full bg-white/80 dark:bg-white/5 backdrop-blur-sm border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10"
-          >
-            <Home className="w-5 h-5" />
-          </Button>
-        </Link>
-      </div>
+      {/* Navigation & Theme Toggle Removed */}
 
       {/* Background Effects */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10">
@@ -1244,5 +1227,6 @@ export default function Wizard() {
         </Card>
       </motion.div>
     </div>
+    </PageLayout>
   );
 }

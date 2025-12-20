@@ -75,20 +75,11 @@ export const Login = ({ lang }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white dark:bg-cosmic-950 p-4 relative overflow-hidden transition-colors duration-300">
+    <div className="min-h-[calc(100vh-80px)] flex items-center justify-center bg-white dark:bg-cosmic-950 p-4 relative overflow-hidden transition-colors duration-300">
       {/* Background Decor */}
       <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-brand-600/20 rounded-full blur-[120px] pointer-events-none opacity-50 dark:opacity-100 animate-pulse-slow" />
       <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[100px] pointer-events-none opacity-50 dark:opacity-100 animate-float" />
       <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.02] pointer-events-none"></div>
-
-      {/* Return to Home Button */}
-      <Link
-        href="/"
-        className="absolute top-6 left-6 z-20 flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-brand-600 dark:hover:text-white transition-colors bg-white/50 dark:bg-white/5 px-4 py-2 rounded-full border border-gray-200 dark:border-white/10 hover:bg-white dark:hover:bg-white/10 backdrop-blur-sm"
-      >
-        <Home size={18} />
-        <span className="text-sm font-medium">الرئيسية</span>
-      </Link>
 
       <motion.div
         initial={{ opacity: 0, y: 20, scale: 0.95 }}
