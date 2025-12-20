@@ -35,4 +35,31 @@ export class WidgetController {
       res.status(404).send('Widget loader not found. Please run "npm run build" in the widget directory.');
     }
   }
+
+  async subscribe(req: Request, res: Response) {
+    try {
+      const { businessId } = req.query;
+      
+      if (!businessId || typeof businessId !== 'string') {
+        return res.status(400).json({ error: 'businessId is required' });
+      }
+
+      // Get widget config for the business
+      const config = await widgetService.getPublicConfig(businessId);
+      
+      // Return subscription info (for SSE or polling setup)
+      res.json({
+        success: true,
+        businessId,
+        config,
+        endpoints: {
+          chat: `/api/chat`,
+          socket: process.env.SOCKET_URL || '/',
+        }
+      });
+    } catch (error) {
+      console.error('Error in widget subscribe:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  }
 }
