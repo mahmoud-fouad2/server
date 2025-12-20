@@ -59,7 +59,7 @@ logger.info('✅ Queue service initialized');
 app.use(helmet());
 app.use(hpp()); // Protect against HTTP Parameter Pollution
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || '*',
+  origin: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : '*',
   credentials: true,
 }));
 
@@ -75,6 +75,19 @@ app.use(sanitizeInput);
 
 // Static files
 app.use('/uploads', express.static('uploads'));
+
+// Serve widget script at root /fahimo-widget.js for backwards compatibility
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+app.get('/fahimo-widget.js', (req, res) => {
+  const widgetPath = path.join(__dirname, '../../widget/dist/fahimo-loader.iife.js');
+  res.set('Content-Type', 'application/javascript');
+  res.set('Cache-Control', 'public, max-age=3600');
+  res.sendFile(widgetPath);
+});
 
 // API Routes
 app.use('/api/widget', widgetRoutes);

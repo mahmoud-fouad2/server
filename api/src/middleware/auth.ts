@@ -29,7 +29,11 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
   }
 
   try {
-    const secret = process.env.JWT_SECRET || 'your-secret-key';
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      console.error('CRITICAL: JWT_SECRET environment variable is not set');
+      return res.status(500).json({ error: 'Server configuration error' });
+    }
     const decoded: any = jwt.verify(token, secret);
 
     // Verify user still exists and is active

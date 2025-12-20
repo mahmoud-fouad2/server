@@ -9,9 +9,13 @@ export class SocketService {
   private io: SocketIOServer;
 
   constructor(httpServer: HttpServer) {
+    const allowedOrigins = process.env.CORS_ORIGINS 
+      ? process.env.CORS_ORIGINS.split(',').map(o => o.trim())
+      : ['http://localhost:3000', 'http://localhost:3001'];
+    
     this.io = new SocketIOServer(httpServer, {
       cors: {
-        origin: "*", // Allow all for now, restrict in production
+        origin: allowedOrigins,
         methods: ["GET", "POST"]
       }
     });
