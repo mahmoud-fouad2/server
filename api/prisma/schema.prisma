@@ -187,15 +187,18 @@ model Conversation {
   businessId     String
   visitorId      String?
   platform       String        @default("web")
+  channel        String?       @default("widget") // Added channel
   status         String        @default("active")
   externalId     String?       // For WhatsApp/Telegram
   agentId        String?       // Assigned agent
   agentRating    Int?          // Agent quality rating
+  metadata       String?       // Added metadata
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
   business       Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
   messages       Message[]
   agentHandoff   AgentHandoff?
+  visitor        Visitor?      @relation(fields: [visitorId], references: [id])
 
   @@index([businessId])
   @@index([visitorId])
@@ -203,14 +206,17 @@ model Conversation {
 }
 
 model Message {
-  id             String       @id @default(cuid())
-  conversationId String
-  sender         String
-  content        String
-  type           String       @default("text")
-  role           String?      // USER or ASSISTANT
-  createdAt      DateTime     @default(now())
-  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  id                String             @id @default(cuid())
+  conversationId    String
+  sender            String
+  content           String
+  type              String             @default("text")
+  role              String?            // USER or ASSISTANT
+  metadata          String?            // Added metadata
+  createdAt         DateTime           @default(now())
+  conversation      Conversation       @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sentimentAnalysis SentimentAnalysis?
+  languageDetection LanguageDetection?
 
   @@index([conversationId])
 }
@@ -288,6 +294,7 @@ model KnowledgeBase {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  chunks     KnowledgeChunk[]
 }
 
 model KnowledgeGap {
@@ -350,6 +357,7 @@ model Visitor {
   updatedAt   DateTime @updatedAt
   business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
   sessions    VisitorSession[]
+  conversations Conversation[]
   
   @@unique([businessId, fingerprint])
 }
@@ -415,12 +423,14 @@ enum BusinessStatus {
 
 model SentimentAnalysis {
   id             String   @id @default(cuid())
-  messageId      String?
+  messageId      String?  @unique // Added unique constraint for 1:1 relation
   conversationId String?
   sentiment      String
   confidence     Float
+  intensity      Float?   // Added to match code
   emotions       String?
   createdAt      DateTime @default(now())
+  message        Message? @relation(fields: [messageId], references: [id]) // Added relation
 
   @@index([messageId])
   @@index([conversationId])
@@ -428,12 +438,13 @@ model SentimentAnalysis {
 
 model LanguageDetection {
   id             String   @id @default(cuid())
-  messageId      String?
+  messageId      String?  @unique // Added unique constraint for 1:1 relation
   conversationId String?
   language       String
   confidence     Float
   dialect        String?
   createdAt      DateTime @default(now())
+  message        Message? @relation(fields: [messageId], references: [id]) // Added relation
 
   @@index([messageId])
   @@index([conversationId])
@@ -445,10 +456,12 @@ model AgentHandoff {
   businessId     String
   requestedBy    String?
   assignedTo     String?
+  agentId        String?       // Added to match code
   priority       String        @default("MEDIUM")
   status         String        @default("PENDING")
   reason         String?
   notes          String?
+  feedback       String?       // Added to match code
   qualityScore   Int?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
@@ -459,15 +472,16 @@ model AgentHandoff {
   @@index([businessId])
   @@index([status])
 }
-
 model KnowledgeChunk {
-  id         String   @id @default(cuid())
-  businessId String
-  content    String
-  embedding  String?
-  metadata   String?
-  createdAt  DateTime @default(now())
-  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  id              String         @id @default(cuid())
+  businessId      String
+  knowledgeBaseId String?
+  content         String
+  embedding       String?
+  metadata        String?
+  createdAt       DateTime       @default(now())
+  business        Business       @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  knowledgeBase   KnowledgeBase? @relation(fields: [knowledgeBaseId], references: [id], onDelete: Cascade)
 
   @@index([businessId])
 }

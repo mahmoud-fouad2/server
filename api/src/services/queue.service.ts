@@ -67,7 +67,8 @@ class QueueService {
 
   createWorker(
     name: string,
-    processor: (job: Job) => Promise<any>
+    processor: (job: Job) => Promise<any>,
+    options?: any
   ): Worker | null {
     if (!this.connection) {
       logger.warn(`Cannot create worker ${name} without Redis connection`);
@@ -81,7 +82,8 @@ class QueueService {
     try {
       const worker = new Worker(name, processor, {
         connection: this.connection,
-        concurrency: 5,
+        concurrency: options?.concurrency || 5,
+        ...options
       });
 
       worker.on('completed', (job) => {

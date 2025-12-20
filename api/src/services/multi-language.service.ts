@@ -106,8 +106,8 @@ class MultiLanguageService {
         data: {
           conversationId,
           messageId,
-          detectedLanguage: result.language,
-          detectedDialect: result.dialect,
+          language: result.language,
+          dialect: result.dialect,
           confidence: result.confidence,
         },
       });

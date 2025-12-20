@@ -45,8 +45,8 @@ export class KnowledgeService {
         title: data.question,
         content: data.answer,
         tags: data.tags ? JSON.stringify(data.tags) : '[]',
-        source: data.source || 'manual',
-        metadata: data.metadata ? JSON.stringify(data.metadata) : null,
+        source: (data as any).source || 'manual',
+        metadata: (data as any).metadata ? JSON.stringify((data as any).metadata) : null,
       }
     });
 
@@ -142,10 +142,12 @@ export class KnowledgeService {
     minSimilarity?: number;
   }) {
     // Use vector search for semantic search
-    const results = await vectorSearchService.searchKnowledge(query, businessId, {
-      limit: options?.limit || 10,
-      minSimilarity: options?.minSimilarity || 0.7,
-    });
+    const results = await vectorSearchService.searchKnowledge(
+      query,
+      businessId,
+      options?.limit || 10,
+      options?.minSimilarity || 0.7
+    );
 
     logger.info(`Vector search found ${results.length} results for query: "${query}"`);
 
@@ -172,6 +174,10 @@ export class KnowledgeService {
     );
 
     logger.info(`Queued web crawling job for ${url}`);
+
+    if (!job) {
+      throw new Error('Failed to queue web crawling job');
+    }
 
     return {
       jobId: job.id,
@@ -239,6 +245,10 @@ export class KnowledgeService {
       },
       { priority: 1 }
     );
+
+    if (!job) {
+      throw new Error('Failed to queue reindexing job');
+    }
 
     logger.info(`Queued reindexing job for business ${businessId}`);
 

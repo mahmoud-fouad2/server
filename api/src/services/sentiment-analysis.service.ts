@@ -152,7 +152,7 @@ class SentimentAnalysisService {
           confidence: result.confidence,
           intensity: result.intensity,
           emotions: result.emotions as any,
-          keywords: result.keywords as any,
+          // keywords: result.keywords as any,
         },
       });
 

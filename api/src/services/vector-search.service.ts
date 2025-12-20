@@ -139,7 +139,7 @@ class VectorSearchService {
           chunk.id,
           chunk.content,
           businessId,
-          chunk.knowledgeBaseId,
+          chunk.knowledgeBaseId || '',
           chunk.metadata || {}
         );
         if (success) indexed++;

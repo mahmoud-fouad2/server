@@ -94,7 +94,6 @@ class AgentHandoffService {
           data: {
             status: 'CLOSED',
             agentRating: qualityScore,
-            agentFeedback: feedback,
           },
         });
       }

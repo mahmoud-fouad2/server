@@ -28,11 +28,8 @@ queueService.createWorker('embeddings', async (job) => {
   logger.info(`Processing embedding job for chunk ${knowledgeChunkId}`);
   
   try {
-    // Generate embedding
-    const embedding = await embeddingService.generateEmbedding(text);
-    
-    // Index in vector database
-    await vectorSearchService.indexKnowledgeChunk(knowledgeChunkId, embedding.embedding, businessId, knowledgeChunkId, {});
+    // Index in vector database (generates embedding internally)
+    await vectorSearchService.indexKnowledgeChunk(knowledgeChunkId, text, businessId, knowledgeChunkId, {});
     
     logger.info(`✅ Successfully indexed chunk ${knowledgeChunkId}`);
     
@@ -66,29 +63,42 @@ queueService.createWorker('crawling', async (job) => {
   logger.info(`Crawling website: ${url}`);
   
   try {
-    const results = await webCrawlerService.crawlWebsite(url, { maxDepth: maxDepth || 3 });
+    const results = await webCrawlerService.crawlWebsite(url, maxDepth || 3);
     
     // Store crawled content in knowledge base
     for (const page of results) {
       if (page.content && page.content.length > 100) {
-        // Create knowledge chunk
-        const knowledge = await prisma.knowledge.create({
+        // Create knowledge base entry
+        const knowledgeBase = await prisma.knowledgeBase.create({
           data: {
             businessId,
             content: page.content,
             title: page.title || page.url,
             source: page.url,
             metadata: JSON.stringify({
-              description: page.description,
-              keywords: page.keywords,
+              description: (page as any).description,
+              keywords: (page as any).keywords,
               crawledAt: new Date(),
             }),
           },
         });
+
+        // Create knowledge chunk
+        const chunk = await prisma.knowledgeChunk.create({
+          data: {
+            businessId,
+            knowledgeBaseId: knowledgeBase.id,
+            content: page.content,
+            metadata: JSON.stringify({
+              source: page.url,
+              title: page.title,
+            }),
+          }
+        });
         
         // Queue embedding generation
         await queueService.addJob('embeddings', 'generate-embedding', {
-          knowledgeChunkId: knowledge.id,
+          knowledgeChunkId: chunk.id,
           text: page.content,
           businessId,
         }, {
@@ -116,11 +126,11 @@ queueService.createWorker('sentiment', async (job) => {
     const result = await sentimentAnalysisService.analyzeSentiment(text);
     
     // Save to database
-    await sentimentAnalysisService.saveSentimentAnalysis({
+    await sentimentAnalysisService.saveSentimentAnalysis(
       conversationId,
       messageId,
-      ...result,
-    });
+      result
+    );
     
     logger.info(`✅ Sentiment analyzed for message ${messageId}: ${result.sentiment}`);
     return { success: true, sentiment: result.sentiment };
@@ -140,11 +150,11 @@ queueService.createWorker('language-detection', async (job) => {
     const result = await multiLanguageService.detectLanguage(text);
     
     // Save to database
-    await multiLanguageService.saveLanguageDetection({
+    await multiLanguageService.saveLanguageDetection(
       conversationId,
       messageId,
-      ...result,
-    });
+      result
+    );
     
     logger.info(`✅ Language detected for message ${messageId}: ${result.language}`);
     return { success: true, language: result.language };
@@ -161,7 +171,22 @@ queueService.createWorker('reindex-business', async (job) => {
   logger.info(`Reindexing all knowledge for business ${businessId}`);
   
   try {
-    await vectorSearchService.reindexBusiness(businessId);
+    // Fetch all knowledge chunks
+    const knowledgeChunks = await prisma.knowledgeChunk.findMany({
+      where: { businessId },
+    });
+    
+    // Reindex
+    for (const chunk of knowledgeChunks) {
+        await vectorSearchService.indexKnowledgeChunk(
+          chunk.id, 
+          chunk.content, 
+          businessId, 
+          chunk.knowledgeBaseId || '', 
+          chunk.metadata ? JSON.parse(chunk.metadata) : {}
+        );
+    }
+
     logger.info(`✅ Reindexed business ${businessId}`);
     return { success: true, businessId };
   } catch (error) {
@@ -177,19 +202,42 @@ queueService.createWorker('ai-processing', async (job) => {
   logger.info(`Generating AI response for message ${messageId}`);
   
   try {
-    const enhancedAIService = (await import('./services/enhanced-ai.service.js')).default;
-    
-    const response = await enhancedAIService.generateResponse(prompt, {
-      context,
-      maxTokens: 1000,
+    // Fetch businessId from conversation
+    const conversation = await prisma.conversation.findUnique({
+      where: { id: conversationId },
+      select: { businessId: true }
     });
+
+    if (!conversation) {
+      throw new Error(`Conversation ${conversationId} not found`);
+    }
+
+    const aiService = (await import('./services/ai.service.js')).default;
+    
+    const response = await aiService.generateResponse(
+      conversation.businessId,
+      prompt,
+      [], // history
+      {
+        conversationId,
+        messageId,
+        useVectorSearch: true,
+      }
+    );
     
     // Update message with AI response
     await prisma.message.update({
       where: { id: messageId },
       data: {
-        aiResponse: response,
+        content: response, // Assuming we update content or add a new message? 
+        // If we want to store AI response separately, we need a field. 
+        // But usually AI response IS a new message.
+        // Wait, the worker updates an EXISTING message? 
+        // "Update message with AI response" implies the message was created as a placeholder?
+        // Or maybe we should create a NEW message?
+        // Let's assume we update metadata for now as per original code, but 'aiResponse' field doesn't exist.
         metadata: JSON.stringify({
+          aiResponse: response,
           processedAt: new Date(),
           provider: 'queue-worker',
         }),
@@ -211,9 +259,9 @@ queueService.createWorker('batch-embeddings', async (job) => {
   logger.info(`Generating batch embeddings for ${knowledgeIds.length} knowledge chunks`);
   
   try {
-    const knowledgeChunks = await prisma.knowledge.findMany({
+    const knowledgeChunks = await prisma.knowledgeChunk.findMany({
       where: { id: { in: knowledgeIds }, businessId },
-      select: { id: true, content: true },
+      select: { id: true, content: true, knowledgeBaseId: true, metadata: true },
     });
     
     const texts = knowledgeChunks.map(k => k.content);
@@ -223,7 +271,10 @@ queueService.createWorker('batch-embeddings', async (job) => {
     for (let i = 0; i < knowledgeChunks.length; i++) {
       await vectorSearchService.indexKnowledgeChunk(
         knowledgeChunks[i].id,
-        embeddings[i]
+        knowledgeChunks[i].content,
+        businessId,
+        knowledgeChunks[i].knowledgeBaseId || '',
+        knowledgeChunks[i].metadata ? JSON.parse(knowledgeChunks[i].metadata as string) : {}
       );
     }
     

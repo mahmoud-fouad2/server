@@ -75,7 +75,8 @@ class TelegramService {
       await prisma.message.create({
         data: {
           conversationId: conversation.id,
-          role: 'USER',
+          role: 'user',
+          sender: 'user',
           content: text,
         },
       });

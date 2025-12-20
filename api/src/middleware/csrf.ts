@@ -63,7 +63,7 @@ const csrfProtection = new CSRFProtection();
 
 export const generateCSRFToken = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const sessionId = req.session?.id || req.ip || 'anonymous';
+    const sessionId = (req as any).session?.id || req.ip || 'anonymous';
     const token = await csrfProtection.createToken(sessionId);
     
     res.locals.csrfToken = token;
@@ -83,7 +83,7 @@ export const validateCSRFToken = async (req: Request, res: Response, next: NextF
   }
 
   try {
-    const sessionId = req.session?.id || req.ip || 'anonymous';
+    const sessionId = (req as any).session?.id || req.ip || 'anonymous';
     const token = req.headers['x-csrf-token'] as string || req.body._csrf;
 
     if (!token) {

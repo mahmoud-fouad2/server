@@ -45,14 +45,14 @@ export class ChatService {
     // Queue background tasks for user messages
     if (senderType === 'USER') {
       // Queue sentiment analysis
-      await queueService.addJob('sentiment', {
+      await queueService.addJob('sentiment', 'analyze', {
         conversationId,
         messageId: message.id,
         text: content,
       }, { priority: 5 });
 
       // Queue language detection
-      await queueService.addJob('language-detection', {
+      await queueService.addJob('language-detection', 'detect', {
         conversationId,
         messageId: message.id,
         text: content,
@@ -101,10 +101,7 @@ export class ChatService {
           take: 10,
         },
         visitor: true,
-        agentHandoffs: {
-          where: { status: { in: ['PENDING', 'ACCEPTED'] } },
-          include: { agent: true },
-        }
+        agentHandoff: true
       }
     });
   }
@@ -135,14 +132,15 @@ export class ChatService {
     priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT' = 'MEDIUM'
   ) {
     // Update conversation status
-    await this.updateConversationStatus(conversationId, 'WAITING_FOR_AGENT');
+    const conversation = await this.updateConversationStatus(conversationId, 'WAITING_FOR_AGENT');
 
     // Request handoff through service
-    const handoff = await agentHandoffService.requestHandoff(
+    const handoff = await agentHandoffService.requestHandoff({
       conversationId,
+      businessId: conversation.businessId,
       reason,
       priority
-    );
+    });
 
     logger.info(`Agent handoff requested for conversation ${conversationId}`);
 
@@ -175,10 +173,7 @@ export class ChatService {
           take: 1,
         },
         visitor: true,
-        agentHandoffs: {
-          where: { status: { in: ['PENDING', 'ACCEPTED'] } },
-          take: 1,
-        }
+        agentHandoff: true
       },
       orderBy: { updatedAt: 'desc' },
     });
@@ -194,7 +189,7 @@ export class ChatService {
             languageDetection: true,
           }
         },
-        agentHandoffs: true,
+        agentHandoff: true,
       }
     });
 
@@ -211,7 +206,7 @@ export class ChatService {
       .map(m => m.sentimentAnalysis?.sentiment);
     
     const avgSentiment = sentiments.length > 0
-      ? sentiments.filter(s => s === 'positive').length / sentiments.length
+      ? sentiments.filter((s: any) => s === 'positive').length / sentiments.length
       : 0;
 
     const languages = conversation.messages
@@ -219,8 +214,8 @@ export class ChatService {
       .map(m => m.languageDetection?.language);
     
     const primaryLanguage = languages.length > 0
-      ? languages.sort((a, b) =>
-          languages.filter(l => l === a).length - languages.filter(l => l === b).length
+      ? languages.sort((a: any, b: any) =>
+          languages.filter((l: any) => l === a).length - languages.filter((l: any) => l === b).length
         ).pop()
       : 'unknown';
 
@@ -233,7 +228,7 @@ export class ChatService {
       agentMessages,
       avgSentiment,
       primaryLanguage,
-      hadAgentHandoff: conversation.agentHandoffs.length > 0,
+      hadAgentHandoff: !!conversation.agentHandoff,
       status: conversation.status,
     };
   }
