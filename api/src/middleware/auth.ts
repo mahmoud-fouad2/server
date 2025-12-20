@@ -1,3 +1,8 @@
+/*
+ * 🛡️ SECURITY CRITICAL - MULTI-TENANT AUTH CORE 🛡️
+ * This file handles JWT verification, Role-Based Access Control (RBAC), and Tenant Context Switching.
+ * Modifications must be audit-logged and tested against the 'Security & Safety Review' protocol.
+ */
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import prisma from '../config/database.js';

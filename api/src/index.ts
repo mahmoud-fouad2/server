@@ -1,3 +1,8 @@
+/*
+ * 🛡️ CORE SYSTEM FILE - DO NOT MODIFY WITHOUT EXPERT REVIEW 🛡️
+ * This file controls the main server entry point, middleware order, and global error handling.
+ * Any changes here can take down the entire production API.
+ */
 import express from 'express';
 import http from 'http';
 import cors from 'cors';

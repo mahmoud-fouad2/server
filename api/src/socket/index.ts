@@ -1,3 +1,8 @@
+/*
+ * 🛡️ REAL-TIME INFRASTRUCTURE - SCALABILITY CORE 🛡️
+ * Handles Socket.IO clustering via Redis Adapter.
+ * Ensure REDIS_URL is configured before modifying adapter logic.
+ */
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { Server as HttpServer } from 'http';
 import { createAdapter } from '@socket.io/redis-adapter';
