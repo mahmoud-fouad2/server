@@ -1,3 +1,8 @@
+/*
+ * 🛡️ CORE SYSTEM FILE - DO NOT MODIFY WITHOUT EXPERT REVIEW 🛡️
+ * This file controls the AI generation logic, provider strategy, and fallback mechanisms.
+ * Any changes here can break the AI functionality.
+ */
 import prisma from '../config/database.js';
 import vectorSearchService from './vector-search.service.js';
 import intentDetectionService from './intent-detection.service.js';
@@ -56,177 +61,6 @@ export class AIService {
   constructor() {
     if (process.env.GROQ_API_KEY) this.providers.set('groq', new GroqProvider(process.env.GROQ_API_KEY));
     if (process.env.GEMINI_API_KEY) this.providers.set('gemini', new GeminiProvider(process.env.GEMINI_API_KEY));
-  }
-
-  async generateResponse(businessId: string, prompt: string) {
-    // Fetch tenant config
-    const business = await prisma.business.findUnique({ 
-      where: { id: businessId }, 
-      select: { aiProviderConfig: true } 
-    });
-
-    const config = business?.aiProviderConfig as any;
-    let providerType = config?.type || 'groq';
-    let provider = this.providers.get(providerType);
-
-    // Intelligent Failover
-    if (!provider || !(await provider.healthCheck())) {
-      console.warn(`Provider ${providerType} unavailable, failing over to Gemini`);
-      provider = this.providers.get('gemini');
-    }
-
-    if (!provider) throw new Error('No AI providers available');
-
-    const { response, usage } = await provider.generateResponse(prompt);
-    
-    // Async billing update
-    prisma.business.update({
-      where: { id: businessId },
-      data: { messagesUsed: { increment: 1 } } // Simplified billing
-    }).catch(console.error);
-
-    return response;
-  }
-  
-  // CRUD for Custom Models
-  async getModels(businessId: string) {
-    return prisma.customAIModel.findMany({
-      where: { businessId }
-    });
-  }
-
-  async createModel(businessId: string, name: string, config: any) {
-    return prisma.customAIModel.create({
-      data: {
-        businessId,
-        name,
-        isActive: true
-      }
-    });
-  }
-
-  private async generateChatResponse(
-    systemPrompt: string,
-    userMessage: string,
-    history: Array<{ role: 'user' | 'assistant'; content: string }> = [],
-    options: AIOptions = {}
-  ) {
-    const providers: AIProviderName[] = ['groq', 'gemini', 'deepseek', 'cerebras'];
-    const preferredProvider = options.provider || providers[0];
-    
-    // Try preferred provider first
-    const sortedProviders = [preferredProvider, ...providers.filter(p => p !== preferredProvider)];
-    
-    for (const providerName of sortedProviders) {
-      const provider = this.providers.get(providerName);
-      if (!provider?.available) continue;
-
-      try {
-        let response: string;
-        
-        switch (providerName) {
-          case 'groq':
-            response = await this.callGroq(systemPrompt, userMessage, history, options);
-            break;
-          case 'gemini':
-            response = await this.callGemini(systemPrompt, userMessage, history, options);
-            break;
-          case 'deepseek':
-            response = await this.callDeepSeek(systemPrompt, userMessage, history, options);
-            break;
-          case 'cerebras':
-            response = await this.callCerebras(systemPrompt, userMessage, history, options);
-            break;
-          default:
-            continue;
-        }
-
-        provider.requestCount++;
-        return { text: response, provider: providerName, tokensUsed: 0 };
-      } catch (error: any) {
-        provider.errorCount++;
-        provider.lastError = error.message;
-        logger.error(`${providerName} failed:`, error.message);
-        continue;
-      }
-    }
-    
-    throw new Error('All AI providers failed');
-  }
-
-  private async callGroq(systemPrompt: string, userMessage: string, history: any[], options: AIOptions) {
-    if (!this.groqClient) throw new Error('Groq not configured');
-    
-    const messages = [
-      { role: 'system' as const, content: systemPrompt },
-      ...history,
-      { role: 'user' as const, content: userMessage }
-    ];
-
-    const completion = await this.groqClient.chat.completions.create({
-      model: 'llama-3.3-70b-versatile',
-      messages,
-      max_tokens: options.maxTokens || 1000,
-      temperature: options.temperature || 0.7,
-    });
-
-    return completion.choices[0]?.message?.content || '';
-  }
-
-  private async callGemini(systemPrompt: string, userMessage: string, history: any[], options: AIOptions) {
-    if (!this.geminiClient) throw new Error('Gemini not configured');
-    
-    const model = this.geminiClient.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
-    
-    const chat = model.startChat({
-      history: history.map(msg => ({
-        role: msg.role === 'user' ? 'user' : 'model',
-        parts: [{ text: msg.content }]
-      })),
-      generationConfig: {
-        maxOutputTokens: options.maxTokens || 1000,
-        temperature: options.temperature || 0.7,
-      },
-    });
-
-    const result = await chat.sendMessage(`${systemPrompt}\n\n${userMessage}`);
-    return result.response.text();
-  }
-
-  private async callDeepSeek(systemPrompt: string, userMessage: string, history: any[], options: AIOptions) {
-    const response = await axios.post(
-      'https://api.deepseek.com/v1/chat/completions',
-      {
-        model: 'deepseek-chat',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          ...history,
-          { role: 'user', content: userMessage }
-        ],
-        max_tokens: options.maxTokens || 1000,
-        temperature: options.temperature || 0.7,
-      },
-      { headers: { Authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}` } }
-    );
-    return response.data.choices[0].message.content;
-  }
-
-  private async callCerebras(systemPrompt: string, userMessage: string, history: any[], options: AIOptions) {
-    const response = await axios.post(
-      'https://api.cerebras.ai/v1/chat/completions',
-      {
-        model: 'llama3.1-8b',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          ...history,
-          { role: 'user', content: userMessage }
-        ],
-        max_tokens: options.maxTokens || 1000,
-        temperature: options.temperature || 0.7,
-      },
-      { headers: { Authorization: `Bearer ${process.env.CEREBRAS_API_KEY}` } }
-    );
-    return response.data.choices[0].message.content;
   }
 
   // Enhanced Core Generation Logic with Vector Search, Intent Detection, and Multi-Provider
@@ -343,51 +177,62 @@ ${sentimentResult?.sentiment === 'NEGATIVE' ? '6. Be extra supportive and unders
         systemPrompt += `\n\n**Relevant Knowledge Base:**\n${relevantKnowledge}\n\nUse this information to answer the user's question accurately.`;
       }
 
-      // 6. Format conversation history
-      const formattedHistory = history.map(msg => ({
-        role: (msg.sender === 'user' ? 'user' : 'assistant') as 'user' | 'assistant',
-        content: msg.content
-      }));
+      // 6. Select Provider Strategy
+      const config = business.aiProviderConfig as any;
+      let providerType = config?.type || 'groq';
+      let provider = this.providers.get(providerType);
 
-      // 7. Call AI Service (with multi-provider fallback)
-      const response = await this.generateChatResponse(
-        systemPrompt,
-        userMessage,
-        formattedHistory,
-        {
-          maxTokens: 1000,
-          temperature: 0.7,
-        }
+      // Intelligent Failover
+      if (!provider || !(await provider.healthCheck())) {
+        console.warn(`Provider ${providerType} unavailable, failing over to Gemini`);
+        provider = this.providers.get('gemini');
+      }
+
+      if (!provider) throw new Error('No AI providers available');
+
+      // 7. Generate Response
+      const { response, usage } = await provider.generateResponse(
+        `${systemPrompt}\n\nUser: ${userMessage}`,
+        { model: config?.model }
       );
 
-      // 8. Log analytics
+      // 8. Async billing update
+      prisma.business.update({
+        where: { id: businessId },
+        data: { messagesUsed: { increment: 1 } }
+      }).catch(console.error);
+
+      // 9. Log analytics
       logger.info('AI Response Generated:', {
         businessId,
-        provider: response.provider,
-        tokensUsed: response.tokensUsed,
+        provider: providerType,
+        tokensUsed: usage.tokens,
         intent: intentResult?.intent,
         sentiment: sentimentResult?.sentiment,
       });
 
-      return response.text;
+      return response;
     } catch (error) {
       logger.error('AI Generation Error:', error);
       return "I apologize, but I'm having trouble processing your request right now. Please try again.";
     }
   }
-
-  // Get AI Provider Status
-  async getProviderStatus() {
-    const status: any = {};
-    this.providers.forEach((provider, name) => {
-      status[name] = {
-        available: provider.available,
-        requestCount: provider.requestCount,
-        errorCount: provider.errorCount,
-        lastError: provider.lastError,
-      };
+  
+  // CRUD for Custom Models
+  async getModels(businessId: string) {
+    return prisma.customAIModel.findMany({
+      where: { businessId }
     });
-    return status;
+  }
+
+  async createModel(businessId: string, name: string, config: any) {
+    return prisma.customAIModel.create({
+      data: {
+        businessId,
+        name,
+        isActive: true
+      }
+    });
   }
 }
 
