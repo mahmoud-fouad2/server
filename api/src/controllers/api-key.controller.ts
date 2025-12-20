@@ -35,11 +35,13 @@ export const createApiKey = async (req: Request, res: Response) => {
     const { name } = req.body;
 
     const key = `sk_live_${crypto.randomBytes(24).toString('hex')}`;
+    const prefix = key.substring(0, 12);
 
     const newKey = await prisma.apiKey.create({
       data: {
         name: name || 'Default Key',
         key,
+        prefix,
         businessId,
       },
     });

@@ -1,10 +1,10 @@
 import { Router } from 'express';
-import { listApiKeys, createApiKey, deleteApiKey } from '../controllers/api-key.controller';
-import { authenticate } from '../middleware/auth';
+import { listApiKeys, createApiKey, deleteApiKey } from '../controllers/api-key.controller.js';
+import { authenticateToken } from '../middleware/auth.js';
 
 const router = Router();
 
-router.use(authenticate);
+router.use(authenticateToken);
 
 router.get('/', listApiKeys);
 router.post('/', createApiKey);

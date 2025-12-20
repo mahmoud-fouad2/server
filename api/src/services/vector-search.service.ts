@@ -1,6 +1,7 @@
 import embeddingService from './embedding.service.js';
 import logger from '../utils/logger.js';
 import { PrismaClient } from '@prisma/client';
+import axios from 'axios';
 
 const prisma = new PrismaClient();
 
