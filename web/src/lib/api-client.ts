@@ -5,9 +5,24 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 async function fetchAPI(endpoint: string, options: RequestInit = {}) {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
   
+  // Get business ID from user object in localStorage
+  let businessId = null;
+  if (typeof window !== 'undefined') {
+    try {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        businessId = user.currentBusinessId || user.businessId || (user.businesses && user.businesses[0]?.id);
+      }
+    } catch (e) {
+      console.error('Error parsing user from localStorage', e);
+    }
+  }
+
   const headers = {
     'Content-Type': 'application/json',
     ...(token && { Authorization: `Bearer ${token}` }),
+    ...(businessId && { 'x-business-id': businessId }),
     ...options.headers,
   };
 
