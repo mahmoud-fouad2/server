@@ -250,22 +250,6 @@ export default function DocsPage() {
               </div>
 
               <nav className="space-y-1">
-                <div className="px-3 py-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700">
-                  <div className="text-xs font-semibold mb-2 text-gray-500">المحتويات</div>
-                  <ul className="space-y-1 text-sm">
-                    {toc.map(item => (
-                      <li key={item.id}>
-                        <button
-                          onClick={() => { setActiveSection(item.id); const target = document.getElementById(item.id); if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
-                          className={`w-full text-left px-2 py-1 rounded transition-colors ${activeSection === item.id ? 'text-brand-600 font-semibold' : 'text-gray-700 dark:text-gray-300 hover:text-brand-600'}`}
-                        >
-                          {item.title}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
                 {filteredSections.map((section) => (
                   <button
                     key={section.id}

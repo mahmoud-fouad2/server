@@ -1,6 +1,7 @@
 'use client';
 import { Button } from '@/components/ui/button';
 import PageLayout from '@/components/layout/PageLayout';
+import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
@@ -33,26 +34,26 @@ export default function AboutPage() {
       icon: <Brain size={32} />,
       title: 'الذكاء الحقيقي',
       description:
-        'لا نعتمد على الكلمات المفتاحية، بل نفهم السياق والمعنى الحقيقي للمحادثة.',
+        'لا نعتمد على الكلمات المفتاحية، بل نفهم السياق والمعنى الحقيقي للمحادثة باستخدام أحدث تقنيات معالجة اللغة الطبيعية والذكاء الاصطناعي المتطور.',
       color: 'blue',
     },
     {
       icon: <Heart size={32} />,
       title: 'اللمسة الإنسانية',
-      description: 'التكنولوجيا يجب أن تخدم الإنسان وتسهل حياته، لا أن تعقدها.',
+      description: 'نؤمن بأن التكنولوجيا يجب أن تخدم الإنسان وتسهل حياته، لا أن تعقدها. لذلك صممنا فهملي ليكون سهل الاستخدام، دافئ التفاعل، وقريب من القلب.',
       color: 'red',
     },
     {
       icon: <Rocket size={32} />,
       title: 'السرعة والكفاءة',
       description:
-        'إعداد البوت يجب أن يكون أسرع من إعداد القهوة - 5 دقائق فقط!',
+        'في عصر السرعة، وقتك ثمين. إعداد البوت يجب أن يكون أسرع من إعداد القهوة - 5 دقائق فقط! ابدأ الآن واستمتع بنتائج فورية.',
       color: 'purple',
     },
     {
       icon: <Globe size={32} />,
       title: 'للجميع',
-      description: 'من المتجر الصغير إلى الشركة العملاقة، فهملي مصمم للجميع.',
+      description: 'من المتجر الصغير إلى الشركة العملاقة، من المطعم المحلي إلى العيادة الطبية، فهملي مصمم لجميع القطاعات والأحجام. نجاحك هو نجاحنا.',
       color: 'green',
     },
   ];
@@ -60,6 +61,7 @@ export default function AboutPage() {
   return (
     <PageLayout>
       <div className="min-h-screen bg-gray-50 dark:bg-cosmic-950" dir="rtl">
+        {/* Hero Section */}
         <section className="relative py-20 px-6 overflow-hidden bg-gradient-to-br from-brand-600 to-brand-800 text-white">
           <div className="max-w-5xl mx-auto relative z-10">
             <motion.div
@@ -67,16 +69,39 @@ export default function AboutPage() {
               animate={{ opacity: 1, y: 0 }}
               className="text-center"
             >
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.2 }}
+                className="mb-8 flex justify-center"
+              >
+                <div className="relative">
+                  <Image
+                    src="/logo2.png"
+                    alt="Faheemly Logo"
+                    width={120}
+                    height={120}
+                    className="rounded-full shadow-2xl border-4 border-white/20"
+                  />
+                  <div className="absolute inset-0 rounded-full bg-brand-400/20 blur-xl"></div>
+                </div>
+              </motion.div>
               <h1 className="text-5xl lg:text-7xl font-bold mb-6">
                 نبني مستقبل الذكاء الاصطناعي العربي
               </h1>
-              <p className="text-xl lg:text-2xl opacity-90 max-w-3xl mx-auto">
+              <p className="text-xl lg:text-2xl opacity-90 max-w-3xl mx-auto leading-relaxed">
                 لم نكن نريد بناء مجرد &quot;شات بوت&quot;. أردنا بناء عقل يفهم، يتعلم،
-                ويتحدث بلسانك.
+                ويتحدث بلسانك. رحلتنا بدأت بسؤال بسيط: لماذا تفشل معظم روبوتات الدردشة في فهم اللهجات العربية؟ 
+                اليوم، بعد آلاف ساعات التطوير، نقدم لك فهملي - المساعد الذكي الذي يفهم كل لهجة عربية بدقة تصل إلى 90%.
               </p>
             </motion.div>
           </div>
+          {/* Decorative Elements */}
+          <div className="absolute top-20 left-10 w-64 h-64 bg-brand-400/10 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-10 right-20 w-96 h-96 bg-brand-300/10 rounded-full blur-3xl"></div>
         </section>
+
+        {/* Stats Section */}
         <section className="py-16 px-6 -mt-10 relative z-20">
           <div className="max-w-6xl mx-auto grid md:grid-cols-4 gap-6">
             {stats.map((stat, i) => (
@@ -85,7 +110,8 @@ export default function AboutPage() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                className="bg-white dark:bg-cosmic-900 rounded-2xl p-6 shadow-xl text-center"
+                transition={{ delay: i * 0.1 }}
+                className="bg-white dark:bg-cosmic-900 rounded-2xl p-6 shadow-xl text-center hover:shadow-2xl transition-shadow"
               >
                 <div className="w-12 h-12 bg-brand-500/10 rounded-xl flex items-center justify-center mx-auto mb-4 text-brand-600">
                   {stat.icon}

@@ -54,8 +54,7 @@ export default function Navbar() {
     <>
       {/* Navigation */}
       <nav
-        className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? 'h-20 shadow-lg' : 'h-24'} backdrop-blur-sm border-b border-gray-200 dark:border-white/5`}
-        style={{ backgroundColor: '#f8f8fa' }}
+        className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? 'h-20 shadow-lg' : 'h-24'} backdrop-blur-sm border-b ${isDark ? 'bg-cosmic-950/95 border-white/5' : 'bg-white/95 border-gray-200'}`}
       >
         <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
           {/* Logo */}
@@ -63,9 +62,9 @@ export default function Navbar() {
               <Image
                 src="/logo.webp"
                 alt="Faheemly"
-                width={110}
-                height={110}
-                className="w-[110px] h-[110px] object-contain transition-all"
+                width={140}
+                height={140}
+                className="w-[140px] h-[140px] object-contain transition-all"
                 priority={true}
               />
           </Link>

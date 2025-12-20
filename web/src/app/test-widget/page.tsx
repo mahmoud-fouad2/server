@@ -25,7 +25,7 @@ export default function TestWidgetPage() {
 
     const script = document.createElement('script');
     script.id = 'fahimo-widget-script';
-    script.src = 'http://localhost:3001/api/widget/loader.js';
+    script.src = (process.env.NEXT_PUBLIC_API_URL || 'https://fahimo-api.onrender.com') + '/api/widget/loader.js';
     script.setAttribute('data-business-id', businessId);
     script.onload = () => setIsLoaded(true);
     document.body.appendChild(script);
@@ -60,7 +60,7 @@ export default function TestWidgetPage() {
         <div className="border-t pt-6">
           <h2 className="font-semibold mb-2">Status:</h2>
           <div className="space-y-2 text-sm">
-            <p>API URL: <code className="bg-gray-100 px-1 rounded">http://localhost:3001</code></p>
+            <p>API URL: <code className="bg-gray-100 px-1 rounded">{process.env.NEXT_PUBLIC_API_URL || 'https://fahimo-api.onrender.com'}</code></p>
             <p>Widget Script: <code className="bg-gray-100 px-1 rounded">/api/widget/loader.js</code></p>
             <p>Loaded: {isLoaded ? '✅ Yes' : '❌ No'}</p>
           </div>
