@@ -1,0 +1,43 @@
+import { Request, Response } from 'express';
+import { VisitorService } from '../services/visitor.service.js';
+
+const visitorService = new VisitorService();
+
+export class VisitorController {
+  async createSession(req: Request, res: Response) {
+    try {
+      const businessId = req.body.businessId || req.query.businessId || req.headers['x-business-id'];
+      const fingerprint = req.body.fingerprint || req.headers['x-fingerprint'];
+
+      if (!businessId || !fingerprint) {
+        return res.status(400).json({ error: 'Business ID and Fingerprint required' });
+      }
+
+      const session = await visitorService.getOrCreateSession(businessId as string, fingerprint as string, {
+        userAgent: req.headers['user-agent'],
+        ipAddress: req.ip,
+        country: req.body.country,
+        city: req.body.city,
+        device: req.body.device,
+      });
+
+      res.json(session);
+    } catch (error) {
+      console.error('Visitor Session Error:', error);
+      res.status(500).json({ error: 'Failed to create session' });
+    }
+  }
+
+  async trackPage(req: Request, res: Response) {
+    try {
+      const { sessionId } = req.body;
+      if (!sessionId) return res.status(400).json({ error: 'Session ID required' });
+
+      await visitorService.trackPageView(sessionId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Track Page Error:', error);
+      res.status(500).json({ error: 'Failed to track page view' });
+    }
+  }
+}

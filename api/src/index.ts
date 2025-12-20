@@ -1,0 +1,135 @@
+import express from 'express';
+import http from 'http';
+import cors from 'cors';
+import helmet from 'helmet';
+import dotenv from 'dotenv';
+import hpp from 'hpp';
+import { SocketService } from './socket/index.js';
+import logger from './utils/logger.js';
+import cacheService from './services/cache.service.js';
+import queueService from './services/queue.service.js';
+import { 
+  errorHandler, 
+  notFound, 
+  handleUnhandledRejections, 
+  handleUncaughtExceptions 
+} from './middleware/errorHandler.js';
+import { globalLimiter, apiLimiter } from './middleware/rateLimiter.js';
+import { sanitizeInput } from './middleware/sanitization.js';
+
+// Import routes
+import widgetRoutes from './routes/widget.routes.js';
+import chatRoutes from './routes/chat.routes.js';
+import authRoutes from './routes/auth.routes.js';
+import businessRoutes from './routes/business.routes.js';
+import crmRoutes from './routes/crm.routes.js';
+import knowledgeRoutes from './routes/knowledge.routes.js';
+import notificationRoutes from './routes/notification.routes.js';
+import aiRoutes from './routes/ai.routes.js';
+import paymentRoutes from './routes/payment.routes.js';
+import uploadRoutes from './routes/upload.routes.js';
+import ticketRoutes from './routes/ticket.routes.js';
+import teamRoutes from './routes/team.routes.js';
+import adminRoutes from './routes/admin.routes.js';
+import integrationRoutes from './routes/integration.routes.js';
+import analyticsRoutes from './routes/analytics.routes.js';
+import visitorRoutes from './routes/visitor.routes.js';
+import continuousImprovementRoutes from './routes/continuous-improvement.routes.js';
+import customAIModelRoutes from './routes/custom-ai-model.routes.js';
+
+dotenv.config();
+
+// Setup global error handlers
+handleUnhandledRejections();
+handleUncaughtExceptions();
+
+const app = express();
+const server = http.createServer(app);
+const PORT = process.env.PORT || 3001;
+
+// Initialize Socket.IO
+new SocketService(server);
+
+// Initialize services
+logger.info('🚀 Starting Fahimo API V2...');
+logger.info(`✅ Cache service: ${cacheService.isConnected() ? 'Connected' : 'Using LRU only'}`);
+logger.info('✅ Queue service initialized');
+
+// Security Middleware
+app.use(helmet());
+app.use(hpp()); // Protect against HTTP Parameter Pollution
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || '*',
+  credentials: true,
+}));
+
+// Rate limiting
+app.use(globalLimiter);
+
+// Body parsing
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Sanitization
+app.use(sanitizeInput);
+
+// Static files
+app.use('/uploads', express.static('uploads'));
+
+// API Routes
+app.use('/api/widget', widgetRoutes);
+app.use('/api/chat', apiLimiter, chatRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/business', apiLimiter, businessRoutes);
+app.use('/api/crm', apiLimiter, crmRoutes);
+app.use('/api/knowledge', apiLimiter, knowledgeRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/ai', apiLimiter, aiRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/uploads', uploadRoutes);
+app.use('/api/tickets', ticketRoutes);
+app.use('/api/team', teamRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/integrations', integrationRoutes);
+app.use('/api/analytics', apiLimiter, analyticsRoutes);
+app.use('/api/visitor', visitorRoutes);
+app.use('/api/improvement', apiLimiter, continuousImprovementRoutes);
+app.use('/api/custom-ai-models', apiLimiter, customAIModelRoutes);
+
+// Health Check
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    version: '2.0.0',
+    timestamp: new Date().toISOString(),
+    services: {
+      cache: cacheService.isConnected(),
+      queue: !!queueService.getQueue('default'),
+    },
+  });
+});
+
+// 404 Handler
+app.use(notFound);
+
+// Error Handler
+app.use(errorHandler);
+
+// Start Server
+server.listen(PORT, () => {
+  logger.info(`✅ Server V2 running on port ${PORT}`);
+  logger.info(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+  logger.info(`🔒 CORS enabled for: ${process.env.CORS_ORIGIN || '*'}`);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', async () => {
+  logger.info('SIGTERM received, shutting down gracefully...');
+  
+  await queueService.closeAll();
+  
+  server.close(() => {
+    logger.info('Server closed');
+    process.exit(0);
+  });
+});
