@@ -48,6 +48,25 @@ export class ChatController {
         return res.status(400).json({ error: 'Missing required fields' });
       }
 
+      // Origin Security Check
+      const origin = req.headers.origin;
+      if (origin) {
+        const business = await prisma.business.findUnique({
+          where: { id: businessId },
+          select: { allowedOrigins: true }
+        });
+        
+        if (business && business.allowedOrigins && business.allowedOrigins.length > 0) {
+           const isAllowed = business.allowedOrigins.some(allowed => 
+             allowed === '*' || origin === allowed || (allowed.startsWith('*.') && origin.endsWith(allowed.slice(2)))
+           );
+           if (!isAllowed) {
+             console.warn(`Blocked request from origin ${origin} for business ${businessId}`);
+             return res.status(403).json({ error: 'Origin not allowed' });
+           }
+        }
+      }
+
       const message = await chatService.saveMessage(businessId, conversationId, content, senderType || 'USER');
       res.json(message);
     } catch (error) {

@@ -1,5 +1,7 @@
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { Server as HttpServer } from 'http';
+import { createAdapter } from '@socket.io/redis-adapter';
+import { createClient } from 'redis';
 import { AIService } from '../services/ai.service.js';
 import prisma from '../config/database.js';
 
@@ -20,7 +22,29 @@ export class SocketService {
       }
     });
 
+    this.setupAdapter();
     this.initialize();
+  }
+
+  private async setupAdapter() {
+    if (process.env.REDIS_URL) {
+      try {
+        const pubClient = createClient({ url: process.env.REDIS_URL });
+        const subClient = pubClient.duplicate();
+        
+        pubClient.on('error', (err) => console.error('Redis Pub Client Error', err));
+        subClient.on('error', (err) => console.error('Redis Sub Client Error', err));
+
+        await Promise.all([pubClient.connect(), subClient.connect()]);
+        
+        this.io.adapter(createAdapter(pubClient, subClient));
+        console.log('✅ Socket.IO Redis Adapter connected');
+      } catch (err) {
+        console.error('❌ Socket.IO Redis Adapter failed:', err);
+      }
+    } else {
+      console.warn('⚠️ REDIS_URL not found, Socket.IO running in single-node mode');
+    }
   }
 
   private initialize() {

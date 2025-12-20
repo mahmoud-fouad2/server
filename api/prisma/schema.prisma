@@ -21,6 +21,8 @@ model User {
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
   employerId       String?
+  currentBusinessId String?   // Session-persisted context
+  roles            Json?      // { businessId: ['admin', 'viewer'] }
   auditLogs        AuditLog[]
   businesses       Business[]
   payments         Payment[]
@@ -32,6 +34,8 @@ model User {
   // CRM relations
   assignedLeads    CrmLead[]        @relation("AssignedTo")
   crmLeadNotes     CrmLeadNote[]    @relation("UserCrmNotes")
+
+  @@index([currentBusinessId])
 }
 
 model Business {
@@ -45,6 +49,9 @@ model Business {
   trialEndsAt              DateTime?
   botTone                  String                  @default("friendly")
   primaryColor             String                  @default("#6366F1")
+  allowedOrigins           String[]                // Array for multiple domains
+  branding                 Json?                   // { logoUrl, primaryColor, customDomain, emailTemplate }
+  aiProviderConfig         Json?                   // { type: 'groq', apiKey: '...' } - Tenant-specific
   /// Widget variant selection: STANDARD or ENHANCED
   widgetVariant            WidgetVariant           @default(STANDARD)
   widgetConfig             String?
@@ -114,11 +121,14 @@ model TicketMessage {
 model AuditLog {
   id         String   @id @default(cuid())
   userId     String
+  businessId String?
   action     String
   details    String?
   ipAddress  String?
   createdAt  DateTime @default(now())
   user       User     @relation(fields: [userId], references: [id])
+  
+  @@index([businessId])
 }
 
 model Payment {

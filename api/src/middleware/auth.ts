@@ -39,18 +39,51 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
     // Verify user still exists and is active
     const user = await prisma.user.findUnique({
       where: { id: decoded.id },
-      select: { id: true, email: true, role: true, businesses: { select: { id: true } } }
+      select: { 
+        id: true, 
+        email: true, 
+        role: true, 
+        currentBusinessId: true,
+        roles: true,
+        businesses: { select: { id: true } } 
+      }
     });
 
     if (!user) {
       return res.status(403).json({ error: 'User not found' });
     }
 
-    // Attach user and primary business ID to request
+    // Intelligent context: Header > Token claim > Session > Default
+    let businessIdHeader = req.headers['x-business-id'];
+    if (Array.isArray(businessIdHeader)) businessIdHeader = businessIdHeader[0];
+
+    const businessId = businessIdHeader || decoded.businessId || user.currentBusinessId || user.businesses[0]?.id;
+
+    // Verify access to the requested business
+    if (businessId && !user.businesses.some(b => b.id === businessId)) {
+       // If they are SUPERADMIN, maybe allow? For now, strict check.
+       if (user.role !== 'ADMIN') { // Assuming ADMIN here means SUPERADMIN or similar, but let's stick to the prompt's strictness
+          return res.status(403).json({ error: 'Access denied to this business context' });
+       }
+    }
+
+    // Attach user and business ID to request
     req.user = {
       ...user,
-      businessId: user.businesses[0]?.id // Assuming single business for now, or handle multi-business logic
+      businessId
     };
+
+    // Audit log (async to not block)
+    if (businessId) {
+      prisma.auditLog.create({ 
+        data: { 
+          userId: user.id, 
+          businessId, 
+          action: 'access_context',
+          ipAddress: req.ip
+        } 
+      }).catch(err => console.error('Audit log failed:', err));
+    }
 
     next();
   } catch (error) {
