@@ -160,7 +160,6 @@ export class AIService {
 - Name: ${business.name}
 - Tone: ${business.botTone}
 - Language: ${business.language}
-// - Industry: ${business.industry || 'General'}
 
 **User Context:**
 ${intentResult ? `- Intent: ${intentResult.intent}` : ''}

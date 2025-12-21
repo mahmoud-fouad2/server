@@ -4,18 +4,28 @@ import prisma from '../../config/database';
 describe('AI Service Integration Tests', () => {
   let aiService: AIService;
   let testBusinessId: string;
+  let testUserId: string;
 
   beforeAll(async () => {
     aiService = new AIService();
     
+    // Create test user
+    const user = await prisma.user.create({
+        data: {
+            email: 'test-ai-integration@example.com',
+            password: 'password123',
+        }
+    });
+    testUserId = user.id;
+
     // Create test business
     const business = await prisma.business.create({
       data: {
+        userId: user.id,
         name: 'Test Business',
-        email: 'test@example.com',
         botTone: 'friendly',
         language: 'ar',
-        industry: 'technology',
+        activityType: 'OTHER',
       },
     });
     testBusinessId = business.id;
@@ -23,7 +33,8 @@ describe('AI Service Integration Tests', () => {
 
   afterAll(async () => {
     // Cleanup
-    await prisma.business.delete({ where: { id: testBusinessId } });
+    if (testBusinessId) await prisma.business.deleteMany({ where: { id: testBusinessId } });
+    if (testUserId) await prisma.user.deleteMany({ where: { id: testUserId } });
     await prisma.$disconnect();
   });
 
