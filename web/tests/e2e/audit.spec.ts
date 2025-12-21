@@ -19,12 +19,12 @@ test.describe('Admin Audit Logs E2E', () => {
       const token = process.env.PLAYWRIGHT_ADMIN_TOKEN || 'test-admin-token';
       const user =
         process.env.PLAYWRIGHT_ADMIN_USER || JSON.stringify({ id: 'test-admin', role: 'ADMIN' });
-      await page.addInitScript((t, u) => {
+      await page.addInitScript(({ token, user }) => {
         try {
-          localStorage.setItem('token', t);
-          localStorage.setItem('user', u);
+          localStorage.setItem('token', token);
+          localStorage.setItem('user', user);
         } catch (e) {}
-      }, token, user);
+      }, { token, user });
   });
 
   test('shows audit logs and supports filters', async ({ page }) => {

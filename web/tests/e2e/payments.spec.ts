@@ -40,12 +40,12 @@ test.describe('Admin Payments E2E', () => {
     const token = process.env.PLAYWRIGHT_ADMIN_TOKEN || 'test-admin-token';
     const user =
       process.env.PLAYWRIGHT_ADMIN_USER || JSON.stringify({ id: 'test-admin', role: 'ADMIN' });
-    await page.addInitScript((t, u) => {
+    await page.addInitScript(({ token, user }) => {
       try {
-        localStorage.setItem('token', t);
-        localStorage.setItem('user', u);
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', user);
       } catch (e) {}
-    }, token, user);
+    }, { token, user });
   });
 
   test('can open gateways list and edit a gateway', async ({ page }) => {

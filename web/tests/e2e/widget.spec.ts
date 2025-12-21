@@ -47,7 +47,7 @@ test.describe('Faheemly widget', () => {
     await page.goto(`${FRONTEND_URL}/`);
 
     // Inject the widget script twice (simulate duplicate inclusion)
-    await page.evaluate((src, bid) => {
+    await page.evaluate(({ src, bid }) => {
       const s1 = document.createElement('script');
       s1.src = src;
       s1.setAttribute('data-business-id', bid);
@@ -57,7 +57,7 @@ test.describe('Faheemly widget', () => {
       s2.src = src;
       s2.setAttribute('data-business-id', bid);
       document.body.appendChild(s2);
-    }, 'https://fahimo-api.onrender.com/fahimo-widget.js?v=v1', businessId);
+    }, { src: 'https://fahimo-api.onrender.com/fahimo-widget.js?v=v1', bid: businessId });
 
     // Wait for the widget container to be created
     await page.waitForSelector(`#fahimo-widget-container[data-business-id="${businessId}"]`, { timeout: 5000 });
