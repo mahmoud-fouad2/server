@@ -413,7 +413,7 @@ model PageVisit {
   sessionId String
   url       String
   title     String?
-  duration  Int      @default(0) // Seconds
+  duration  Int?     @default(0) // Seconds - Made optional for backward compatibility
   createdAt DateTime @default(now())
   session   VisitorSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
