@@ -40,26 +40,27 @@ export class ChatService {
     });
 
     // Invalidate cache for this conversation
-    await cacheService.del(`conversation:${conversationId}:history`);
+    await cacheService.del(`conversation:${conversationId}:history`).catch(() => {});
     
-    // Queue background tasks for user messages
+    // Queue background tasks for user messages (non-blocking)
     if (senderType === 'USER') {
-      // Queue sentiment analysis
-      await queueService.addJob('sentiment', 'analyze', {
+      // Queue sentiment analysis (fire and forget)
+      queueService.addJob('sentiment', 'analyze', {
         conversationId,
         messageId: message.id,
         text: content,
-      }, { priority: 5 });
+      }, { priority: 5 }).catch(err => logger.warn('Failed to queue sentiment job:', err));
 
-      // Queue language detection
-      await queueService.addJob('language-detection', 'detect', {
+      // Queue language detection (fire and forget)
+      queueService.addJob('language-detection', 'detect', {
         conversationId,
         messageId: message.id,
         text: content,
-      }, { priority: 5 });
+      }, { priority: 5 }).catch(err => logger.warn('Failed to queue language detection job:', err));
     }
 
-    return message;
+    // Return message with conversationId attached
+    return { ...message, conversationId };
   }
 
   async getHistory(conversationId: string, limit: number = 50, useCache: boolean = true) {

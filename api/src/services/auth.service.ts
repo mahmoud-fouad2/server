@@ -34,7 +34,19 @@ export class AuthService {
       return { user, business };
     });
 
-    return this.generateToken(result.user.id, result.business.id);
+    return this.generateToken(result.user.id, result.business.id, {
+      id: result.user.id,
+      email: result.user.email,
+      name: result.user.name,
+      role: result.user.role,
+      businessId: result.business.id,
+      businesses: [{ 
+        id: result.business.id, 
+        name: result.business.name,
+        planType: 'TRIAL',
+        status: 'TRIAL'
+      }]
+    });
   }
 
   async login(data: LoginInput) {
@@ -44,8 +56,15 @@ export class AuthService {
         id: true,
         email: true,
         password: true,
+        name: true,
+        role: true,
         businesses: {
-          select: { id: true }
+          select: { 
+            id: true,
+            name: true,
+            planType: true,
+            status: true
+          }
         }
       }
     });
@@ -58,12 +77,19 @@ export class AuthService {
     const businessId = user.businesses[0]?.id;
     if (!businessId) throw new Error('No business associated with this user');
 
-    return this.generateToken(user.id, businessId);
+    return this.generateToken(user.id, businessId, {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      businessId,
+      businesses: user.businesses
+    });
   }
 
-  private generateToken(userId: string, businessId: string) {
+  private generateToken(userId: string, businessId: string, userData?: any) {
     const secret = process.env.JWT_SECRET || 'your-secret-key';
     const token = jwt.sign({ id: userId, businessId }, secret, { expiresIn: '7d' });
-    return { token };
+    return { token, user: userData };
   }
 }

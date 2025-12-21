@@ -5,8 +5,9 @@ import { authenticateToken } from '../middleware/auth.js';
 const router = Router();
 const chatController = new ChatController();
 
-// Public chat endpoint (usually protected by rate limit and businessId check, not user auth)
+// Public chat endpoints (protected by rate limit and businessId check, not user auth)
 router.post('/send', chatController.sendMessage.bind(chatController));
+router.post('/rate', chatController.rateConversation.bind(chatController));
 
 router.get('/conversations', authenticateToken, chatController.getConversations.bind(chatController));
 router.get('/conversations/:conversationId/messages', authenticateToken, chatController.getMessages.bind(chatController));

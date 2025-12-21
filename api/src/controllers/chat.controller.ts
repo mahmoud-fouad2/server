@@ -1,8 +1,10 @@
 import { Request, Response } from 'express';
 import { ChatService } from '../services/chat.service.js';
+import { AIService } from '../services/ai.service.js';
 import prisma from '../config/database.js';
 
 const chatService = new ChatService();
+const aiService = new AIService();
 
 export class ChatController {
   
@@ -41,40 +43,96 @@ export class ChatController {
 
   async sendMessage(req: Request, res: Response) {
     try {
-      const { businessId, conversationId, content, senderType } = req.body;
+      const { businessId, conversationId, content, senderType, visitorId } = req.body;
       
       // Basic validation
       if (!businessId || !content) {
-        return res.status(400).json({ error: 'Missing required fields' });
+        return res.status(400).json({ error: 'Missing required fields: businessId and content are required' });
       }
 
-      // Origin Security Check
-      /* 
-      // Temporarily disabled until database migration for 'allowedOrigins' is applied on production
-      const origin = req.headers.origin;
-      if (origin) {
-        const business = await prisma.business.findUnique({
-          where: { id: businessId },
-          select: { allowedOrigins: true }
-        });
-        
-        if (business && business.allowedOrigins && business.allowedOrigins.length > 0) {
-           const isAllowed = business.allowedOrigins.some(allowed => 
-             allowed === '*' || origin === allowed || (allowed.startsWith('*.') && origin.endsWith(allowed.slice(2)))
-           );
-           if (!isAllowed) {
-             console.warn(`Blocked request from origin ${origin} for business ${businessId}`);
-             return res.status(403).json({ error: 'Origin not allowed' });
-           }
+      // 1. Save user message (creates conversation if needed)
+      const userMessage = await chatService.saveMessage(
+        businessId, 
+        conversationId || null, 
+        content, 
+        senderType || 'USER',
+        visitorId
+      );
+
+      const activeConversationId = userMessage.conversationId;
+
+      // 2. Generate AI response for USER messages
+      if (senderType === 'USER' || !senderType) {
+        try {
+          // Get conversation history for context
+          const history = await chatService.getHistory(activeConversationId, 10, false);
+          
+          // Generate AI response
+          const aiResponse = await aiService.generateResponse(
+            businessId,
+            content,
+            history.map((m: any) => ({ role: m.sender === 'user' ? 'user' : 'assistant', content: m.content })),
+            {
+              conversationId: activeConversationId,
+              messageId: userMessage.id,
+              useVectorSearch: true,
+              detectIntent: true,
+              analyzeSentiment: true,
+              detectLanguage: true
+            }
+          );
+
+          // Save bot response
+          const botMessage = await chatService.saveMessage(
+            businessId,
+            activeConversationId,
+            aiResponse,
+            'BOT'
+          );
+
+          // Return both user message and AI response
+          return res.json({
+            conversationId: activeConversationId,
+            userMessage: {
+              id: userMessage.id,
+              content: userMessage.content,
+              sender: userMessage.sender,
+              createdAt: userMessage.createdAt
+            },
+            botMessage: {
+              id: botMessage.id,
+              content: botMessage.content,
+              sender: botMessage.sender,
+              createdAt: botMessage.createdAt
+            },
+            // Legacy field for backward compatibility
+            content: aiResponse
+          });
+        } catch (aiError) {
+          console.error('AI Response Generation Error:', aiError);
+          // Return user message even if AI fails
+          return res.json({
+            conversationId: activeConversationId,
+            userMessage: {
+              id: userMessage.id,
+              content: userMessage.content,
+              sender: userMessage.sender,
+              createdAt: userMessage.createdAt
+            },
+            content: 'I apologize, but I am having trouble processing your request right now. Please try again.',
+            error: 'AI generation failed'
+          });
         }
       }
-      */
 
-      const message = await chatService.saveMessage(businessId, conversationId, content, senderType || 'USER');
-      res.json(message);
+      // For non-user messages (agent messages), just return the saved message
+      res.json({
+        conversationId: activeConversationId,
+        message: userMessage
+      });
     } catch (error) {
       console.error('Send Message Error:', error);
-      res.status(500).json({ error: 'Failed to send message' });
+      res.status(500).json({ error: 'Failed to send message', details: error instanceof Error ? error.message : 'Unknown error' });
     }
   }
 
@@ -99,6 +157,33 @@ export class ChatController {
     } catch (error) {
       console.error('Analytics Error:', error);
       res.status(500).json({ error: 'Failed to fetch analytics' });
+    }
+  }
+
+  async rateConversation(req: Request, res: Response) {
+    try {
+      const { businessId, conversationId, rating } = req.body;
+      
+      if (!conversationId || !rating || rating < 1 || rating > 5) {
+        return res.status(400).json({ error: 'Valid conversationId and rating (1-5) required' });
+      }
+
+      // Update conversation with rating
+      const conversation = await prisma.conversation.update({
+        where: { id: conversationId },
+        data: {
+          metadata: JSON.stringify({ 
+            ...JSON.parse((await prisma.conversation.findUnique({ where: { id: conversationId } }))?.metadata as string || '{}'),
+            rating,
+            ratedAt: new Date().toISOString()
+          })
+        }
+      });
+
+      res.json({ success: true, rating, conversationId });
+    } catch (error) {
+      console.error('Rate Conversation Error:', error);
+      res.status(500).json({ error: 'Failed to save rating' });
     }
   }
 }
