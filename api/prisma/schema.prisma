@@ -393,7 +393,7 @@ model Visitor {
 
 model VisitorSession {
   id          String   @id @default(cuid())
-  visitorId   String
+  visitorId   String?  // Made optional for backward compatibility with existing data
   userAgent   String?
   ipAddress   String?
   country     String?
@@ -404,8 +404,10 @@ model VisitorSession {
   pageViews   Int      @default(0)
   startedAt   DateTime @default(now())
   endedAt     DateTime?
-  visitor     Visitor  @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+  visitor     Visitor?  @relation(fields: [visitorId], references: [id], onDelete: Cascade)
   visits      PageVisit[]
+  
+  @@index([visitorId])
 }
 
 model PageVisit {

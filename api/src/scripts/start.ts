@@ -10,7 +10,7 @@ function runMigrations() {
   
   console.log('🔄 Starting Prisma migrations...');
   
-  // Step 1: Generate Prisma Client
+  // Step 1: Generate Prisma Client first
   console.log('📦 Generating Prisma Client...');
   const generateResult = spawnSync(npxCmd, ['prisma', 'generate'], {
     stdio: 'inherit',
@@ -22,7 +22,19 @@ function runMigrations() {
     console.log('✅ Prisma Client generated successfully');
   }
   
-  // Step 2: Push schema to database
+  // Step 2: Run manual migration script
+  console.log('🔧 Running manual migration script...');
+  const migrateResult = spawnSync(process.execPath, [
+    path.resolve(__dirname, 'migrate.js')
+  ], {
+    stdio: 'inherit',
+  });
+  
+  if (migrateResult.status !== 0) {
+    console.warn('⚠️  Manual migration had issues (non-critical)');
+  }
+  
+  // Step 3: Push schema to database
   console.log('🚀 Pushing schema to database...');
   const pushResult = spawnSync(npxCmd, ['prisma', 'db', 'push', '--accept-data-loss', '--skip-generate'], {
     stdio: 'inherit',
