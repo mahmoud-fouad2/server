@@ -30,6 +30,17 @@ declare global {
   const dataApi = scriptTag.getAttribute('data-api-url');
   if (dataApi) apiUrl = dataApi;
 
+  // Determine Asset Base URL (where this script is loaded from)
+  let assetBaseUrl = 'https://fahimo.com'; // Default fallback
+  if (scriptTag.src) {
+    try {
+      const url = new URL(scriptTag.src);
+      assetBaseUrl = url.origin;
+    } catch (e) {
+      console.warn('[Fahimo] Could not determine asset base URL from script src');
+    }
+  }
+
   // SPA Navigation Handler
   let currentRoot: HTMLElement | null = null;
 
@@ -44,14 +55,14 @@ declare global {
         if (!config || !config.widgetConfig) {
           throw new Error('Invalid config');
         }
-        loadWidget(config.widgetVariant, config, apiUrl, businessId);
+        loadWidget(config.widgetVariant, config, apiUrl, businessId, assetBaseUrl);
       })
       .catch(err => {
         console.error('[Fahimo] Failed to load widget config:', err);
       });
   }
 
-  function loadWidget(variant: 'standard' | 'enhanced', config: any, apiUrl: string, businessId: string) {
+  function loadWidget(variant: 'standard' | 'enhanced', config: any, apiUrl: string, businessId: string, assetBaseUrl: string) {
     console.log(`[Fahimo] Loading ${variant} widget for ${businessId}`);
     
     window.__FAHIMO_CONFIG = config;
@@ -65,7 +76,7 @@ declare global {
     currentRoot = container;
 
     // Render Preact App
-    render(h(App, { config: config.widgetConfig, variant, businessId }), container);
+    render(h(App, { config: config.widgetConfig, variant, businessId, assetBaseUrl }), container);
   }
 
   // Initial load
