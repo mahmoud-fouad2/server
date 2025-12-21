@@ -27,4 +27,25 @@ export class NotificationService {
       }
     });
   }
+
+  async getUnreadCount(businessId: string) {
+    return prisma.notification.count({
+      where: {
+        businessId,
+        isRead: false,
+      },
+    });
+  }
+
+  async markAllRead(businessId: string) {
+    return prisma.notification.updateMany({
+      where: {
+        businessId,
+        isRead: false,
+      },
+      data: {
+        isRead: true,
+      },
+    });
+  }
 }

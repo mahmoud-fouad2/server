@@ -14,4 +14,8 @@ router.get('/conversations/:conversationId/messages', authenticateToken, chatCon
 router.post('/conversations/:conversationId/handoff', authenticateToken, chatController.requestHandoff.bind(chatController));
 router.get('/conversations/:conversationId/analytics', authenticateToken, chatController.getAnalytics.bind(chatController));
 
+// Dashboard convenience routes
+router.get('/handover-requests', authenticateToken, chatController.getHandoverRequests.bind(chatController));
+router.post('/:conversationId/mark-read', authenticateToken, chatController.markConversationRead.bind(chatController));
+
 export default router;

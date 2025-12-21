@@ -184,4 +184,41 @@ export class ChatController {
       res.status(500).json({ error: 'Failed to save rating' });
     }
   }
+
+  async getHandoverRequests(req: Request, res: Response) {
+    try {
+      // Prefer x-business-id (dashboard sends it) then fall back to req.user
+      const businessId = (req.headers['x-business-id'] as string) || (req as any).user?.businessId;
+      if (!businessId) return res.status(400).json({ error: 'Business ID required' });
+
+      const requests = await prisma.agentHandoff.findMany({
+        where: {
+          businessId: String(businessId),
+          status: 'PENDING',
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 100,
+        include: {
+          conversation: true,
+        },
+      });
+
+      res.json(requests);
+    } catch (error) {
+      console.error('Get Handover Requests Error:', error);
+      res.status(500).json({ error: 'Failed to fetch handover requests' });
+    }
+  }
+
+  async markConversationRead(req: Request, res: Response) {
+    try {
+      const { conversationId } = req.params;
+      if (!conversationId) return res.status(400).json({ error: 'conversationId required' });
+
+      // Read tracking is not modeled yet; keep endpoint for dashboard compatibility.
+      res.json({ success: true, conversationId });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to mark conversation read' });
+    }
+  }
 }

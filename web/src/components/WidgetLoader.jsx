@@ -3,6 +3,16 @@
 import { useEffect } from 'react';
 import { API_CONFIG } from '@/lib/config';
 
+function normalizeApiBaseUrl(value) {
+  if (!value) return value;
+  // Trim trailing slashes and a trailing `/api` segment if present.
+  // The widget itself always calls `${apiBase}/api/...`.
+  return String(value)
+    .trim()
+    .replace(/\/+$/, '')
+    .replace(/\/api$/i, '');
+}
+
 export default function WidgetLoader() {
   useEffect(() => {
     try {
@@ -52,7 +62,7 @@ export default function WidgetLoader() {
         // 1) If NEXT_PUBLIC_API_URL is provided at build-time (explicit override)
         // 2) If running on localhost and NEXT_PUBLIC_ALLOW_LOCAL_WIDGET=true (local dev only)
         try {
-          const explicitApi = process.env.NEXT_PUBLIC_API_URL;
+          const explicitApi = normalizeApiBaseUrl(process.env.NEXT_PUBLIC_API_URL);
           const allowLocal = process.env.NEXT_PUBLIC_ALLOW_LOCAL_WIDGET === 'true';
           const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
 

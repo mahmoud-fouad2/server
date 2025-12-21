@@ -289,34 +289,6 @@ export default function WidgetSettingsView({
             </div>
           </div>
 
-          <div className="flex items-center justify-between p-3 border rounded-lg">
-            <div className="space-y-0.5">
-              <label className="text-sm font-medium">
-                نموذج ما قبل المحادثة
-              </label>
-              <p className="text-xs text-muted-foreground">
-                طلب معلومات من الزائر قبل بدء المحادثة (اسم، إيميل، أو رقم هاتف)
-              </p>
-            </div>
-            <input
-              type="checkbox"
-              checked={widgetConfig.preChatFormEnabled}
-              onChange={e => {
-                const checked = e.target.checked;
-                setWidgetConfig({ ...widgetConfig, preChatFormEnabled: checked });
-                // Save immediately to business settings so it takes effect without explicit save
-                try {
-                  businessApi.updatePreChatSettings({ preChatFormEnabled: checked });
-                } catch (err) {
-                  // Notify user if immediate save fails, but do not block UI
-                  addNotification('فشل حفظ حالة نموذج ما قبل المحادثة', 'error');
-                }
-              }}
-              className="toggle"
-            />
-          </div>
-
-          {/* Make the toggle more visible in a quick widget customization panel */}
           <div className="p-3 border rounded-lg bg-muted/50">
             <div className="flex items-center justify-between">
               <div>
@@ -332,6 +304,17 @@ export default function WidgetSettingsView({
                   try {
                     await businessApi.updatePreChatSettings({ preChatFormEnabled: checked });
                     addNotification('تم تحديث حالة نموذج ما قبل المحادثة');
+                    // Broadcast config update so the widget refreshes immediately
+                    const businessId = user?.businessId;
+                    if (businessId) {
+                      try {
+                        const bc = new BroadcastChannel(`fahimo-config-update-${businessId}`);
+                        bc.postMessage({ type: 'CONFIG_UPDATED', timestamp: Date.now() });
+                        bc.close();
+                      } catch (e) {
+                        localStorage.setItem(`fahimo-config-update-${businessId}-notify`, Date.now());
+                      }
+                    }
                   } catch (err) {
                     addNotification('فشل تحديث حالة نموذج ما قبل المحادثة', 'error');
                   }

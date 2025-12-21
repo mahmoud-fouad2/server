@@ -19,6 +19,9 @@ export const PublicWidgetResponseSchema = z.object({
   widgetVariant: z.enum(['STANDARD', 'ENHANCED']).default('STANDARD'),
   configVersion: z.number(),
   isDemo: z.boolean().optional(),
+  // Business-level flags used by the dashboard/widget UX
+  preChatFormEnabled: z.boolean().optional(),
+  crmLeadCollectionEnabled: z.boolean().optional(),
 });
 
 export type PublicWidgetResponse = z.infer<typeof PublicWidgetResponseSchema>;

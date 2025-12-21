@@ -132,8 +132,10 @@ export function App({ config, variant, businessId, assetBaseUrl }: Props) {
     playSound();
 
     try {
-      const apiUrl = (window as any).__FAHIMO_API_URL || 'https://fahimo-api.onrender.com';
-      const res = await fetch(`${apiUrl}/api/chat/send`, {
+      const rawApiUrl = (window as any).__FAHIMO_API_URL || 'https://fahimo-api.onrender.com';
+      // Accept https://host or https://host/api and normalize to https://host
+      const apiBase = String(rawApiUrl).trim().replace(/\/+$/, '').replace(/\/api$/i, '');
+      const res = await fetch(`${apiBase}/api/chat/send`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -184,8 +186,9 @@ export function App({ config, variant, businessId, assetBaseUrl }: Props) {
     setRatingSubmitted(true);
     
     try {
-      const apiUrl = (window as any).__FAHIMO_API_URL || 'https://fahimo-api.onrender.com';
-      await fetch(`${apiUrl}/api/chat/rate`, {
+      const rawApiUrl = (window as any).__FAHIMO_API_URL || 'https://fahimo-api.onrender.com';
+      const apiBase = String(rawApiUrl).trim().replace(/\/+$/, '').replace(/\/api$/i, '');
+      await fetch(`${apiBase}/api/chat/rate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

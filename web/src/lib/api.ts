@@ -1,4 +1,39 @@
-const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'https://fahimo-api.onrender.com').replace(/\/$/, '') + '/api';
+function normalizeApiBaseUrl(value: string) {
+  // Accept:
+  // - https://host
+  // - https://host/
+  // - https://host/api
+  // and normalize to https://host
+  return String(value || '')
+    .trim()
+    .replace(/\/+$/, '')
+    .replace(/\/api$/i, '');
+}
+
+const API_BASE = normalizeApiBaseUrl(process.env.NEXT_PUBLIC_API_URL || 'https://fahimo-api.onrender.com');
+const API_URL = `${API_BASE}/api`;
+
+function normalizeEndpoint(endpoint: string) {
+  const raw = String(endpoint || '').trim();
+  if (!raw) return '/';
+
+  // Allow callers to pass:
+  // - '/something'
+  // - 'something'
+  // - 'api/something'
+  // - '/api/something'
+  // and normalize to '/something'
+  let e = raw;
+  if (e.startsWith('http://') || e.startsWith('https://')) {
+    return e;
+  }
+
+  e = e.replace(/^\/+/, '');
+  if (e.toLowerCase().startsWith('api/')) {
+    e = e.slice(4);
+  }
+  return `/${e}`;
+}
 
 export async function apiCall(endpoint: string, options: RequestInit = {}) {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
@@ -26,7 +61,10 @@ export async function apiCall(endpoint: string, options: RequestInit = {}) {
     ...(options.headers as Record<string, string>),
   };
 
-  const response = await fetch(`${API_URL}${endpoint}`, {
+  const normalized = normalizeEndpoint(endpoint);
+  const url = normalized.startsWith('http') ? normalized : `${API_URL}${normalized}`;
+
+  const response = await fetch(url, {
     ...options,
     headers,
   });
@@ -55,6 +93,14 @@ export const businessApi = {
   get: () => fetchAPI('/business'),
   update: (data: any) => fetchAPI('/business', { method: 'PATCH', body: JSON.stringify(data) }),
   getStats: () => fetchAPI('/business/stats'),
+  getSettings: () => fetchAPI('/business/settings'),
+  updateSettings: (data: any) => fetchAPI('/business/settings', { method: 'PUT', body: JSON.stringify(data) }),
+  updatePlan: (data: any) => fetchAPI('/business/plan', { method: 'PUT', body: JSON.stringify(data) }),
+  getIntegrations: () => fetchAPI('/business/integrations'),
+  getChartData: () => fetchAPI('/business/chart-data'),
+  getConversations: () => fetchAPI('/business/conversations'),
+  updatePreChatSettings: (data: any) => fetchAPI('/business/pre-chat-settings', { method: 'PUT', body: JSON.stringify(data) }),
+  invalidateCache: () => fetchAPI('/business/cache/invalidate', { method: 'POST' }),
 };
 
 export const crmApi = {
@@ -157,6 +203,32 @@ export const customAIModelApi = {
 export const widgetApi = {
   getConfig: (businessId: string) => fetchAPI(`/widget/config/${businessId}`),
   updateConfig: (data: any) => fetchAPI('/widget/config', { method: 'PATCH', body: JSON.stringify(data) }),
+  uploadIcon: async (formData: FormData) => {
+    // The API upload endpoint expects `file`.
+    const file = formData.get('file') || formData.get('icon');
+    const fd = new FormData();
+    if (file) fd.append('file', file);
+
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    const headers: Record<string, string> = {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+
+    const response = await fetch(`${API_URL}/uploads`, {
+      method: 'POST',
+      headers,
+      body: fd,
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Upload failed');
+
+    // Normalize to the key name expected by the UI.
+    return {
+      ...data,
+      iconUrl: data.url,
+    };
+  },
 };
 
 export const adminApi = {

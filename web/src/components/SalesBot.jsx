@@ -1,53 +1,11 @@
 'use client';
 
-import React, { useEffect } from 'react';
-import { usePathname } from 'next/navigation';
-import { API_CONFIG, WIDGET_CONFIG } from '@/lib/config';
+// IMPORTANT: Avoid duplicate widget injection.
+// The widget is injected via `WidgetLoader` in the root layout.
+// This component remains for backward compatibility, but delegates to the single loader.
 
-const SalesBot = () => {
-  const pathname = usePathname();
+import WidgetLoader from '@/components/WidgetLoader';
 
-  // Hide on dashboard, admin, login, register, wizard, examples, docs pages
-  const hiddenPaths = [
-    '/dashboard',
-    '/admin',
-    '/login',
-    '/register',
-    '/wizard',
-    '/examples',
-    '/docs',
-  ];
-  // Only hide if pathname matches these specific paths, not the homepage
-  const shouldHide = pathname && hiddenPaths.some(path => pathname.startsWith(path));
-
-  useEffect(() => {
-    if (shouldHide) return;
-    
-    // Check if the fahimo widget is already present for this business (prevent duplicates per business)
-    const existingScript = document.getElementById(`fahimo-widget-script-${WIDGET_CONFIG.BUSINESS_ID}`) || document.querySelector(`script[src*="fahimo-widget"][data-business-id="${WIDGET_CONFIG.BUSINESS_ID}"]`) || document.querySelector(`#fahimo-widget-container[data-business-id="${WIDGET_CONFIG.BUSINESS_ID}"]`);
-    if (existingScript) return;
-
-    const script = document.createElement('script');
-    script.id = `fahimo-widget-script-${WIDGET_CONFIG.BUSINESS_ID}`;
-    // Use centralized configuration
-    script.src = API_CONFIG.WIDGET_SCRIPT;
-    script.setAttribute('data-business-id', WIDGET_CONFIG.BUSINESS_ID);
-    script.async = true;
-    
-    script.onerror = () => {
-      console.error('Failed to load Fahimo widget from:', script.src);
-    };
-    
-    document.body.appendChild(script);
-
-    return () => {
-      // Optional: Cleanup if needed, but usually we want the widget to persist
-    };
-  }, [shouldHide]);
-
-  if (shouldHide) return null;
-
-  return null; // The widget renders itself into the body
-};
-
-export default SalesBot;
+export default function SalesBot() {
+  return <WidgetLoader />;
+}

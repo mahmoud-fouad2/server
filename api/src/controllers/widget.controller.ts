@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import { WidgetService } from '../services/widget.service.js';
 import path from 'path';
 import fs from 'fs';
+import prisma from '../config/database.js';
+import { WidgetConfigSchema } from '../shared_local/index.js';
 
 const widgetService = new WidgetService();
 
@@ -19,6 +21,63 @@ export class WidgetController {
     } catch (error) {
       console.error('Error fetching widget config:', error);
       res.status(500).json({ error: 'Internal Server Error' });
+    }
+  }
+
+  async updateConfig(req: Request, res: Response) {
+    try {
+      const businessId = (req as any).user?.businessId;
+      if (!businessId) {
+        return res.status(400).json({ error: 'Business ID required' });
+      }
+
+      // Allow partial updates; merge with existing stored config.
+      const incoming = (req.body && typeof req.body === 'object') ? req.body : {};
+      const partial = WidgetConfigSchema.partial().parse(incoming);
+
+      const business = await prisma.business.findUnique({
+        where: { id: businessId },
+        select: { widgetConfig: true },
+      });
+
+      let current: any = {};
+      try {
+        current = business?.widgetConfig ? JSON.parse(business.widgetConfig) : {};
+      } catch (e) {
+        current = {};
+      }
+
+      const merged = WidgetConfigSchema.parse({
+        ...current,
+        ...partial,
+      });
+
+      const updated = await prisma.business.update({
+        where: { id: businessId },
+        data: {
+          widgetConfig: JSON.stringify(merged),
+          // Keep Business.primaryColor in sync when provided
+          ...(merged.primaryColor ? { primaryColor: merged.primaryColor } : {}),
+        },
+        select: {
+          id: true,
+          widgetVariant: true,
+          widgetConfig: true,
+          preChatFormEnabled: true,
+        },
+      });
+
+      res.json({
+        success: true,
+        businessId: updated.id,
+        widgetVariant: updated.widgetVariant,
+        widgetConfig: merged,
+        preChatFormEnabled: updated.preChatFormEnabled,
+        configVersion: Date.now(),
+      });
+    } catch (error) {
+      console.error('Error updating widget config:', error);
+      res.status(500).json({ error: 'Failed to update widget config' });
     }
   }
 

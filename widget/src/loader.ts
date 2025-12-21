@@ -44,39 +44,62 @@ declare global {
   // SPA Navigation Handler
   let currentRoot: HTMLElement | null = null;
 
-  function init() {
-    // Check if already mounted
-    if (document.getElementById('fahimo-widget-root')) return;
-
-    // Fetch Config
-    fetch(`${apiUrl}/api/widget/config/${businessId}`)
-      .then(res => res.json())
-      .then(config => {
-        if (!config || !config.widgetConfig) {
-          throw new Error('Invalid config');
-        }
-        loadWidget(config.widgetVariant, config, apiUrl, businessId, assetBaseUrl);
-      })
-      .catch(err => {
-        console.error('[Fahimo] Failed to load widget config:', err);
-      });
+  function getConfigUrl() {
+    return `${apiUrl.replace(/\/+$/, '').replace(/\/api$/i, '')}/api/widget/config/${businessId}`;
   }
 
-  function loadWidget(variant: 'standard' | 'enhanced', config: any, apiUrl: string, businessId: string, assetBaseUrl: string) {
-    console.log(`[Fahimo] Loading ${variant} widget for ${businessId}`);
-    
-    window.__FAHIMO_CONFIG = config;
-    window.__FAHIMO_API_URL = apiUrl;
-    window.__FAHIMO_BUSINESS_ID = businessId;
-
-    // Create Root
+  function ensureRoot() {
+    if (currentRoot && document.body.contains(currentRoot)) return currentRoot;
+    const existing = document.getElementById('fahimo-widget-root') as HTMLElement | null;
+    if (existing) {
+      currentRoot = existing;
+      return existing;
+    }
     const container = document.createElement('div');
     container.id = 'fahimo-widget-root';
     document.body.appendChild(container);
     currentRoot = container;
+    return container;
+  }
 
-    // Render Preact App
-    render(h(App, { config: config.widgetConfig, variant, businessId, assetBaseUrl }), container);
+  function renderWidget(publicConfig: any) {
+    const container = ensureRoot();
+
+    window.__FAHIMO_CONFIG = publicConfig;
+    window.__FAHIMO_API_URL = apiUrl;
+    window.__FAHIMO_BUSINESS_ID = businessId;
+
+    const variant: 'standard' | 'enhanced' = (String(publicConfig?.widgetVariant || 'STANDARD').toLowerCase() === 'enhanced')
+      ? 'enhanced'
+      : 'standard';
+
+    render(
+      h(App, {
+        // Keep backwards-compat: App expects `config` to be the widgetConfig object.
+        config: publicConfig?.widgetConfig || {},
+        variant,
+        businessId,
+        assetBaseUrl,
+        // Extra props are safe in Preact; App may ignore them if not declared.
+        businessName: publicConfig?.name,
+        preChatFormEnabled: publicConfig?.preChatFormEnabled,
+      } as any),
+      container
+    );
+  }
+
+  async function fetchAndRender() {
+    const res = await fetch(getConfigUrl(), { cache: 'no-store' as any });
+    const config = await res.json();
+    if (!config || !config.widgetConfig) throw new Error('Invalid config');
+    renderWidget(config);
+  }
+
+  function init() {
+    // Fetch config and (re)render.
+    fetchAndRender().catch(err => {
+      console.error('[Fahimo] Failed to load widget config:', err);
+    });
   }
 
   // Initial load
@@ -95,6 +118,27 @@ declare global {
   });
 
   observer.observe(document.body, { childList: true, subtree: false });
+
+  // Listen for dashboard-driven config updates (same-origin dashboards can broadcast).
+  try {
+    const channelName = `fahimo-config-update-${businessId}`;
+    if (typeof BroadcastChannel !== 'undefined') {
+      const bc = new BroadcastChannel(channelName);
+      bc.onmessage = () => {
+        fetchAndRender().catch(() => {});
+      };
+    }
+
+    // Fallback for browsers without BroadcastChannel support
+    const storageKey = `fahimo-config-update-${businessId}-notify`;
+    window.addEventListener('storage', (e) => {
+      if (e && e.key === storageKey) {
+        fetchAndRender().catch(() => {});
+      }
+    });
+  } catch (e) {
+    // ignore
+  }
 
 })();
 

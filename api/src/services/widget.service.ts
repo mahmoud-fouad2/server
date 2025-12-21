@@ -14,6 +14,8 @@ export class WidgetService {
         name: true,
         widgetConfig: true,
         widgetVariant: true,
+        preChatFormEnabled: true,
+        crmLeadCollectionEnabled: true,
       }
     });
 
@@ -44,7 +46,9 @@ export class WidgetService {
       widgetConfig: safeConfig,
       widgetVariant: business.widgetVariant,
       configVersion: Date.now(),
-      isDemo: false
+      isDemo: false,
+      preChatFormEnabled: business.preChatFormEnabled,
+      crmLeadCollectionEnabled: business.crmLeadCollectionEnabled,
     };
   }
 
