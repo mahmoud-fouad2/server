@@ -44,7 +44,7 @@ model Business {
   name                     String
   activityType             ActivityType
   language                 String                  @default("ar")
-  industry                 String?
+  // industry                 String?
   status                   BusinessStatus          @default(TRIAL)
   trialEndsAt              DateTime?
   botTone                  String                  @default("friendly")

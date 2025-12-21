@@ -40,7 +40,14 @@ export class AuthService {
   async login(data: LoginInput) {
     const user = await prisma.user.findUnique({ 
       where: { email: data.email },
-      include: { businesses: true }
+      select: {
+        id: true,
+        email: true,
+        password: true,
+        businesses: {
+          select: { id: true }
+        }
+      }
     });
 
     if (!user) throw new Error('Invalid credentials');
