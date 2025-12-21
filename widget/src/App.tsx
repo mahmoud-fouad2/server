@@ -171,11 +171,19 @@ export function App({ config, variant, businessId }: Props) {
             )}
 
             {activeTab === 'info' && (
-              <div style={{ padding: '20px', overflowY: 'auto' }}>
-                <h3 style={{ marginTop: 0 }}>About Us</h3>
-                <p>We are here to help you with any questions you might have.</p>
-                <p><strong>Email:</strong> support@example.com</p>
-                <p><strong>Hours:</strong> 9 AM - 5 PM</p>
+              <div style={{ padding: '20px', overflowY: 'auto', direction: 'rtl', textAlign: 'right' }}>
+                <h3 style={{ marginTop: 0, marginBottom: '15px', color: primaryColor }}>من نحن</h3>
+                <p style={{ marginBottom: '15px', lineHeight: '1.6' }}>نحن هنا لمساعدتك في الإجابة على أي استفسارات قد تكون لديك. نسعى دائماً لتقديم أفضل خدمة ممكنة.</p>
+                
+                <div style={{ marginBottom: '10px' }}>
+                  <strong>البريد الإلكتروني:</strong>
+                  <div style={{ direction: 'ltr', textAlign: 'right' }}>support@faheemly.com</div>
+                </div>
+                
+                <div>
+                  <strong>ساعات العمل:</strong>
+                  <div>9 صباحاً - 5 مساءً</div>
+                </div>
               </div>
             )}
           </div>
@@ -212,21 +220,6 @@ export function App({ config, variant, businessId }: Props) {
               }}
             >
               ℹ️ Info
-            </button>
-          </div>
-
-
-          {/* Input Area */}
-          <div style={{ padding: '12px', borderTop: '1px solid #e5e7eb', display: 'flex', gap: '8px' }}>
-            <input 
-              value={input}
-              onInput={(e) => setInput(e.currentTarget.value)}
-              onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-              placeholder="Type a message..."
-              style={{ flex: 1, padding: '8px 12px', borderRadius: '20px', border: '1px solid #e5e7eb', outline: 'none' }}
-            />
-            <button onClick={sendMessage} style={{ backgroundColor: primaryColor, color: 'white', border: 'none', borderRadius: '50%', width: '36px', height: '36px', cursor: 'pointer' }}>
-              ➤
             </button>
           </div>
           
