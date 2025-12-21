@@ -7,7 +7,8 @@ const __dirname = path.dirname(__filename);
 
 function runMigrations() {
   const npxCmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';
-  const result = spawnSync(npxCmd, ['prisma', 'migrate', 'deploy'], {
+  // Use db push to ensure schema sync on Render Free Tier where migration generation is difficult
+  const result = spawnSync(npxCmd, ['prisma', 'db', 'push', '--accept-data-loss'], {
     stdio: 'inherit',
   });
 
@@ -15,7 +16,7 @@ function runMigrations() {
     // Don't crash the whole service if migrations fail; log and continue.
     // The app includes runtime fallbacks for older schemas.
     // eslint-disable-next-line no-console
-    console.warn('[startup] prisma migrate deploy failed; continuing startup');
+    console.warn('[startup] prisma db push failed; continuing startup');
   }
 }
 
