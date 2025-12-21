@@ -9,6 +9,7 @@ function runMigrations() {
   const npxCmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';
   
   console.log('🔄 Starting Prisma migrations...');
+  console.log('⚠️  This will reset the database and create fresh schema');
   
   // Step 1: Generate Prisma Client first
   console.log('📦 Generating Prisma Client...');
@@ -22,29 +23,29 @@ function runMigrations() {
     console.log('✅ Prisma Client generated successfully');
   }
   
-  // Step 2: Run manual migration script
-  console.log('🔧 Running manual migration script...');
-  const migrateResult = spawnSync(process.execPath, [
-    path.resolve(__dirname, 'migrate.js')
-  ], {
-    stdio: 'inherit',
-  });
-  
-  if (migrateResult.status !== 0) {
-    console.warn('⚠️  Manual migration had issues (non-critical)');
-  }
-  
-  // Step 3: Push schema to database
-  console.log('🚀 Pushing schema to database...');
-  const pushResult = spawnSync(npxCmd, ['prisma', 'db', 'push', '--accept-data-loss', '--skip-generate'], {
+  // Step 2: Force reset and push schema (fresh start)
+  console.log('🚀 Resetting database and pushing fresh schema...');
+  const pushResult = spawnSync(npxCmd, ['prisma', 'db', 'push', '--force-reset', '--skip-generate'], {
     stdio: 'inherit',
   });
 
   if (pushResult.status !== 0) {
-    console.error('❌ Prisma db push failed! Database schema may be outdated.');
-    console.error('⚠️  Application will start but some features may not work.');
+    console.error('❌ Prisma db push failed!');
+    console.error('⚠️  Trying without force reset...');
+    
+    // Fallback: try without force reset
+    const fallbackResult = spawnSync(npxCmd, ['prisma', 'db', 'push', '--accept-data-loss', '--skip-generate'], {
+      stdio: 'inherit',
+    });
+    
+    if (fallbackResult.status !== 0) {
+      console.error('❌ Database migration failed completely!');
+      console.error('⚠️  Application will start but features may not work.');
+    } else {
+      console.log('✅ Database schema synchronized (fallback mode)');
+    }
   } else {
-    console.log('✅ Database schema synchronized successfully');
+    console.log('✅ Database reset and schema synchronized successfully');
   }
 }
 

@@ -84,7 +84,8 @@ async function runManualMigration() {
     console.log('✅ Manual migration completed successfully');
     return true;
   } catch (error) {
-    console.error('⚠️  Manual migration failed:', error.message);
+    const err = error as Error;
+    console.error('⚠️  Manual migration failed:', err.message);
     return false;
   } finally {
     await prisma.$disconnect();
