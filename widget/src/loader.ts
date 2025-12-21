@@ -69,15 +69,12 @@ declare global {
     window.__FAHIMO_API_URL = apiUrl;
     window.__FAHIMO_BUSINESS_ID = businessId;
 
-    const variant: 'standard' | 'enhanced' = (String(publicConfig?.widgetVariant || 'STANDARD').toLowerCase() === 'enhanced')
-      ? 'enhanced'
-      : 'standard';
-
     render(
       h(App, {
-        // Keep backwards-compat: App expects `config` to be the widgetConfig object.
-        config: publicConfig?.widgetConfig || {},
-        variant,
+        config: {
+          businessId: businessId,
+          ...publicConfig?.widgetConfig,
+        },
         businessId,
         assetBaseUrl,
         // Extra props are safe in Preact; App may ignore them if not declared.
