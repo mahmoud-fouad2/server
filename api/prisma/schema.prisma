@@ -22,7 +22,7 @@ model User {
   updatedAt        DateTime        @updatedAt
   employerId       String?
   // currentBusinessId String?   // Session-persisted context - Temporarily disabled for production compatibility
-  roles            Json?      // { businessId: ['admin', 'viewer'] }
+  // roles            Json?      // { businessId: ['admin', 'viewer'] }
   auditLogs        AuditLog[]
   businesses       Business[]
   payments         Payment[]
@@ -214,7 +214,7 @@ model Conversation {
   id             String        @id @default(cuid())
   businessId     String
   visitorId      String?
-  platform       String        @default("web")
+  // platform       String        @default("web")
   channel        String?       @default("widget") // Added channel
   status         String        @default("active")
   externalId     String?       // For WhatsApp/Telegram

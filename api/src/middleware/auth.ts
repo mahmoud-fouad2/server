@@ -49,7 +49,7 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
         email: true, 
         role: true, 
         // currentBusinessId: true, // Temporarily disabled
-        roles: true,
+        // roles: true,
         businesses: { select: { id: true } } 
       }
     });
