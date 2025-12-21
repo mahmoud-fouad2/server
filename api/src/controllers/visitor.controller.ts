@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { VisitorService } from '../services/visitor.service.js';
+import prisma from '../config/database.js';
 
 const visitorService = new VisitorService();
 
@@ -7,10 +8,19 @@ export class VisitorController {
   async createSession(req: Request, res: Response) {
     try {
       const businessId = req.body.businessId || req.query.businessId || req.headers['x-business-id'];
-      const fingerprint = req.body.fingerprint || req.headers['x-fingerprint'];
+      const fingerprint = req.body.fingerprint || req.headers['x-fingerprint'] || `fp_${Date.now()}_${Math.random().toString(36).substring(2)}`;
 
-      if (!businessId || !fingerprint) {
-        return res.status(400).json({ error: 'Business ID and Fingerprint required' });
+      if (!businessId) {
+        return res.status(400).json({ error: 'Business ID required' });
+      }
+      
+      // التحقق من وجود الـ business
+      const business = await prisma.business.findUnique({
+        where: { id: businessId as string }
+      });
+      
+      if (!business) {
+        return res.status(404).json({ error: 'Business not found' });
       }
 
       const session = await visitorService.getOrCreateSession(businessId as string, fingerprint as string, {
@@ -21,10 +31,13 @@ export class VisitorController {
         device: req.body.device,
       });
 
-      res.json(session);
+      res.json({ success: true, sessionId: session.id, data: session });
     } catch (error) {
       console.error('Visitor Session Error:', error);
-      res.status(500).json({ error: 'Failed to create session' });
+      res.status(500).json({ 
+        error: 'Failed to create session',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   }
 

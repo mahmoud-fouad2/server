@@ -11,7 +11,10 @@ export class ChatController {
   async getConversations(req: Request, res: Response) {
     try {
       // @ts-ignore
-      const businessId = req.user.businessId;
+      const businessId = req.user?.businessId;
+      if (!businessId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
       const conversations = await prisma.conversation.findMany({
         where: { businessId },
         include: {
@@ -22,22 +25,33 @@ export class ChatController {
         },
         orderBy: { updatedAt: 'desc' }
       });
-      res.json(conversations);
+      res.json({ success: true, data: conversations, count: conversations.length });
     } catch (error) {
-      res.status(500).json({ error: 'Failed to fetch conversations' });
+      console.error('Conversations fetch error:', error);
+      res.status(500).json({ 
+        error: 'Failed to fetch conversations',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   }
 
   async getMessages(req: Request, res: Response) {
     try {
       const { conversationId } = req.params;
+      if (!conversationId) {
+        return res.status(400).json({ error: 'Conversation ID required' });
+      }
       const messages = await prisma.message.findMany({
         where: { conversationId },
         orderBy: { createdAt: 'asc' }
       });
-      res.json(messages);
+      res.json({ success: true, data: messages, count: messages.length });
     } catch (error) {
-      res.status(500).json({ error: 'Failed to fetch messages' });
+      console.error('Messages fetch error:', error);
+      res.status(500).json({ 
+        error: 'Failed to fetch messages',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   }
 
@@ -189,7 +203,7 @@ export class ChatController {
     try {
       // Prefer x-business-id (dashboard sends it) then fall back to req.user
       const businessId = (req.headers['x-business-id'] as string) || (req as any).user?.businessId;
-      if (!businessId) return res.status(400).json({ error: 'Business ID required' });
+      if (!businessId) return res.status(401).json({ error: 'Unauthorized - Business ID required' });
 
       const requests = await prisma.agentHandoff.findMany({
         where: {
@@ -203,10 +217,13 @@ export class ChatController {
         },
       });
 
-      res.json(requests);
+      res.json({ success: true, data: requests, count: requests.length });
     } catch (error) {
       console.error('Get Handover Requests Error:', error);
-      res.status(500).json({ error: 'Failed to fetch handover requests' });
+      res.status(500).json({ 
+        error: 'Failed to fetch handover requests',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   }
 

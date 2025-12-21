@@ -87,7 +87,7 @@ export default function App() {
   const audioRef = useRef<HTMLAudioElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+  const API_URL = import.meta.env.VITE_API_URL || 'https://fahimo-api.onrender.com';
   const storageKey = `fahimo_chat_${config.businessId}`;
 
   // Initialization
@@ -341,7 +341,7 @@ export default function App() {
   const toggleOpen = () => setIsOpen(!isOpen);
 
   const primaryColor = config.primaryColor || '#6366F1';
-  const soundUrl = `${API_URL}/sounds/notification.mp3`; // Use API hosted sound
+  const soundUrl = `${API_URL}/sounds/notification.mp3`;
 
   return (
     <div style={{ 

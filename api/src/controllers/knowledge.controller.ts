@@ -9,23 +9,37 @@ export class KnowledgeController {
   async getEntries(req: Request, res: Response) {
     try {
       // @ts-ignore
-      const businessId = req.user.businessId;
+      const businessId = req.user?.businessId;
+      if (!businessId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
       const entries = await knowledgeService.getEntries(businessId);
-      res.json(entries);
+      res.json({ success: true, data: entries, count: entries.length });
     } catch (error) {
-      res.status(500).json({ error: 'Failed to fetch knowledge base' });
+      console.error('Knowledge fetch error:', error);
+      res.status(500).json({ 
+        error: 'Failed to fetch knowledge base',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   }
 
   async createEntry(req: Request, res: Response) {
     try {
       // @ts-ignore
-      const businessId = req.user.businessId;
+      const businessId = req.user?.businessId;
+      if (!businessId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
       const data = CreateKnowledgeSchema.parse(req.body);
       const entry = await knowledgeService.createEntry(businessId, data);
-      res.json(entry);
+      res.status(201).json({ success: true, data: entry });
     } catch (error) {
-      res.status(400).json({ error: 'Failed to create entry' });
+      console.error('Knowledge create error:', error);
+      res.status(400).json({ 
+        error: 'Failed to create entry',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   }
 
