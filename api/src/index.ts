@@ -95,11 +95,21 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Serve static files from public directory
+app.use(express.static(path.join(__dirname, '../public')));
+
 app.get('/fahimo-widget.js', (req, res) => {
-  const widgetPath = path.join(__dirname, '../../widget/dist/fahimo-loader.iife.js');
+  // Serve the pre-built and copied widget file from public directory
+  const widgetPath = path.join(__dirname, '../public/fahimo-widget.js');
+  
   res.set('Content-Type', 'application/javascript');
   res.set('Cache-Control', 'public, max-age=3600');
-  res.sendFile(widgetPath);
+  res.sendFile(widgetPath, (err) => {
+    if (err) {
+      logger.error('Failed to serve widget:', err);
+      res.status(404).send('Widget not found');
+    }
+  });
 });
 
 // API Routes
