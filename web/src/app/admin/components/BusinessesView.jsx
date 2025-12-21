@@ -3,7 +3,7 @@ import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Search, Briefcase, Edit, Trash2 } from 'lucide-react'
+import { Search, Briefcase, Edit, Trash2, Loader2 } from 'lucide-react'
 import { adminApi } from '@/lib/api'
 
 export default function BusinessesView() {
@@ -79,7 +79,9 @@ export default function BusinessesView() {
       <CardContent>
         <div className="overflow-x-auto">
           {loading ? (
-            <div className="p-12 text-center">جاري التحميل...</div>
+            <div className="p-12 flex justify-center items-center">
+              <Loader2 className="w-8 h-8 animate-spin text-brand-600" />
+            </div>
           ) : businesses.length === 0 ? (
             <div className="p-12 text-center text-gray-500">لا توجد شركات</div>
           ) : (

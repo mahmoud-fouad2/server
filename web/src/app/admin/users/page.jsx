@@ -7,6 +7,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
 
 export default function AdminUsersPage() {
   const router = useRouter();
@@ -157,10 +158,10 @@ export default function AdminUsersPage() {
 
         {/* Users Table */}
         <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
           {loading ? (
-            <div className="p-12 text-center">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-              <p className="mt-4 text-gray-600">جاري التحميل...</p>
+            <div className="p-12 flex justify-center items-center">
+              <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
             </div>
           ) : users.length === 0 ? (
             <div className="p-12 text-center text-gray-500">
@@ -293,6 +294,7 @@ export default function AdminUsersPage() {
               )}
             </>
           )}
+          </div>
         </div>
       </div>
     </div>

@@ -26,6 +26,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import FaheemAnimatedLogo from './FaheemAnimatedLogo';
 import { ticketApi, notificationsApi } from '@/lib/api';
+import { API_CONFIG } from '@/lib/config';
 import { io } from 'socket.io-client';
 
 const SidebarItem = ({
@@ -108,27 +109,45 @@ export default function Sidebar({ activeTab, setActiveTab, userRole }) {
     fetchTicketCount();
     fetchUnread();
 
+    // Poll for ticket updates every 60 seconds
+    const ticketInterval = setInterval(fetchTicketCount, 60000);
+
     // Setup socket to get real-time notification increments
     try {
       const rawUser = localStorage.getItem('user');
       const profile = rawUser ? JSON.parse(rawUser) : null;
-      if (profile && profile.businessId) {
-        const socket = io(API_CONFIG.BASE_URL.replace('/api', ''), { transports: ['websocket'] });
+      if (profile && profile.businessId && API_CONFIG.BASE_URL) {
+        const socketUrl = API_CONFIG.BASE_URL.replace('/api', '');
+        const socket = io(socketUrl, { transports: ['websocket'] });
+        
         socket.on('connect', () => {
           socket.emit('join_room', `business_${profile.businessId}`);
         });
+        
         socket.on('notification:new', () => fetchUnread());
+        socket.on('ticket:updated', () => fetchTicketCount()); // Listen for ticket updates if backend supports it
+        
         // Update on explicit events too
         const onUnreadChanged = () => fetchUnread();
         window.addEventListener('unread:changed', onUnreadChanged);
 
         // clean up on unmount
-        const cleanup = () => { try { socket.disconnect(); } catch (e) {} window.removeEventListener('unread:changed', onUnreadChanged); };
+        const cleanup = () => { 
+          try { socket.disconnect(); } catch (e) {} 
+          window.removeEventListener('unread:changed', onUnreadChanged);
+          clearInterval(ticketInterval);
+        };
         window.addEventListener('beforeunload', cleanup);
+        return cleanup; // Return cleanup function for useEffect
       }
-    } catch (e) {}
+    } catch (e) {
+      console.error('Socket setup failed', e);
+    }
 
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      clearInterval(ticketInterval);
+    };
   }, []);
 
   const toggleTheme = () => {
