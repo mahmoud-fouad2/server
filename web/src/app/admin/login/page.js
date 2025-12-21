@@ -15,6 +15,7 @@ import {
 import { Lock, ShieldCheck, Loader2 } from 'lucide-react';
 import FaheemAnimatedLogo from '@/components/FaheemAnimatedLogo';
 import { authApi } from '@/lib/api';
+import { ERROR_MESSAGES } from '@/lib/error-messages';
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
@@ -37,7 +38,7 @@ export default function AdminLogin() {
         !data.user ||
         (data.user.role !== 'SUPERADMIN' && data.user.role !== 'ADMIN')
       ) {
-        setError('الوصول مرفوض: أنت لست مسؤولاً');
+        setError(ERROR_MESSAGES.UNAUTHORIZED);
         setLoading(false);
         return;
       }
@@ -50,7 +51,7 @@ export default function AdminLogin() {
       router.push('/admin');
     } catch (err) {
       console.error('Login error:', err);
-      setError(err.message || 'خطأ في الاتصال. حاول مرة أخرى.');
+      setError(ERROR_MESSAGES.INVALID_CREDENTIALS || 'خطأ في الاتصال. حاول مرة أخرى.');
       setLoading(false);
     }
   };

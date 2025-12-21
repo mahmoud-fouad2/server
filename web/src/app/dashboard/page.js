@@ -21,6 +21,8 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { businessApi, knowledgeApi, widgetApi } from '@/lib/api';
 import AuthGuard from '@/components/AuthGuard';
+import DashboardSkeleton from '@/components/skeletons/DashboardSkeleton';
+import { ERROR_MESSAGES } from '@/lib/error-messages';
 
 // Import Sub-components
 import StatsOverview from './components/StatsOverview';
@@ -130,11 +132,7 @@ function DashboardContent() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
-        <Loader2 className="w-10 h-10 animate-spin text-brand-500" />
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   return (
