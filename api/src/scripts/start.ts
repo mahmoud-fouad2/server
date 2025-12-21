@@ -47,6 +47,20 @@ function runMigrations() {
   } else {
     console.log('✅ Database reset and schema synchronized successfully');
   }
+  
+  // Step 3: Seed database with initial data
+  console.log('🌱 Seeding database...');
+  const seedResult = spawnSync(process.execPath, [
+    path.resolve(__dirname, 'seed.js')
+  ], {
+    stdio: 'inherit',
+  });
+  
+  if (seedResult.status !== 0) {
+    console.warn('⚠️  Database seed had issues (non-critical)');
+  } else {
+    console.log('✅ Database seeded successfully');
+  }
 }
 
 function startServer() {
