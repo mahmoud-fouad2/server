@@ -67,7 +67,7 @@ async function main() {
       userId: premiumUser.id,
       name: 'Faheemly Official',
       activityType: ActivityType.SERVICE,
-      industry: 'Technology',
+      // industry: 'Technology',
       language: 'ar',
       status: BusinessStatus.ACTIVE,
       planType: PlanType.ENTERPRISE,
