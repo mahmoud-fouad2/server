@@ -297,14 +297,52 @@ export default function StatsOverview({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const copyWidgetCode = () => {
-    const version = `v=${new Date().getTime()}`;
-    const widgetSrc = API_CONFIG.WIDGET_SCRIPT ? `${API_CONFIG.WIDGET_SCRIPT}?${version}` : `${API_CONFIG.BASE_URL}/fahimo-widget.js?${version}`;
-    const code = `<script src="${widgetSrc}" data-business-id="${user?.businessId}"></script>`;
-    copyToClipboard(code);
+  // Dynamic script injection to bypass aggressive caching
+  useEffect(() => {
+    const scriptId = 'fahimo-widget-script';
+    // Remove any old script to prevent duplicates
+    document.getElementById(scriptId)?.remove();
+
+    if (user?.businessId) {
+      const script = document.createElement('script');
+      const version = new Date().getTime();
+      const widgetSrc = API_CONFIG.WIDGET_SCRIPT 
+        ? `${API_CONFIG.WIDGET_SCRIPT}?v=${version}` 
+        : `${API_CONFIG.BASE_URL}/fahimo-widget.js?v=${version}`;
+      
+      script.id = scriptId;
+      script.src = widgetSrc;
+      script.setAttribute('data-business-id', user.businessId);
+      script.async = true;
+      
+      document.body.appendChild(script);
+
+      // Cleanup on component unmount
+      return () => {
+        document.getElementById(scriptId)?.remove();
+      };
+    }
+  }, [user?.businessId]); // Re-run if businessId changes
+
+  const getWidgetCode = (platform) => {
+    const version = new Date().getTime();
+    const widgetSrc = `${API_CONFIG.WIDGET_SCRIPT || `${API_CONFIG.BASE_URL}/fahimo-widget.js`}?v=${version}`;
+    const businessId = user?.businessId || 'YOUR_BUSINESS_ID';
+    
+    switch (platform) {
+      case 'wordpress':
+        return `function add_fahimo_widget() {
+  echo '<script src="${widgetSrc}" data-business-id="${businessId}"></script>';
+}
+add_action('wp_footer', 'add_fahimo_widget');`;
+      default: // HTML
+        return `<script src="${widgetSrc}" data-business-id="${businessId}"></script>`;
+    }
   };
 
-  const widgetSrc = `${API_CONFIG.WIDGET_SCRIPT || `${API_CONFIG.BASE_URL}/fahimo-widget.js`}?v=${new Date().getTime()}`;
+  const copyWidgetCode = (platform) => {
+    copyToClipboard(getWidgetCode(platform));
+  };
 
   // Client-side CSV export of visible chart data
   const exportVisibleDataCSV = () => {
@@ -873,10 +911,10 @@ export default function StatsOverview({
                 <h4 className="text-sm font-semibold mb-2 text-right" dir="rtl">HTML / عام</h4>
                 <div className="relative group">
                   <div className="bg-muted p-4 rounded-lg font-mono text-xs break-all border border-border">
-                    {`<script src="${widgetSrc}" data-business-id="${user?.businessId}"></script>`}
+                    {getWidgetCode('html')}
                   </div>
                   <div className="absolute top-2 right-2 flex gap-2">
-                    <Button size="sm" variant="ghost" onClick={() => copyToClipboard(`<script src="${widgetSrc}" data-business-id="${user?.businessId}"></script>`)}>
+                    <Button size="sm" variant="ghost" onClick={() => copyWidgetCode('html')}>
                       <Copy className="w-4 h-4" />
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => exportVisibleDataCSV()}>
@@ -894,13 +932,10 @@ export default function StatsOverview({
                 <h4 className="text-sm font-semibold mb-2 text-right" dir="rtl">WordPress</h4>
                 <div className="relative group">
                   <div className="bg-muted p-4 rounded-lg font-mono text-xs break-all border border-border">
-                    {`function add_fahimo_widget() {
-            echo '<script src="${widgetSrc}" data-business-id="${user?.businessId}"></script>';
-          }
-          add_action('wp_footer', 'add_fahimo_widget');`}
+                    {getWidgetCode('wordpress')}
                   </div>
                   <div className="absolute top-2 right-2">
-                    <Button size="sm" variant="ghost" onClick={() => copyToClipboard(`function add_fahimo_widget() { echo '<script src="${widgetSrc}" data-business-id="${user?.businessId}"></script>'; } add_action('wp_footer', 'add_fahimo_widget');`)}>
+                    <Button size="sm" variant="ghost" onClick={() => copyWidgetCode('wordpress')}>
                       <Copy className="w-4 h-4" />
                     </Button>
                   </div>
