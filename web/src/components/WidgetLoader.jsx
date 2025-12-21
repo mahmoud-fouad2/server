@@ -56,11 +56,17 @@ export default function WidgetLoader() {
           const allowLocal = process.env.NEXT_PUBLIC_ALLOW_LOCAL_WIDGET === 'true';
           const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
 
-          if (explicitApi) {
+          if (explicitApi && explicitApi.indexOf('localhost') === -1) {
             s.setAttribute('data-api-url', explicitApi);
           } else if ((hostname === 'localhost' || hostname === '127.0.0.1') && allowLocal) {
             s.setAttribute('data-api-url', window.location.origin);
           } else {
+            // Force production URL if explicitApi is missing or is localhost in a non-local context
+            // This ensures we never accidentally inject localhost into the widget config
+            if (process.env.NODE_ENV === 'production') {
+               // Do not set data-api-url, let the widget use its default (https://fahimo-api.onrender.com)
+            }
+            
             // Avoid setting a default local API URL that could cause CSP violations when the widget
             // is embedded on remote sites (e.g., faheemly.com). In production, recommend configuring
             // NEXT_PUBLIC_API_URL to the correct API host.

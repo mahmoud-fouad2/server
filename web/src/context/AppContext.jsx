@@ -13,9 +13,9 @@ export function AppProvider({ children }) {
     setMounted(true);
     // Theme initialization
     const savedTheme = localStorage.getItem('theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    // Default to light mode, ignore system preference as per user request
     
-    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+    if (savedTheme === 'dark') {
       setIsDark(true);
       document.documentElement.classList.add('dark');
     } else {
