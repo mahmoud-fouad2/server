@@ -96,8 +96,17 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Serve static files from public directory
-app.use(express.static(path.join(__dirname, '../public')));
+// Serve static files from public directory with proper CORS
+app.use(express.static(path.join(__dirname, '../public'), {
+  setHeaders: (res, filePath) => {
+    // Allow CORS for sound files and widget files
+    if (filePath.endsWith('.mp3') || filePath.endsWith('.wav') || filePath.endsWith('.js')) {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Range');
+    }
+  }
+}));
 
 app.get('/fahimo-widget.js', (req, res) => {
   // Serve the pre-built and copied widget file from public directory

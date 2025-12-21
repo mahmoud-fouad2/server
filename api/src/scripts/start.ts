@@ -7,16 +7,32 @@ const __dirname = path.dirname(__filename);
 
 function runMigrations() {
   const npxCmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';
-  // Use db push to ensure schema sync on Render Free Tier where migration generation is difficult
-  const result = spawnSync(npxCmd, ['prisma', 'db', 'push', '--accept-data-loss'], {
+  
+  console.log('🔄 Starting Prisma migrations...');
+  
+  // Step 1: Generate Prisma Client
+  console.log('📦 Generating Prisma Client...');
+  const generateResult = spawnSync(npxCmd, ['prisma', 'generate'], {
+    stdio: 'inherit',
+  });
+  
+  if (generateResult.status !== 0) {
+    console.error('❌ Prisma generate failed!');
+  } else {
+    console.log('✅ Prisma Client generated successfully');
+  }
+  
+  // Step 2: Push schema to database
+  console.log('🚀 Pushing schema to database...');
+  const pushResult = spawnSync(npxCmd, ['prisma', 'db', 'push', '--accept-data-loss', '--skip-generate'], {
     stdio: 'inherit',
   });
 
-  if (result.status !== 0) {
-    // Don't crash the whole service if migrations fail; log and continue.
-    // The app includes runtime fallbacks for older schemas.
-    // eslint-disable-next-line no-console
-    console.warn('[startup] prisma db push failed; continuing startup');
+  if (pushResult.status !== 0) {
+    console.error('❌ Prisma db push failed! Database schema may be outdated.');
+    console.error('⚠️  Application will start but some features may not work.');
+  } else {
+    console.log('✅ Database schema synchronized successfully');
   }
 }
 
