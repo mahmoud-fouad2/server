@@ -8,12 +8,14 @@ export async function apiCall(endpoint: string, options: RequestInit = {}) {
   if (typeof window !== 'undefined') {
     try {
       const userStr = localStorage.getItem('user');
-      if (userStr) {
+      if (userStr && userStr !== 'undefined' && userStr !== 'null') {
         const user = JSON.parse(userStr);
         businessId = user.currentBusinessId || user.businessId || (user.businesses && user.businesses[0]?.id);
       }
     } catch (e) {
       console.error('Error parsing user from localStorage', e);
+      // Clear invalid data
+      localStorage.removeItem('user');
     }
   }
 

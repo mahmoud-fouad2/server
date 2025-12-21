@@ -431,6 +431,7 @@ model CrmLeadNote {
 }
 
 enum Role {
+  SUPERADMIN
   ADMIN
   CLIENT
   EMPLOYEE

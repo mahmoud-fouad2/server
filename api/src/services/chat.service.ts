@@ -21,7 +21,6 @@ export class ChatService {
           businessId,
           status: 'ACTIVE',
           channel: metadata?.channel || 'widget',
-          metadata: metadata ? JSON.stringify(metadata) : null,
         }
       });
       conversationId = conversation.id;
@@ -35,7 +34,6 @@ export class ChatService {
         content,
         sender: senderType === 'USER' ? 'user' : (senderType === 'AGENT' ? 'agent' : 'bot'),
         type: metadata?.type || 'text',
-        metadata: metadata ? JSON.stringify(metadata) : null,
       }
     });
 

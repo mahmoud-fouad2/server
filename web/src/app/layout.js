@@ -145,7 +145,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <head>
-        <meta httpEquiv="Content-Security-Policy" content="default-src 'self' https://fahimo-api.onrender.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://fahimo-api.onrender.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: https: blob:; font-src 'self' data:; connect-src 'self' https://fahimo-api.onrender.com wss://fahimo-api.onrender.com; media-src 'self' https://assets.mixkit.co blob: data:;" />
+        <meta httpEquiv="Content-Security-Policy" content="default-src 'self' https://fahimo-api.onrender.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://fahimo-api.onrender.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: https: blob:; font-src 'self' data:; connect-src 'self' https://fahimo-api.onrender.com wss://fahimo-api.onrender.com; media-src 'self' https://fahimo-api.onrender.com https://assets.mixkit.co blob: data:;" />
         {/* Fonts handled by next/font (Beiruti) for automatic optimization */}
         {/* Explicit favicons to ensure browsers pick them up and avoid caching issues */}
         <link rel="icon" href="/favicon.ico" />

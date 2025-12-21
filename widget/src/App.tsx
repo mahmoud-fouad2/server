@@ -244,12 +244,22 @@ export function App({ config, variant, businessId, assetBaseUrl }: Props) {
           flexDirection: 'column',
           marginBottom: '16px',
           overflow: 'hidden',
-          animation: 'fahimo-slide-up 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)'
+          animation: 'fahimo-balloon-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1)',
+          transformOrigin: 'bottom right'
         }}>
           <style>{`
-            @keyframes fahimo-slide-up {
-              from { opacity: 0; transform: translateY(30px) scale(0.9); }
-              to { opacity: 1; transform: translateY(0) scale(1); }
+            @keyframes fahimo-balloon-in {
+              0% { 
+                opacity: 0; 
+                transform: scale(0.3) translateY(30px); 
+              }
+              60% { 
+                opacity: 1; 
+                transform: scale(1.08) translateY(0); 
+              }
+              100% { 
+                transform: scale(1) translateY(0); 
+              }
             }
             @keyframes fahimo-fade-in {
               from { opacity: 0; transform: translateY(8px); }

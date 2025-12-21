@@ -30,10 +30,15 @@ export const apiCall = async (endpoint, options = {}) => {
   try {
     if (typeof window !== 'undefined') {
       const u = localStorage.getItem('user');
-      if (u) storedUser = JSON.parse(u);
+      if (u && u !== 'undefined' && u !== 'null') {
+        storedUser = JSON.parse(u);
+      }
     }
   } catch (e) {
-    // ignore parse errors
+    // ignore parse errors and clear invalid data
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('user');
+    }
   }
 
   // Allow an explicit public widget business id injected at build time
