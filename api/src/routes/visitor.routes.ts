@@ -6,5 +6,7 @@ const visitorController = new VisitorController();
 
 router.post('/session', visitorController.createSession);
 router.post('/track', visitorController.trackPage);
+router.get('/active-sessions', visitorController.getActiveSessions);
+router.get('/analytics', visitorController.getAnalytics);
 
 export default router;

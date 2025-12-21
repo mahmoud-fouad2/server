@@ -4,11 +4,13 @@ import { z } from 'zod';
 
 export const WidgetConfigSchema = z.object({
   welcomeMessage: z.string().default("مرحباً! كيف يمكنني مساعدتك اليوم؟"),
-  primaryColor: z.string().default("#003366"),
+  primaryColor: z.string().default("#6366F1"),
   personality: z.enum(['friendly', 'formal', 'fun']).default('friendly'),
   showBranding: z.boolean().default(true),
   avatar: z.string().default("robot"),
   customIconUrl: z.string().optional(),
+  botName: z.string().optional(), // Added for custom bot name
+  botIcon: z.string().optional(), // Added as clearer alias for customIconUrl
 });
 
 export type WidgetConfig = z.infer<typeof WidgetConfigSchema>;

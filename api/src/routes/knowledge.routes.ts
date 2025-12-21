@@ -9,6 +9,7 @@ router.use(authenticateToken);
 
 router.get('/', knowledgeController.getEntries.bind(knowledgeController));
 router.post('/', knowledgeController.createEntry.bind(knowledgeController));
+router.post('/reindex', knowledgeController.reindex.bind(knowledgeController));
 router.delete('/:id', knowledgeController.deleteEntry.bind(knowledgeController));
 
 export default router;

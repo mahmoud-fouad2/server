@@ -40,4 +40,15 @@ export class KnowledgeController {
       res.status(400).json({ error: 'Failed to delete entry' });
     }
   }
+
+  async reindex(req: Request, res: Response) {
+    try {
+      // @ts-ignore
+      const businessId = req.user.businessId;
+      const result = await knowledgeService.reindex(businessId);
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to trigger re-indexing' });
+    }
+  }
 }

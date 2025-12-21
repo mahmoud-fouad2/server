@@ -24,14 +24,14 @@ const storage = multer.diskStorage({
 
 const upload = multer({ 
   storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
   fileFilter: (req, file, cb) => {
     const original = file.originalname || '';
     if (original.includes('..') || original.includes('/') || original.includes('\\')) {
       return cb(new Error('Invalid filename'));
     }
     const ext = path.extname(original).toLowerCase();
-    const allowedExts = ['.png', '.jpg', '.jpeg', '.gif', '.txt', '.pdf'];
+    const allowedExts = ['.png', '.jpg', '.jpeg', '.gif', '.txt', '.pdf', '.doc', '.docx'];
     if (!allowedExts.includes(ext)) return cb(new Error('Invalid file type'));
     cb(null, true);
   }

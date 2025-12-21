@@ -43,6 +43,7 @@ import visitorRoutes from './routes/visitor.routes.js';
 import continuousImprovementRoutes from './routes/continuous-improvement.routes.js';
 import customAIModelRoutes from './routes/custom-ai-model.routes.js';
 import apiKeyRoutes from './routes/api-key.routes.js';
+import ratingRoutes from './routes/rating.routes.js';
 
 dotenv.config();
 
@@ -133,6 +134,7 @@ app.use('/api/analytics', apiLimiter, analyticsRoutes);
 app.use('/api/visitor', visitorRoutes);
 app.use('/api/improvement', apiLimiter, continuousImprovementRoutes);
 app.use('/api/custom-ai-models', apiLimiter, customAIModelRoutes);
+app.use('/api/rating', apiLimiter, ratingRoutes);
 
 // Health Check
 app.get('/health', (req, res) => {

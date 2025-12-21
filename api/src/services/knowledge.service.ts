@@ -9,6 +9,30 @@ import logger from '../utils/logger.js';
 
 export class KnowledgeService {
   
+  async reindex(businessId: string) {
+    const entries = await prisma.knowledgeBase.findMany({
+      where: { businessId },
+      select: { id: true, title: true, content: true }
+    });
+
+    let count = 0;
+    for (const entry of entries) {
+      await queueService.addJob(
+        'embeddings',
+        'regenerate-embedding',
+        {
+          knowledgeChunkId: entry.id,
+          text: `${entry.title}\n${entry.content}`,
+          businessId,
+        },
+        { priority: 1 } // Low priority
+      );
+      count++;
+    }
+
+    return { count, message: `Queued ${count} entries for re-indexing` };
+  }
+
   async getEntries(businessId: string, options?: {
     search?: string;
     tags?: string[];

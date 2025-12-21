@@ -48,6 +48,7 @@ model Business {
   status                   BusinessStatus          @default(TRIAL)
   trialEndsAt              DateTime?
   botTone                  String                  @default("friendly")
+  systemPrompt             String?                 // Custom system prompt
   primaryColor             String                  @default("#6366F1")
   allowedOrigins           String[]                // Array for multiple domains
   branding                 Json?                   // { logoUrl, primaryColor, customDomain, emailTemplate }
@@ -398,10 +399,26 @@ model VisitorSession {
   country     String?
   city        String?
   device      String?
+  browser     String?
+  os          String?
   pageViews   Int      @default(0)
   startedAt   DateTime @default(now())
   endedAt     DateTime?
   visitor     Visitor  @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+  visits      PageVisit[]
+}
+
+model PageVisit {
+  id        String   @id @default(cuid())
+  sessionId String
+  url       String
+  title     String?
+  duration  Int      @default(0) // Seconds
+  createdAt DateTime @default(now())
+  session   VisitorSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@index([url])
 }
 
 model CrmLead {

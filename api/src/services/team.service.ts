@@ -34,7 +34,7 @@ export class TeamService {
         email: data.email,
         password: hashedPassword,
         employerId: businessId,
-        role: data.role || 'CLIENT', // Should probably be AGENT or similar if Role enum supports it
+        role: data.role || 'EMPLOYEE',
         isActive: true,
       },
       select: {

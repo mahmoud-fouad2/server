@@ -30,14 +30,30 @@ export class VisitorController {
 
   async trackPage(req: Request, res: Response) {
     try {
-      const { sessionId } = req.body;
+      const { sessionId, url, title } = req.body;
       if (!sessionId) return res.status(400).json({ error: 'Session ID required' });
 
-      await visitorService.trackPageView(sessionId);
+      await visitorService.trackPageView(sessionId, { url, title });
       res.json({ success: true });
     } catch (error) {
       console.error('Track Page Error:', error);
       res.status(500).json({ error: 'Failed to track page view' });
+    }
+  }
+
+  async getActiveSessions(req: Request, res: Response) {
+    try {
+      res.json([]);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch active sessions' });
+    }
+  }
+
+  async getAnalytics(req: Request, res: Response) {
+    try {
+      res.json({ visitors: 0, sessions: 0, pageViews: 0 });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch visitor analytics' });
     }
   }
 }

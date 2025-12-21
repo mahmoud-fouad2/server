@@ -50,7 +50,7 @@ export class AnalyticsService {
     const [activeConversations, conversationsLast24h, messagesLastHour, messagesLast24h] =
       await Promise.all([
         prisma.conversation.count({
-          where: { businessId, status: 'active' },
+          where: { businessId, status: 'ACTIVE' }, // Changed to uppercase to match likely Enum
         }),
         prisma.conversation.count({
           where: { businessId, createdAt: { gte: oneDayAgo } },
@@ -82,6 +82,38 @@ export class AnalyticsService {
       totalChunks,
       chunksWithEmbedding,
       chunksMissingEmbedding: Math.max(0, totalChunks - chunksWithEmbedding),
+    };
+  }
+
+  async getRatingStats(businessId: string) {
+    const ratings = await prisma.conversation.groupBy({
+      by: ['agentRating'],
+      where: {
+        businessId,
+        agentRating: { not: null }
+      },
+      _count: { id: true }
+    });
+
+    const totalRatings = ratings.reduce((acc, curr) => acc + curr._count.id, 0);
+    const weightedSum = ratings.reduce((acc, curr) => acc + (curr.agentRating! * curr._count.id), 0);
+    const average = totalRatings > 0 ? weightedSum / totalRatings : 0;
+
+    const distribution = {
+      1: 0, 2: 0, 3: 0, 4: 0, 5: 0
+    };
+    
+    ratings.forEach(r => {
+      if (r.agentRating) {
+        // @ts-ignore
+        distribution[r.agentRating] = r._count.id;
+      }
+    });
+
+    return {
+      average: Number(average.toFixed(1)),
+      count: totalRatings,
+      distribution
     };
   }
 }

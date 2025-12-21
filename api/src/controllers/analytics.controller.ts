@@ -49,4 +49,27 @@ export class AnalyticsController {
       res.status(500).json({ error: 'Failed to fetch vector stats' });
     }
   }
+
+  async getAlerts(req: AuthRequest, res: Response) {
+    try {
+      // Placeholder for alerts to prevent 404
+      res.json([]);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch alerts' });
+    }
+  }
+
+  async getRatingStats(req: AuthRequest, res: Response) {
+    try {
+      const businessId = req.user!.businessId;
+      if (!businessId) return res.status(400).json({ error: 'Business ID required' });
+
+      const stats = await analyticsService.getRatingStats(businessId);
+      res.json(stats);
+    } catch (error) {
+      console.error('Rating Stats Error:', error);
+      res.status(500).json({ error: 'Failed to fetch rating stats' });
+    }
+  }
+}
 }

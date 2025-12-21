@@ -1,229 +1,347 @@
+import { h, Fragment } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
+import { io, Socket } from 'socket.io-client';
 
-interface Props {
-  config: any;
-  variant: 'standard' | 'enhanced';
-  businessId: string;
-  assetBaseUrl?: string;
-}
+// --- Icons ---
+const ChatIcon = () => (
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+  </svg>
+);
 
+const CloseIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="18" y1="6" x2="6" y2="18"></line>
+    <line x1="6" y1="6" x2="18" y2="18"></line>
+  </svg>
+);
+
+const SendIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="22" y1="2" x2="11" y2="13"></line>
+    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+  </svg>
+);
+
+const AttachmentIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+  </svg>
+);
+
+const StarIcon = ({ filled, onClick }: { filled: boolean; onClick?: () => void }) => (
+  <svg 
+    onClick={onClick}
+    width="24" height="24" viewBox="0 0 24 24" 
+    fill={filled ? "#FFD700" : "none"} 
+    stroke={filled ? "#FFD700" : "#CBD5E1"} 
+    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+    className={`fahimo-star ${filled ? 'selected' : ''}`}
+  >
+    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+  </svg>
+);
+
+// --- Types ---
 interface Message {
   id: string;
   text: string;
-  sender: 'user' | 'bot';
-  timestamp: number;
+  sender: 'user' | 'bot' | 'agent';
+  timestamp: Date;
+  type?: 'text' | 'image' | 'file';
+  fileUrl?: string;
 }
 
-interface ChatSession {
-  conversationId: string | null;
-  messages: Message[];
-  rating: number | null;
-  ratingSubmitted: boolean;
+interface WidgetConfig {
+  businessId: string;
+  primaryColor?: string;
+  botName?: string;
+  botIcon?: string;
+  welcomeMessage?: string;
+  requireEmail?: boolean;
 }
 
-// Helper to darken/lighten hex color
-const adjustColor = (color: string, amount: number) => {
-  return '#' + color.replace(/^#/, '').replace(/../g, c => 
-    ('0' + Math.min(255, Math.max(0, parseInt(c, 16) + amount)).toString(16)).substr(-2)
-  );
-};
+interface VisitorInfo {
+  name: string;
+  email: string;
+  phone: string;
+}
 
-// Generate unique ID
-const generateId = () => Math.random().toString(36).substring(2, 15);
-
-export function App({ config, variant, businessId, assetBaseUrl }: Props) {
+export default function App() {
+  // State
   const [isOpen, setIsOpen] = useState(false);
+  const [config, setConfig] = useState<WidgetConfig>({ businessId: '' });
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
-  const [isMuted, setIsMuted] = useState(false);
+  const [socket, setSocket] = useState<Socket | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [visitorInfo, setVisitorInfo] = useState<VisitorInfo>({ name: '', email: '', phone: '' });
+  const [showPreChat, setShowPreChat] = useState(true);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [showRating, setShowRating] = useState(false);
   const [rating, setRating] = useState(0);
-  const [hoverRating, setHoverRating] = useState(0);
   const [ratingSubmitted, setRatingSubmitted] = useState(false);
-  const [visitorId, setVisitorId] = useState<string>('');
-  
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Storage key for this business
-  const storageKey = `fahimo-chat-${businessId}`;
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+  const storageKey = `fahimo_chat_${config.businessId}`;
 
-  // Initialize visitor ID and load session on mount
+  // Initialization
   useEffect(() => {
-    // Get or create visitor ID
-    let vid = localStorage.getItem(`fahimo-visitor-${businessId}`);
-    if (!vid) {
-      vid = `v_${generateId()}`;
-      localStorage.setItem(`fahimo-visitor-${businessId}`, vid);
+    // Load config from script tag
+    const script = document.getElementById('fahimo-widget-script');
+    const businessId = script?.getAttribute('data-business-id');
+    
+    if (businessId) {
+      fetchConfig(businessId);
     }
-    setVisitorId(vid);
 
-    // Load saved session
-    const savedSession = localStorage.getItem(storageKey);
-    if (savedSession) {
-      try {
-        const session: ChatSession = JSON.parse(savedSession);
-        setMessages(session.messages || []);
-        setConversationId(session.conversationId);
-        setRating(session.rating || 0);
-        setRatingSubmitted(session.ratingSubmitted || false);
-      } catch (e) {
-        console.error('Failed to load chat session:', e);
+    // Load local storage
+    const saved = localStorage.getItem(`fahimo_chat_${businessId}`);
+    if (saved) {
+      const data = JSON.parse(saved);
+      if (data.conversationId) {
+        setConversationId(data.conversationId);
+        setMessages(data.messages || []);
+        setShowPreChat(false);
+        setVisitorInfo(data.visitorInfo || { name: '', email: '', phone: '' });
+        
+        // Reconnect socket if we have an active conversation
+        connectSocket(businessId!, data.conversationId);
       }
     }
+  }, []);
 
-    // Load mute preference
-    const savedMute = localStorage.getItem(`fahimo-mute-${businessId}`);
-    if (savedMute) setIsMuted(savedMute === 'true');
-  }, [businessId, storageKey]);
-
-  // Save session whenever messages change
-  useEffect(() => {
-    if (messages.length > 0 || conversationId) {
-      const session: ChatSession = {
-        conversationId,
-        messages,
-        rating,
-        ratingSubmitted
-      };
-      localStorage.setItem(storageKey, JSON.stringify(session));
-    }
-  }, [messages, conversationId, rating, ratingSubmitted, storageKey]);
-
-  // Scroll to bottom when messages change
+  // Auto-scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, isOpen]);
+
+  // Play sound on new message
+  useEffect(() => {
+    if (messages.length > 0 && messages[messages.length - 1].sender !== 'user' && isOpen) {
+      audioRef.current?.play().catch(e => console.log('Audio play failed', e));
+    }
   }, [messages]);
 
-  const toggleMute = () => {
-    const newState = !isMuted;
-    setIsMuted(newState);
-    localStorage.setItem(`fahimo-mute-${businessId}`, String(newState));
-  };
-
-  const playSound = () => {
-    if (!isMuted && audioRef.current) {
-      audioRef.current.play().catch(() => {});
+  const fetchConfig = async (businessId: string) => {
+    try {
+      const res = await fetch(`${API_URL}/api/widget/config/${businessId}`);
+      const data = await res.json();
+      setConfig({ ...data, businessId });
+    } catch (err) {
+      console.error('Failed to load widget config', err);
+      setConfig({ businessId });
     }
   };
 
-  const toggleOpen = () => {
-    const newState = !isOpen;
-    setIsOpen(newState);
-    if (newState) playSound();
+  const connectSocket = (businessId: string, convId?: string) => {
+    if (socket) return;
+
+    const newSocket = io(API_URL, {
+      query: { businessId, conversationId: convId }
+    });
+
+    newSocket.on('connect', () => {
+      console.log('Connected to chat server');
+    });
+
+    newSocket.on('message', (msg: any) => {
+      addMessage({
+        id: msg.id || Date.now().toString(),
+        text: msg.content,
+        sender: msg.sender === 'USER' ? 'user' : (msg.sender === 'BOT' ? 'bot' : 'agent'),
+        timestamp: new Date(msg.createdAt),
+        type: msg.type || 'text',
+        fileUrl: msg.fileUrl
+      });
+    });
+
+    newSocket.on('agent_joined', () => {
+      addMessage({
+        id: 'system-' + Date.now(),
+        text: 'An agent has joined the chat.',
+        sender: 'agent',
+        timestamp: new Date()
+      });
+    });
+
+    setSocket(newSocket);
   };
 
-  const sendMessage = async () => {
-    if (!input.trim() || isLoading) return;
-    
-    const userMsg = input.trim();
-    const userMessage: Message = {
-      id: generateId(),
-      text: userMsg,
-      sender: 'user',
-      timestamp: Date.now()
-    };
-    
-    setMessages(prev => [...prev, userMessage]);
-    setInput('');
+  const addMessage = (msg: Message) => {
+    setMessages(prev => {
+      const newMessages = [...prev, msg];
+      // Save to local storage
+      if (config.businessId) {
+        localStorage.setItem(storageKey, JSON.stringify({
+          conversationId,
+          messages: newMessages,
+          visitorInfo
+        }));
+      }
+      return newMessages;
+    });
+  };
+
+  const handlePreChatSubmit = async (e: Event) => {
+    e.preventDefault();
     setIsLoading(true);
-    playSound();
+    
+    // Generate a visitor ID if not exists
+    let visitorId = localStorage.getItem('fahimo_visitor_id');
+    if (!visitorId) {
+      visitorId = 'v_' + Math.random().toString(36).substr(2, 9);
+      localStorage.setItem('fahimo_visitor_id', visitorId);
+    }
 
     try {
-      const rawApiUrl = (window as any).__FAHIMO_API_URL || 'https://fahimo-api.onrender.com';
-      // Accept https://host or https://host/api and normalize to https://host
-      const apiBase = String(rawApiUrl).trim().replace(/\/+$/, '').replace(/\/api$/i, '');
-      const res = await fetch(`${apiBase}/api/chat/send`, {
+      // Start conversation via API
+      const res = await fetch(`${API_URL}/api/chat/send`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          businessId,
-          conversationId,
+          businessId: config.businessId,
+          content: `Started chat. Name: ${visitorInfo.name}, Email: ${visitorInfo.email}`,
           visitorId,
-          content: userMsg,
-          senderType: 'USER'
+          senderType: 'USER' // Initial message to trigger creation
         })
       });
       
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}`);
-      }
-      
       const data = await res.json();
+      setConversationId(data.conversationId);
+      setShowPreChat(false);
+      connectSocket(config.businessId, data.conversationId);
       
-      // Update conversation ID if new
-      if (data.conversationId && !conversationId) {
-        setConversationId(data.conversationId);
+      // Add welcome message if configured
+      if (config.welcomeMessage) {
+        addMessage({
+          id: 'welcome',
+          text: config.welcomeMessage,
+          sender: 'bot',
+          timestamp: new Date()
+        });
       }
-      
-      const botMessage: Message = {
-        id: generateId(),
-        text: data.content || data.botMessage?.content || 'Sorry, I could not process your message.',
-        sender: 'bot',
-        timestamp: Date.now()
-      };
-      
-      setMessages(prev => [...prev, botMessage]);
-      playSound();
-    } catch (e) {
-      console.error('Chat error:', e);
-      const errorMessage: Message = {
-        id: generateId(),
-        text: 'Sorry, there was an error. Please try again.',
-        sender: 'bot',
-        timestamp: Date.now()
-      };
-      setMessages(prev => [...prev, errorMessage]);
+    } catch (err) {
+      console.error('Failed to start chat', err);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const submitRating = async (stars: number) => {
-    setRating(stars);
-    setRatingSubmitted(true);
+  const sendMessage = async () => {
+    if (!input.trim() || !conversationId) return;
+
+    const text = input;
+    setInput('');
     
+    // Optimistic add
+    addMessage({
+      id: 'temp-' + Date.now(),
+      text,
+      sender: 'user',
+      timestamp: new Date()
+    });
+
     try {
-      const rawApiUrl = (window as any).__FAHIMO_API_URL || 'https://fahimo-api.onrender.com';
-      const apiBase = String(rawApiUrl).trim().replace(/\/+$/, '').replace(/\/api$/i, '');
-      await fetch(`${apiBase}/api/chat/rate`, {
+      await fetch(`${API_URL}/api/chat/send`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          businessId,
+          businessId: config.businessId,
           conversationId,
-          rating: stars
+          content: text,
+          senderType: 'USER',
+          visitorId: localStorage.getItem('fahimo_visitor_id')
         })
       });
+    } catch (err) {
+      console.error('Failed to send message', err);
+      // TODO: Show error state
+    }
+  };
+
+  const handleFileUpload = async (e: Event) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (!file || !conversationId) return;
+
+    if (file.size > 10 * 1024 * 1024) { // 10MB limit
+      alert('File size must be less than 10MB');
+      return;
+    }
+
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('businessId', config.businessId);
+    formData.append('conversationId', conversationId);
+
+    try {
+      const res = await fetch(`${API_URL}/api/upload`, {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      
+      // Send message with file link
+      await fetch(`${API_URL}/api/chat/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          businessId: config.businessId,
+          conversationId,
+          content: `Sent a file: ${data.url}`,
+          senderType: 'USER',
+          visitorId: localStorage.getItem('fahimo_visitor_id')
+        })
+      });
+      
+      // Add to local UI
+      addMessage({
+        id: 'file-' + Date.now(),
+        text: 'Sent a file',
+        sender: 'user',
+        timestamp: new Date(),
+        type: 'file',
+        fileUrl: data.url
+      });
+
+    } catch (err) {
+      console.error('Upload failed', err);
+      alert('Failed to upload file');
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleRating = async (value: number) => {
+    setRating(value);
+    try {
+      await fetch(`${API_URL}/api/chat/rate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          businessId: config.businessId,
+          conversationId,
+          rating: value
+        })
+      });
+      setRatingSubmitted(true);
+      setTimeout(() => setShowRating(false), 2000);
     } catch (e) {
-      console.error('Rating submission error:', e);
-    }
-    
-    setTimeout(() => setShowRating(false), 2000);
-  };
-
-  const endConversation = () => {
-    if (!ratingSubmitted && messages.length > 0) {
-      setShowRating(true);
+      console.error('Rating failed', e);
     }
   };
 
-  const clearSession = () => {
-    localStorage.removeItem(storageKey);
-    setMessages([]);
-    setConversationId(null);
-    setRating(0);
-    setRatingSubmitted(false);
-    setShowRating(false);
-  };
+  const toggleOpen = () => setIsOpen(!isOpen);
 
   const primaryColor = config.primaryColor || '#6366F1';
-  // Always load sound from the hosting page (frontend) to avoid cross-origin audio blocking.
-  const soundUrl = (typeof window !== 'undefined' && window.location?.origin)
-    ? `${window.location.origin}/sounds/notification.mp3`
-    : '/sounds/notification.mp3';
+  const soundUrl = `${API_URL}/sounds/notification.mp3`; // Use API hosted sound
 
   return (
     <div style={{ 
@@ -233,14 +351,12 @@ export function App({ config, variant, businessId, assetBaseUrl }: Props) {
       zIndex: 2147483647, 
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' 
     }}>
-      {/* Hidden audio element - uses local sound file */}
       <audio ref={audioRef} src={soundUrl} preload="auto" />
       
-      {/* Chat Window */}
       {isOpen && (
         <div style={{
-          width: variant === 'enhanced' ? '380px' : '360px',
-          height: variant === 'enhanced' ? '580px' : '520px',
+          width: '380px',
+          height: '600px',
           backgroundColor: '#ffffff',
           borderRadius: '20px',
           boxShadow: '0 20px 60px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05)',
@@ -248,447 +364,164 @@ export function App({ config, variant, businessId, assetBaseUrl }: Props) {
           flexDirection: 'column',
           marginBottom: '16px',
           overflow: 'hidden',
-          animation: 'fahimo-balloon-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1)',
-          transformOrigin: 'bottom right'
+          animation: 'fahimo-slide-up 0.3s ease-out'
         }}>
           <style>{`
-            @keyframes fahimo-balloon-in {
-              0% { 
-                opacity: 0; 
-                transform: scale(0.3) translateY(30px); 
-              }
-              60% { 
-                boxShadow: '0 24px 80px rgba(0,0,0,0.18), 0 0 0 1px rgba(15,23,42,0.06)',
-                transform: scale(1.08) translateY(0); 
-              }
-              100% { 
-                transform: scale(1) translateY(0); 
-                animation: 'fahimo-open 360ms cubic-bezier(0.22, 1, 0.36, 1)',
+            @keyframes fahimo-slide-up {
+              from { opacity: 0; transform: translateY(20px); }
+              to { opacity: 1; transform: translateY(0); }
             }
-            @keyframes fahimo-fade-in {
-              from { opacity: 0; transform: translateY(8px); }
-                  @keyframes fahimo-open {
-                    0% {
-                      opacity: 0;
-                      transform: translate3d(0, 16px, 0) scale(0.92);
-                      filter: blur(2px);
-                    }
-                    60% {
-                      opacity: 1;
-                      transform: translate3d(0, 0, 0) scale(1.01);
-                      filter: blur(0);
-                    }
-                    100% {
-                      opacity: 1;
-                      transform: translate3d(0, 0, 0) scale(1);
-                      filter: blur(0);
-                    }
-                  }
-            .fahimo-msg { animation: fahimo-fade-in 0.3s ease-out forwards; }
-            .fahimo-typing span { animation: fahimo-pulse 1.4s infinite; }
-            .fahimo-typing span:nth-child(2) { animation-delay: 0.2s; }
-            .fahimo-typing span:nth-child(3) { animation-delay: 0.4s; }
-            .fahimo-star { cursor: pointer; transition: transform 0.2s, color 0.2s; }
-            .fahimo-star:hover { transform: scale(1.2); }
-            .fahimo-star.selected { animation: fahimo-star-pop 0.3s ease-out; }
+            .fahimo-msg { padding: 10px 14px; border-radius: 12px; margin-bottom: 8px; max-width: 80%; font-size: 14px; line-height: 1.5; }
+            .fahimo-msg.user { background: ${primaryColor}; color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
+            .fahimo-msg.bot, .fahimo-msg.agent { background: #F3F4F6; color: #1F2937; align-self: flex-start; border-bottom-left-radius: 2px; }
+            .fahimo-input:focus { outline: none; }
+            .fahimo-star:hover { transform: scale(1.1); }
           `}</style>
-          
+
           {/* Header */}
           <div style={{ 
-            background: `linear-gradient(145deg, ${primaryColor}, ${adjustColor(primaryColor, -25)})`,
+            background: `linear-gradient(135deg, ${primaryColor}, ${adjustColor(primaryColor, -40)})`,
             color: 'white', 
-            padding: '18px 20px', 
+            padding: '20px', 
             display: 'flex', 
             alignItems: 'center', 
             justifyContent: 'space-between'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{ position: 'relative' }}>
-                <div style={{ 
-                  width: 44, 
-                  height: 44, 
-                  borderRadius: '50%', 
-                  background: 'rgba(255,255,255,0.2)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '20px'
-                }}>
-                  🤖
-                </div>
-                <div style={{
-                  position: 'absolute', bottom: 0, right: 0, width: 12, height: 12, 
-                  backgroundColor: '#22C55E', borderRadius: '50%', border: '2px solid white'
-                }} />
+              <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {config.botIcon ? <img src={config.botIcon} style={{width: '100%', height: '100%', borderRadius: '50%'}} /> : <ChatIcon />}
               </div>
               <div>
-                <div style={{ fontWeight: '600', fontSize: '15px' }}>
-                  {config.welcomeMessage?.split('!')[0] || 'AI Assistant'}
-                </div>
-                <div style={{ fontSize: '12px', opacity: 0.85, display: 'flex', alignItems: 'center', gap: '5px' }}>
-                  <span style={{ width: 6, height: 6, backgroundColor: '#22C55E', borderRadius: '50%' }}></span>
-                  Always online
-                </div>
+                <div style={{ fontWeight: 600, fontSize: '16px' }}>{config.botName || 'Support Chat'}</div>
+                <div style={{ fontSize: '12px', opacity: 0.9 }}>We reply immediately</div>
               </div>
             </div>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button 
-                onClick={toggleMute}
-                style={{ 
-                  background: 'rgba(255,255,255,0.15)', 
-                  border: 'none', 
-                  color: 'white', 
-                  cursor: 'pointer', 
-                  width: 34, height: 34, borderRadius: '50%',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '14px',
-                  transition: 'background 0.2s'
-                }}
-                onMouseOver={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.25)')}
-                onMouseOut={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.15)')}
-              >
-                {isMuted ? '🔇' : '🔊'}
-              </button>
-              {messages.length > 0 && (
-                <button 
-                  onClick={endConversation}
-                  title="End & Rate"
-                  style={{ 
-                    background: 'rgba(255,255,255,0.15)', 
-                    border: 'none', 
-                    color: 'white', 
-                    cursor: 'pointer', 
-                    width: 34, height: 34, borderRadius: '50%',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '14px',
-                    transition: 'background 0.2s'
-                  }}
-                  onMouseOver={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.25)')}
-                  onMouseOut={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.15)')}
-                >
-                  ⭐
-                </button>
-              )}
-              <button 
-                onClick={toggleOpen}
-                style={{ 
-                  background: 'rgba(255,255,255,0.15)', 
-                  border: 'none', 
-                  color: 'white', 
-                  cursor: 'pointer', 
-                  width: 34, height: 34, borderRadius: '50%',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '18px',
-                  transition: 'background 0.2s'
-                }}
-                onMouseOver={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.25)')}
-                onMouseOut={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.15)')}
-              >
-                ✕
-              </button>
+            <div onClick={() => setIsOpen(false)} style={{ cursor: 'pointer', opacity: 0.8 }}>
+              <CloseIcon />
             </div>
           </div>
 
-          {/* Rating Overlay */}
-          {showRating && (
-            <div style={{
-              position: 'absolute',
-              top: 0, left: 0, right: 0, bottom: 0,
-              backgroundColor: 'rgba(255,255,255,0.97)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 10,
-              animation: 'fahimo-fade-in 0.3s ease-out'
-            }}>
-              {ratingSubmitted ? (
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '48px', marginBottom: '16px' }}>🎉</div>
-                  <div style={{ fontSize: '18px', fontWeight: '600', color: '#1F2937' }}>Thank you!</div>
-                  <div style={{ fontSize: '14px', color: '#6B7280', marginTop: '8px' }}>
-                    Your feedback helps us improve
+          {/* Body */}
+          <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', background: '#F9FAFB' }}>
+            {showPreChat ? (
+              <div style={{ padding: '20px' }}>
+                <h3 style={{ textAlign: 'center', marginBottom: '20px', color: '#374151' }}>Welcome! Please introduce yourself.</h3>
+                <form onSubmit={handlePreChatSubmit}>
+                  <div style={{ marginBottom: '15px' }}>
+                    <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', color: '#4B5563' }}>Name</label>
+                    <input 
+                      required 
+                      style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #D1D5DB' }}
+                      value={visitorInfo.name}
+                      onInput={(e) => setVisitorInfo({...visitorInfo, name: (e.target as HTMLInputElement).value})}
+                    />
                   </div>
-                </div>
-              ) : (
-                <>
-                  <div style={{ fontSize: '16px', fontWeight: '600', color: '#1F2937', marginBottom: '8px' }}>
-                    How was your experience?
+                  <div style={{ marginBottom: '15px' }}>
+                    <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', color: '#4B5563' }}>Email</label>
+                    <input 
+                      type="email" 
+                      required 
+                      style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #D1D5DB' }}
+                      value={visitorInfo.email}
+                      onInput={(e) => setVisitorInfo({...visitorInfo, email: (e.target as HTMLInputElement).value})}
+                    />
                   </div>
-                  <div style={{ fontSize: '13px', color: '#6B7280', marginBottom: '20px' }}>
-                    Rate your conversation
-                  </div>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <span
-                        key={star}
-                        className={`fahimo-star ${rating >= star ? 'selected' : ''}`}
-                        onClick={() => submitRating(star)}
-                        onMouseEnter={() => setHoverRating(star)}
-                        onMouseLeave={() => setHoverRating(0)}
-                        style={{
-                          fontSize: '36px',
-                          color: (hoverRating || rating) >= star ? '#FBBF24' : '#E5E7EB',
-                          transition: 'color 0.2s'
-                        }}
-                      >
-                        ★
-                      </span>
-                    ))}
-                  </div>
-                  <button
-                    onClick={() => setShowRating(false)}
-                    style={{
-                      marginTop: '24px',
-                      padding: '8px 20px',
-                      background: 'transparent',
-                      border: '1px solid #E5E7EB',
-                      borderRadius: '20px',
-                      color: '#6B7280',
-                      cursor: 'pointer',
-                      fontSize: '13px'
-                    }}
-                  >
-                    Skip
+                  <button type="submit" style={{ width: '100%', padding: '12px', background: primaryColor, color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>
+                    Start Chat
                   </button>
-                </>
-              )}
-            </div>
-          )}
-
-          {/* Messages Area */}
-          <div className="fahimo-scroll" style={{ 
-            flex: 1, 
-            padding: '20px', 
-            overflowY: 'auto', 
-            backgroundColor: '#F9FAFB',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '14px'
-          }}>
-            {messages.length === 0 && (
-              <div style={{ 
-                textAlign: 'center', 
-                marginTop: '60px',
-                animation: 'fahimo-fade-in 0.5s ease-out'
-              }}>
-                <div style={{ fontSize: '48px', marginBottom: '16px' }}>👋</div>
-                <div style={{ fontSize: '16px', fontWeight: '600', color: '#1F2937', marginBottom: '8px' }}>
-                  {config.welcomeMessage || 'Hello! How can I help you today?'}
-                </div>
-                <div style={{ fontSize: '13px', color: '#9CA3AF' }}>
-                  Ask me anything, I'm here to help!
-                </div>
+                </form>
               </div>
+            ) : (
+              <>
+                {messages.map(msg => (
+                  <div key={msg.id} className={`fahimo-msg ${msg.sender}`}>
+                    {msg.type === 'file' ? (
+                      <a href={msg.fileUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'underline' }}>
+                        📎 Attachment
+                      </a>
+                    ) : msg.text}
+                  </div>
+                ))}
+                {isLoading && <div className="fahimo-msg bot">...</div>}
+                <div ref={messagesEndRef} />
+                
+                {/* Rating Prompt */}
+                {showRating && !ratingSubmitted && (
+                  <div style={{ marginTop: '20px', padding: '15px', background: 'white', borderRadius: '12px', textAlign: 'center', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
+                    <div style={{ marginBottom: '10px', fontSize: '14px', color: '#4B5563' }}>How was your experience?</div>
+                    <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+                      {[1, 2, 3, 4, 5].map(star => (
+                        <StarIcon key={star} filled={rating >= star} onClick={() => handleRating(star)} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
             )}
-            
-            {messages.map((msg) => (
-              <div 
-                key={msg.id} 
-                className="fahimo-msg"
-                style={{
-                  alignSelf: msg.sender === 'user' ? 'flex-end' : 'flex-start',
-                  maxWidth: '80%'
-                }}
-              >
-                <div style={{
-                  padding: '12px 16px',
-                  borderRadius: msg.sender === 'user' ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
-                  backgroundColor: msg.sender === 'user' ? primaryColor : 'white',
-                  color: msg.sender === 'user' ? 'white' : '#1F2937',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-                  fontSize: '14px',
-                  lineHeight: '1.5',
-                  wordBreak: 'break-word'
-                }}>
-                  {msg.text}
-                </div>
-                <div style={{ 
-                  fontSize: '11px', 
-                  color: '#9CA3AF', 
-                  marginTop: '4px',
-                  textAlign: msg.sender === 'user' ? 'right' : 'left',
-                  paddingLeft: '4px',
-                  paddingRight: '4px',
-                }}>
-                  {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </div>
-              </div>
-            ))}
-            
-            {/* Typing Indicator */}
-            {isLoading && (
-              <div className="fahimo-msg" style={{ alignSelf: 'flex-start' }}>
-                <div className="fahimo-typing" style={{
-                  padding: '14px 20px',
-                  borderRadius: '18px 18px 18px 4px',
-                  backgroundColor: 'white',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-                  display: 'flex',
-                  gap: '4px'
-                }}>
-                  <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#9CA3AF' }}></span>
-                  <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#9CA3AF' }}></span>
-                  <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#9CA3AF' }}></span>
-                </div>
-              </div>
-            )}
-            
-            <div ref={messagesEndRef} />
           </div>
-          
-          {/* Input Area */}
-          <div style={{ 
-            padding: '12px', 
-            borderTop: '1px solid #F3F4F6', 
-            backgroundColor: 'white'
-          }}>
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
-              <textarea
-                value={input}
-                onInput={(e) => {
-                  const target = e.target as HTMLTextAreaElement;
-                  setInput(target.value);
-                  target.style.height = 'auto';
-                  target.style.height = Math.min(target.scrollHeight, 88) + 'px';
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendMessage();
-                  }
-                }}
-                placeholder="Type your message..."
-                disabled={isLoading}
-                style={{
-                  flex: 1,
-                  padding: '10px 14px',
-                  borderRadius: '20px',
-                  border: '1px solid #E5E7EB',
-                  outline: 'none',
-                  fontSize: '14px',
-                  resize: 'none',
-                  height: '40px',
-                  maxHeight: '88px',
-                  fontFamily: 'inherit',
-                  backgroundColor: '#F9FAFB',
-                  boxSizing: 'border-box',
-                  transition: 'border-color 0.2s, box-shadow 0.2s, background-color 0.2s'
-                }}
-                onFocus={(e) => {
-                  const target = e.target as HTMLTextAreaElement;
-                  target.style.borderColor = primaryColor;
-                  target.style.boxShadow = `0 0 0 3px ${primaryColor}20`;
-                  target.style.backgroundColor = 'white';
-                }}
-                onBlur={(e) => {
-                  const target = e.target as HTMLTextAreaElement;
-                  target.style.borderColor = '#E5E7EB';
-                  target.style.boxShadow = 'none';
-                  target.style.backgroundColor = '#F9FAFB';
-                }}
+
+          {/* Footer */}
+          {!showPreChat && (
+            <div style={{ padding: '15px', background: 'white', borderTop: '1px solid #E5E7EB', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                style={{ display: 'none' }} 
+                onChange={handleFileUpload} 
               />
               <button 
-                onClick={sendMessage}
-                disabled={!input.trim() || isLoading}
-                style={{
-                  padding: '0',
-                  borderRadius: '50%',
-                  backgroundColor: input.trim() && !isLoading ? primaryColor : '#E5E7EB',
-                  color: 'white',
-                  border: 'none',
-                  cursor: input.trim() && !isLoading ? 'pointer' : 'not-allowed',
-                  width: '40px',
-                  height: '40px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  transition: 'all 0.2s',
-                  flexShrink: 0
-                }}
+                onClick={() => fileInputRef.current?.click()} 
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6B7280' }}
+                disabled={isUploading}
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="22" y1="2" x2="11" y2="13"></line>
-                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                </svg>
+                <AttachmentIcon />
+              </button>
+              <input 
+                style={{ flex: 1, border: 'none', outline: 'none', fontSize: '15px' }}
+                placeholder="Type a message..."
+                value={input}
+                onInput={(e) => setInput((e.target as HTMLInputElement).value)}
+                onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+              />
+              <button 
+                onClick={sendMessage} 
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: primaryColor }}
+                disabled={!input.trim()}
+              >
+                <SendIcon />
               </button>
             </div>
-          </div>
-          
-          {/* Footer */}
-          <div style={{ 
-            textAlign: 'center', 
-            padding: '10px', 
-            fontSize: '11px', 
-            color: '#9CA3AF',
-            backgroundColor: '#F9FAFB',
-            borderTop: '1px solid #F3F4F6'
-          }}>
-            Powered by <a href="https://faheemly.com" target="_blank" rel="noopener" style={{ color: primaryColor, textDecoration: 'none', fontWeight: '600' }}>Faheemly AI</a>
-          </div>
+          )}
         </div>
       )}
 
-      {/* Toggle Button */}
-      {!isOpen && (
-        <button
-          onClick={toggleOpen}
-          style={{
-            width: '64px',
-            height: '64px',
-            borderRadius: '32px',
-            background: `linear-gradient(145deg, ${primaryColor}, ${adjustColor(primaryColor, -20)})`,
-            color: 'white',
-            border: 'none',
-            boxShadow: '0 6px 24px rgba(0,0,0,0.18)',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s',
-            animation: 'fahimo-pop-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
-          }}
-          onMouseOver={(e) => {
-            e.currentTarget.style.transform = 'scale(1.1)';
-            e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.22)';
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.transform = 'scale(1)';
-            e.currentTarget.style.boxShadow = '0 6px 24px rgba(0,0,0,0.18)';
-          }}
-        >
-          <style>{`
-            @keyframes fahimo-pop-in {
-              from { transform: scale(0) rotate(-180deg); opacity: 0; }
-              to { transform: scale(1) rotate(0); opacity: 1; }
-            }
-          `}</style>
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-          </svg>
-          
-          {/* Unread indicator if there are messages */}
-          {messages.length > 0 && (
-            <div style={{
-              position: 'absolute',
-              top: '-2px',
-              right: '-2px',
-              width: '18px',
-              height: '18px',
-              backgroundColor: '#EF4444',
-              borderRadius: '50%',
-              border: '2px solid white',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '10px',
-              fontWeight: 'bold'
-            }}>
-              {messages.length > 9 ? '9+' : messages.length}
-            </div>
-          )}
-        </button>
-      )}
+      {/* Launcher */}
+      <div 
+        onClick={toggleOpen}
+        style={{
+          width: '60px',
+          height: '60px',
+          borderRadius: '30px',
+          background: primaryColor,
+          color: 'white',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          transition: 'transform 0.2s'
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
+        onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+      >
+        {isOpen ? <CloseIcon /> : <ChatIcon />}
+      </div>
     </div>
+  );
+}
+
+function adjustColor(color: string, amount: number) {
+  return '#' + color.replace(/^#/, '').replace(/../g, c => 
+    ('0' + Math.min(255, Math.max(0, parseInt(c, 16) + amount)).toString(16)).substr(-2)
   );
 }

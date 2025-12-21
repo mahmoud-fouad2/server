@@ -1,5 +1,5 @@
 import { render, h } from 'preact';
-import { App } from './App';
+import App from './App';
 
 export {};
 
@@ -93,6 +93,49 @@ declare global {
     const config = await res.json();
     if (!config || !config.widgetConfig) throw new Error('Invalid config');
     renderWidget(config);
+    trackVisitor(); // Track visit after config loads
+  }
+
+  async function trackVisitor() {
+    try {
+      // 1. Get/Create Fingerprint
+      let fingerprint = localStorage.getItem(`fahimo-fp-${businessId}`);
+      if (!fingerprint) {
+        fingerprint = 'v_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        localStorage.setItem(`fahimo-fp-${businessId}`, fingerprint);
+      }
+
+      // 2. Create Session
+      const sessionRes = await fetch(`${apiUrl}/api/visitor/session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          businessId,
+          fingerprint,
+          // Simple client-side detection
+          device: /Mobile|Android|iP(hone|od)|IEMobile|BlackBerry|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(navigator.userAgent) ? 'Mobile' : 'Desktop',
+          browser: navigator.userAgent, 
+          os: navigator.platform
+        })
+      });
+      
+      if (!sessionRes.ok) return;
+      const session = await sessionRes.json();
+
+      // 3. Track Page View
+      await fetch(`${apiUrl}/api/visitor/track`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: session.id,
+          url: window.location.href,
+          title: document.title
+        })
+      });
+
+    } catch (e) {
+      // Silent fail for analytics
+    }
   }
 
   function init() {

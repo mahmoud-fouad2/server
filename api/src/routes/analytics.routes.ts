@@ -11,5 +11,6 @@ router.get('/dashboard', analyticsController.getDashboard);
 router.get('/dashboard/:days', analyticsController.getDashboard);
 router.get('/realtime', analyticsController.getRealtime);
 router.get('/vector-stats', analyticsController.getVectorStats);
+router.get('/alerts', analyticsController.getAlerts);
 
 export default router;

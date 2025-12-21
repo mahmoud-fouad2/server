@@ -1,5 +1,8 @@
 import prisma from '../config/database.js';
 import { WidgetConfigSchema } from '../shared_local/index.js';
+import { VisitorService } from './visitor.service.js';
+
+const visitorService = new VisitorService();
 
 export class BusinessService {
   
@@ -22,12 +25,13 @@ export class BusinessService {
   }
 
   async getStats(businessId: string) {
-    const [conversations, messages, leads, tickets, knowledge] = await Promise.all([
+    const [conversations, messages, leads, tickets, knowledge, visitorStats] = await Promise.all([
       prisma.conversation.count({ where: { businessId } }),
       prisma.message.count({ where: { conversation: { businessId } } }),
       prisma.crmLead.count({ where: { businessId } }).catch(() => 0),
       prisma.ticket.count({ where: { businessId } }).catch(() => 0),
       prisma.knowledgeBase.count({ where: { businessId } }).catch(() => 0),
+      visitorService.getAnalytics(businessId, 30).catch(() => ({ totalSessions: 0, activeNow: 0, deviceStats: [], browserStats: [], topPages: [] })),
     ]);
 
     return {
@@ -36,6 +40,7 @@ export class BusinessService {
       leads,
       tickets,
       knowledge,
+      visitorStats,
     };
   }
 
