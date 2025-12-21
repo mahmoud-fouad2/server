@@ -87,7 +87,7 @@ export default function MobileNav({ activeTab, setActiveTab, userRole }) {
           : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-cosmic-800 active:bg-gray-200 dark:active:bg-cosmic-700'
       }`}
     >
-      <Icon size={22} />
+        {Icon ? <Icon size={22} /> : null}
       <span className="font-medium text-lg">{label}</span>
     </button>
   );

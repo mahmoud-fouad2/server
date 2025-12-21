@@ -1,6 +1,6 @@
 import axios from 'axios';
 import logger from '../utils/logger.js';
-import { PrismaClient } from '@prisma/client';
+import { Channel, PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -56,7 +56,7 @@ class TelegramService {
         where: {
           businessId,
           externalId: chatId,
-          channel: 'TELEGRAM',
+              channel: Channel.TELEGRAM,
         },
       });
 
@@ -65,7 +65,7 @@ class TelegramService {
           data: {
             businessId,
             externalId: chatId,
-            channel: 'TELEGRAM',
+                channel: Channel.TELEGRAM,
             status: 'ACTIVE',
           },
         });

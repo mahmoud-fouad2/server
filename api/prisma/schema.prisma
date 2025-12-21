@@ -215,7 +215,7 @@ model Conversation {
   businessId     String
   visitorId      String?
   // platform       String        @default("web")
-  channel        String?       @default("widget") // Added channel
+  channel        Channel?      @default(WIDGET)
   status         String        @default("active")
   externalId     String?       // For WhatsApp/Telegram
   agentId        String?       // Assigned agent
@@ -445,6 +445,12 @@ enum ActivityType {
   REALESTATE
   RESTAURANT
   OTHER
+}
+
+enum Channel {
+  WIDGET
+  WHATSAPP
+  TELEGRAM
 }
 
 enum BusinessStatus {

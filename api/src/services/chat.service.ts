@@ -3,6 +3,7 @@ import queueService from './queue.service.js';
 import cacheService from './cache.service.js';
 import agentHandoffService from './agent-handoff.service.js';
 import logger from '../utils/logger.js';
+import { Channel } from '@prisma/client';
 
 export class ChatService {
   
@@ -20,6 +21,7 @@ export class ChatService {
         data: {
           businessId,
           status: 'ACTIVE',
+          channel: Channel.WIDGET,
         },
         // Avoid selecting columns that may not exist yet in production DB
         select: {
@@ -31,8 +33,8 @@ export class ChatService {
       logger.info(`Created new conversation: ${conversationId}`);
 
       // Best-effort enrichment (non-blocking): these columns may not exist on older DBs.
-      const channel = metadata?.channel || 'widget';
-      if (channel || senderId) {
+      const channel = Channel.WIDGET;
+      if (senderId) {
         prisma.conversation
           .update({
             where: { id: conversationId },

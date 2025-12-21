@@ -29,8 +29,28 @@ END $$;
 
 -- Add missing Conversation fields
 ALTER TABLE "Conversation" ADD COLUMN IF NOT EXISTS "visitorId" TEXT;
-ALTER TABLE "Conversation" ADD COLUMN IF NOT EXISTS "channel" TEXT;
 ALTER TABLE "Conversation" ADD COLUMN IF NOT EXISTS "metadata" TEXT;
+
+-- Ensure Channel enum exists (if DB already has it, this is a no-op)
+DO $$
+BEGIN
+  PERFORM 1 FROM pg_type WHERE typname = 'Channel';
+  IF NOT FOUND THEN
+    CREATE TYPE "Channel" AS ENUM ('WIDGET', 'WHATSAPP', 'TELEGRAM');
+  END IF;
+END $$;
+
+-- Add channel column as enum when missing
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'Conversation' AND column_name = 'channel'
+  ) THEN
+    ALTER TABLE "Conversation" ADD COLUMN "channel" "Channel";
+  END IF;
+END $$;
 
 DO $$
 BEGIN
@@ -39,7 +59,7 @@ BEGIN
     FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'Conversation' AND column_name = 'channel'
   ) THEN
-    ALTER TABLE "Conversation" ALTER COLUMN "channel" SET DEFAULT 'widget';
+    ALTER TABLE "Conversation" ALTER COLUMN "channel" SET DEFAULT 'WIDGET';
   END IF;
 END $$;
 

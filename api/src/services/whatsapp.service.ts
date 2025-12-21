@@ -1,6 +1,6 @@
 import twilio from 'twilio';
 import logger from '../utils/logger.js';
-import { PrismaClient } from '@prisma/client';
+import { Channel, PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -82,7 +82,7 @@ class WhatsAppService {
         where: {
           businessId,
           externalId: phoneNumber,
-          channel: 'WHATSAPP',
+           channel: Channel.WHATSAPP,
         },
       });
 
@@ -91,7 +91,7 @@ class WhatsAppService {
           data: {
             businessId,
             externalId: phoneNumber,
-            channel: 'WHATSAPP',
+             channel: Channel.WHATSAPP,
             status: 'ACTIVE',
           },
         });

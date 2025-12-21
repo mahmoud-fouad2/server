@@ -50,10 +50,12 @@ const SidebarItem = ({
     {activeTab === id && (
       <div className="absolute left-0 top-0 bottom-0 w-1 bg-brand-500 rounded-r-full"></div>
     )}
-    <Icon
-      size={20}
-      className={`transition-transform duration-300 ${activeTab === id ? 'scale-110' : 'group-hover:scale-110'}`}
-    />
+    {Icon ? (
+      <Icon
+        size={20}
+        className={`transition-transform duration-300 ${activeTab === id ? 'scale-110' : 'group-hover:scale-110'}`}
+      />
+    ) : null}
     <span className="font-medium flex-1 text-right">{label}</span>
     {badge > 0 && (
       <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm animate-pulse">

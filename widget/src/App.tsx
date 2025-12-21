@@ -217,8 +217,9 @@ export function App({ config, variant, businessId, assetBaseUrl }: Props) {
   };
 
   const primaryColor = config.primaryColor || '#6366F1';
-  const soundUrl = assetBaseUrl 
-    ? `${assetBaseUrl}/sounds/notification.mp3` 
+  // Always load sound from the hosting page (frontend) to avoid cross-origin audio blocking.
+  const soundUrl = (typeof window !== 'undefined' && window.location?.origin)
+    ? `${window.location.origin}/sounds/notification.mp3`
     : '/sounds/notification.mp3';
 
   return (
@@ -254,29 +255,32 @@ export function App({ config, variant, businessId, assetBaseUrl }: Props) {
                 transform: scale(0.3) translateY(30px); 
               }
               60% { 
-                opacity: 1; 
+                boxShadow: '0 24px 80px rgba(0,0,0,0.18), 0 0 0 1px rgba(15,23,42,0.06)',
                 transform: scale(1.08) translateY(0); 
               }
               100% { 
                 transform: scale(1) translateY(0); 
-              }
+                animation: 'fahimo-open 360ms cubic-bezier(0.22, 1, 0.36, 1)',
             }
             @keyframes fahimo-fade-in {
               from { opacity: 0; transform: translateY(8px); }
-              to { opacity: 1; transform: translateY(0); }
-            }
-            @keyframes fahimo-pulse {
-              0%, 100% { opacity: 0.4; }
-              50% { opacity: 1; }
-            }
-            @keyframes fahimo-star-pop {
-              0% { transform: scale(1); }
-              50% { transform: scale(1.3); }
-              100% { transform: scale(1); }
-            }
-            .fahimo-scroll::-webkit-scrollbar { width: 5px; }
-            .fahimo-scroll::-webkit-scrollbar-track { background: transparent; }
-            .fahimo-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
+                  @keyframes fahimo-open {
+                    0% {
+                      opacity: 0;
+                      transform: translate3d(0, 16px, 0) scale(0.92);
+                      filter: blur(2px);
+                    }
+                    60% {
+                      opacity: 1;
+                      transform: translate3d(0, 0, 0) scale(1.01);
+                      filter: blur(0);
+                    }
+                    100% {
+                      opacity: 1;
+                      transform: translate3d(0, 0, 0) scale(1);
+                      filter: blur(0);
+                    }
+                  }
             .fahimo-msg { animation: fahimo-fade-in 0.3s ease-out forwards; }
             .fahimo-typing span { animation: fahimo-pulse 1.4s infinite; }
             .fahimo-typing span:nth-child(2) { animation-delay: 0.2s; }
@@ -501,7 +505,8 @@ export function App({ config, variant, businessId, assetBaseUrl }: Props) {
                   color: '#9CA3AF', 
                   marginTop: '4px',
                   textAlign: msg.sender === 'user' ? 'right' : 'left',
-                  paddingX: '4px'
+                  paddingLeft: '4px',
+                  paddingRight: '4px',
                 }}>
                   {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </div>
