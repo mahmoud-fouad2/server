@@ -21,7 +21,7 @@ model User {
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
   employerId       String?
-  currentBusinessId String?   // Session-persisted context
+  // currentBusinessId String?   // Session-persisted context - Temporarily disabled for production compatibility
   roles            Json?      // { businessId: ['admin', 'viewer'] }
   auditLogs        AuditLog[]
   businesses       Business[]
@@ -35,7 +35,7 @@ model User {
   assignedLeads    CrmLead[]        @relation("AssignedTo")
   crmLeadNotes     CrmLeadNote[]    @relation("UserCrmNotes")
 
-  @@index([currentBusinessId])
+  // @@index([currentBusinessId])
 }
 
 model Business {
