@@ -234,7 +234,7 @@ export default function StatsOverview({
       try {
         const response = await apiCall('api/chat/conversations');
         const list = Array.isArray(response) ? response : (Array.isArray(response.data) ? response.data : []);
-        setTopConversations((list || []).slice(0, 3));
+        setTopConversations(Array.isArray(list) ? list : []);
       } catch (e) {
         // If unauthorized, clear token and optionally redirect to login
         if (e.message && e.message.toLowerCase().includes('unauthorized')) {
@@ -298,12 +298,13 @@ export default function StatsOverview({
   };
 
   const copyWidgetCode = () => {
-    const widgetSrc = API_CONFIG.WIDGET_SCRIPT || `${API_CONFIG.BASE_URL}/fahimo-widget.js`;
+    const version = `v=${new Date().getTime()}`;
+    const widgetSrc = API_CONFIG.WIDGET_SCRIPT ? `${API_CONFIG.WIDGET_SCRIPT}?${version}` : `${API_CONFIG.BASE_URL}/fahimo-widget.js?${version}`;
     const code = `<script src="${widgetSrc}" data-business-id="${user?.businessId}"></script>`;
     copyToClipboard(code);
   };
 
-  const widgetSrc = API_CONFIG.WIDGET_SCRIPT || `${API_CONFIG.BASE_URL}/fahimo-widget.js`;
+  const widgetSrc = `${API_CONFIG.WIDGET_SCRIPT || `${API_CONFIG.BASE_URL}/fahimo-widget.js`}?v=${new Date().getTime()}`;
 
   // Client-side CSV export of visible chart data
   const exportVisibleDataCSV = () => {
