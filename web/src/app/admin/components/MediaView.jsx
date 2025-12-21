@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { adminApi } from '@/lib/api';
+import { Loader2 } from 'lucide-react';
 
 export default function MediaView() {
   const [files, setFiles] = useState([]);
@@ -29,7 +30,11 @@ export default function MediaView() {
     }
   };
 
-  if (loading) return <div>جارِ التحميل...</div>;
+  if (loading) return (
+    <div className="flex justify-center items-center p-8">
+      <Loader2 className="w-8 h-8 animate-spin text-gray-500" />
+    </div>
+  );
 
   return (
     <div className="space-y-4">

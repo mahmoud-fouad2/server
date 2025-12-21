@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { adminApi, apiCall } from '@/lib/api'
+import { Loader2 } from 'lucide-react'
 
 export default function AdminCrmView() {
   const [leads, setLeads] = useState([])
@@ -137,7 +138,9 @@ export default function AdminCrmView() {
         </div>
 
         {loading ? (
-          <div className="p-12 text-center">جاري التحميل...</div>
+          <div className="p-12 flex justify-center items-center">
+            <Loader2 className="w-8 h-8 animate-spin text-brand-600" />
+          </div>
         ) : leads.length === 0 ? (
           <div className="p-12 text-center text-gray-500">لا توجد عملاء محتملين</div>
         ) : (

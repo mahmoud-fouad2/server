@@ -174,40 +174,23 @@ export default function AdminDashboard() {
   };
 
   // 3. Effects
-  // SECURITY: Check authentication and admin role
+  // Data Fetching (Auth is handled by AdminLayout)
   useEffect(() => {
-    const checkAuth = async () => {
+    const initData = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const userStr = localStorage.getItem('user');
-
-        if (!token || !userStr) {
-          router.push('/admin/login');
-          return;
-        }
-
-        const user = JSON.parse(userStr);
-        const role = user.role?.toUpperCase();
-
-        // Check if user has admin role
-        if (role !== 'ADMIN' && role !== 'SUPERADMIN') {
-          router.push('/dashboard');
-          return;
-        }
-
-        setAuthorized(true);
-
+        setAuthorized(true); // Layout guarantees auth
+        
         // Fetch Data
         await Promise.all([fetchStats(), fetchUsers(), fetchTicketCount()]);
         setLoading(false);
       } catch (error) {
-        console.error('Auth check failed:', error);
-        router.push('/admin/login');
+        console.error('Failed to initialize admin dashboard:', error);
+        setLoading(false);
       }
     };
 
-    checkAuth();
-  }, [router]);
+    initData();
+  }, []);
 
   useEffect(() => {
     if (!authorized) return; // Don't fetch if not authorized
