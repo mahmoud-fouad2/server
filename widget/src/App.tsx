@@ -217,6 +217,9 @@ export function App({ config, variant, businessId, assetBaseUrl }: Props) {
   };
 
   const primaryColor = config.primaryColor || '#6366F1';
+  const soundUrl = assetBaseUrl 
+    ? `${assetBaseUrl}/sounds/notification.mp3` 
+    : '/sounds/notification.mp3';
 
   return (
     <div style={{ 
@@ -226,10 +229,8 @@ export function App({ config, variant, businessId, assetBaseUrl }: Props) {
       zIndex: 2147483647, 
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' 
     }}>
-      {/* Hidden audio element - uses data URI for sound to avoid CSP issues */}
-      <audio ref={audioRef} preload="auto">
-        <source src="data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU" type="audio/wav" />
-      </audio>
+      {/* Hidden audio element - uses local sound file */}
+      <audio ref={audioRef} src={soundUrl} preload="auto" />
       
       {/* Chat Window */}
       {isOpen && (

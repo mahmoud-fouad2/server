@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
+  publicDir: 'public',
   build: {
     lib: {
       entry: 'src/loader.ts',
@@ -9,6 +10,7 @@ export default defineConfig({
       formats: ['iife']
     },
     outDir: 'dist',
-    emptyOutDir: true
+    emptyOutDir: true,
+    copyPublicDir: true
   }
 });
