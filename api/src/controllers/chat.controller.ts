@@ -49,6 +49,8 @@ export class ChatController {
       }
 
       // Origin Security Check
+      /* 
+      // Temporarily disabled until database migration for 'allowedOrigins' is applied on production
       const origin = req.headers.origin;
       if (origin) {
         const business = await prisma.business.findUnique({
@@ -66,6 +68,7 @@ export class ChatController {
            }
         }
       }
+      */
 
       const message = await chatService.saveMessage(businessId, conversationId, content, senderType || 'USER');
       res.json(message);

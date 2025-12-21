@@ -54,6 +54,9 @@ const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 3001;
 
+// Trust Proxy for Render/Load Balancers
+app.set('trust proxy', 1);
+
 // Initialize Socket.IO
 new SocketService(server);
 
