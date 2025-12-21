@@ -65,9 +65,16 @@ export const api = {
     updateProfile: (data: any) => fetchAPI('/auth/profile', { method: 'PATCH', body: JSON.stringify(data) }),
   },
   business: {
-    get: () => fetchAPI('/business'),
-    update: (data: any) => fetchAPI('/business', { method: 'PATCH', body: JSON.stringify(data) }),
-    clearCache: () => fetchAPI('/business/clear-cache', { method: 'POST' }),
+    get: () => fetchAPI('/business/'),
+    update: (data: any) => fetchAPI('/business/', { method: 'PATCH', body: JSON.stringify(data) }),
+    clearCache: () => fetchAPI('/business/cache/invalidate', { method: 'POST' }),
+    stats: () => fetchAPI('/business/stats'),
+    settings: () => fetchAPI('/business/settings'),
+    updateSettings: (data: any) => fetchAPI('/business/settings', { method: 'PUT', body: JSON.stringify(data) }),
+    conversations: (params?: any) => {
+      const query = params ? `?${new URLSearchParams(params).toString()}` : '';
+      return fetchAPI(`/business/conversations${query}`);
+    },
   },
   widget: {
     getConfig: (businessId: string) => fetchAPI(`/widget/config/${businessId}`),

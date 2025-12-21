@@ -31,8 +31,14 @@ export function useDashboardStats() {
     try {
       setLoading(true);
       setError(null);
-      const data = await api.analytics.dashboard();
-      setStats(data);
+      // Try business stats first, fallback to analytics
+      try {
+        const data = await api.business.stats();
+        setStats(data);
+      } catch {
+        const data = await api.analytics.dashboard();
+        setStats(data);
+      }
     } catch (err: any) {
       console.error('Failed to fetch dashboard stats:', err);
       setError(err.message || 'Failed to load statistics');
@@ -46,6 +52,45 @@ export function useDashboardStats() {
   }, [fetchStats]);
 
   return { stats, loading, error, refetch: fetchStats };
+}
+
+// ==========================================
+// useBusiness - Fetch business details (Enhanced)
+// ==========================================
+export function useBusiness() {
+  const [business, setBusiness] = useState<Business | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchBusiness = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await api.business.get();
+      setBusiness(data);
+    } catch (err: any) {
+      console.error('Failed to fetch business:', err);
+      setError(err.message || 'Failed to load business details');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const updateBusiness = useCallback(async (updates: Partial<Business>) => {
+    try {
+      await api.business.update(updates);
+      await fetchBusiness();
+    } catch (err: any) {
+      console.error('Failed to update business:', err);
+      throw err;
+    }
+  }, [fetchBusiness]);
+
+  useEffect(() => {
+    fetchBusiness();
+  }, [fetchBusiness]);
+
+  return { business, loading, error, refetch: fetchBusiness, updateBusiness };
 }
 
 // ==========================================
@@ -322,41 +367,3 @@ export function useCRM() {
   return { leads, loading, error, refetch: fetchLeads, createLead, updateLead };
 }
 
-// ==========================================
-// useBusiness - Manage business settings
-// ==========================================
-export function useBusiness() {
-  const [business, setBusiness] = useState<Business | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchBusiness = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await api.business.get();
-      setBusiness(data);
-    } catch (err: any) {
-      console.error('Failed to fetch business:', err);
-      setError(err.message || 'Failed to load business data');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const updateBusiness = useCallback(async (updates: Partial<Business>) => {
-    try {
-      await api.business.update(updates);
-      await fetchBusiness();
-    } catch (err: any) {
-      console.error('Failed to update business:', err);
-      throw err;
-    }
-  }, [fetchBusiness]);
-
-  useEffect(() => {
-    fetchBusiness();
-  }, [fetchBusiness]);
-
-  return { business, loading, error, refetch: fetchBusiness, updateBusiness };
-}

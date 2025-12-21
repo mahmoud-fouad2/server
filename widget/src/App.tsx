@@ -67,16 +67,16 @@ interface VisitorInfo {
   phone: string;
 }
 
-export default function App() {
+export default function App(props?: { preChatFormEnabled?: boolean; config?: any; businessId?: string; variant?: string; businessName?: string; assetBaseUrl?: string }) {
   // State
   const [isOpen, setIsOpen] = useState(false);
-  const [config, setConfig] = useState<WidgetConfig>({ businessId: '' });
+  const [config, setConfig] = useState<WidgetConfig>(props?.config || { businessId: props?.businessId || '' });
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [visitorInfo, setVisitorInfo] = useState<VisitorInfo>({ name: '', email: '', phone: '' });
-  const [showPreChat, setShowPreChat] = useState(true);
+  const [showPreChat, setShowPreChat] = useState(props?.preChatFormEnabled === true);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [showRating, setShowRating] = useState(false);
   const [rating, setRating] = useState(0);
