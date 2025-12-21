@@ -67,6 +67,7 @@ export const api = {
   business: {
     get: () => fetchAPI('/business'),
     update: (data: any) => fetchAPI('/business', { method: 'PATCH', body: JSON.stringify(data) }),
+    clearCache: () => fetchAPI('/business/clear-cache', { method: 'POST' }),
   },
   widget: {
     getConfig: (businessId: string) => fetchAPI(`/widget/config/${businessId}`),
@@ -89,6 +90,7 @@ export const api = {
       const query = status ? `?status=${status}` : '';
       return fetchAPI(`/chat/handover-requests${query}`);
     },
+    acceptHandover: (id: string) => fetchAPI(`/chat/handover/${id}/accept`, { method: 'POST' }),
   },
   visitor: {
     createSession: (data: any) => fetchAPI('/visitor/session', { method: 'POST', body: JSON.stringify(data) }),

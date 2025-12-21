@@ -205,14 +205,13 @@ function DashboardContent() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="bg-gradient-to-r from-brand-500/20 to-brand-500/5 p-6 text-center relative">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute top-2 right-2"
+                <button
+                  className="absolute top-2 right-2 p-2 rounded-md hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
                   onClick={() => setShowProAlert(false)}
+                  aria-label="إغلاق"
                 >
                   <X className="w-4 h-4" />
-                </Button>
+                </button>
                 <div className="w-16 h-16 bg-brand-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Crown className="w-8 h-8 text-brand-500" />
                 </div>
@@ -234,15 +233,15 @@ function DashboardContent() {
                   <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
                   <span>دعم فني مباشر 24/7</span>
                 </div>
-                <Button
-                  className="w-full mt-4"
+                <button
+                  className="w-full mt-4 bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-md transition-colors"
                   onClick={() => {
                     setActiveTab('subscription');
                     setShowProAlert(false);
                   }}
                 >
                   ترقية الباقة الآن
-                </Button>
+                </button>
               </div>
             </motion.div>
           </motion.div>
@@ -304,7 +303,11 @@ function DashboardContent() {
 
               <div className="flex items-center gap-2 sm:gap-4">
                 <button
-                  onClick={() => setIsDark(!isDark)}
+                  onClick={() => {
+                    if (typeof setIsDark === 'function') {
+                      setIsDark(!isDark);
+                    }
+                  }}
                   data-tour="theme-toggle"
                   aria-label="Toggle theme"
                   className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-brand-600/10 dark:bg-white/5 flex items-center justify-center hover:bg-brand-600/20 transition-colors"
