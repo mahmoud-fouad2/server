@@ -31,7 +31,7 @@ export class VisitorController {
         device: req.body.device,
       });
 
-      res.json({ success: true, sessionId: session.id, data: session });
+      res.json({ id: session.id, sessionId: session.id, success: true, data: session });
     } catch (error) {
       console.error('Visitor Session Error:', error);
       res.status(500).json({ 

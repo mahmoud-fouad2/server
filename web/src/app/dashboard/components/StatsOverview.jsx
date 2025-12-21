@@ -233,8 +233,8 @@ export default function StatsOverview({
     (async () => {
       try {
         const response = await apiCall('api/chat/conversations');
-        const list = Array.isArray(response) ? response : (response.data || response || []);
-        setTopConversations(list.slice(0, 3));
+        const list = Array.isArray(response) ? response : (Array.isArray(response.data) ? response.data : []);
+        setTopConversations((list || []).slice(0, 3));
       } catch (e) {
         // If unauthorized, clear token and optionally redirect to login
         if (e.message && e.message.toLowerCase().includes('unauthorized')) {
@@ -247,7 +247,7 @@ export default function StatsOverview({
     (async () => {
       try {
         const response = await apiCall('api/chat/handover-requests');
-        const list = Array.isArray(response) ? response : (response.data || response || []);
+        const list = Array.isArray(response) ? response : (Array.isArray(response.data) ? response.data : []);
         setHandoverCount(list.length || 0);
       } catch (e) {
         if (e.message && e.message.toLowerCase().includes('unauthorized')) {

@@ -388,11 +388,11 @@ export default function App(props?: { preChatFormEnabled?: boolean; config?: any
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {config.botIcon ? <img src={config.botIcon} style={{width: '100%', height: '100%', borderRadius: '50%'}} /> : <ChatIcon />}
+                {config.botIcon ? <img src={config.botIcon} style={{width: '100%', height: '100%', borderRadius: '50%'}} alt="Bot" /> : <ChatIcon />}
               </div>
               <div>
-                <div style={{ fontWeight: 600, fontSize: '16px' }}>{config.botName || 'Support Chat'}</div>
-                <div style={{ fontSize: '12px', opacity: 0.9 }}>We reply immediately</div>
+                <div style={{ fontWeight: 600, fontSize: '16px' }}>{config.botName || 'دعم فني'}</div>
+                <div style={{ fontSize: '12px', opacity: 0.9 }}>نرد عليك فوراً</div>
               </div>
             </div>
             <div onClick={() => setIsOpen(false)} style={{ cursor: 'pointer', opacity: 0.8 }}>
@@ -401,32 +401,32 @@ export default function App(props?: { preChatFormEnabled?: boolean; config?: any
           </div>
 
           {/* Body */}
-          <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', background: '#F9FAFB' }}>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', background: '#F9FAFB', direction: 'rtl' }}>
             {showPreChat ? (
               <div style={{ padding: '20px' }}>
-                <h3 style={{ textAlign: 'center', marginBottom: '20px', color: '#374151' }}>Welcome! Please introduce yourself.</h3>
+                <h3 style={{ textAlign: 'center', marginBottom: '20px', color: '#374151' }}>أهلاً! من فضلك عرّفنا بنفسك</h3>
                 <form onSubmit={handlePreChatSubmit}>
                   <div style={{ marginBottom: '15px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', color: '#4B5563' }}>Name</label>
+                    <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', color: '#4B5563' }}>الاسم</label>
                     <input 
                       required 
-                      style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #D1D5DB' }}
+                      style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #D1D5DB', textAlign: 'right' }}
                       value={visitorInfo.name}
                       onInput={(e) => setVisitorInfo({...visitorInfo, name: (e.target as HTMLInputElement).value})}
                     />
                   </div>
                   <div style={{ marginBottom: '15px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', color: '#4B5563' }}>Email</label>
+                    <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', color: '#4B5563' }}>البريد الإلكتروني</label>
                     <input 
                       type="email" 
                       required 
-                      style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #D1D5DB' }}
+                      style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #D1D5DB', direction: 'ltr', textAlign: 'left' }}
                       value={visitorInfo.email}
                       onInput={(e) => setVisitorInfo({...visitorInfo, email: (e.target as HTMLInputElement).value})}
                     />
                   </div>
-                  <button type="submit" style={{ width: '100%', padding: '12px', background: primaryColor, color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>
-                    Start Chat
+                  <button type="submit" disabled={isLoading} style={{ width: '100%', padding: '12px', background: primaryColor, color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', opacity: isLoading ? 0.7 : 1 }}>
+                    {isLoading ? 'جاري البدء...' : 'ابدأ المحادثة'}
                   </button>
                 </form>
               </div>
@@ -447,7 +447,7 @@ export default function App(props?: { preChatFormEnabled?: boolean; config?: any
                 {/* Rating Prompt */}
                 {showRating && !ratingSubmitted && (
                   <div style={{ marginTop: '20px', padding: '15px', background: 'white', borderRadius: '12px', textAlign: 'center', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
-                    <div style={{ marginBottom: '10px', fontSize: '14px', color: '#4B5563' }}>How was your experience?</div>
+                    <div style={{ marginBottom: '10px', fontSize: '14px', color: '#4B5563' }}>كيف كانت تجربتك؟</div>
                     <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
                       {[1, 2, 3, 4, 5].map(star => (
                         <StarIcon key={star} filled={rating >= star} onClick={() => handleRating(star)} />
@@ -476,11 +476,16 @@ export default function App(props?: { preChatFormEnabled?: boolean; config?: any
                 <AttachmentIcon />
               </button>
               <input 
-                style={{ flex: 1, border: 'none', outline: 'none', fontSize: '15px' }}
-                placeholder="Type a message..."
+                style={{ flex: 1, border: 'none', outline: 'none', fontSize: '15px', textAlign: 'right' }}
+                placeholder="اكتب رسالتك..."
                 value={input}
                 onInput={(e) => setInput((e.target as HTMLInputElement).value)}
-                onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                  }
+                }}
               />
               <button 
                 onClick={sendMessage} 
