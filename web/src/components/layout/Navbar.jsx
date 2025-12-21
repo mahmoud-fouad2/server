@@ -54,7 +54,7 @@ export default function Navbar() {
     <>
       {/* Navigation */}
       <nav
-        className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? 'h-20 shadow-lg' : 'h-24'} backdrop-blur-sm border-b ${isDark ? 'bg-cosmic-950/95 border-white/5' : 'bg-white/95 border-gray-200'}`}
+        className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? 'h-20 shadow-lg' : 'h-24'} backdrop-blur-sm border-b ${isDark ? 'bg-cosmic-950/95 border-white/5' : 'bg-[#f8f8fa]/95 border-gray-200'}`}
       >
         <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
           {/* Logo */}

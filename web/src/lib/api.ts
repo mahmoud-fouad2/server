@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://fahimo-api.onrender.com/api';
+const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'https://fahimo-api.onrender.com').replace(/\/$/, '') + '/api';
 
 export async function apiCall(endpoint: string, options: RequestInit = {}) {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
