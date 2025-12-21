@@ -112,7 +112,7 @@ export class SocketService {
         data: {
             conversationId: targetConversationId,
             content,
-            sender: senderType || 'visitor',
+            sender: senderType || 'user',
             type: 'text'
         }
       });
@@ -121,12 +121,12 @@ export class SocketService {
       this.io.to(targetConversationId).emit('receive_message', {
         conversationId: targetConversationId,
         content,
-        sender: senderType || 'visitor',
+        sender: senderType || 'user',
         timestamp: new Date()
       });
 
       // 3. Generate AI Response (if message is from visitor)
-      if (senderType === 'visitor') {
+      if (senderType === 'user') {
           // Extract country from socket handshake (set by geo middleware if available)
           const country = (socket as any).handshake?.headers?.['x-geo-country'] || undefined;
           
@@ -147,7 +147,7 @@ export class SocketService {
             data: {
                 conversationId: targetConversationId,
                 content: responseText,
-                sender: 'bot',
+                sender: 'agent',
                 type: 'text'
             }
           });
@@ -156,7 +156,7 @@ export class SocketService {
           this.io.to(targetConversationId).emit('receive_message', {
             conversationId: targetConversationId,
             content: responseText,
-            sender: 'bot',
+            sender: 'agent',
             timestamp: new Date()
           });
       }

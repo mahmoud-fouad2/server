@@ -5,6 +5,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
+    "prepare": "npm run build",
     "watch": "tsc -w"
   },
   "devDependencies": {
