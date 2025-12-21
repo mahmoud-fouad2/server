@@ -43,3 +43,5 @@ export interface SocketMessage {
   conversationId?: string;
 }
 
+// Export validation schemas from validation.dto.ts
+export * from './validation.dto.js';

@@ -37,13 +37,20 @@ export const sanitizeInput = (req: Request, res: Response, next: NextFunction) =
 function sanitizeObject(obj: any): void {
   for (const key in obj) {
     if (typeof obj[key] === 'string') {
-      // Remove potential XSS
-      obj[key] = sanitizeHtml(obj[key], sanitizeOptions);
+      // Only sanitize HTML for known content fields to prevent breaking JSON, emails, URLs
+      // Skip sanitization for: passwords, tokens, emails, URLs, JSON strings, base64, businessId
+      const skipSanitizationKeys = ['password', 'token', 'apiKey', 'secret', 'email', 'url', 
+        'businessId', 'conversationId', 'visitorId', 'id', 'userId', 'base64', 'data', 'config',
+        'phoneNumber', 'phone', 'accessToken', 'refreshToken', 'verifyToken', 'botToken'];
       
-      // Remove SQL injection attempts
-      obj[key] = obj[key].replace(/('|(--)|;|(\*)|(%)|(<)|(>)|(\+)|(=))/gi, '');
+      const shouldSkip = skipSanitizationKeys.some(skipKey => key.toLowerCase().includes(skipKey.toLowerCase()));
       
-      // Trim whitespace
+      if (!shouldSkip) {
+        // Remove potential XSS for content fields only
+        obj[key] = sanitizeHtml(obj[key], sanitizeOptions);
+      }
+      
+      // Always trim whitespace
       obj[key] = obj[key].trim();
     } else if (typeof obj[key] === 'object' && obj[key] !== null) {
       sanitizeObject(obj[key]);

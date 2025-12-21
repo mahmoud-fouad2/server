@@ -57,12 +57,8 @@ export class ChatController {
 
   async sendMessage(req: Request, res: Response) {
     try {
-      const { businessId, conversationId, content, senderType, visitorId } = req.body;
-      
-      // Basic validation
-      if (!businessId || !content) {
-        return res.status(400).json({ error: 'Missing required fields: businessId and content are required' });
-      }
+      const { SendMessageSchema } = await import('@fahimo/shared');
+      const { businessId, conversationId, content, senderType, visitorId } = SendMessageSchema.parse(req.body);
 
       // 1. Save user message (creates conversation if needed)
       const userMessage = await chatService.saveMessage(
@@ -176,11 +172,8 @@ export class ChatController {
 
   async rateConversation(req: Request, res: Response) {
     try {
-      const { businessId, conversationId, rating } = req.body;
-      
-      if (!conversationId || !rating || rating < 1 || rating > 5) {
-        return res.status(400).json({ error: 'Valid conversationId and rating (1-5) required' });
-      }
+      const { RateConversationSchema } = await import('@fahimo/shared');
+      const { conversationId, rating } = RateConversationSchema.parse(req.body);
 
       // Update conversation with rating
       await prisma.conversation.update({

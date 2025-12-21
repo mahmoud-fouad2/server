@@ -1,4 +1,3 @@
-import { h, Fragment } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { io, Socket } from 'socket.io-client';
 
@@ -87,7 +86,7 @@ export default function App(props?: { preChatFormEnabled?: boolean; config?: any
   const audioRef = useRef<HTMLAudioElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const API_URL = import.meta.env.VITE_API_URL || 'https://fahimo-api.onrender.com';
+  const API_URL = (import.meta as any).env?.VITE_API_URL || 'https://fahimo-api.onrender.com';
   const storageKey = `fahimo_chat_${config.businessId}`;
 
   // Initialization

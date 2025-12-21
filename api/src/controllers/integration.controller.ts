@@ -21,8 +21,10 @@ export class IntegrationController {
   async updateTelegram(req: AuthRequest, res: Response) {
     try {
       const businessId = req.user!.businessId;
-      const { botToken } = req.body;
       if (!businessId) return res.status(400).json({ error: 'Business ID required' });
+      
+      const { TelegramIntegrationSchema } = await import('@fahimo/shared');
+      const { botToken } = TelegramIntegrationSchema.parse(req.body);
 
       const result = await integrationService.updateTelegram(businessId, { botToken });
       res.json(result);
@@ -35,8 +37,10 @@ export class IntegrationController {
   async updateWhatsApp(req: AuthRequest, res: Response) {
     try {
       const businessId = req.user!.businessId;
-      const { phoneNumberId, accessToken, verifyToken } = req.body;
       if (!businessId) return res.status(400).json({ error: 'Business ID required' });
+      
+      const { WhatsAppIntegrationSchema } = await import('@fahimo/shared');
+      const { phoneNumberId, accessToken, verifyToken } = WhatsAppIntegrationSchema.parse(req.body);
 
       const result = await integrationService.updateWhatsApp(businessId, { phoneNumberId, accessToken, verifyToken });
       res.json(result);

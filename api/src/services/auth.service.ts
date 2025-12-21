@@ -88,7 +88,10 @@ export class AuthService {
   }
 
   private generateToken(userId: string, businessId: string, userData?: any) {
-    const secret = process.env.JWT_SECRET || 'your-secret-key';
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      throw new Error('CRITICAL: JWT_SECRET environment variable is not set. Cannot generate authentication tokens.');
+    }
     const token = jwt.sign({ id: userId, businessId }, secret, { expiresIn: '7d' });
     return { token, user: userData };
   }

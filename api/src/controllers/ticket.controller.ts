@@ -7,7 +7,8 @@ const ticketService = new TicketService();
 export class TicketController {
   async create(req: AuthRequest, res: Response) {
     try {
-      const { subject, message, priority } = req.body;
+      const { CreateTicketSchema } = await import('@fahimo/shared');
+      const { subject, message, priority } = CreateTicketSchema.parse(req.body);
       const userId = req.user!.userId;
       const businessId = req.user!.businessId;
 

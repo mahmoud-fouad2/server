@@ -23,11 +23,12 @@ export class TeamController {
   async create(req: AuthRequest, res: Response) {
     try {
       const businessId = req.user!.businessId;
-      const { name, email, password, role } = req.body;
-
       if (!businessId) {
         return res.status(400).json({ error: 'Business ID required' });
       }
+      
+      const { AddTeamMemberSchema } = await import('@fahimo/shared');
+      const { name, email, password, role } = AddTeamMemberSchema.parse(req.body);
 
       const employee = await teamService.addEmployee(businessId, { name, email, password, role });
       res.status(201).json(employee);
