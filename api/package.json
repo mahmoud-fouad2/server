@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/index.js",
-    "start:prod": "npx prisma migrate deploy && node dist/scripts/seed.js && node dist/index.js",
+    "start": "node dist/scripts/start.js",
+    "start:prod": "node dist/scripts/start.js",
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "worker": "node dist/worker.js",
     "worker:dev": "ts-node-dev --respawn --transpile-only src/worker.ts",
@@ -15,6 +15,7 @@
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
     "db:seed": "ts-node src/scripts/seed.ts",
+    "seed:prod": "node dist/scripts/seed.js",
     "lint": "eslint src --ext .ts",
     "format": "prettier --write \"src/**/*.ts\"",
     "test": "jest",

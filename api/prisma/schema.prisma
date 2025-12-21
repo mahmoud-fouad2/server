@@ -433,13 +433,17 @@ model CrmLeadNote {
 enum Role {
   SUPERADMIN
   ADMIN
+  BUSINESS_OWNER
   CLIENT
   EMPLOYEE
 }
 
 enum ActivityType {
   ECOMMERCE
-  SERVICE
+  HEALTHCARE
+  EDUCATION
+  REALESTATE
+  RESTAURANT
   OTHER
 }
 

@@ -531,18 +531,18 @@ export function App({ config, variant, businessId, assetBaseUrl }: Props) {
           
           {/* Input Area */}
           <div style={{ 
-            padding: '16px', 
+            padding: '12px', 
             borderTop: '1px solid #F3F4F6', 
             backgroundColor: 'white'
           }}>
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
               <textarea
                 value={input}
                 onInput={(e) => {
                   const target = e.target as HTMLTextAreaElement;
                   setInput(target.value);
                   target.style.height = 'auto';
-                  target.style.height = Math.min(target.scrollHeight, 100) + 'px';
+                  target.style.height = Math.min(target.scrollHeight, 88) + 'px';
                 }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
@@ -554,16 +554,17 @@ export function App({ config, variant, businessId, assetBaseUrl }: Props) {
                 disabled={isLoading}
                 style={{
                   flex: 1,
-                  padding: '12px 16px',
-                  borderRadius: '24px',
+                  padding: '10px 14px',
+                  borderRadius: '20px',
                   border: '1px solid #E5E7EB',
                   outline: 'none',
                   fontSize: '14px',
                   resize: 'none',
-                  height: '46px',
-                  maxHeight: '100px',
+                  height: '40px',
+                  maxHeight: '88px',
                   fontFamily: 'inherit',
                   backgroundColor: '#F9FAFB',
+                  boxSizing: 'border-box',
                   transition: 'border-color 0.2s, box-shadow 0.2s, background-color 0.2s'
                 }}
                 onFocus={(e) => {
@@ -583,14 +584,14 @@ export function App({ config, variant, businessId, assetBaseUrl }: Props) {
                 onClick={sendMessage}
                 disabled={!input.trim() || isLoading}
                 style={{
-                  padding: '12px',
+                  padding: '0',
                   borderRadius: '50%',
                   backgroundColor: input.trim() && !isLoading ? primaryColor : '#E5E7EB',
                   color: 'white',
                   border: 'none',
                   cursor: input.trim() && !isLoading ? 'pointer' : 'not-allowed',
-                  width: '46px',
-                  height: '46px',
+                  width: '40px',
+                  height: '40px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',

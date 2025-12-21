@@ -66,7 +66,7 @@ async function main() {
       id: businessId,
       userId: premiumUser.id,
       name: 'Faheemly Official',
-      activityType: ActivityType.SERVICE,
+      activityType: ActivityType.OTHER,
       // industry: 'Technology',
       language: 'ar',
       status: BusinessStatus.ACTIVE,

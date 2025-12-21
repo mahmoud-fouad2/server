@@ -169,15 +169,13 @@ export class ChatController {
       }
 
       // Update conversation with rating
-      const conversation = await prisma.conversation.update({
+      await prisma.conversation.update({
         where: { id: conversationId },
         data: {
-          metadata: JSON.stringify({ 
-            ...JSON.parse((await prisma.conversation.findUnique({ where: { id: conversationId } }))?.metadata as string || '{}'),
-            rating,
-            ratedAt: new Date().toISOString()
-          })
-        }
+          agentRating: rating,
+        },
+        // Avoid selecting columns that may not exist yet in production DB
+        select: { id: true },
       });
 
       res.json({ success: true, rating, conversationId });

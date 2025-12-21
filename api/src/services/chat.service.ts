@@ -20,12 +20,30 @@ export class ChatService {
         data: {
           businessId,
           status: 'ACTIVE',
-          channel: metadata?.channel || 'widget',
-        }
+        },
+        // Avoid selecting columns that may not exist yet in production DB
+        select: {
+          id: true,
+        },
       });
       conversationId = conversation.id;
       
       logger.info(`Created new conversation: ${conversationId}`);
+
+      // Best-effort enrichment (non-blocking): these columns may not exist on older DBs.
+      const channel = metadata?.channel || 'widget';
+      if (channel || senderId) {
+        prisma.conversation
+          .update({
+            where: { id: conversationId },
+            data: {
+              ...(channel ? { channel } : {}),
+              ...(senderType === 'USER' && senderId ? { visitorId: senderId } : {}),
+            },
+            select: { id: true },
+          })
+          .catch(() => {});
+      }
     }
 
     const message = await prisma.message.create({

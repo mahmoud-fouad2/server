@@ -145,7 +145,6 @@ export default function RootLayout({ children }) {
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <head>
-        <meta httpEquiv="Content-Security-Policy" content="default-src 'self' https://fahimo-api.onrender.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://fahimo-api.onrender.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: https: blob:; font-src 'self' data:; connect-src 'self' https://fahimo-api.onrender.com wss://fahimo-api.onrender.com; media-src 'self' https://fahimo-api.onrender.com https://assets.mixkit.co blob: data:;" />
         {/* Fonts handled by next/font (Beiruti) for automatic optimization */}
         {/* Explicit favicons to ensure browsers pick them up and avoid caching issues */}
         <link rel="icon" href="/favicon.ico" />
@@ -168,10 +167,22 @@ export default function RootLayout({ children }) {
             const apiOrigin = apiHost.replace(/\/api$/, '');
             const apiWs = apiOrigin.replace(/^http/, 'ws');
             
-            // Only use production URLs
-            const connectSrc = `'self' ${apiOrigin} ${apiWs}`;
-
-            const csp = `default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://fonts.googleapis.com ${apiOrigin}; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; img-src 'self' data: https:; font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; connect-src ${connectSrc}; frame-src 'self';`;
+            const csp = [
+              // Default policy
+              `default-src 'self' ${apiOrigin}`,
+              // Scripts/styles
+              `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://fonts.googleapis.com ${apiOrigin}`,
+              `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net`,
+              // Assets
+              `img-src 'self' data: https: blob:`,
+              `font-src 'self' data: https://fonts.googleapis.com https://fonts.gstatic.com`,
+              // API connections
+              `connect-src 'self' ${apiOrigin} ${apiWs}`,
+              // Audio
+              `media-src 'self' ${apiOrigin} blob: data:`,
+              // Frames
+              `frame-src 'self'`,
+            ].join('; ') + ';';
             return <meta httpEquiv="Content-Security-Policy" content={csp} />;
           })()
         }
