@@ -32,3 +32,14 @@ export interface ApiResponse<T> {
   error?: string;
   meta?: any;
 }
+
+// --- Socket Types ---
+
+export interface SocketMessage {
+  businessId: string;
+  content: string;
+  senderType: 'user' | 'agent' | 'system';
+  visitorId?: string;
+  conversationId?: string;
+}
+

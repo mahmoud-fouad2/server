@@ -40,6 +40,7 @@
     "@types/nodemailer": "^6.4.21",
     "@types/sanitize-html": "^2.13.0",
     "@types/ua-parser-js": "^0.7.39",
+    "@fahimo/shared": "file:../shared",
     "aws-sdk": "^2.1500.0",
     "axios": "^1.6.2",
     "bcryptjs": "^2.4.3",

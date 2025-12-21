@@ -3,9 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build:api": "cd api && npm run build",
-    "build:web": "cd web && npm run build",
-    "build:widget": "cd widget && npm run build",
+    "build": "npm run build:shared && npm run build:widget && npm run build:api && npm run build:web",
+    "build:shared": "cd shared && npm install && npm run build",
+    "build:widget": "cd widget && npm install && npm run build",
+    "build:api": "cd api && npm install && npm run build",
+    "build:web": "cd web && npm install && npm run build",
     "dev:api": "cd api && npm run dev",
     "dev:web": "cd web && npm run dev",
     "dev:widget": "cd widget && npm run dev"

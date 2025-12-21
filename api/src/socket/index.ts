@@ -9,6 +9,7 @@ import { createAdapter } from '@socket.io/redis-adapter';
 import { createClient } from 'redis';
 import { AIService } from '../services/ai.service.js';
 import prisma from '../config/database.js';
+import { SocketMessage } from '@fahimo/shared';
 
 const aiService = new AIService();
 
@@ -76,7 +77,7 @@ export class SocketService {
     });
   }
 
-  private async handleMessage(socket: Socket, data: any) {
+  private async handleMessage(socket: Socket, data: SocketMessage) {
     const { businessId, content, senderType, visitorId, conversationId } = data;
 
     if (!businessId || !content) return;

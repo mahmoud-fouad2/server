@@ -14,9 +14,6 @@ import type {
   KnowledgeEntry,
   Ticket,
   CrmLead,
-  WidgetConfig,
-  Subscription,
-  ChartDataPoint,
 } from '@/types/dashboard';
 
 // ==========================================
@@ -31,17 +28,19 @@ export function useDashboardStats() {
     try {
       setLoading(true);
       setError(null);
-      // Try business stats first, fallback to analytics
+      // Try business stats first, fallback to admin analytics if needed
       try {
         const data = await api.business.stats();
-        setStats(data);
+        setStats(data as DashboardStats);
       } catch {
-        const data = await api.analytics.dashboard();
-        setStats(data);
+        // Fallback logic if business stats fail (e.g. for admin view)
+        const data = await api.admin.getAnalyticsOverview();
+        setStats(data as DashboardStats);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to fetch dashboard stats:', err);
-      setError(err.message || 'Failed to load statistics');
+      const message = err instanceof Error ? err.message : 'Failed to load statistics';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -67,10 +66,11 @@ export function useBusiness() {
       setLoading(true);
       setError(null);
       const data = await api.business.get();
-      setBusiness(data);
-    } catch (err: any) {
+      setBusiness(data as Business);
+    } catch (err: unknown) {
       console.error('Failed to fetch business:', err);
-      setError(err.message || 'Failed to load business details');
+      const message = err instanceof Error ? err.message : 'Failed to load business details';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -80,7 +80,7 @@ export function useBusiness() {
     try {
       await api.business.update(updates);
       await fetchBusiness();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to update business:', err);
       throw err;
     }
@@ -106,10 +106,11 @@ export function useConversations() {
       setLoading(true);
       setError(null);
       const data = await api.chat.conversations();
-      setConversations(data);
-    } catch (err: any) {
+      setConversations(data as Conversation[]);
+    } catch (err: unknown) {
       console.error('Failed to fetch conversations:', err);
-      setError(err.message || 'Failed to load conversations');
+      const message = err instanceof Error ? err.message : 'Failed to load conversations';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -135,10 +136,11 @@ export function useHandoffRequests() {
       setLoading(true);
       setError(null);
       const data = await api.chat.handoverRequests();
-      setRequests(data);
-    } catch (err: any) {
+      setRequests(data as AgentHandoff[]);
+    } catch (err: unknown) {
       console.error('Failed to fetch handoff requests:', err);
-      setError(err.message || 'Failed to load handoff requests');
+      const message = err instanceof Error ? err.message : 'Failed to load handoff requests';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -148,7 +150,7 @@ export function useHandoffRequests() {
     try {
       await api.chat.acceptHandover(id);
       await fetchRequests();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to accept handoff:', err);
       throw err;
     }
@@ -174,10 +176,11 @@ export function useTeam() {
       setLoading(true);
       setError(null);
       const data = await api.team.list();
-      setTeam(data);
-    } catch (err: any) {
+      setTeam(data as TeamMember[]);
+    } catch (err: unknown) {
       console.error('Failed to fetch team:', err);
-      setError(err.message || 'Failed to load team members');
+      const message = err instanceof Error ? err.message : 'Failed to load team members';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -185,20 +188,10 @@ export function useTeam() {
 
   const addMember = useCallback(async (memberData: Partial<TeamMember>) => {
     try {
-      await api.team.create(memberData);
+      await api.team.add(memberData);
       await fetchTeam();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to add team member:', err);
-      throw err;
-    }
-  }, [fetchTeam]);
-
-  const updateMember = useCallback(async (id: string, updates: Partial<TeamMember>) => {
-    try {
-      await api.team.update(id, updates);
-      await fetchTeam();
-    } catch (err: any) {
-      console.error('Failed to update team member:', err);
       throw err;
     }
   }, [fetchTeam]);
@@ -207,7 +200,7 @@ export function useTeam() {
     try {
       await api.team.delete(id);
       await fetchTeam();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to remove team member:', err);
       throw err;
     }
@@ -217,7 +210,7 @@ export function useTeam() {
     fetchTeam();
   }, [fetchTeam]);
 
-  return { team, loading, error, refetch: fetchTeam, addMember, updateMember, removeMember };
+  return { team, loading, error, refetch: fetchTeam, addMember, removeMember };
 }
 
 // ==========================================
@@ -233,10 +226,11 @@ export function useKnowledge() {
       setLoading(true);
       setError(null);
       const data = await api.knowledge.list();
-      setEntries(data);
-    } catch (err: any) {
+      setEntries(data as KnowledgeEntry[]);
+    } catch (err: unknown) {
       console.error('Failed to fetch knowledge entries:', err);
-      setError(err.message || 'Failed to load knowledge base');
+      const message = err instanceof Error ? err.message : 'Failed to load knowledge base';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -246,7 +240,7 @@ export function useKnowledge() {
     try {
       await api.knowledge.create(entryData);
       await fetchEntries();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to create entry:', err);
       throw err;
     }
@@ -256,7 +250,7 @@ export function useKnowledge() {
     try {
       await api.knowledge.delete(id);
       await fetchEntries();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to delete entry:', err);
       throw err;
     }
@@ -266,7 +260,7 @@ export function useKnowledge() {
     try {
       await api.knowledge.reindex();
       await fetchEntries();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to reindex:', err);
       throw err;
     }
@@ -291,11 +285,12 @@ export function useTickets() {
     try {
       setLoading(true);
       setError(null);
-      const data = await api.tickets.list();
-      setTickets(data);
-    } catch (err: any) {
+      const data = await api.ticket.list();
+      setTickets(data as Ticket[]);
+    } catch (err: unknown) {
       console.error('Failed to fetch tickets:', err);
-      setError(err.message || 'Failed to load tickets');
+      const message = err instanceof Error ? err.message : 'Failed to load tickets';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -303,9 +298,9 @@ export function useTickets() {
 
   const createTicket = useCallback(async (ticketData: Partial<Ticket>) => {
     try {
-      await api.tickets.create(ticketData);
+      await api.ticket.create(ticketData);
       await fetchTickets();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to create ticket:', err);
       throw err;
     }
@@ -330,11 +325,12 @@ export function useCRM() {
     try {
       setLoading(true);
       setError(null);
-      const data = await api.crm.leads();
-      setLeads(data);
-    } catch (err: any) {
+      const data = await api.crm.getLeads();
+      setLeads(data as CrmLead[]);
+    } catch (err: unknown) {
       console.error('Failed to fetch leads:', err);
-      setError(err.message || 'Failed to load CRM leads');
+      const message = err instanceof Error ? err.message : 'Failed to load CRM leads';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -344,7 +340,7 @@ export function useCRM() {
     try {
       await api.crm.createLead(leadData);
       await fetchLeads();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to create lead:', err);
       throw err;
     }
@@ -354,7 +350,7 @@ export function useCRM() {
     try {
       await api.crm.updateLead(id, updates);
       await fetchLeads();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to update lead:', err);
       throw err;
     }
@@ -366,4 +362,3 @@ export function useCRM() {
 
   return { leads, loading, error, refetch: fetchLeads, createLead, updateLead };
 }
-

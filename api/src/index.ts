@@ -67,7 +67,9 @@ logger.info(`✅ Cache service: ${cacheService.isConnected() ? 'Connected' : 'Us
 logger.info('✅ Queue service initialized');
 
 // Security Middleware
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+}));
 app.use(hpp()); // Protect against HTTP Parameter Pollution
 app.use(cors({
   origin: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : '*',

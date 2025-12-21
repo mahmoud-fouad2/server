@@ -80,7 +80,7 @@ export interface Visitor {
   email?: string;
   phone?: string;
   businessId: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   createdAt: string;
   sessions?: VisitorSession[];
 }
@@ -125,7 +125,7 @@ export interface Integration {
   type: 'WHATSAPP' | 'TELEGRAM' | 'FACEBOOK' | 'SLACK' | 'API';
   name: string;
   isActive: boolean;
-  config: Record<string, any>;
+  config: Record<string, unknown>;
   createdAt: string;
 }
 
@@ -168,7 +168,7 @@ export interface CrmLead {
   source: string;
   businessId: string;
   assignedToId?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
   assignedTo?: User;

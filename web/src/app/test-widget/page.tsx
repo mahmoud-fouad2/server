@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 declare global {
   interface Window {
-    __FAHIMO_WIDGET_LOADER?: any;
+    __FAHIMO_WIDGET_LOADER?: unknown;
   }
 }
 

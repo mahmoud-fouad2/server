@@ -9,16 +9,10 @@ import {
   Heart,
   Rocket,
   Users,
-  Zap,
   Shield,
-  Target,
-  Award,
-  TrendingUp,
   Globe,
   MessageSquare,
   Clock,
-  CheckCircle,
-  Sparkles,
 } from 'lucide-react';
 
 export default function AboutPage() {

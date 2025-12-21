@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api-client';
+import type { User } from '@/types/dashboard';
+import { LoginInput } from '@fahimo/shared/dist/auth.dto';
 
 export function useAuth() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -16,7 +18,7 @@ export function useAuth() {
         setLoading(false);
         return;
       }
-      const { user } = await api.auth.me();
+      const { user } = await api.auth.me() as { user: User };
       setUser(user);
     } catch (error) {
       console.error('Auth check failed', error);
@@ -26,8 +28,8 @@ export function useAuth() {
     }
   }
 
-  async function login(data: any) {
-    const response = await api.auth.login(data);
+  async function login(data: LoginInput) {
+    const response = await api.auth.login(data) as { token: string; user: User };
     localStorage.setItem('token', response.token);
     await checkUser();
     return response;
@@ -39,5 +41,5 @@ export function useAuth() {
     window.location.href = '/login';
   }
 
-  return { user, loading, login, logout };
+  return { user, loading, login, logout, checkUser };
 }

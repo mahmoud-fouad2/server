@@ -109,7 +109,7 @@ function DashboardContent() {
       return;
     try {
       setCacheLoadingState((s) => ({ ...s, clearing: true }));
-      const data = await api.business.clearCache();
+      const data = await api.business.clearCache() as { deleted?: number };
       addNotification(
         `تم مسح الكاش${data?.deleted ? ` (${data.deleted})` : ''}`,
         'success'

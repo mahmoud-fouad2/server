@@ -1,12 +1,9 @@
 'use client';
 
 import {
-  LayoutDashboard,
   MessageSquare,
-  Database,
   Settings,
   LogOut,
-  Globe,
   Moon,
   Sun,
   CreditCard,
@@ -21,7 +18,6 @@ import {
   BarChart3,
   ContactRound,
 } from 'lucide-react';
-import useTheme from '@/lib/theme';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import FaheemAnimatedLogo from './FaheemAnimatedLogo';
