@@ -200,7 +200,13 @@ export const api = {
     }
   },
   knowledge: {
-    list: () => fetchAPI('/knowledge'),
+    list: async () => {
+      const response: any = await fetchAPI('/knowledge');
+      if (Array.isArray(response)) return response;
+      if (response && Array.isArray(response.data)) return response.data;
+      if (response && Array.isArray(response.entries)) return response.entries;
+      return [];
+    },
     create: (data: Record<string, unknown>) => fetchAPI('/knowledge', { method: 'POST', body: JSON.stringify(data) }),
     delete: (id: string) => fetchAPI(`/knowledge/${id}`, { method: 'DELETE' }),
     update: (id: string, data: Record<string, unknown>) => fetchAPI(`/knowledge/${id}`, { method: 'PUT', body: JSON.stringify(data) }),

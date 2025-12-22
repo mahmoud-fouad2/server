@@ -45,9 +45,10 @@ export default function VisitorAnalytics() {
         const dateFrom = getDateFrom(dateRange).toISOString();
         const response = await visitorApi.getAnalytics({ from: dateFrom });
         const analyticsData = response?.analytics || response?.data || response;
-        if (mounted) setAnalytics(analyticsData || null);
+        if (mounted) setAnalytics(analyticsData || {});
       } catch (error) {
         if (mounted) console.error('Error fetching analytics:', error);
+        if (mounted) setAnalytics({});
       }
     };
 

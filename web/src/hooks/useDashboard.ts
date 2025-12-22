@@ -226,7 +226,14 @@ export function useKnowledge() {
       setLoading(true);
       setError(null);
       const data = await api.knowledge.list();
-      setEntries(data as KnowledgeEntry[]);
+      const normalized = Array.isArray(data)
+        ? data
+        : Array.isArray(data?.data)
+          ? data.data
+          : Array.isArray(data?.entries)
+            ? data.entries
+            : [];
+      setEntries(normalized as KnowledgeEntry[]);
     } catch (err: unknown) {
       console.error('Failed to fetch knowledge entries:', err);
       const message = err instanceof Error ? err.message : 'Failed to load knowledge base';

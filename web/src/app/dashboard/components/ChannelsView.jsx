@@ -31,8 +31,15 @@ export default function ChannelsView({ addNotification }) {
   const fetchIntegrations = async () => {
     try {
       const data = await businessApi.getIntegrations();
-      const telegram = data.find(i => i.type === 'TELEGRAM');
-      setTelegramIntegration(telegram);
+      const integrations = Array.isArray(data)
+        ? data
+        : Array.isArray(data?.data)
+          ? data.data
+          : Array.isArray(data?.integrations)
+            ? data.integrations
+            : [];
+      const telegram = integrations.find(i => i.type === 'TELEGRAM');
+      setTelegramIntegration(telegram || null);
     } catch (err) {
       console.error(err);
     }

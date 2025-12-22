@@ -40,7 +40,14 @@ export default function KnowledgeBaseView({ addNotification }) {
   const fetchKbList = async () => {
     try {
       const data = await knowledgeApi.list();
-      setKbList(data);
+      const normalized = Array.isArray(data)
+        ? data
+        : Array.isArray(data?.data)
+          ? data.data
+          : Array.isArray(data?.entries)
+            ? data.entries
+            : [];
+      setKbList(normalized);
     } catch (err) {
       console.error(err);
     } finally {
@@ -183,7 +190,7 @@ export default function KnowledgeBaseView({ addNotification }) {
     if (!kb) return '';
     const metaTitle = kb.metadata?.title || kb.metadata?.filename || kb.metadata?.url;
     if (metaTitle) return metaTitle;
-    if (kb.content) {
+    if (kb.content && typeof kb.content === 'string') {
       // Strip newlines and reduce whitespace
       const text = kb.content.replace(/\s+/g, ' ').trim();
       if (!text) return '';
