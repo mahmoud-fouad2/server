@@ -15,7 +15,7 @@ const widgetCors = cors({
 });
 
 router.post('/session', widgetCors, visitorController.createSession);
-router.post('/track', visitorController.trackPage);
+router.post('/track', widgetCors, visitorController.trackPage);
 router.get('/active-sessions', authenticateToken, visitorController.getActiveSessions.bind(visitorController));
 router.get('/analytics', authenticateToken, visitorController.getAnalytics.bind(visitorController));
 
