@@ -1,6 +1,6 @@
 import axios from 'axios';
 import logger from '../utils/logger.js';
-import cacheService from './cache.service.js';
+import { cacheService } from './cache.service.js';
 
 interface EmbeddingResponse {
   embedding: number[];

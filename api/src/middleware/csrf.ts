@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import cacheService from '../services/cache.service.js';
+import { cacheService } from '../services/cache.service.js';
 import logger from '../utils/logger.js';
 
 interface CSRFTokenData {

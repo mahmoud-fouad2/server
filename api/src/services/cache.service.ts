@@ -215,6 +215,20 @@ class CacheService {
     }
   }
 
+  async flush(): Promise<void> {
+    try {
+      if (this.redis && this.isRedisConnected) {
+        await this.redis.flushall();
+        logger.info('Redis cache flushed (flushall).');
+      }
+      this.lruCache.clear();
+      logger.info('LRU cache cleared.');
+    } catch (error) {
+      logger.error('Error flushing cache:', error);
+      throw error;
+    }
+  }
+
   getRedisClient(): RedisClient | null {
     return this.redis;
   }
@@ -224,4 +238,4 @@ class CacheService {
   }
 }
 
-export default new CacheService();
+export const cacheService = new CacheService();

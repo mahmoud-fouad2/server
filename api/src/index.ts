@@ -11,7 +11,7 @@ import dotenv from 'dotenv';
 import hpp from 'hpp';
 import { SocketService } from './socket/index.js';
 import logger from './utils/logger.js';
-import cacheService from './services/cache.service.js';
+import { cacheService } from './services/cache.service.js';
 import queueService from './services/queue.service.js';
 import { 
   errorHandler, 
@@ -44,6 +44,7 @@ import continuousImprovementRoutes from './routes/continuous-improvement.routes.
 import customAIModelRoutes from './routes/custom-ai-model.routes.js';
 import apiKeyRoutes from './routes/api-key.routes.js';
 import ratingRoutes from './routes/rating.routes.js';
+import systemRoutes from './routes/system.routes.js';
 
 dotenv.config();
 
@@ -146,6 +147,7 @@ app.use('/api/visitor', visitorRoutes);
 app.use('/api/improvement', apiLimiter, continuousImprovementRoutes);
 app.use('/api/custom-ai-models', apiLimiter, customAIModelRoutes);
 app.use('/api/rating', apiLimiter, ratingRoutes);
+app.use('/api/system', systemRoutes);
 
 // Health Check
 app.get('/health', (req, res) => {

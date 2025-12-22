@@ -4,7 +4,7 @@ import embeddingService from './embedding.service.js';
 import vectorSearchService from './vector-search.service.js';
 import webCrawlerService from './web-crawler.service.js';
 import queueService from './queue.service.js';
-import cacheService from './cache.service.js';
+import { cacheService } from './cache.service.js';
 import logger from '../utils/logger.js';
 
 export class KnowledgeService {

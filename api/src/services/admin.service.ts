@@ -1,5 +1,5 @@
 import prisma from '../config/database.js';
-import cacheService from './cache.service.js';
+import { cacheService } from './cache.service.js';
 import queueService from './queue.service.js';
 
 export class AdminService {

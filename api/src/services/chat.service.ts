@@ -1,6 +1,6 @@
 import prisma from '../config/database.js';
 import queueService from './queue.service.js';
-import cacheService from './cache.service.js';
+import { cacheService } from './cache.service.js';
 import agentHandoffService from './agent-handoff.service.js';
 import logger from '../utils/logger.js';
 import { Channel } from '@prisma/client';

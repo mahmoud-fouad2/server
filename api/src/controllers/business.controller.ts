@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { BusinessService } from '../services/business.service.js';
 import { IntegrationService } from '../services/integration.service.js';
-import cacheService from '../services/cache.service.js';
+import { cacheService } from '../services/cache.service.js';
 
 const businessService = new BusinessService();
 const integrationService = new IntegrationService();

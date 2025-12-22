@@ -1,5 +1,5 @@
 import { Queue, Worker, Job, QueueEvents } from 'bullmq';
-import cacheService from '../services/cache.service.js';
+import { cacheService } from '../services/cache.service.js';
 import logger from '../utils/logger.js';
 
 interface QueueConfig {

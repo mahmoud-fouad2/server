@@ -10,7 +10,7 @@ import sentimentAnalysisService from './sentiment-analysis.service.js';
 import multiLanguageService from './multi-language.service.js';
 import { dialectService } from './dialect.service.js';
 import queueService from './queue.service.js';
-import cacheService from './cache.service.js';
+import { cacheService } from './cache.service.js';
 import logger from '../utils/logger.js';
 import Groq from 'groq-sdk';
 import { GoogleGenerativeAI } from '@google/generative-ai';
