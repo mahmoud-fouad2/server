@@ -13,10 +13,10 @@ router.post(
   systemController.flushCache
 );
 
-router.post(
-  '/flush-cache/service',
-  authenticateSystemKey,
-  systemController.flushCache
-);
+router
+  .route('/flush-cache/service')
+  .all(authenticateSystemKey)
+  .post(systemController.flushCache)
+  .get(systemController.flushCache);
 
 export default router;
