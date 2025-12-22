@@ -13,6 +13,8 @@ export const notificationsApi = api.notifications;
 export const apiKeyApi = api.apiKey;
 export const integrationApi = api.integration;
 export const telegramApi = api.integration;
+export const visitorApi = api.visitor;
+export const analyticsApi = api.analytics;
 
 export const apiCall = async (endpoint: string, options?: unknown) => {
   return fetchAPI(endpoint, options as any);

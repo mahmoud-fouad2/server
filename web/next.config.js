@@ -24,6 +24,11 @@ const nextConfig = {
       process.env.NEXT_PUBLIC_API_URL || 'https://fahimo-api.onrender.com',
   },
 
+  // Next.js 15 deprecates `next lint`. Run ESLint via npm scripts/CI instead.
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+
   // Performance optimizations
   compress: true,
 

@@ -1,28 +1,320 @@
-import { h, Component, Fragment } from 'preact';
-import { useState, useEffect, useRef } from 'preact/hooks';
+import { h, Fragment } from 'preact';
+import { useState, useEffect, useMemo, useRef } from 'preact/hooks';
 import io, { Socket } from 'socket.io-client';
 
-// ========================= TYPES =========================
+const styles = {
+  headerContent: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+  },
+  avatarShell: (theme: any) => ({
+    width: '48px',
+    height: '48px',
+    borderRadius: '50%',
+    background: 'rgba(255, 255, 255, 0.2)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontWeight: 600,
+    color: theme.textOnPrimary,
+    border: '2px solid rgba(255, 255, 255, 0.4)',
+    overflow: 'hidden',
+  }),
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+  },
+  botName: {
+    fontSize: '18px',
+    fontWeight: 600,
+    color: 'white',
+  },
+  botStatus: (theme: any) => ({
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    color: `rgba(${hexToRgb(theme.textOnPrimary)}, 0.9)`,
+    fontSize: '13px',
+  }),
+  statusDot: {
+    width: '8px',
+    height: '8px',
+    borderRadius: '50%',
+    background: '#4ade80',
+    animation: 'fahimoPulse 1.5s infinite',
+  },
+  headerActions: {
+    display: 'flex',
+    gap: '8px',
+  },
+  iconButton: {
+    width: '34px',
+    height: '34px',
+    borderRadius: '50%',
+    border: 'none',
+    background: 'rgba(255, 255, 255, 0.2)',
+    color: 'white',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  body: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    background: '#F4F6FB',
+  },
+  preChatForm: {
+    padding: '24px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '16px',
+    animation: 'fahimoFadeIn 0.3s ease',
+  },
+  inputLabel: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+    fontSize: '14px',
+    color: '#1f2937',
+  },
+  inputControl: {
+    borderRadius: '12px',
+    border: '1px solid #e5e7eb',
+    padding: '12px 14px',
+    fontSize: '14px',
+    outline: 'none',
+  },
+  primaryButton: (theme: any) => ({
+    border: 'none',
+    borderRadius: '14px',
+    background: `linear-gradient(120deg, ${theme.primary}, ${theme.accent})`,
+    color: theme.textOnPrimary,
+    padding: '14px',
+    fontSize: '15px',
+    fontWeight: 600,
+    cursor: 'pointer',
+  }),
+  errorText: {
+    color: '#ef4444',
+    fontSize: '13px',
+  },
+  chatShell: {
+    display: 'flex',
+    flexDirection: 'column',
+    height: '100%',
+  },
+  messages: (theme: any) => ({
+    flex: 1,
+    padding: '20px',
+    overflowY: 'auto' as const,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '10px',
+    background: `linear-gradient(180deg, ${theme.secondary}, #fff)`,
+  }),
+  messageRow: (sender: Message['senderType']) => ({
+    display: 'flex',
+    justifyContent: sender === 'USER' ? 'flex-end' : 'flex-start',
+  }),
+  messageBubble: (theme: any, sender: Message['senderType']) => ({
+    maxWidth: '80%',
+    borderRadius: sender === 'USER' ? '18px 4px 18px 18px' : '4px 18px 18px 18px',
+    padding: '12px 16px',
+    background: sender === 'USER' ? theme.primary : '#fff',
+    color: sender === 'USER' ? theme.textOnPrimary : '#111827',
+    boxShadow: '0 8px 24px rgba(15, 23, 42, 0.08)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+  }),
+  typingBubble: (theme: any) => ({
+    display: 'inline-flex',
+    background: '#fff',
+    borderRadius: '18px',
+    padding: '8px 12px',
+    gap: '6px',
+    boxShadow: '0 8px 24px rgba(15, 23, 42, 0.08)',
+  }),
+  typingDot: (delay: number) => ({
+    width: '6px',
+    height: '6px',
+    borderRadius: '50%',
+    background: '#cbd5f5',
+    animation: `fahimoPulse 1.4s ease ${delay}ms infinite`,
+  }),
+  timestamp: {
+    fontSize: '11px',
+    color: '#6b7280',
+    textAlign: 'right' as const,
+  },
+  ratingCard: {
+    margin: '0 20px 12px',
+    padding: '14px',
+    borderRadius: '16px',
+    background: '#fff',
+    boxShadow: '0 10px 30px rgba(15,23,42,.08)',
+  },
+  ratingStars: {
+    display: 'flex',
+    gap: '8px',
+    marginTop: '6px',
+  },
+  ratingStar: (active: boolean) => ({
+    width: '36px',
+    height: '36px',
+    borderRadius: '50%',
+    border: 'none',
+    background: active ? '#FACC15' : '#E5E7EB',
+    color: active ? '#8B5CF6' : '#4B5563',
+    cursor: 'pointer',
+    fontSize: '18px',
+  }),
+  composerShell: {
+    padding: '16px',
+    borderTop: '1px solid #e5e7eb',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    background: '#fff',
+  },
+  composerActions: {
+    display: 'flex',
+    gap: '8px',
+  },
+  subtleButton: {
+    width: '36px',
+    height: '36px',
+    borderRadius: '12px',
+    border: '1px solid #e5e7eb',
+    background: '#fff',
+    color: '#6b7280',
+    cursor: 'not-allowed',
+  },
+  textInput: {
+    flex: 1,
+    borderRadius: '16px',
+    border: '1px solid #e5e7eb',
+    padding: '12px 14px',
+    resize: 'none' as const,
+    fontFamily: 'inherit',
+    fontSize: '14px',
+    outline: 'none',
+  },
+  sendButton: (theme: any, disabled: boolean) => ({
+    width: '44px',
+    height: '44px',
+    borderRadius: '50%',
+    border: 'none',
+    background: disabled ? '#CBD5F5' : `linear-gradient(135deg, ${theme.primary}, ${theme.accent})`,
+    color: disabled ? '#94a3b8' : theme.textOnPrimary,
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  }),
+};
+
+function getLauncherStyle(theme: any, position: 'left' | 'right', isOpen: boolean) {
+  return {
+    position: 'fixed',
+    bottom: '28px',
+    [position]: '28px',
+    width: '64px',
+    height: '64px',
+    borderRadius: '32px',
+    background: `linear-gradient(135deg, ${theme.primary}, ${theme.accent})`,
+    color: theme.textOnPrimary,
+    border: 'none',
+    boxShadow: '0 18px 40px rgba(37, 99, 235, 0.35)',
+    cursor: 'pointer',
+    display: isOpen ? 'none' : 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 999999,
+  } as const;
+}
+
+function getWidgetStyle(theme: any, position: 'left' | 'right', isOpen: boolean, isMinimized: boolean) {
+  return {
+    position: 'fixed',
+    bottom: '24px',
+    [position]: '24px',
+    width: isMinimized ? '320px' : '420px',
+    height: isMinimized ? '96px' : '620px',
+    transform: isOpen ? 'translateY(0)' : 'translateY(40px)',
+    opacity: isOpen ? 1 : 0,
+    pointerEvents: isOpen ? 'auto' : 'none',
+    borderRadius: theme.borderRadius,
+    background: '#fff',
+    boxShadow: '0 40px 120px rgba(15, 23, 42, 0.35)',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    zIndex: 1000000,
+    overflow: 'hidden',
+    animation: isOpen ? 'fahimoSlideUp 0.35s ease' : 'none',
+  } as const;
+}
+
+function getHeaderStyle(theme: any) {
+  return {
+    padding: '20px',
+    background: `linear-gradient(120deg, ${theme.primary}, ${theme.accent})`,
+    color: theme.textOnPrimary,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  } as const;
+}
+
+function hexToRgb(hex: string) {
+  const sanitized = hex.replace('#', '');
+  const bigint = parseInt(sanitized, 16);
+  const r = (bigint >> 16) & 255;
+  const g = (bigint >> 8) & 255;
+  const b = bigint & 255;
+  return `${r}, ${g}, ${b}`;
+}
+
+function getReadableTextColor(hexColor: string) {
+  const hex = hexColor.replace('#', '');
+  const bigint = parseInt(hex, 16);
+  const r = (bigint >> 16) & 255;
+  const g = (bigint >> 8) & 255;
+  const b = bigint & 255;
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.6 ? '#0f172a' : '#ffffff';
+}
+
+function resolveAssetUrl(input?: string, base?: string) {
+  if (!input) return undefined;
+  if (/^https?:\/\//i.test(input)) return input;
+  if (base) {
+    const normalizedBase = base.replace(/\/$/, '');
+    const normalizedPath = input.replace(/^\//, '');
+    return `${normalizedBase}/${normalizedPath}`;
+  }
+  return input;
+}
+
+function buildFormState(fields: PreChatField[]) {
+  return fields.reduce<Record<string, string>>((state, field) => {
+    state[field.id] = '';
+    return state;
+  }, {});
+}import { h, Fragment } from 'preact';
+import { useState, useEffect, useMemo, useRef } from 'preact/hooks';
+import io, { Socket } from 'socket.io-client';
+
 interface Message {
   id: string;
   content: string;
   senderType: 'USER' | 'BOT' | 'AGENT';
-  timestamp: Date;
+  timestamp: Date | string;
   isTyping?: boolean;
-}
-
-interface WidgetConfig {
-  businessId: string;
-  primaryColor?: string;
-  secondaryColor?: string;
-  botName?: string;
-  botIcon?: string;
-  welcomeMessage?: string;
-  position?: 'right' | 'left';
-  preChatEnabled?: boolean;
-  customIcon?: string;
-  accentColor?: string;
-  borderRadius?: string;
 }
 
 interface VisitorInfo {
@@ -31,7 +323,58 @@ interface VisitorInfo {
   phone?: string;
 }
 
-// ========================= ICONS =========================
+interface PreChatField {
+  id: string;
+  label: string;
+  type?: 'text' | 'email' | 'phone' | 'number';
+  required?: boolean;
+  placeholder?: string;
+}
+
+interface WidgetConfig {
+  businessId: string;
+  widgetName?: string;
+  welcomeMessage?: string;
+  tagline?: string;
+  primaryColor?: string;
+  secondaryColor?: string;
+  accentColor?: string;
+  borderRadius?: string;
+  position?: 'left' | 'right';
+  personality?: 'friendly' | 'formal' | 'fun';
+  botName?: string;
+  botIcon?: string;
+  avatar?: string;
+  avatarUrl?: string;
+  customIconUrl?: string;
+  customLauncherIcon?: string;
+  notificationSound?: string;
+  notificationSoundEnabled?: boolean;
+  ratingEnabled?: boolean;
+  preChatEnabled?: boolean;
+  preChatDescription?: string;
+  preChatFields?: PreChatField[];
+  autoOpenDelay?: number;
+  showBranding?: boolean;
+  accentText?: string;
+  secondaryText?: string;
+}
+
+interface AppProps {
+  config: WidgetConfig;
+  businessName?: string;
+  assetBaseUrl?: string;
+  preChatFormEnabled?: boolean;
+}
+
+const DEFAULT_PRECHAT_FIELDS: PreChatField[] = [
+  { id: 'name', label: 'ما اسمك؟', type: 'text', required: true, placeholder: 'أدخل اسمك' },
+  { id: 'email', label: 'بريدك الإلكتروني', type: 'email', required: true, placeholder: 'example@email.com' },
+  { id: 'phone', label: 'رقم الجوال (اختياري)', type: 'phone', required: false, placeholder: '+9665XXXXXXX' },
+];
+
+const DEFAULT_SOUND = 'https://cdn.fahimo.com/widget/sounds/notify.mp3';
+
 const SendIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
@@ -39,7 +382,7 @@ const SendIcon = () => (
 );
 
 const MinimizeIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M19 12H5" />
   </svg>
 );
@@ -52,82 +395,316 @@ const CloseIcon = () => (
 
 const ChatBubbleIcon = () => (
   <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+    <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" />
   </svg>
 );
 
 const AttachIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
   </svg>
 );
 
 const EmojiIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <circle cx="12" cy="12" r="10"/>
-    <path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/>
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <circle cx="12" cy="12" r="10" />
+    <path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01" />
   </svg>
 );
 
-// ========================= MODERN WIDGET APP =========================
-export default function App({ config }: { config: WidgetConfig }) {
+function formatTimestamp(value: Date | string) {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
+  return date.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
+}
+
+function ensureGlobalStyles() {
+  if (typeof document === 'undefined') return;
+  const styleId = 'fahimo-widget-global';
+  if (document.getElementById(styleId)) return;
+  const style = document.createElement('style');
+  style.id = styleId;
+  style.textContent = `
+    @keyframes fahimoPulse { 0% { opacity: 0.5; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1); } 100% { opacity: 0.5; transform: scale(0.9); } }
+    @keyframes fahimoSlideUp { from { transform: translateY(24px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes fahimoFadeIn { from { opacity: 0; } to { opacity: 1; } }
+  `;
+  document.head.appendChild(style);
+}
+
+export default function App({ config, businessName, assetBaseUrl, preChatFormEnabled }: AppProps) {
+  ensureGlobalStyles();
+
+  const computedPreChatEnabled = typeof preChatFormEnabled === 'boolean'
+    ? preChatFormEnabled
+    : config.preChatEnabled !== false;
+
+  const preChatFields = useMemo(() => {
+    return (config.preChatFields && config.preChatFields.length > 0)
+      ? config.preChatFields
+      : DEFAULT_PRECHAT_FIELDS;
+  }, [config.preChatFields]);
+
+  const theme = useMemo(() => {
+    const primary = config.primaryColor || '#0066FF';
+    const accent = config.accentColor || '#00D4FF';
+    const secondary = config.secondaryColor || '#F8F9FA';
+    const borderRadius = config.borderRadius || '20px';
+    const textOnPrimary = getReadableTextColor(primary);
+    return { primary, accent, secondary, borderRadius, textOnPrimary };
+  }, [config.primaryColor, config.accentColor, config.secondaryColor, config.borderRadius]);
+
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [showPreChat, setShowPreChat] = useState(config.preChatEnabled !== false);
-  const [visitorInfo, setVisitorInfo] = useState<VisitorInfo>({ name: '', email: '', phone: '' });
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [socket, setSocket] = useState<Socket | null>(null);
-  const [showRating, setShowRating] = useState(false);
-  const [rating, setRating] = useState(0);
   const [isTyping, setIsTyping] = useState(false);
-  
+  const [ratingValue, setRatingValue] = useState<number | null>(null);
+  const [ratingSubmitted, setRatingSubmitted] = useState(false);
+  const [visitorInfo, setVisitorInfo] = useState<VisitorInfo>({ name: '', email: '', phone: '' });
+  const requirePreChat = computedPreChatEnabled;
+  const [preChatCompleted, setPreChatCompleted] = useState(!requirePreChat);
+  const [showPreChat, setShowPreChat] = useState(requirePreChat);
+  const [preChatError, setPreChatError] = useState<string | null>(null);
+  const [preChatData, setPreChatData] = useState<Record<string, string>>(() => buildFormState(preChatFields));
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const chatBodyRef = useRef<HTMLDivElement>(null);
+  const socketRef = useRef<Socket | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const lastMessageCountRef = useRef(0);
+  const welcomeInjectedRef = useRef(false);
 
-  // Extract config values with defaults
-  const primaryColor = config.primaryColor || '#0066FF';
-  const secondaryColor = config.secondaryColor || '#F8F9FA';
-  const accentColor = config.accentColor || '#00D4FF';
-  const botName = config.botName || 'مساعد ذكي';
-  const welcomeMsg = config.welcomeMessage || 'مرحباً! كيف يمكنني مساعدتك اليوم؟ 👋';
+  const widgetName = config.widgetName || config.botName || businessName || 'مساعد Fahimo';
+  const welcomeMessage = config.welcomeMessage || 'مرحباً! كيف يمكنني مساعدتك اليوم؟ 👋';
+  const avatarUrl = resolveAssetUrl(config.botIcon || config.avatarUrl || config.customIconUrl, assetBaseUrl);
+  const launcherIcon = resolveAssetUrl(config.customLauncherIcon || config.customIconUrl || config.botIcon, assetBaseUrl);
+  const notificationSoundSrc = resolveAssetUrl(config.notificationSound, assetBaseUrl) || DEFAULT_SOUND;
+  const notificationsAllowed = config.notificationSoundEnabled !== false;
   const position = config.position || 'right';
-  const borderRadius = config.borderRadius || '16px';
+  const ratingEnabled = config.ratingEnabled !== false;
 
-  // Auto scroll to bottom
+  useEffect(() => {
+    setPreChatData(buildFormState(preChatFields));
+  }, [preChatFields]);
+
+  useEffect(() => {
+    if (!requirePreChat) {
+      setPreChatCompleted(true);
+      setShowPreChat(false);
+    } else if (!preChatCompleted) {
+      setShowPreChat(true);
+    }
+  }, [requirePreChat, preChatCompleted]);
+
+  useEffect(() => {
+    if (typeof config.autoOpenDelay === 'number') {
+      const timer = window.setTimeout(() => setIsOpen(true), Math.max(config.autoOpenDelay, 0));
+      return () => window.clearTimeout(timer);
+    }
+    return undefined;
+  }, [config.autoOpenDelay]);
+
+  useEffect(() => {
+    if (isOpen && !sessionId) {
+      initializeSession();
+    }
+  }, [isOpen, sessionId]);
+
+  useEffect(() => {
+    if (!conversationId) return;
+
+    const apiUrl = getApiUrl();
+    const socket = io(apiUrl, {
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+    });
+
+    socketRef.current = socket;
+
+    socket.on('connect', () => {
+      socket.emit('join-conversation', { conversationId });
+    });
+
+    socket.on('agent-message', (payload: any) => {
+      appendIncomingMessage(payload, 'AGENT');
+    });
+
+    socket.on('bot-message', (payload: any) => {
+      appendIncomingMessage(payload, 'BOT');
+    });
+
+    socket.on('agent-typing', () => {
+      setIsTyping(true);
+      window.setTimeout(() => setIsTyping(false), 2500);
+    });
+
+    return () => {
+      socket.disconnect();
+      socketRef.current = null;
+    };
+  }, [conversationId]);
+
+  useEffect(() => {
+    if (!showPreChat && messages.length === 0 && welcomeMessage && !welcomeInjectedRef.current) {
+      setMessages([createSystemMessage(welcomeMessage)]);
+      welcomeInjectedRef.current = true;
+    }
+  }, [showPreChat, welcomeMessage, messages.length]);
+
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
 
-  // Initialize session
   useEffect(() => {
-    if (isOpen && !sessionId) {
-      initializeSession();
+    if (!notificationsAllowed) {
+      audioRef.current = null;
+      return;
     }
-  }, [isOpen]);
-
-  // Connect socket
-  useEffect(() => {
-    if (conversationId && !socket) {
-      connectSocket();
-    }
+    const audio = new Audio(notificationSoundSrc);
+    audio.preload = 'auto';
+    audio.volume = 0.85;
+    audioRef.current = audio;
     return () => {
-      if (socket) {
-        socket.disconnect();
-      }
+      audio.pause();
+      audioRef.current = null;
     };
-  }, [conversationId]);
+  }, [notificationSoundSrc, notificationsAllowed]);
 
-  const initializeSession = async () => {
+  useEffect(() => {
+    if (!notificationsAllowed) return;
+    if (messages.length <= lastMessageCountRef.current) return;
+
+    const latest = messages[messages.length - 1];
+    lastMessageCountRef.current = messages.length;
+
+    if (latest && latest.senderType !== 'USER') {
+      audioRef.current?.play().catch(() => {
+        /* Autoplay might be blocked; ignore */
+      });
+    }
+  }, [messages, notificationsAllowed]);
+
+  const handlePreChatChange = (fieldId: string, value: string) => {
+    setPreChatError(null);
+    setPreChatData(prev => ({ ...prev, [fieldId]: value }));
+  };
+
+  const handlePreChatSubmit = async (event: Event) => {
+    event.preventDefault();
+    for (const field of preChatFields) {
+      if (field.required && !preChatData[field.id]?.trim()) {
+        setPreChatError('يرجى تعبئة جميع الحقول المطلوبة.');
+        return;
+      }
+    }
+
+    setVisitorInfo({
+      name: preChatData.name || 'زائر',
+      email: preChatData.email || '',
+      phone: preChatData.phone || '',
+    });
+
+    setPreChatCompleted(true);
+    setShowPreChat(false);
+    setPreChatError(null);
+
+    if (!welcomeInjectedRef.current) {
+      setMessages([createSystemMessage(welcomeMessage)]);
+      welcomeInjectedRef.current = true;
+    }
+  };
+
+  const sendMessage = async () => {
+    if (!input.trim() || isLoading) return;
+
+    const content = input.trim();
+    const outgoing: Message = {
+      id: `msg_${Date.now()}`,
+      content,
+      senderType: 'USER',
+      timestamp: new Date(),
+    };
+
+    setMessages(prev => [...prev, outgoing]);
+    setInput('');
+    setIsLoading(true);
+
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://fahimo-api.onrender.com';
-      const fingerprint = localStorage.getItem('fahimo_fingerprint') || `fp_${Date.now()}_${Math.random()}`;
-      localStorage.setItem('fahimo_fingerprint', fingerprint);
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/chat/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          businessId: config.businessId,
+          content,
+          conversationId,
+          visitorId: sessionId,
+          visitorName: visitorInfo.name || 'زائر',
+          visitorEmail: visitorInfo.email || '',
+        }),
+      });
+
+      const data = await response.json();
+      if (data.conversationId && !conversationId) {
+        setConversationId(data.conversationId);
+      }
+
+      if (data.reply || data.message) {
+        appendIncomingMessage({ content: data.reply || data.message }, 'BOT');
+      }
+    } catch (error) {
+      console.error('Send message failed:', error);
+      appendIncomingMessage({ content: 'عذراً، حدث خطأ. يرجى المحاولة مرة أخرى.' }, 'BOT');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const submitRating = async (value: number) => {
+    if (!conversationId || !ratingEnabled) return;
+
+    setRatingValue(value);
+    try {
+      const apiUrl = getApiUrl();
+      await fetch(`${apiUrl}/api/chat/rate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          conversationId,
+          rating: value,
+          businessId: config.businessId,
+        }),
+      });
+      setRatingSubmitted(true);
+    } catch (error) {
+      console.error('Rating failed:', error);
+    }
+  };
+
+  function appendIncomingMessage(payload: any, senderType: Message['senderType']) {
+    const message: Message = {
+      id: `msg_${Date.now()}`,
+      content: payload.content || payload.message || '',
+      senderType,
+      timestamp: new Date(),
+    };
+    setMessages(prev => [...prev, message]);
+    setIsTyping(false);
+  }
+
+  async function initializeSession() {
+    try {
+      const apiUrl = getApiUrl();
+      const fingerprintKey = `fahimo_fingerprint_${config.businessId}`;
+      const fingerprint = localStorage.getItem(fingerprintKey) || `fp_${Date.now()}_${Math.random()}`;
+      localStorage.setItem(fingerprintKey, fingerprint);
 
       const response = await fetch(`${apiUrl}/api/visitor/session`, {
         method: 'POST',
@@ -146,698 +723,190 @@ export default function App({ config }: { config: WidgetConfig }) {
     } catch (error) {
       console.error('Session init failed:', error);
     }
-  };
+  }
 
-  const connectSocket = () => {
-    const apiUrl = import.meta.env.VITE_API_URL || 'https://fahimo-api.onrender.com';
-    const newSocket = io(apiUrl, {
-      transports: ['websocket', 'polling'],
-      reconnection: true,
-    });
+  function getApiUrl() {
+    return (window as any).__FAHIMO_API_URL || import.meta.env.VITE_API_URL || 'https://fahimo-api.onrender.com';
+  }
 
-    newSocket.on('connect', () => {
-      console.log('Socket connected');
-      if (conversationId) {
-        newSocket.emit('join-conversation', { conversationId });
-      }
-    });
-
-    newSocket.on('agent-message', (data: any) => {
-      const newMsg: Message = {
-        id: `msg_${Date.now()}`,
-        content: data.content || data.message,
-        senderType: 'AGENT',
-        timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, newMsg]);
-      setIsTyping(false);
-    });
-
-    newSocket.on('bot-message', (data: any) => {
-      const newMsg: Message = {
-        id: `msg_${Date.now()}`,
-        content: data.content || data.message,
-        senderType: 'BOT',
-        timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, newMsg]);
-      setIsTyping(false);
-    });
-
-    newSocket.on('agent-typing', () => {
-      setIsTyping(true);
-      setTimeout(() => setIsTyping(false), 3000);
-    });
-
-    setSocket(newSocket);
-  };
-
-  const handlePreChatSubmit = async (e: Event) => {
-    e.preventDefault();
-    if (!visitorInfo.name || !visitorInfo.email) return;
-    
-    setIsLoading(true);
-    setShowPreChat(false);
-
-    // Add welcome message
-    const welcomeMessage: Message = {
-      id: 'welcome',
-      content: welcomeMsg,
+  function createSystemMessage(content: string): Message {
+    return {
+      id: `sys_${Date.now()}`,
+      content,
       senderType: 'BOT',
       timestamp: new Date(),
     };
-    setMessages([welcomeMessage]);
-    setIsLoading(false);
-  };
+  }
 
-  const sendMessage = async () => {
-    if (!input.trim() || isLoading) return;
-
-    const userMessage: Message = {
-      id: `msg_${Date.now()}`,
-      content: input,
-      senderType: 'USER',
-      timestamp: new Date(),
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    const messageContent = input;
-    setInput('');
-    setIsLoading(true);
-
-    try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://fahimo-api.onrender.com';
-      const response = await fetch(`${apiUrl}/api/chat/send`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          businessId: config.businessId,
-          content: messageContent,
-          conversationId: conversationId,
-          visitorId: sessionId,
-          visitorName: visitorInfo.name || 'زائر',
-          visitorEmail: visitorInfo.email || '',
-        }),
-      });
-
-      const data = await response.json();
-      
-      if (data.conversationId && !conversationId) {
-        setConversationId(data.conversationId);
-      }
-
-      if (data.reply || data.message) {
-        const botMessage: Message = {
-          id: `msg_${Date.now()}_bot`,
-          content: data.reply || data.message,
-          senderType: 'BOT',
-          timestamp: new Date(),
-        };
-        setMessages(prev => [...prev, botMessage]);
-      }
-    } catch (error) {
-      console.error('Send message failed:', error);
-      const errorMsg: Message = {
-        id: `msg_${Date.now()}_error`,
-        content: 'عذراً، حدث خطأ. يرجى المحاولة مرة أخرى.',
-        senderType: 'BOT',
-        timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, errorMsg]);
-    } finally {
-      setIsLoading(false);
+  function handleComposerKeyDown(event: KeyboardEvent) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      sendMessage();
     }
-  };
+  }
 
-  const submitRating = async (ratingValue: number) => {
-    if (!conversationId) return;
-    setRating(ratingValue);
+  const shouldShowRating = ratingEnabled && conversationId && !ratingSubmitted;
 
-    try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://fahimo-api.onrender.com';
-      await fetch(`${apiUrl}/api/chat/rate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          conversationId,
-          rating: ratingValue,
-          businessId: config.businessId,
-        }),
-      });
-      setShowRating(false);
-    } catch (error) {
-      console.error('Rating failed:', error);
-    }
-  };
-
-  // ========================= STYLES =========================
-  const styles = {
-    widgetButton: {
-      position: 'fixed' as const,
-      bottom: '24px',
-      [position]: '24px',
-      width: '60px',
-      height: '60px',
-      borderRadius: '50%',
-      background: `linear-gradient(135deg, ${primaryColor} 0%, ${accentColor} 100%)`,
-      border: 'none',
-      boxShadow: '0 8px 24px rgba(0, 102, 255, 0.3)',
-      cursor: 'pointer',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      color: 'white',
-      zIndex: 999999,
-      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-      transform: isOpen ? 'scale(0.9) rotate(90deg)' : 'scale(1) rotate(0deg)',
-      opacity: isOpen ? 0 : 1,
-      pointerEvents: isOpen ? 'none' : 'auto',
-    } as any,
-
-    widgetContainer: {
-      position: 'fixed' as const,
-      bottom: '24px',
-      [position]: '24px',
-      width: isMinimized ? '320px' : '400px',
-      height: isMinimized ? '80px' : '600px',
-      maxHeight: '90vh',
-      borderRadius: borderRadius,
-      background: 'white',
-      boxShadow: '0 12px 48px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05)',
-      display: 'flex',
-      flexDirection: 'column' as const,
-      overflow: 'hidden',
-      zIndex: 999999,
-      transform: isOpen ? 'translateY(0) scale(1)' : 'translateY(20px) scale(0.95)',
-      opacity: isOpen ? 1 : 0,
-      pointerEvents: isOpen ? 'auto' : 'none',
-      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-    } as any,
-
-    header: {
-      background: `linear-gradient(135deg, ${primaryColor} 0%, ${accentColor} 100%)`,
-      color: 'white',
-      padding: '20px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      minHeight: '80px',
-    },
-
-    headerContent: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '12px',
-      flex: 1,
-    },
-
-    avatar: {
-      width: '48px',
-      height: '48px',
-      borderRadius: '50%',
-      background: 'rgba(255, 255, 255, 0.2)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      fontSize: '24px',
-      fontWeight: 'bold',
-      border: '3px solid rgba(255, 255, 255, 0.3)',
-    },
-
-    botInfo: {
-      flex: 1,
-    },
-
-    botName: {
-      fontWeight: '600',
-      fontSize: '18px',
-      marginBottom: '4px',
-    },
-
-    botStatus: {
-      fontSize: '13px',
-      opacity: 0.9,
-      display: 'flex',
-      alignItems: 'center',
-      gap: '6px',
-    },
-
-    statusDot: {
-      width: '8px',
-      height: '8px',
-      borderRadius: '50%',
-      background: '#4ADE80',
-      animation: 'pulse 2s infinite',
-    },
-
-    headerActions: {
-      display: 'flex',
-      gap: '8px',
-    },
-
-    iconButton: {
-      background: 'rgba(255, 255, 255, 0.2)',
-      border: 'none',
-      borderRadius: '8px',
-      padding: '8px',
-      cursor: 'pointer',
-      color: 'white',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      transition: 'all 0.2s',
-      ':hover': {
-        background: 'rgba(255, 255, 255, 0.3)',
-      },
-    },
-
-    body: {
-      flex: 1,
-      overflowY: 'auto' as const,
-      padding: '20px',
-      background: '#F8F9FA',
-      display: isMinimized ? 'none' : 'flex',
-      flexDirection: 'column' as const,
-      gap: '16px',
-    },
-
-    messageGroup: {
-      display: 'flex',
-      flexDirection: 'column' as const,
-      gap: '12px',
-    },
-
-    messageBubble: (isUser: boolean) => ({
-      maxWidth: '75%',
-      alignSelf: isUser ? 'flex-end' : 'flex-start',
-      display: 'flex',
-      flexDirection: isUser ? 'row-reverse' : 'row',
-      gap: '8px',
-      animation: 'slideIn 0.3s ease-out',
-    }),
-
-    messageContent: (isUser: boolean) => ({
-      background: isUser ? `linear-gradient(135deg, ${primaryColor} 0%, ${accentColor} 100%)` : 'white',
-      color: isUser ? 'white' : '#1F2937',
-      padding: '12px 16px',
-      borderRadius: isUser ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-      fontSize: '15px',
-      lineHeight: '1.5',
-      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-      wordBreak: 'break-word' as const,
-    }),
-
-    messageAvatar: (isUser: boolean) => ({
-      width: '32px',
-      height: '32px',
-      borderRadius: '50%',
-      background: isUser ? '#E5E7EB' : primaryColor,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      fontSize: '14px',
-      fontWeight: '600',
-      color: isUser ? '#6B7280' : 'white',
-      flexShrink: 0,
-    }),
-
-    typingIndicator: {
-      display: 'flex',
-      gap: '4px',
-      padding: '12px 16px',
-      background: 'white',
-      borderRadius: '16px 16px 16px 4px',
-      maxWidth: 'fit-content',
-      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-    },
-
-    typingDot: {
-      width: '8px',
-      height: '8px',
-      borderRadius: '50%',
-      background: '#9CA3AF',
-      animation: 'bounce 1.4s infinite',
-    },
-
-    footer: {
-      padding: '16px',
-      background: 'white',
-      borderTop: '1px solid #E5E7EB',
-      display: isMinimized ? 'none' : 'flex',
-      gap: '8px',
-      alignItems: 'center',
-    },
-
-    inputWrapper: {
-      flex: 1,
-      display: 'flex',
-      alignItems: 'center',
-      gap: '8px',
-      background: secondaryColor,
-      borderRadius: '24px',
-      padding: '8px 16px',
-    },
-
-    input: {
-      flex: 1,
-      border: 'none',
-      outline: 'none',
-      background: 'transparent',
-      fontSize: '15px',
-      color: '#1F2937',
-      fontFamily: 'inherit',
-    },
-
-    sendButton: {
-      background: `linear-gradient(135deg, ${primaryColor} 0%, ${accentColor} 100%)`,
-      border: 'none',
-      borderRadius: '50%',
-      width: '44px',
-      height: '44px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      cursor: 'pointer',
-      color: 'white',
-      transition: 'all 0.2s',
-      flexShrink: 0,
-    },
-
-    preChatForm: {
-      padding: '24px',
-      display: 'flex',
-      flexDirection: 'column' as const,
-      gap: '20px',
-    },
-
-    preChatTitle: {
-      fontSize: '20px',
-      fontWeight: '600',
-      color: '#1F2937',
-      textAlign: 'center' as const,
-      marginBottom: '8px',
-    },
-
-    preChatSubtitle: {
-      fontSize: '14px',
-      color: '#6B7280',
-      textAlign: 'center' as const,
-      marginBottom: '12px',
-    },
-
-    inputGroup: {
-      display: 'flex',
-      flexDirection: 'column' as const,
-      gap: '8px',
-    },
-
-    label: {
-      fontSize: '14px',
-      fontWeight: '500',
-      color: '#374151',
-    },
-
-    textInput: {
-      padding: '12px 16px',
-      border: '2px solid #E5E7EB',
-      borderRadius: '12px',
-      fontSize: '15px',
-      outline: 'none',
-      transition: 'all 0.2s',
-      fontFamily: 'inherit',
-    },
-
-    submitButton: {
-      padding: '14px',
-      background: `linear-gradient(135deg, ${primaryColor} 0%, ${accentColor} 100%)`,
-      color: 'white',
-      border: 'none',
-      borderRadius: '12px',
-      fontSize: '16px',
-      fontWeight: '600',
-      cursor: 'pointer',
-      transition: 'all 0.2s',
-      marginTop: '8px',
-    },
-
-    ratingContainer: {
-      background: 'white',
-      borderRadius: '12px',
-      padding: '20px',
-      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-      textAlign: 'center' as const,
-    },
-
-    ratingTitle: {
-      fontSize: '16px',
-      fontWeight: '500',
-      color: '#1F2937',
-      marginBottom: '16px',
-    },
-
-    ratingStars: {
-      display: 'flex',
-      justifyContent: 'center',
-      gap: '8px',
-    },
-
-    star: (filled: boolean) => ({
-      fontSize: '32px',
-      cursor: 'pointer',
-      color: filled ? '#FBBF24' : '#D1D5DB',
-      transition: 'all 0.2s',
-    }),
-  };
-
-  // ========================= RENDER =========================
   return (
-    <>
-      <style>{`
-        @keyframes slideIn {
-          from {
-            opacity: 0;
-            transform: translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes pulse {
-          0%, 100% {
-            opacity: 1;
-          }
-          50% {
-            opacity: 0.5;
-          }
-        }
-
-        @keyframes bounce {
-          0%, 80%, 100% {
-            transform: scale(0);
-          }
-          40% {
-            transform: scale(1);
-          }
-        }
-
-        .fahimo-widget-input:focus {
-          border-color: ${primaryColor} !important;
-        }
-
-        .fahimo-widget-button:hover {
-          transform: scale(1.05) !important;
-        }
-
-        .fahimo-widget-send-button:hover {
-          transform: scale(1.1) !important;
-        }
-
-        .fahimo-widget-icon-button:hover {
-          background: rgba(255, 255, 255, 0.3) !important;
-        }
-      `}</style>
-
-      {/* Widget Button */}
+    <Fragment>
       <button
-        style={styles.widgetButton}
-        onClick={() => setIsOpen(true)}
-        className="fahimo-widget-button"
-        aria-label="Open chat"
+        type="button"
+        style={getLauncherStyle(theme, position, isOpen)}
+        onClick={() => {
+          setIsOpen(true);
+          setIsMinimized(false);
+        }}
+        aria-label="فتح المحادثة"
       >
-        <ChatBubbleIcon />
+        {launcherIcon ? (
+          <img src={launcherIcon} alt={widgetName} style={{ width: '60%', height: '60%' }} />
+        ) : (
+          <ChatBubbleIcon />
+        )}
       </button>
 
-      {/* Widget Container */}
-      {isOpen && (
-        <div style={styles.widgetContainer}>
-          {/* Header */}
-          <div style={styles.header}>
-            <div style={styles.headerContent}>
-              <div style={styles.avatar}>
-                {config.botIcon ? (
-                  <img src={config.botIcon} alt={botName} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
-                ) : (
-                  <span>🤖</span>
-                )}
-              </div>
-              <div style={styles.botInfo}>
-                <div style={styles.botName}>{botName}</div>
-                <div style={styles.botStatus}>
-                  <span style={styles.statusDot}></span>
-                  <span>متاح الآن</span>
-                </div>
-              </div>
+      <section
+        style={getWidgetStyle(theme, position, isOpen, isMinimized)}
+        aria-live="polite"
+        aria-label="محادثة الدعم"
+      >
+        <header style={getHeaderStyle(theme)}>
+          <div style={styles.headerContent}>
+            <div style={styles.avatarShell(theme)}>
+              {avatarUrl ? (
+                <img src={avatarUrl} alt={widgetName} style={styles.avatarImage} />
+              ) : (
+                <span>{widgetName?.charAt(0)?.toUpperCase()}</span>
+              )}
             </div>
-            <div style={styles.headerActions}>
-              <button
-                style={styles.iconButton}
-                onClick={() => setIsMinimized(!isMinimized)}
-                className="fahimo-widget-icon-button"
-                aria-label="Minimize"
-              >
-                <MinimizeIcon />
-              </button>
-              <button
-                style={styles.iconButton}
-                onClick={() => setIsOpen(false)}
-                className="fahimo-widget-icon-button"
-                aria-label="Close"
-              >
-                <CloseIcon />
-              </button>
+            <div>
+              <div style={styles.botName}>{widgetName}</div>
+              <div style={styles.botStatus(theme)}>
+                <span style={styles.statusDot}></span>
+                {config.tagline || 'متاح للرد خلال لحظات'}
+              </div>
             </div>
           </div>
 
-          {/* Body */}
-          <div style={styles.body} ref={chatBodyRef}>
-            {showPreChat ? (
-              <div style={styles.preChatForm}>
-                <div style={styles.preChatTitle}>مرحباً بك! 👋</div>
-                <div style={styles.preChatSubtitle}>من فضلك عرّفنا بنفسك لنبدأ المحادثة</div>
-                <form onSubmit={handlePreChatSubmit}>
-                  <div style={styles.inputGroup}>
-                    <label style={styles.label}>الاسم *</label>
-                    <input
-                      type="text"
-                      required
-                      value={visitorInfo.name}
-                      onInput={(e) => setVisitorInfo({ ...visitorInfo, name: (e.target as HTMLInputElement).value })}
-                      style={styles.textInput}
-                      className="fahimo-widget-input"
-                      placeholder="أدخل اسمك"
-                    />
-                  </div>
-                  <div style={styles.inputGroup}>
-                    <label style={styles.label}>البريد الإلكتروني *</label>
-                    <input
-                      type="email"
-                      required
-                      value={visitorInfo.email}
-                      onInput={(e) => setVisitorInfo({ ...visitorInfo, email: (e.target as HTMLInputElement).value })}
-                      style={styles.textInput}
-                      className="fahimo-widget-input"
-                      placeholder="email@example.com"
-                    />
-                  </div>
-                  <div style={styles.inputGroup}>
-                    <label style={styles.label}>رقم الهاتف (اختياري)</label>
-                    <input
-                      type="tel"
-                      value={visitorInfo.phone || ''}
-                      onInput={(e) => setVisitorInfo({ ...visitorInfo, phone: (e.target as HTMLInputElement).value })}
-                      style={styles.textInput}
-                      className="fahimo-widget-input"
-                      placeholder="+966 5X XXX XXXX"
-                    />
-                  </div>
-                  <button type="submit" style={styles.submitButton} disabled={isLoading}>
-                    {isLoading ? 'جاري البدء...' : 'ابدأ المحادثة'}
-                  </button>
-                </form>
-              </div>
-            ) : (
-              <div style={styles.messageGroup}>
-                {messages.map((msg) => (
-                  <div key={msg.id} style={styles.messageBubble(msg.senderType === 'USER')}>
-                    <div style={styles.messageAvatar(msg.senderType === 'USER')}>
-                      {msg.senderType === 'USER' ? visitorInfo.name.charAt(0).toUpperCase() : '🤖'}
-                    </div>
-                    <div style={styles.messageContent(msg.senderType === 'USER')}>
-                      {msg.content}
+          <div style={styles.headerActions}>
+            <button type="button" style={styles.iconButton} onClick={() => setIsMinimized(prev => !prev)}>
+              <MinimizeIcon />
+            </button>
+            <button
+              type="button"
+              style={styles.iconButton}
+              onClick={() => {
+                setIsOpen(false);
+                setIsMinimized(false);
+              }}
+            >
+              <CloseIcon />
+            </button>
+          </div>
+        </header>
+
+        <div style={styles.body}>
+          {showPreChat ? (
+            <form style={styles.preChatForm} onSubmit={handlePreChatSubmit as any}>
+              <h3>لنبدأ التعارف</h3>
+              <p>{config.preChatDescription || 'شاركنا بيانات بسيطة لنستطيع خدمتك بشكل أفضل.'}</p>
+              {preChatFields.map(field => (
+                <label key={field.id} style={styles.inputLabel}>
+                  <span>
+                    {field.label}
+                    {field.required && <span style={{ color: '#F87171', marginRight: '4px' }}>*</span>}
+                  </span>
+                  <input
+                    type={field.type === 'phone' ? 'tel' : field.type || 'text'}
+                    style={styles.inputControl}
+                    value={preChatData[field.id] || ''}
+                    placeholder={field.placeholder}
+                    onInput={(event: any) => handlePreChatChange(field.id, event.currentTarget.value)}
+                  />
+                </label>
+              ))}
+
+              {preChatError && <div style={styles.errorText}>{preChatError}</div>}
+
+              <button type="submit" style={styles.primaryButton(theme)}>
+                ابدأ المحادثة
+              </button>
+            </form>
+          ) : (
+            <div style={styles.chatShell}>
+              <div style={styles.messages(theme)}>
+                {messages.map(message => (
+                  <div key={message.id} style={styles.messageRow(message.senderType)}>
+                    <div style={styles.messageBubble(theme, message.senderType)}>
+                      <div>{message.content}</div>
+                      <span style={styles.timestamp}>{formatTimestamp(message.timestamp)}</span>
                     </div>
                   </div>
                 ))}
+
                 {isTyping && (
-                  <div style={styles.messageBubble(false)}>
-                    <div style={styles.messageAvatar(false)}>🤖</div>
-                    <div style={styles.typingIndicator}>
-                      <span style={{ ...styles.typingDot, animationDelay: '0s' }}></span>
-                      <span style={{ ...styles.typingDot, animationDelay: '0.2s' }}></span>
-                      <span style={{ ...styles.typingDot, animationDelay: '0.4s' }}></span>
-                    </div>
-                  </div>
-                )}
-                {showRating && (
-                  <div style={styles.ratingContainer}>
-                    <div style={styles.ratingTitle}>كيف كانت تجربتك معنا؟</div>
-                    <div style={styles.ratingStars}>
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <span
-                          key={star}
-                          style={styles.star(star <= rating)}
-                          onClick={() => submitRating(star)}
-                        >
-                          ★
-                        </span>
+                  <div style={styles.messageRow('BOT')}>
+                    <div style={styles.typingBubble(theme)}>
+                      {[0, 120, 240].map(delay => (
+                        <span key={delay} style={styles.typingDot(delay)}></span>
                       ))}
                     </div>
                   </div>
                 )}
-                <div ref={messagesEndRef} />
-              </div>
-            )}
-          </div>
 
-          {/* Footer */}
-          {!showPreChat && (
-            <div style={styles.footer}>
-              <button style={styles.iconButton} aria-label="Attach file">
-                <AttachIcon />
-              </button>
-              <button style={styles.iconButton} aria-label="Emoji">
-                <EmojiIcon />
-              </button>
-              <div style={styles.inputWrapper}>
-                <input
-                  type="text"
-                  value={input}
-                  onInput={(e) => setInput((e.target as HTMLInputElement).value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      sendMessage();
-                    }
-                  }}
-                  placeholder="اكتب رسالتك هنا..."
-                  style={styles.input}
-                  disabled={isLoading}
-                />
+                <div ref={messagesEndRef}></div>
               </div>
-              <button
-                style={styles.sendButton}
-                onClick={sendMessage}
-                disabled={isLoading || !input.trim()}
-                className="fahimo-widget-send-button"
-                aria-label="Send message"
-              >
-                <SendIcon />
-              </button>
+
+              {shouldShowRating && (
+                <div style={styles.ratingCard}>
+                  <p>كيف تقيم تجربتك معنا؟</p>
+                  <div style={styles.ratingStars}>
+                    {[1, 2, 3, 4, 5].map(value => (
+                      <button
+                        type="button"
+                        key={value}
+                        style={styles.ratingStar(value <= (ratingValue || 0))}
+                        onClick={() => submitRating(value)}
+                        aria-label={`تقييم ${value} نجوم`}
+                      >
+                        ★
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div style={styles.composerShell}>
+                <div style={styles.composerActions}>
+                  <button type="button" style={styles.subtleButton} aria-label="إرفاق ملف" disabled>
+                    <AttachIcon />
+                  </button>
+                  <button type="button" style={styles.subtleButton} aria-label="إرسال إيموجي" disabled>
+                    <EmojiIcon />
+                  </button>
+                </div>
+                <textarea
+                  style={styles.textInput}
+                  rows={1}
+                  value={input}
+                  placeholder="اكتب رسالتك هنا"
+                  onInput={(event: any) => setInput(event.currentTarget.value)}
+                  onKeyDown={handleComposerKeyDown as any}
+                />
+                <button
+                  type="button"
+                  style={styles.sendButton(theme, isLoading || !input.trim())}
+                  onClick={sendMessage}
+                  disabled={isLoading || !input.trim()}
+                  aria-label="إرسال الرسالة"
+                >
+                  <SendIcon />
+                </button>
+              </div>
             </div>
           )}
         </div>
-      )}
-    </>
+      </section>
+    </Fragment>
   );
 }
