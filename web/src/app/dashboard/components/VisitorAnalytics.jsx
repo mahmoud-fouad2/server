@@ -354,8 +354,45 @@ export default function VisitorAnalytics() {
         </CardContent>
       </Card>
 
-      {/* Device & Browser Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Country, Device & Browser Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>حسب البلد</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {Object.entries(analytics?.byCountry || {}).length > 0 ? (
+                Object.entries(analytics.byCountry).map(
+                  ([country, count]) => (
+                    <div
+                      key={country}
+                      className="flex items-center justify-between"
+                    >
+                      <span className="capitalize">{country}</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-24 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-brand-500"
+                            style={{
+                              width: `${Math.min(100, (count / safeSessionDivisor) * 100)}%`,
+                            }}
+                          />
+                        </div>
+                        <span className="text-sm font-medium w-8 text-right">{count}</span>
+                      </div>
+                    </div>
+                  )
+                )
+              ) : (
+                <p className="text-center text-muted-foreground py-4 text-sm">
+                  لا توجد بيانات بعد
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle>حسب الجهاز</CardTitle>

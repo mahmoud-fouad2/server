@@ -190,6 +190,7 @@ export class VisitorService {
       activeNow,
       deviceStats,
       browserStats,
+      countryStats,
       topPages,
       durationSamples,
       trafficSourceStats,
@@ -231,6 +232,16 @@ export class VisitorService {
         _count: { id: true },
         orderBy: { _count: { id: 'desc' } },
         take: 5,
+      }),
+      prisma.visitorSession.groupBy({
+        by: ['country'],
+        where: {
+          visitor: { businessId },
+          startedAt: { gte: rangeStart, lte: rangeEnd },
+        },
+        _count: { id: true },
+        orderBy: { _count: { id: 'desc' } },
+        take: 10,
       }),
       prisma.pageVisit.groupBy({
         by: ['url', 'title'],
@@ -290,6 +301,12 @@ export class VisitorService {
       return acc;
     }, {});
 
+    const byCountry = countryStats.reduce<Record<string, number>>((acc, cur) => {
+      const label = normalizeLabel(cur.country);
+      acc[label] = (acc[label] || 0) + cur._count.id;
+      return acc;
+    }, {});
+
     return {
       totalSessions,
       totalPageViews,
@@ -297,8 +314,10 @@ export class VisitorService {
       activeNow,
       deviceStats: deviceStats.map(d => ({ name: d.device || 'Unknown', count: d._count.id })),
       browserStats: browserStats.map(b => ({ name: b.browser || 'Unknown', count: b._count.id })),
+      countryStats: countryStats.map(c => ({ name: c.country || 'Unknown', count: c._count.id })),
       byDevice,
       byBrowser,
+      byCountry,
       topPages: topPagesNormalized,
       trafficSources,
     };
