@@ -77,9 +77,11 @@ declare global {
         },
         businessId,
         assetBaseUrl,
+        apiBaseUrl: apiUrl,
         // Extra props are safe in Preact; App may ignore them if not declared.
         businessName: publicConfig?.name,
         preChatFormEnabled: publicConfig?.preChatFormEnabled,
+        isDemo: publicConfig?.isDemo,
       } as any),
       container
     );
@@ -90,11 +92,15 @@ declare global {
     const config = await res.json();
     if (!config || !config.widgetConfig) throw new Error('Invalid config');
     renderWidget(config);
-    trackVisitor(); // Track visit after config loads
+    trackVisitor(config); // Track visit after config loads
   }
 
-  async function trackVisitor() {
+  async function trackVisitor(publicConfig?: any) {
     try {
+      if (publicConfig?.isDemo) {
+        console.warn('[Fahimo] Demo widget config detected; skipping visitor tracking.');
+        return;
+      }
       // 1. Get/Create Fingerprint
       let fingerprint = localStorage.getItem(`fahimo-fp-${businessId}`);
       if (!fingerprint) {
@@ -116,7 +122,17 @@ declare global {
         })
       });
       
-      if (!sessionRes.ok) return;
+      if (!sessionRes.ok) {
+        let errorPayload: any = null;
+        try {
+          errorPayload = await sessionRes.json();
+        } catch (err) {
+          // ignore parse errors
+        }
+        const reason = errorPayload?.error || errorPayload?.message || 'unknown error';
+        console.warn(`[Fahimo] Failed to create visitor session (${sessionRes.status}): ${reason}`);
+        return;
+      }
       const session = await sessionRes.json();
 
       // 3. Track Page View

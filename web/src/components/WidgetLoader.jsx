@@ -5,6 +5,20 @@ import { API_CONFIG } from '@/lib/config';
 
 // Seeded Faheemly business that powers the public demo (see api/src/scripts/seed.ts)
 const FAHEEMLY_DEMO_BUSINESS_ID = 'cmir2oyaz00013ltwis4xc4tp';
+const WIDGET_BUILD_VERSION = getWidgetBuildVersion();
+
+function getWidgetBuildVersion() {
+  return (
+    process.env.NEXT_PUBLIC_WIDGET_BUILD_ID ||
+    process.env.NEXT_PUBLIC_WIDGET_VERSION ||
+    process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA ||
+    process.env.NEXT_PUBLIC_GIT_SHA ||
+    process.env.GITHUB_SHA ||
+    process.env.VERCEL_GIT_COMMIT_SHA ||
+    process.env.BUILD_ID ||
+    ''
+  );
+}
 
 function normalizeApiBaseUrl(value) {
   if (!value) return value;
@@ -19,6 +33,9 @@ function normalizeApiBaseUrl(value) {
 export default function WidgetLoader() {
   useEffect(() => {
     try {
+      if (WIDGET_BUILD_VERSION) {
+        window.__FAHIMO_WIDGET_VERSION = WIDGET_BUILD_VERSION;
+      }
       // Widget is now enabled by default (unified single file)
       const enabled = process.env.NEXT_PUBLIC_ENABLE_WIDGET !== 'false'; // Default true
       if (!enabled) {
@@ -50,6 +67,7 @@ export default function WidgetLoader() {
 
       // Prefer Render-hosted widget (same backend) to avoid broken static hosting on faheemly.com
       const externalWidget = process.env.NEXT_PUBLIC_WIDGET_URL || API_CONFIG.WIDGET_SCRIPT || 'https://fahimo-api.onrender.com/fahimo-widget.js';
+      const widgetSrc = appendCacheBust(externalWidget);
 
       // Load only the production/external widget by default. Local fallbacks are
       // disabled to prevent accidental loading from localhost in production.
@@ -61,6 +79,9 @@ export default function WidgetLoader() {
         s.defer = true;
         s.src = src;
         s.setAttribute('data-business-id', bid);
+        if (WIDGET_BUILD_VERSION) {
+          s.setAttribute('data-widget-version', WIDGET_BUILD_VERSION);
+        }
         // Only set explicit data-api-url in safe cases:
         // 1) If NEXT_PUBLIC_API_URL is provided at build-time (explicit override)
         // 2) If running on localhost and NEXT_PUBLIC_ALLOW_LOCAL_WIDGET=true (local dev only)
@@ -105,11 +126,19 @@ export default function WidgetLoader() {
           console.warn('WidgetLoader: loading production widget script without NEXT_PUBLIC_API_URL set. This may cause the widget to call the production API and return 404/400 on non-production sites.');
         }
       } catch (e) {}
-      loadScript(externalWidget);
+      loadScript(widgetSrc);
     } catch (e) {
       console.error('WidgetLoader error', e);
     }
   }, []);
 
   return null;
+}
+
+function appendCacheBust(url) {
+  if (!WIDGET_BUILD_VERSION) return url;
+  const [base, hash = ''] = url.split('#');
+  const separator = base.includes('?') ? '&' : '?';
+  const busted = `${base}${separator}v=${encodeURIComponent(WIDGET_BUILD_VERSION)}`;
+  return hash ? `${busted}#${hash}` : busted;
 }

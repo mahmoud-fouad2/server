@@ -372,6 +372,8 @@ interface AppProps {
   config: WidgetConfig;
   businessName?: string;
   assetBaseUrl?: string;
+  apiBaseUrl?: string;
+  isDemo?: boolean;
   preChatFormEnabled?: boolean;
 }
 
@@ -381,7 +383,8 @@ const DEFAULT_PRECHAT_FIELDS: PreChatField[] = [
   { id: 'phone', label: 'رقم الجوال (اختياري)', type: 'phone', required: false, placeholder: '+9665XXXXXXX' },
 ];
 
-const DEFAULT_SOUND = 'https://cdn.fahimo.com/widget/sounds/notify.mp3';
+const DEFAULT_SOUND_PATH = '/sounds/notify.mp3';
+const API_SOUND_FALLBACK = 'https://fahimo-api.onrender.com/sounds/notify.mp3';
 
 const SendIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -442,7 +445,7 @@ function ensureGlobalStyles() {
   document.head.appendChild(style);
 }
 
-export default function App({ config, businessName, assetBaseUrl, preChatFormEnabled }: AppProps) {
+export default function App({ config, businessName, assetBaseUrl, apiBaseUrl, preChatFormEnabled }: AppProps) {
   ensureGlobalStyles();
 
   const computedPreChatEnabled = typeof preChatFormEnabled === 'boolean'
@@ -504,7 +507,11 @@ export default function App({ config, businessName, assetBaseUrl, preChatFormEna
   const welcomeMessage = config.welcomeMessage || 'مرحباً! كيف يمكنني مساعدتك اليوم؟ 👋';
   const avatarUrl = resolveAssetUrl(config.botIcon || config.avatarUrl || config.customIconUrl, assetBaseUrl);
   const launcherIcon = resolveAssetUrl(config.customLauncherIcon || config.customIconUrl || config.botIcon, assetBaseUrl);
-  const notificationSoundSrc = resolveAssetUrl(config.notificationSound, assetBaseUrl) || DEFAULT_SOUND;
+  const notificationSoundSrc =
+    resolveAssetUrl(config.notificationSound, assetBaseUrl) ||
+    resolveAssetUrl(DEFAULT_SOUND_PATH, assetBaseUrl) ||
+    (apiBaseUrl ? `${apiBaseUrl.replace(/\/$/, '')}${DEFAULT_SOUND_PATH}` : undefined) ||
+    API_SOUND_FALLBACK;
   const notificationsAllowed = config.notificationSoundEnabled !== false;
   const position = config.position || 'right';
   const ratingEnabled = config.ratingEnabled !== false;
