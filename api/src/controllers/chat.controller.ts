@@ -58,7 +58,27 @@ export class ChatController {
   async sendMessage(req: Request, res: Response) {
     try {
       const { SendMessageSchema } = await import('@fahimo/shared');
-      const { businessId, conversationId, content, senderType, visitorId } = SendMessageSchema.parse(req.body);
+      const {
+        businessId,
+        conversationId,
+        content,
+        senderType,
+        visitorId,
+        visitorSessionId,
+        preChatData,
+      } = SendMessageSchema.parse(req.body);
+
+      const resolvedVisitorId = await this.resolveVisitorIdentity(
+        visitorId ?? null,
+        conversationId ?? null,
+        visitorSessionId ?? null
+      );
+
+      const metadataPayload: Record<string, unknown> = {};
+      if (visitorSessionId) metadataPayload.visitorSessionId = visitorSessionId;
+      if (preChatData && Object.keys(preChatData).length) {
+        metadataPayload.preChatData = preChatData;
+      }
 
       // 1. Save user message (creates conversation if needed)
       const userMessage = await chatService.saveMessage(
@@ -66,10 +86,22 @@ export class ChatController {
         conversationId || null, 
         content, 
         senderType || 'USER',
-        visitorId
+        resolvedVisitorId ?? undefined,
+        Object.keys(metadataPayload).length ? metadataPayload : undefined
       );
 
       const activeConversationId = userMessage.conversationId;
+
+      if (preChatData && Object.keys(preChatData).length) {
+        await this.applyPreChatMetadata(
+          activeConversationId,
+          resolvedVisitorId,
+          preChatData,
+          visitorSessionId
+        );
+      } else if (visitorSessionId) {
+        await this.mergeConversationMetadata(activeConversationId, { visitorSessionId });
+      }
 
       // 2. Generate AI response for USER messages
       if (senderType === 'USER' || !senderType) {
@@ -229,6 +261,117 @@ export class ChatController {
       res.json({ success: true, conversationId });
     } catch (error) {
       res.status(500).json({ error: 'Failed to mark conversation read' });
+    }
+  }
+
+  private async resolveVisitorIdentity(
+    visitorId: string | null,
+    conversationId: string | null,
+    visitorSessionId: string | null
+  ): Promise<string | null> {
+    if (visitorId) return visitorId;
+
+    if (visitorSessionId) {
+      const session = await prisma.visitorSession.findUnique({
+        where: { id: visitorSessionId },
+        select: { visitorId: true },
+      });
+      if (session?.visitorId) {
+        return session.visitorId;
+      }
+    }
+
+    if (conversationId) {
+      const conversation = await prisma.conversation.findUnique({
+        where: { id: conversationId },
+        select: { visitorId: true },
+      });
+      if (conversation?.visitorId) {
+        return conversation.visitorId;
+      }
+    }
+
+    return null;
+  }
+
+  private async applyPreChatMetadata(
+    conversationId: string,
+    visitorId: string | null,
+    preChatData: Record<string, string>,
+    visitorSessionId?: string | null
+  ) {
+    if (!preChatData || !Object.keys(preChatData).length) return;
+
+    await Promise.all([
+      this.mergeConversationMetadata(conversationId, {
+        preChatData,
+        ...(visitorSessionId ? { visitorSessionId } : {}),
+      }),
+      this.updateVisitorProfile(visitorId, preChatData),
+    ]);
+  }
+
+  private async mergeConversationMetadata(
+    conversationId: string,
+    patch: Record<string, unknown>
+  ) {
+    if (!conversationId || !Object.keys(patch).length) return;
+
+    try {
+      const existing = await prisma.conversation.findUnique({
+        where: { id: conversationId },
+        select: { metadata: true },
+      });
+
+      let current: Record<string, unknown> = {};
+      if (existing?.metadata) {
+        try {
+          current = JSON.parse(existing.metadata);
+        } catch (error) {
+          current = {};
+        }
+      }
+
+      const next: Record<string, unknown> = {
+        ...current,
+        ...patch,
+      };
+
+      if (patch.preChatData) {
+        const existingPreChat = (current.preChatData as Record<string, string> | undefined) || {};
+        next.preChatData = {
+          ...existingPreChat,
+          ...(patch.preChatData as Record<string, string>),
+        };
+      }
+
+      await prisma.conversation.update({
+        where: { id: conversationId },
+        data: { metadata: JSON.stringify(next) },
+        select: { id: true },
+      });
+    } catch (error) {
+      console.error('Conversation metadata merge failed:', error);
+    }
+  }
+
+  private async updateVisitorProfile(
+    visitorId: string | null,
+    preChatData: Record<string, string>
+  ) {
+    if (!visitorId) return;
+
+    const payload: Record<string, string> = {};
+    if (preChatData.name?.trim()) payload.name = preChatData.name.trim();
+    if (preChatData.email?.trim()) payload.email = preChatData.email.trim();
+    if (preChatData.phone?.trim()) payload.phone = preChatData.phone.trim();
+
+    if (!Object.keys(payload).length) return;
+
+    try {
+      await prisma.visitor.update({ where: { id: visitorId }, data: payload });
+    } catch (error) {
+      console.error('Visitor profile enrichment failed:', error);
     }
   }
 }

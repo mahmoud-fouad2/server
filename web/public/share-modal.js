@@ -24,7 +24,7 @@ function addSharePlaceholders() {
 		});
 	} catch (e) {
 		// Fail silently in case DOM not available (e.g., some server-side contexts)
-		try { console.warn('share-modal placeholder guard failed', e?.message || e); } catch (_) {}
+		try { console.warn('share-modal placeholder guard failed', e?.message || e); } catch { /* noop */ }
 	}
 }
 

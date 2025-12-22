@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import PageLayout from '@/components/layout/PageLayout';
-import Head from 'next/head';
 import {
   Utensils,
   Stethoscope,
@@ -152,7 +151,6 @@ const solutions = [
 
 export default function SolutionsPage() {
   const [mounted, setMounted] = useState(false);
-  const [selectedSolution, setSelectedSolution] = useState(null);
 
   useEffect(() => {
     setMounted(true);

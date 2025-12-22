@@ -14,6 +14,7 @@ import {
   Star,
   TrendingUp,
 } from 'lucide-react';
+import { visitorApi, analyticsApi } from '@/lib/api';
 
 export default function VisitorAnalytics() {
   const [activeSessions, setActiveSessions] = useState([]);
@@ -27,12 +28,13 @@ export default function VisitorAnalytics() {
 
     const fetchActiveSessions = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const response = await fetch('/api/visitor/active-sessions', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await response.json();
-        if (mounted && data.success) setActiveSessions(data.sessions);
+        const response = await visitorApi.getActiveSessions();
+        const sessions = Array.isArray(response?.sessions)
+          ? response.sessions
+          : Array.isArray(response)
+            ? response
+            : [];
+        if (mounted) setActiveSessions(sessions);
       } catch (error) {
         if (mounted) console.error('Error fetching active sessions:', error);
       }
@@ -40,16 +42,10 @@ export default function VisitorAnalytics() {
 
     const fetchAnalytics = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const dateFrom = getDateFrom(dateRange);
-        const response = await fetch(
-          `/api/visitor/analytics?from=${dateFrom.toISOString()}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        const data = await response.json();
-        if (mounted && data.success) setAnalytics(data.analytics);
+        const dateFrom = getDateFrom(dateRange).toISOString();
+        const response = await visitorApi.getAnalytics({ from: dateFrom });
+        const analyticsData = response?.analytics || response?.data || response;
+        if (mounted) setAnalytics(analyticsData || null);
       } catch (error) {
         if (mounted) console.error('Error fetching analytics:', error);
       }
@@ -57,14 +53,14 @@ export default function VisitorAnalytics() {
 
     const fetchRatingStats = async () => {
       try {
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
-        const businessId = user.businesses?.[0]?.id;
-
-        if (!businessId) return;
-
-        const response = await fetch(`/api/rating/stats/${businessId}`);
-        const data = await response.json();
-        if (mounted && data.success) setRatingStats(data.stats);
+        const statsResponse = await analyticsApi.getRatingStats();
+        if (!mounted) return;
+        const payload = statsResponse?.stats || statsResponse || {};
+        setRatingStats({
+          avgRating: payload?.average ?? payload?.avgRating ?? 0,
+          totalRatings: payload?.count ?? payload?.totalRatings ?? 0,
+          ratingDistribution: payload?.distribution || payload?.ratingDistribution || { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+        });
       } catch (error) {
         if (mounted) console.error('Error fetching rating stats:', error);
       }
@@ -106,6 +102,23 @@ export default function VisitorAnalytics() {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes}د ${remainingSeconds}ث`;
+  };
+
+  const totalSessions = analytics?.totalSessions ?? 0;
+  const safeSessionDivisor = totalSessions > 0 ? totalSessions : 1;
+  const avgPagesPerSession =
+    totalSessions > 0 && analytics?.totalPageViews
+      ? (analytics.totalPageViews / safeSessionDivisor).toFixed(1)
+      : '0';
+  const trafficSourceEntries = Object.entries(analytics?.trafficSources || {});
+  const hasTrafficSources = trafficSourceEntries.length > 0;
+  const totalRatings = ratingStats?.totalRatings ?? 0;
+  const ratingDistribution = ratingStats?.ratingDistribution || {
+    1: 0,
+    2: 0,
+    3: 0,
+    4: 0,
+    5: 0,
   };
 
   if (loading) {
@@ -170,12 +183,7 @@ export default function VisitorAnalytics() {
               {analytics?.totalPageViews || 0}
             </div>
             <p className="text-xs text-muted-foreground">
-              {analytics?.totalPageViews && analytics?.totalSessions
-                ? (analytics.totalPageViews / analytics.totalSessions).toFixed(
-                    1
-                  )
-                : 0}{' '}
-              لكل جلسة
+              {avgPagesPerSession} لكل جلسة
             </p>
           </CardContent>
         </Card>
@@ -286,7 +294,7 @@ export default function VisitorAnalytics() {
                         <div
                           className="h-full bg-brand-500"
                           style={{
-                            width: `${(count / analytics.totalSessions) * 100}%`,
+                            width: `${Math.min(100, (count / safeSessionDivisor) * 100)}%`,
                           }}
                         />
                       </div>
@@ -317,7 +325,7 @@ export default function VisitorAnalytics() {
                         <div
                           className="h-full bg-brand-500"
                           style={{
-                            width: `${(count / analytics.totalSessions) * 100}%`,
+                            width: `${Math.min(100, (count / safeSessionDivisor) * 100)}%`,
                           }}
                         />
                       </div>
@@ -337,22 +345,28 @@ export default function VisitorAnalytics() {
           <CardTitle>الصفحات الأكثر زيارة</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            {analytics?.topPages?.map((page, index) => (
-              <div
-                key={page.path}
-                className="flex items-center justify-between"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center w-6 h-6 bg-brand-500/10 rounded text-xs font-bold text-brand-500">
-                    {index + 1}
+          {analytics?.topPages?.length ? (
+            <div className="space-y-3">
+              {analytics.topPages.map((page, index) => (
+                <div
+                  key={page.path}
+                  className="flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-6 h-6 bg-brand-500/10 rounded text-xs font-bold text-brand-500">
+                      {index + 1}
+                    </div>
+                    <span className="font-mono text-sm">{page.path}</span>
                   </div>
-                  <span className="font-mono text-sm">{page.path}</span>
+                  <span className="text-sm font-medium">{page.count} زيارة</span>
                 </div>
-                <span className="text-sm font-medium">{page.count} زيارة</span>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-muted-foreground py-6">
+              لا توجد بيانات تصفح كافية بعد
+            </p>
+          )}
         </CardContent>
       </Card>
 
@@ -362,9 +376,9 @@ export default function VisitorAnalytics() {
           <CardTitle>مصادر الزيارات</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            {Object.entries(analytics?.trafficSources || {}).map(
-              ([source, count]) => (
+          {hasTrafficSources ? (
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              {trafficSourceEntries.map(([source, count]) => (
                 <div key={source} className="text-center">
                   <div className="text-2xl font-bold text-brand-500">
                     {count}
@@ -373,9 +387,13 @@ export default function VisitorAnalytics() {
                     {source}
                   </div>
                 </div>
-              )
-            )}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-muted-foreground py-6">
+              لم يتم جمع مصادر الزيارات بعد
+            </p>
+          )}
         </CardContent>
       </Card>
 
@@ -397,12 +415,12 @@ export default function VisitorAnalytics() {
                     <div
                       className="h-full bg-yellow-400"
                       style={{
-                        width: `${((ratingStats.ratingDistribution[rating] || 0) / ratingStats.totalRatings) * 100}%`,
+                        width: `${totalRatings > 0 ? ((ratingDistribution[rating] || 0) / totalRatings) * 100 : 0}%`,
                       }}
                     />
                   </div>
                   <span className="text-sm font-medium w-12 text-left">
-                    {ratingStats.ratingDistribution[rating] || 0}
+                    {ratingDistribution[rating] || 0}
                   </span>
                 </div>
               ))}

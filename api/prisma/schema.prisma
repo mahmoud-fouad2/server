@@ -401,6 +401,7 @@ model VisitorSession {
   device      String?
   browser     String?
   os          String?
+  trafficSource String?
   pageViews   Int      @default(0)
   startedAt   DateTime @default(now())
   endedAt     DateTime?

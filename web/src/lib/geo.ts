@@ -26,7 +26,10 @@ export async function detectUserRegion(): Promise<GeoData> {
       if (age < 3600000) { // 1 hour
         return data;
       }
-    } catch (e) {
+    } catch (cacheError) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn('Geo cache parse failed, refetching region data', cacheError);
+      }
       // Invalid cache, proceed with fresh detection
     }
   }

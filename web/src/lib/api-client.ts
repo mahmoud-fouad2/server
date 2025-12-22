@@ -272,6 +272,8 @@ export const api = {
   visitor: {
     createSession: (data: Record<string, unknown>) => fetchAPI('/visitor/session', { method: 'POST', body: JSON.stringify(data) }),
     trackPage: (sessionId: string) => fetchAPI('/visitor/track', { method: 'POST', body: JSON.stringify({ sessionId }) }),
+    getActiveSessions: () => fetchAPI('/visitor/active-sessions'),
+    getAnalytics: (params?: Record<string, string | number | boolean>) => fetchAPI('/visitor/analytics', { params }),
   },
   improvement: {
     getGaps: (limit = 20, offset = 0) => fetchAPI(`/improvement/gaps?limit=${limit}&offset=${offset}`),
@@ -287,6 +289,7 @@ export const api = {
     getRealtime: () => fetchAPI('/analytics/realtime'),
     getVectorStats: () => fetchAPI('/analytics/vector-stats'),
     getAlerts: () => fetchAPI('/analytics/alerts'),
+    getRatingStats: () => fetchAPI('/rating/stats'),
   },
   admin: {
     getStats: () => fetchAPI('/admin/stats'),
@@ -333,6 +336,31 @@ export const api = {
     deleteMedia: (url: string) => fetchAPI('/admin/media', { method: 'DELETE', body: JSON.stringify({ url }) }),
   }
 };
+
+// Legacy alias helper so older dashboard code keeps working even if the canonical
+// method names changed (e.g. conversations() vs getConversations()).
+type ApiMethod = (...args: unknown[]) => unknown;
+type ApiSection = Record<string, ApiMethod>;
+
+const ensureAlias = (section: ApiSection | undefined, alias: string, target: string) => {
+  if (!section || section[alias]) return;
+  const targetFn = section[target];
+  if (typeof targetFn === 'function') {
+    section[alias] = (...args: unknown[]) => targetFn(...args);
+  }
+};
+
+ensureAlias(api.auth as ApiSection, 'getProfile', 'profile');
+
+ensureAlias(api.business as ApiSection, 'getSettings', 'settings');
+ensureAlias(api.business as ApiSection, 'getIntegrations', 'integrations');
+ensureAlias(api.business as ApiSection, 'getConversations', 'conversations');
+
+ensureAlias(api.chat as ApiSection, 'getConversations', 'conversations');
+ensureAlias(api.chat as ApiSection, 'getMessages', 'messages');
+ensureAlias(api.chat as ApiSection, 'getHandoverRequests', 'handoverRequests');
+
+ensureAlias(api.integration as ApiSection, 'setup', 'updateTelegram');
 
 // Export individual namespaces for backward compatibility if needed
 export const authApi = api.auth;

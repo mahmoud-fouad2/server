@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import FaheemAnimatedLogo from '@/components/FaheemAnimatedLogo';
-import { Home, MessageSquare, ArrowRight } from 'lucide-react';
+import { Home, MessageSquare } from 'lucide-react';
 
 export default function NotFound() {
   return (

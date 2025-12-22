@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import {
   Utensils,
-  Check,
   ArrowRight,
   Clock,
   Users,

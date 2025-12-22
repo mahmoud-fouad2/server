@@ -15,7 +15,6 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { contactApi } from '@/lib/api';
 import Captcha from '@/components/Captcha';
 
 // export const metadata = {

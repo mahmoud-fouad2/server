@@ -3,21 +3,17 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import PageLayout from '@/components/layout/PageLayout';
-import Head from 'next/head';
 import {
   MessageSquare,
-  Mic,
   Upload,
   Globe,
   Zap,
   Bot,
   BarChart3,
-  Settings,
   Shield,
   Clock,
   Users,
   Phone,
-  Mail,
   Check,
   ArrowRight,
 } from 'lucide-react';

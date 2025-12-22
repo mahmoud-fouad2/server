@@ -5,6 +5,15 @@ import { AuthRequest } from '../middleware/auth.js';
 const analyticsService = new AnalyticsService();
 
 export class AnalyticsController {
+  private resolveBusinessId(req: AuthRequest) {
+    return (
+      req.user?.businessId ||
+      (req.params as Record<string, string | undefined>)?.businessId ||
+      (req.query?.businessId as string) ||
+      (req.headers['x-business-id'] as string)
+    );
+  }
+
   async getDashboard(req: AuthRequest, res: Response) {
     try {
       const businessId = req.user!.businessId;
@@ -61,11 +70,11 @@ export class AnalyticsController {
 
   async getRatingStats(req: AuthRequest, res: Response) {
     try {
-      const businessId = req.user!.businessId;
+      const businessId = this.resolveBusinessId(req);
       if (!businessId) return res.status(400).json({ error: 'Business ID required' });
 
       const stats = await analyticsService.getRatingStats(businessId);
-      res.json(stats);
+      res.json({ success: true, stats });
     } catch (error) {
       console.error('Rating Stats Error:', error);
       res.status(500).json({ error: 'Failed to fetch rating stats' });

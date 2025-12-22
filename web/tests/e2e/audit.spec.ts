@@ -23,7 +23,9 @@ test.describe('Admin Audit Logs E2E', () => {
         try {
           localStorage.setItem('token', token);
           localStorage.setItem('user', user);
-        } catch (e) {}
+        } catch (storageError) {
+          console.error('Failed to seed admin auth context', storageError);
+        }
       }, { token, user });
   });
 

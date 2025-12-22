@@ -1,4 +1,4 @@
-import { Industry, BotConfig, KnowledgeItem } from './types';
+import { Industry } from './types';
 
 export const APP_NAME = 'فهملي';
 

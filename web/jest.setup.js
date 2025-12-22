@@ -77,39 +77,58 @@ global.ResizeObserver = class ResizeObserver {
   }
 }
 
+const stripImageProps = (props) => {
+  const sanitized = { ...props };
+  const blocked = ['unoptimized', 'placeholder', 'blurDataURL', 'quality', 'priority', 'sizes', 'fill'];
+  blocked.forEach(key => {
+    if (key in sanitized) {
+      delete sanitized[key];
+    }
+  });
+  return sanitized;
+};
+
+const MOTION_PROPS = ['whileInView', 'initial', 'animate', 'exit', 'transition', 'variants'];
+const stripMotionProps = (props) => {
+  const sanitized = { ...props };
+  MOTION_PROPS.forEach(key => {
+    if (key in sanitized) {
+      delete sanitized[key];
+    }
+  });
+  return sanitized;
+};
+
+const createMockMotionElement = (Tag) => {
+  const MockComponent = ({ children, ...props }) => {
+    const Component = Tag;
+    const safeProps = stripMotionProps(props);
+    return <Component {...safeProps}>{children}</Component>;
+  };
+  MockComponent.displayName = `MockMotion${Tag}`;
+  return MockComponent;
+};
+
 // Mock Next.js Image component for jest env (avoid next/image DOM warnings)
 jest.mock('next/image', () => ({
   __esModule: true,
-  default: ({ src, alt, ...props }) => {
-    // Remove next/image-specific props that would create DOM warnings in JSDOM
-    const { unoptimized, placeholder, blurDataURL, className, quality, priority, sizes, fill, ...rest } = props;
-    return <img src={src} alt={alt} className={className} {...rest} />;
-  },
+  default: Object.assign(({ src, alt, ...props }) => {
+    const sanitized = stripImageProps(props);
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img src={src} alt={alt} {...sanitized} />;
+  }, { displayName: 'MockNextImage' }),
 }));
 
 // Mock framer-motion to render simple DOM nodes and avoid unknown prop warnings
 jest.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }) => {
-      const { whileInView, initial, animate, exit, transition, variants, ...rest } = props;
-      return <div {...rest}>{children}</div>;
-    },
-    button: ({ children, ...props }) => {
-      const { whileInView, initial, animate, exit, transition, variants, ...rest } = props;
-      return <button {...rest}>{children}</button>;
-    },
-    h1: ({ children, ...props }) => {
-      const { whileInView, initial, animate, exit, transition, variants, ...rest } = props;
-      return <h1 {...rest}>{children}</h1>;
-    },
-    h2: ({ children, ...props }) => {
-      const { whileInView, initial, animate, exit, transition, variants, ...rest } = props;
-      return <h2 {...rest}>{children}</h2>;
-    },
-    p: ({ children, ...props }) => {
-      const { whileInView, initial, animate, exit, transition, variants, ...rest } = props;
-      return <p {...rest}>{children}</p>;
-    },
+    div: createMockMotionElement('div'),
+    button: createMockMotionElement('button'),
+    h1: createMockMotionElement('h1'),
+    h2: createMockMotionElement('h2'),
+    p: createMockMotionElement('p'),
   },
-  AnimatePresence: ({ children }) => <>{children}</>,
+  AnimatePresence: Object.assign(({ children }) => <>{children}</>, {
+    displayName: 'MockAnimatePresence',
+  }),
 }));

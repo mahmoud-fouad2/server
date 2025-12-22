@@ -14,6 +14,6 @@ const analyticsController = new AnalyticsController();
 // But "stats" sounds like admin.
 // I'll add authenticateToken.
 
-router.get('/stats/:businessId', authenticateToken, analyticsController.getRatingStats);
+router.get('/stats/:businessId?', authenticateToken, analyticsController.getRatingStats.bind(analyticsController));
 
 export default router;

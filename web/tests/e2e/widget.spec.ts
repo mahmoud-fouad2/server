@@ -83,10 +83,20 @@ test.describe('Faheemly widget', () => {
       try {
         const bc = new BroadcastChannel(`fahimo-config-update-${bid}`);
         bc.postMessage({ type: 'CONFIG_UPDATED', timestamp: Date.now() });
-      } catch (e) {
+      } catch (broadcastError) {
+        console.warn('Widget test broadcast channel unavailable, using storage fallback', broadcastError);
         // fallback: set localStorage notify key used by widget's storage listener
-        try { localStorage.setItem(`fahimo-config-update-${bid}-notify`, String(Date.now())); } catch (e) {}
-        window.dispatchEvent(new StorageEvent('storage', { key: `fahimo-config-update-${bid}-notify`, newValue: String(Date.now()) }));
+        try {
+          localStorage.setItem(`fahimo-config-update-${bid}-notify`, String(Date.now()));
+        } catch (storageError) {
+          console.warn('Widget test failed to update storage notification key', storageError);
+        }
+        window.dispatchEvent(
+          new StorageEvent('storage', {
+            key: `fahimo-config-update-${bid}-notify`,
+            newValue: String(Date.now()),
+          })
+        );
       }
     }, businessId);
 

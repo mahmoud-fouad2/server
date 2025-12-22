@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Sidebar from '@/components/Sidebar';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { MessageSquare, User, Clock } from 'lucide-react';
 import { businessApi } from '@/lib/api';
 
@@ -16,7 +16,7 @@ export default function ConversationsPage() {
         const data = await businessApi.getConversations();
         setConversations(data);
       } catch (error) {
-        // Error loading conversations
+        console.error('Failed to load conversations', error);
       } finally {
         setLoading(false);
       }

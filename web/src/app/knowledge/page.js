@@ -3,8 +3,7 @@
 import { useState } from 'react';
 import Sidebar from '@/components/Sidebar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Upload, FileText, Check, Loader2 } from 'lucide-react';
+import { Upload, Check, Loader2 } from 'lucide-react';
 import { knowledgeApi } from '@/lib/api';
 
 export default function KnowledgePage() {
@@ -26,6 +25,7 @@ export default function KnowledgePage() {
 
       setMessage('تم رفع الملف بنجاح! سيتم تدريب البوت عليه فوراً.');
     } catch (error) {
+      console.error('Knowledge upload failed:', error);
       setMessage('فشل الرفع. حاول مرة أخرى.');
     } finally {
       setUploading(false);

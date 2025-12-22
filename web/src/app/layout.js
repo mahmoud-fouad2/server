@@ -10,7 +10,6 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 import '@/lib/fetch-proxy';
 import ClientLayout from './ClientLayout';
 import { AppProvider } from '@/context/AppContext';
-import { getOrganizationSchema } from '@/lib/structured-data';
 // WidgetLoader is a client component that appends the widget script when appropriate.
 // Import it directly — Next will render this as a client component at runtime.
 import WidgetLoader from '@/components/WidgetLoader';

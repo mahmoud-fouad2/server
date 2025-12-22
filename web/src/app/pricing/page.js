@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import PageLayout from '@/components/layout/PageLayout';
-import Head from 'next/head';
 import {
   Check,
   X,
@@ -11,9 +10,6 @@ import {
   Rocket,
   Crown,
   Zap,
-  Shield,
-  HeadphonesIcon,
-  Users,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';

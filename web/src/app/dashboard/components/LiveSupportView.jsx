@@ -30,14 +30,21 @@ export default function LiveSupportView({ addNotification }) {
 
     const fetchHandoverRequests = async () => {
       try {
-        const data = await chatApi.getHandoverRequests();
+        const payload = await chatApi.getHandoverRequests();
+        const requests = Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload?.data)
+            ? payload.data
+            : Array.isArray(payload?.requests)
+              ? payload.requests
+              : [];
+
         if (!mounted) return;
-        // If new requests arrived compared to previous state, notify
-        if (data.length > handoverRequests.length) {
+        if (requests.length > handoverRequests.length) {
           playNotificationSound();
           addNotification('طلب دعم جديد!', 'success');
         }
-        setHandoverRequests(data);
+        setHandoverRequests(requests);
       } catch (err) {
         console.error(err);
       }

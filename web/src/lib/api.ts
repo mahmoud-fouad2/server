@@ -16,8 +16,11 @@ export const telegramApi = api.integration;
 export const visitorApi = api.visitor;
 export const analyticsApi = api.analytics;
 
-export const apiCall = async (endpoint: string, options?: unknown) => {
-  return fetchAPI(endpoint, options as any);
+export const apiCall = async (
+  endpoint: string,
+  options?: Parameters<typeof fetchAPI>[1]
+) => {
+  return fetchAPI(endpoint, options);
 };
 
 export default api;

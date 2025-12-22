@@ -126,7 +126,9 @@ declare global {
         body: JSON.stringify({
           sessionId: session.id,
           url: window.location.href,
-          title: document.title
+          title: document.title,
+          referrer: document.referrer || undefined,
+          origin: window.location.hostname,
         })
       });
 

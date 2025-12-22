@@ -54,6 +54,7 @@ export class ChatService {
         content,
         sender: senderType === 'USER' ? 'user' : (senderType === 'AGENT' ? 'agent' : 'bot'),
         type: metadata?.type || 'text',
+        metadata: metadata ? JSON.stringify(metadata) : undefined,
       }
     });
 

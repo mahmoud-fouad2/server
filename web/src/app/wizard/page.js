@@ -1,7 +1,6 @@
- 'use client';
+'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import useTheme from '@/lib/theme';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +12,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import FaheemAnimatedLogo from '@/components/FaheemAnimatedLogo';
 import { convertCurrency } from '@/constants';
@@ -24,9 +22,6 @@ import {
   ArrowRight,
   ArrowLeft,
   Loader2,
-  Home,
-  Sun,
-  Moon,
   Palette,
   Bot,
   FileText,
@@ -37,8 +32,6 @@ import {
   Copy,
   CheckCircle2,
   AlertCircle,
-  Sparkles,
-  Zap,
 } from 'lucide-react';
 import { authApi, widgetApi, knowledgeApi, businessApi } from '@/lib/api';
 import { API_CONFIG } from '@/lib/config';
@@ -146,7 +139,9 @@ export default function Wizard() {
       console.error('Wizard boundary caught:', error, info);
       try {
         window.__LAST_WIZARD_ERROR = { error: error?.toString(), info };
-      } catch (e) {}
+      } catch (storageError) {
+        console.warn('Failed to persist wizard error snapshot:', storageError);
+      }
     }
 
     render() {
@@ -169,7 +164,6 @@ export default function Wizard() {
   }
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [isDark, setIsDark] = useTheme(true);
   const [isVerified, setIsVerified] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [ConfettiComp, setConfettiComp] = useState(null);
@@ -208,8 +202,6 @@ export default function Wizard() {
     // Terms acceptance
     acceptTerms: false,
   });
-
-  const router = useRouter();
   const totalSteps = 6;
 
   // Save draft function must be declared before any effect that uses it
@@ -268,7 +260,9 @@ export default function Wizard() {
         window.__WIZARD_CLIENT_ERRORS = window.__WIZARD_CLIENT_ERRORS || [];
         window.__WIZARD_CLIENT_ERRORS.push(payload);
         console.error('Captured wizard client error:', payload);
-      } catch (e) {}
+      } catch (loggingError) {
+        console.warn('Failed to record wizard client error:', loggingError);
+      }
     };
 
     window.addEventListener('error', handler);
@@ -414,8 +408,9 @@ export default function Wizard() {
   const widgetCode = `<script src="${API_CONFIG.WIDGET_SCRIPT}" data-business-id="${businessId || formData.email?.split('@')[0] || 'your-business-id'}"></script>`;
 
   return (
-    <PageLayout>
-    <div
+    <LocalWizardBoundary>
+      <PageLayout>
+        <div
       className="min-h-[calc(100vh-80px)] flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-cosmic-950 dark:to-cosmic-900 p-4 font-sans relative overflow-hidden transition-colors duration-300"
       dir="rtl"
     >
@@ -1114,12 +1109,17 @@ export default function Wizard() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => navigator.clipboard.writeText(widgetCode)}
-                      className="mb-6"
+                      onClick={() => copyToClipboard(widgetCode)}
+                      className="mb-2"
                     >
                       <Copy className="w-4 h-4 mr-2" />
                       نسخ الكود
                     </Button>
+                    {copied && (
+                      <p className="text-sm text-green-600 dark:text-green-400 mb-4">
+                        تم نسخ الكود إلى الحافظة
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-4">
@@ -1226,7 +1226,8 @@ export default function Wizard() {
           </CardFooter>
         </Card>
       </motion.div>
-    </div>
-    </PageLayout>
+        </div>
+      </PageLayout>
+    </LocalWizardBoundary>
   );
 }

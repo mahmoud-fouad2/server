@@ -2,7 +2,7 @@
 // The SW simply tries to forward requests to the network and returns a lightweight
 // 504 response when the network is unavailable.
 
-self.addEventListener('install', event => {
+self.addEventListener('install', () => {
   // Activate immediately
   self.skipWaiting();
 });

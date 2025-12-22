@@ -3,6 +3,9 @@
 import { useEffect } from 'react';
 import { API_CONFIG } from '@/lib/config';
 
+// Seeded Faheemly business that powers the public demo (see api/src/scripts/seed.ts)
+const FAHEEMLY_DEMO_BUSINESS_ID = 'cmir2oyaz00013ltwis4xc4tp';
+
 function normalizeApiBaseUrl(value) {
   if (!value) return value;
   // Trim trailing slashes and a trailing `/api` segment if present.
@@ -35,7 +38,7 @@ export default function WidgetLoader() {
         const host = typeof window !== 'undefined' && window.location ? window.location.hostname : '';
         if (host && host.includes('faheemly.com')) {
           // On the faheemly.com site, default to the demo Faheemly business so the embed works without extra setup
-          bid = 'cmjbp7ew000016xf96ail1m8w';
+          bid = FAHEEMLY_DEMO_BUSINESS_ID;
           console.info('[Fahimo] No env business ID found; defaulting to Faheemly demo business on faheemly.com');
         } else {
           console.warn('No business ID configured for widget. Set NEXT_PUBLIC_WIDGET_BUSINESS_ID or NEXT_PUBLIC_BUSINESS_ID.');

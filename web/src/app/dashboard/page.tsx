@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import Image from 'next/image';
 import useTheme from '@/lib/theme';
-import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import Sidebar from '@/components/Sidebar';
 import MobileNav from '@/components/MobileNav';
@@ -52,10 +51,9 @@ interface Notification {
 
 function DashboardContent() {
   // Hooks
-  const router = useRouter();
   const [isDark, setIsDark] = useTheme(false);
   const { stats, loading: statsLoading } = useDashboardStats();
-  const { business, loading: businessLoading } = useBusiness();
+  const { loading: businessLoading } = useBusiness();
   const { entries: kbList, reindex } = useKnowledge();
 
   // State
@@ -89,7 +87,7 @@ function DashboardContent() {
   useEffect(() => {
     try {
       window.scrollTo({ top: 0, behavior: 'smooth' });
-    } catch (e) {
+    } catch {
       // ignore in SSR/test env
     }
   }, [activeTab]);

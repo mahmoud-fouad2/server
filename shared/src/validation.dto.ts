@@ -17,6 +17,8 @@ export const SendMessageSchema = z.object({
   content: z.string().min(1, 'Message content is required').max(5000, 'Message too long'),
   senderType: z.enum(['USER', 'BOT', 'AGENT']).optional().default('USER'),
   visitorId: z.string().optional(),
+  visitorSessionId: z.string().cuid('Invalid session ID').optional(),
+  preChatData: z.record(z.string()).optional(),
 });
 
 export type SendMessageInput = z.infer<typeof SendMessageSchema>;

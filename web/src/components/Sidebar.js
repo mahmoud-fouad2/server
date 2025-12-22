@@ -90,7 +90,9 @@ export default function Sidebar({ activeTab, setActiveTab, userRole }) {
         ).length;
         setTicketCount(count);
       } catch (err) {
-        // Error handled silently in production
+        if (process.env.NODE_ENV !== 'production') {
+          console.error('Sidebar: failed to fetch tickets', err);
+        }
       }
     };
     // Fetch unread counts
@@ -101,7 +103,9 @@ export default function Sidebar({ activeTab, setActiveTab, userRole }) {
         const ticketsWithUnread = data.ticketsUnread || 0;
         setUnreadCount(ticketsWithUnread);
       } catch (err) {
-        // ignore
+        if (process.env.NODE_ENV !== 'production') {
+          console.error('Sidebar: failed to fetch unread counts', err);
+        }
       }
     };
     fetchTicketCount();
@@ -130,8 +134,14 @@ export default function Sidebar({ activeTab, setActiveTab, userRole }) {
         window.addEventListener('unread:changed', onUnreadChanged);
 
         // clean up on unmount
-        const cleanup = () => { 
-          try { socket.disconnect(); } catch (e) {} 
+        const cleanup = () => {
+          try {
+            socket.disconnect();
+          } catch (socketError) {
+            if (process.env.NODE_ENV !== 'production') {
+              console.warn('Sidebar: failed to disconnect socket', socketError);
+            }
+          }
           window.removeEventListener('unread:changed', onUnreadChanged);
           clearInterval(ticketInterval);
         };

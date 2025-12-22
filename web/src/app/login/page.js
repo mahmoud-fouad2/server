@@ -1,11 +1,10 @@
 'use client';
 
-import { useState } from 'react';
 import { Login } from '../../components/Login';
 import PageLayout from '@/components/layout/PageLayout';
 
 export default function LoginPage() {
-  const [lang, setLang] = useState('ar');
+  const lang = 'ar';
 
   return (
     <PageLayout>

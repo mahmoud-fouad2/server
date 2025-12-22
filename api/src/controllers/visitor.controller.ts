@@ -1,10 +1,20 @@
 import { Request, Response } from 'express';
 import { VisitorService } from '../services/visitor.service.js';
 import prisma from '../config/database.js';
+import { AuthRequest } from '../middleware/auth.js';
 
 const visitorService = new VisitorService();
 
 export class VisitorController {
+  private resolveBusinessId(req: AuthRequest) {
+    return (
+      req.user?.businessId ||
+      (req.headers['x-business-id'] as string) ||
+      (req.query?.businessId as string) ||
+      (req.params as Record<string, string | undefined>)?.businessId
+    );
+  }
+
   async createSession(req: Request, res: Response) {
     try {
       const businessId = req.body.businessId || req.query.businessId || req.headers['x-business-id'];
@@ -29,6 +39,8 @@ export class VisitorController {
         country: req.body.country,
         city: req.body.city,
         device: req.body.device,
+        browser: req.body.browser,
+        os: req.body.os,
       });
 
       res.json({ id: session.id, sessionId: session.id, success: true, data: session });
@@ -43,10 +55,10 @@ export class VisitorController {
 
   async trackPage(req: Request, res: Response) {
     try {
-      const { sessionId, url, title } = req.body;
+      const { sessionId, url, title, referrer, origin } = req.body;
       if (!sessionId) return res.status(400).json({ error: 'Session ID required' });
 
-      await visitorService.trackPageView(sessionId, { url, title });
+      await visitorService.trackPageView(sessionId, { url, title, referrer, origin });
       res.json({ success: true });
     } catch (error) {
       console.error('Track Page Error:', error);
@@ -54,19 +66,38 @@ export class VisitorController {
     }
   }
 
-  async getActiveSessions(req: Request, res: Response) {
+  async getActiveSessions(req: AuthRequest, res: Response) {
     try {
-      res.json([]);
+      const businessId = this.resolveBusinessId(req);
+      if (!businessId) {
+        return res.status(400).json({ success: false, error: 'Business ID required' });
+      }
+
+      const sessions = await visitorService.getActiveSessions(businessId as string);
+      res.json({ success: true, sessions });
     } catch (error) {
-      res.status(500).json({ error: 'Failed to fetch active sessions' });
+      console.error('Visitor Active Sessions Error:', error);
+      res.status(500).json({ success: false, error: 'Failed to fetch active sessions' });
     }
   }
 
-  async getAnalytics(req: Request, res: Response) {
+  async getAnalytics(req: AuthRequest, res: Response) {
     try {
-      res.json({ visitors: 0, sessions: 0, pageViews: 0 });
+      const businessId = this.resolveBusinessId(req);
+      if (!businessId) {
+        return res.status(400).json({ success: false, error: 'Business ID required' });
+      }
+
+      const rawFrom = req.query?.from ? new Date(String(req.query.from)) : undefined;
+      const rawTo = req.query?.to ? new Date(String(req.query.to)) : undefined;
+      const fromParam = rawFrom && !isNaN(rawFrom.getTime()) ? rawFrom : undefined;
+      const toParam = rawTo && !isNaN(rawTo.getTime()) ? rawTo : undefined;
+
+      const analytics = await visitorService.getAnalytics(businessId as string, { from: fromParam, to: toParam });
+      res.json({ success: true, analytics });
     } catch (error) {
-      res.status(500).json({ error: 'Failed to fetch visitor analytics' });
+      console.error('Visitor Analytics Error:', error);
+      res.status(500).json({ success: false, error: 'Failed to fetch visitor analytics' });
     }
   }
 }

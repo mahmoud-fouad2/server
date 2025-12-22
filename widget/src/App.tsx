@@ -471,6 +471,7 @@ export default function App({ config, businessName, assetBaseUrl, preChatFormEna
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [visitorId, setVisitorId] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState(false);
   const [ratingValue, setRatingValue] = useState<number | null>(null);
   const [ratingSubmitted, setRatingSubmitted] = useState(false);
@@ -483,6 +484,18 @@ export default function App({ config, businessName, assetBaseUrl, preChatFormEna
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<Socket | null>(null);
+    useEffect(() => {
+      if (typeof window === 'undefined') return;
+      try {
+        const storedVisitorId = localStorage.getItem(`fahimo-visitor-id-${config.businessId}`);
+        if (storedVisitorId) {
+          setVisitorId(storedVisitorId);
+        }
+      } catch (error) {
+        // Ignore storage access issues
+      }
+    }, [config.businessId]);
+
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const lastMessageCountRef = useRef(0);
   const welcomeInjectedRef = useRef(false);
@@ -645,6 +658,22 @@ export default function App({ config, businessName, assetBaseUrl, preChatFormEna
     setInput('');
     setIsLoading(true);
 
+    const cleanPreChatData = Object.entries(preChatData).reduce<Record<string, string>>((acc, [key, value]) => {
+      if (typeof value === 'string' && value.trim().length) {
+        acc[key] = value.trim();
+      }
+      return acc;
+    }, {});
+
+    let resolvedVisitorId = visitorId;
+    if (!resolvedVisitorId && typeof window !== 'undefined') {
+      try {
+        resolvedVisitorId = localStorage.getItem(`fahimo-visitor-id-${config.businessId}`);
+      } catch (error) {
+        resolvedVisitorId = null;
+      }
+    }
+
     try {
       const apiUrl = getApiUrl();
       const response = await fetch(`${apiUrl}/api/chat/send`, {
@@ -654,9 +683,11 @@ export default function App({ config, businessName, assetBaseUrl, preChatFormEna
           businessId: config.businessId,
           content,
           conversationId,
-          visitorId: sessionId,
+          visitorId: resolvedVisitorId || undefined,
+          visitorSessionId: sessionId || undefined,
           visitorName: visitorInfo.name || 'زائر',
           visitorEmail: visitorInfo.email || '',
+          preChatData: Object.keys(cleanPreChatData).length ? cleanPreChatData : undefined,
         }),
       });
 
@@ -726,8 +757,19 @@ export default function App({ config, businessName, assetBaseUrl, preChatFormEna
       });
 
       const data = await response.json();
-      if (data.id || data.sessionId) {
-        setSessionId(data.id || data.sessionId);
+      const nextSessionId = data.id || data.sessionId;
+      if (nextSessionId) {
+        setSessionId(nextSessionId);
+      }
+
+      const derivedVisitorId = data?.data?.visitor?.id || data.visitorId;
+      if (derivedVisitorId) {
+        setVisitorId(derivedVisitorId);
+        try {
+          localStorage.setItem(`fahimo-visitor-id-${config.businessId}`, derivedVisitorId);
+        } catch (error) {
+          // ignore storage write issues
+        }
       }
     } catch (error) {
       console.error('Session init failed:', error);

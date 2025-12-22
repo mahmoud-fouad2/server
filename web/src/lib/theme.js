@@ -9,8 +9,10 @@ export function setTheme(isDark) {
       document.documentElement.classList.remove('dark');
       localStorage.setItem('theme', 'light');
     }
-  } catch (e) {
-    // ignore (SSR or unavailable localStorage)
+  } catch (error) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('useTheme: failed to persist theme preference', error);
+    }
   }
 }
 
@@ -28,8 +30,10 @@ export function useTheme(defaultPref = false) {
         // Default to light mode regardless of system preference
         setIsDark(false);
       }
-    } catch (e) {
-      // ignore
+    } catch (error) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn('useTheme: failed to read persisted theme', error);
+      }
     }
   }, []);
 

@@ -46,6 +46,9 @@ if (typeof window !== 'undefined' && window.fetch) {
 
       return originalFetch(url, init);
     } catch (err) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('fetch-proxy: failed to rewrite request', err);
+      }
       // Fallback to original fetch on unexpected errors
       return originalFetch(input, init);
     }

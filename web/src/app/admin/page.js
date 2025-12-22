@@ -24,7 +24,6 @@ import {
   Shield,
   LogOut,
   Search,
-  Save,
   Trash2,
   Edit,
   Plus,
@@ -37,7 +36,6 @@ import {
   Moon,
   Bell,
   CheckCircle,
-  XCircle,
   Loader2,
   LifeBuoy,
   Share2,
@@ -73,7 +71,7 @@ export default function AdminDashboard() {
     totalMessages: 0,
   });
   const [users, setUsers] = useState([]);
-  const [notifications, setNotifications] = useState(5); // Mock notification count
+  const notifications = 5; // Mock notification count
   const [settings, setSettings] = useState({});
   const [aiModels, setAiModels] = useState([]);
   const [systemLogs, setSystemLogs] = useState([]);

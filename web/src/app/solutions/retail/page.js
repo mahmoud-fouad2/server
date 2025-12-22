@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import PageLayout from '@/components/layout/PageLayout';
 import {
   ShoppingBag,
-  Check,
   ArrowRight,
   TrendingUp,
   Package,

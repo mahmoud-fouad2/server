@@ -87,6 +87,70 @@ export class AuthService {
     });
   }
 
+  async getProfile(userId: string) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        businesses: {
+          select: {
+            id: true,
+            name: true,
+            planType: true,
+            status: true
+          }
+        }
+      }
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      businessId: user.businesses[0]?.id,
+      businesses: user.businesses
+    };
+  }
+
+  async updateProfile(userId: string, data: { name?: string; email?: string; password?: string }) {
+    const updates: Record<string, any> = {};
+
+    if (typeof data.name === 'string' && data.name.trim()) {
+      updates.name = data.name.trim();
+    }
+
+    if (typeof data.email === 'string' && data.email.trim()) {
+      const normalizedEmail = data.email.trim().toLowerCase();
+      const existingUser = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+      if (existingUser && existingUser.id !== userId) {
+        throw new Error('Email already in use');
+      }
+      updates.email = normalizedEmail;
+    }
+
+    if (typeof data.password === 'string' && data.password.trim()) {
+      const password = data.password.trim();
+      if (password.length < 8) {
+        throw new Error('Password must be at least 8 characters');
+      }
+      updates.password = await bcrypt.hash(password, 10);
+    }
+
+    if (Object.keys(updates).length) {
+      await prisma.user.update({ where: { id: userId }, data: updates });
+    }
+
+    return this.getProfile(userId);
+  }
+
   private generateToken(userId: string, businessId: string, userData?: any) {
     const secret = process.env.JWT_SECRET;
     if (!secret) {

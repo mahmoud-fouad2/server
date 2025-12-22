@@ -47,7 +47,11 @@ export const getApiUrl = endpoint => {
         console.warn('API_CONFIG: Using production API host from non-production page host. Consider setting NEXT_PUBLIC_API_URL to your staging/local API.');
       }
     }
-  } catch (e) {}
+  } catch (warningError) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('API_CONFIG: unable to verify host origin', warningError);
+    }
+  }
   return `${API_CONFIG.BASE_URL}/${cleanEndpoint}`;
 };
 
