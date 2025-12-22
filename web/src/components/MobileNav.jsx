@@ -20,6 +20,8 @@ import {
   Share2,
   Headphones,
   LifeBuoy,
+  BarChart3,
+  ContactRound,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import FaheemAnimatedLogo from './FaheemAnimatedLogo';
@@ -182,6 +184,11 @@ export default function MobileNav({ activeTab, setActiveTab, userRole }) {
             />
             {!isAgent && (
               <>
+                <MenuItem 
+                  icon={BarChart3} 
+                  label="تحليلات الزوار" 
+                  id="visitor-analytics" 
+                />
                 <MenuItem icon={Users} label="فريق العمل" id="team" />
                 <MenuItem icon={Share2} label="قنوات الاتصال" id="channels" />
                 <MenuItem
@@ -200,6 +207,13 @@ export default function MobileNav({ activeTab, setActiveTab, userRole }) {
               </>
             )}
             <MenuItem icon={LifeBuoy} label="تذاكر الدعم" id="tickets" />
+            {!isAgent && (
+              <MenuItem
+                icon={ContactRound}
+                label="إدارة العملاء"
+                id="crm"
+              />
+            )}
             <MenuItem
               icon={User}
               label="إعدادات الحساب"

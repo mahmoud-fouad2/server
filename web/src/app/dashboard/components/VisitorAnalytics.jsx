@@ -13,6 +13,8 @@ import {
   MousePointer,
   Star,
   TrendingUp,
+  RefreshCw,
+  AlertCircle,
 } from 'lucide-react';
 import { visitorApi, analyticsApi } from '@/lib/api';
 
@@ -21,6 +23,7 @@ export default function VisitorAnalytics() {
   const [analytics, setAnalytics] = useState(null);
   const [ratingStats, setRatingStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [dateRange, setDateRange] = useState('7d'); // 7d, 30d, 90d
 
   useEffect(() => {
@@ -28,33 +31,51 @@ export default function VisitorAnalytics() {
 
     const fetchActiveSessions = async () => {
       try {
+        console.log('[VisitorAnalytics] Fetching active sessions...');
         const response = await visitorApi.getActiveSessions();
+        console.log('[VisitorAnalytics] Active sessions response:', response);
         const sessions = Array.isArray(response?.sessions)
           ? response.sessions
           : Array.isArray(response)
             ? response
             : [];
-        if (mounted) setActiveSessions(sessions);
+        if (mounted) {
+          setActiveSessions(sessions);
+          console.log('[VisitorAnalytics] Active sessions set:', sessions.length);
+        }
       } catch (error) {
-        if (mounted) console.error('Error fetching active sessions:', error);
+        if (mounted) {
+          console.error('[VisitorAnalytics] Error fetching active sessions:', error);
+          setError('فشل تحميل الجلسات النشطة');
+        }
       }
     };
 
     const fetchAnalytics = async () => {
       try {
+        console.log('[VisitorAnalytics] Fetching analytics...');
         const dateFrom = getDateFrom(dateRange).toISOString();
         const response = await visitorApi.getAnalytics({ from: dateFrom });
+        console.log('[VisitorAnalytics] Analytics response:', response);
         const analyticsData = response?.analytics || response?.data || response;
-        if (mounted) setAnalytics(analyticsData || {});
+        if (mounted) {
+          setAnalytics(analyticsData || {});
+          console.log('[VisitorAnalytics] Analytics set:', analyticsData);
+        }
       } catch (error) {
-        if (mounted) console.error('Error fetching analytics:', error);
-        if (mounted) setAnalytics({});
+        if (mounted) {
+          console.error('[VisitorAnalytics] Error fetching analytics:', error);
+          setAnalytics({});
+          setError('فشل تحميل بيانات التحليلات');
+        }
       }
     };
 
     const fetchRatingStats = async () => {
       try {
+        console.log('[VisitorAnalytics] Fetching rating stats...');
         const statsResponse = await analyticsApi.getRatingStats();
+        console.log('[VisitorAnalytics] Rating stats response:', statsResponse);
         if (!mounted) return;
         const payload = statsResponse?.stats || statsResponse || {};
         setRatingStats({
@@ -63,11 +84,16 @@ export default function VisitorAnalytics() {
           ratingDistribution: payload?.distribution || payload?.ratingDistribution || { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
         });
       } catch (error) {
-        if (mounted) console.error('Error fetching rating stats:', error);
+        if (mounted) {
+          console.error('[VisitorAnalytics] Error fetching rating stats:', error);
+          setRatingStats({ avgRating: 0, totalRatings: 0, ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } });
+        }
       }
     };
 
     const fetchData = async () => {
+      setError(null);
+      setLoading(true);
       await Promise.all([
         fetchActiveSessions(),
         fetchAnalytics(),
@@ -125,7 +151,60 @@ export default function VisitorAnalytics() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">جاري تحميل التحليلات...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors flex items-center gap-2 mx-auto"
+          >
+            <RefreshCw className="w-4 h-4" />
+            إعادة المحاولة
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Show helpful message if no data yet
+  const hasAnyData = totalSessions > 0 || activeSessions.length > 0;
+  
+  if (!hasAnyData && !loading) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="py-12">
+            <div className="text-center">
+              <Eye className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+              <h3 className="text-xl font-bold mb-2">لا توجد بيانات زيارات بعد</h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                بمجرد أن يبدأ الزوار بالتفاعل مع الويدجت، ستظهر التحليلات هنا
+              </p>
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 max-w-2xl mx-auto">
+                <h4 className="font-bold mb-2 text-blue-900 dark:text-blue-100">
+                  💡 للحصول على بيانات التحليلات:
+                </h4>
+                <ol className="text-right text-sm text-blue-800 dark:text-blue-200 space-y-2">
+                  <li>1. تأكد من تثبيت الويدجت على موقعك</li>
+                  <li>2. تأكد من إضافة السكريبت بشكل صحيح مع Business ID</li>
+                  <li>3. انتظر حتى يقوم الزوار بفتح الويدجت</li>
+                  <li>4. البيانات ستظهر هنا تلقائياً</li>
+                </ol>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }

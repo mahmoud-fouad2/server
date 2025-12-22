@@ -313,9 +313,7 @@ function buildFormState(fields: PreChatField[]) {
     state[field.id] = '';
     return state;
   }, {});
-}import { h, Fragment } from 'preact';
-import { useState, useEffect, useMemo, useRef } from 'preact/hooks';
-import io, { Socket } from 'socket.io-client';
+}
 
 interface Message {
   id: string;
@@ -328,6 +326,10 @@ interface Message {
 interface VisitorInfo {
   name: string;
   email: string;
+  phone: string;
+}
+
+interface AppProps {
   phone?: string;
 }
 
@@ -503,7 +505,7 @@ export default function App({ config, businessName, assetBaseUrl, apiBaseUrl, pr
   const lastMessageCountRef = useRef(0);
   const welcomeInjectedRef = useRef(false);
 
-  const widgetName = config.widgetName || config.botName || businessName || 'مساعد Fahimo';
+  const widgetName = config.widgetName || config.botName || businessName || 'مساعد فهملي';
   const welcomeMessage = config.welcomeMessage || 'مرحباً! كيف يمكنني مساعدتك اليوم؟ 👋';
   const avatarUrl = resolveAssetUrl(config.botIcon || config.avatarUrl || config.customIconUrl, assetBaseUrl);
   const launcherIcon = resolveAssetUrl(config.customLauncherIcon || config.customIconUrl || config.botIcon, assetBaseUrl);
@@ -939,7 +941,16 @@ export default function App({ config, businessName, assetBaseUrl, apiBaseUrl, pr
                   <button type="button" style={styles.subtleButton} aria-label="إرفاق ملف" disabled>
                     <AttachIcon />
                   </button>
-                  <button type="button" style={styles.subtleButton} aria-label="إرسال إيموجي" disabled>
+                  <button 
+                    type="button" 
+                    style={styles.subtleButton} 
+                    aria-label="إرسال إيموجي"
+                    onClick={() => {
+                      const emojis = ['😊', '👍', '❤️', '🎉', '🙏', '✅', '🤔', '😂', '🔥', '💯'];
+                      const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+                      setInput(prev => prev + emoji);
+                    }}
+                  >
                     <EmojiIcon />
                   </button>
                 </div>
@@ -965,12 +976,12 @@ export default function App({ config, businessName, assetBaseUrl, apiBaseUrl, pr
                 <div style={styles.brandingFooter}>
                   مدعوم من{' '}
                   <a
-                    href="https://fahimo.com"
+                    href="https://faheemly.com"
                     target="_blank"
                     rel="noreferrer"
                     style={{ color: theme.primary, fontWeight: 600, textDecoration: 'none' }}
                   >
-                    Fahimo
+                    فهملي AI
                   </a>
                 </div>
               )}
