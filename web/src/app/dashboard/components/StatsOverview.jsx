@@ -240,6 +240,7 @@ export default function StatsOverview({
         if (e.message && e.message.toLowerCase().includes('unauthorized')) {
           try { localStorage.removeItem('token'); localStorage.removeItem('user'); } catch (err) {}
         }
+        setTopConversations([]); // Ensure it's always an array
       }
     })();
 
