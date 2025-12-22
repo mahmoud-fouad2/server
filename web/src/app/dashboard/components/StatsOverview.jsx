@@ -145,6 +145,9 @@ export default function StatsOverview({
   const [topConversationsExpanded, setTopConversationsExpanded] = useState(false);
   const [handoverCount, setHandoverCount] = useState(0);
 
+  const safeKbList = Array.isArray(kbList) ? kbList : [];
+  const safeTopConversations = Array.isArray(topConversations) ? topConversations : [];
+
   // Real-time updates from API
   useEffect(() => {
     const fetchRealTimeStats = async () => {
@@ -745,11 +748,11 @@ add_action('wp_footer', 'add_fahimo_widget');`;
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {kbList && (
+              {safeKbList.length > 0 && (
                 <div className="space-y-3">
                   <motion.div layout className="space-y-2">
                     <AnimatePresence initial={false}>
-                      {(kbExpanded ? kbList : kbList.slice(0, 1)).map(kb => (
+                      {(kbExpanded ? safeKbList : safeKbList.slice(0, 1)).map(kb => (
                         <motion.div
                           layout
                           key={kb.id}
@@ -782,20 +785,20 @@ add_action('wp_footer', 'add_fahimo_widget');`;
                     </AnimatePresence>
                   </motion.div>
 
-                  {kbList.length > 1 && (
+                  {safeKbList.length > 1 && (
                     <div className="pt-2">
                       <button
                         aria-expanded={kbExpanded}
                         className="text-sm text-brand-500 hover:underline"
                         onClick={() => setKbExpanded(!kbExpanded)}
                       >
-                        {kbExpanded ? 'إخفاء' : `عرض الكل (${kbList.length})`}
+                        {kbExpanded ? 'إخفاء' : `عرض الكل (${safeKbList.length})`}
                       </button>
                     </div>
                   )}
                 </div>
               )}
-              {(!kbList || kbList.length === 0) && (
+              {safeKbList.length === 0 && (
                 <div className="text-center py-8 text-muted-foreground border border-dashed border-border rounded-lg">
                   لا يوجد مصادر نشطة
                 </div>
@@ -824,10 +827,10 @@ add_action('wp_footer', 'add_fahimo_widget');`;
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {topConversations && topConversations.length > 0 ? (
+                {safeTopConversations.length > 0 ? (
                   <div className="space-y-2">
                     <AnimatePresence initial={false}>
-                      {(topConversationsExpanded ? topConversations : topConversations.slice(0, 3)).map(conv => (
+                      {(topConversationsExpanded ? safeTopConversations : safeTopConversations.slice(0, 3)).map(conv => (
                         <motion.div key={conv.id} layout initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} className="p-3 bg-muted/20 rounded-lg">
                           <div className="flex items-center justify-between">
                             <div className="font-medium text-sm">زائر · {String(conv.id).replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0,6)}</div>
@@ -840,12 +843,12 @@ add_action('wp_footer', 'add_fahimo_widget');`;
 
                     <div className="pt-2 flex gap-2 items-center">
                       <Button variant="outline" size="sm" className="flex-1" onClick={() => setActiveTab('conversations')}>عرض المحادثات</Button>
-                      {topConversations.length > 3 && (
+                      {safeTopConversations.length > 3 && (
                         <Button size="sm" className="bg-brand-600 text-white hover:bg-brand-700" onClick={() => setTopConversationsExpanded(!topConversationsExpanded)} aria-expanded={topConversationsExpanded}>
-                          {topConversationsExpanded ? `عرض أقل` : `عرض المزيد (${topConversations.length})`}
+                          {topConversationsExpanded ? `عرض أقل` : `عرض المزيد (${safeTopConversations.length})`}
                         </Button>
                       )}
-                      <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">{(topConversations || []).length} أحدث</div>
+                      <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">{safeTopConversations.length} أحدث</div>
                     </div>
                   </div>
                 ) : (
