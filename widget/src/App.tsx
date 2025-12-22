@@ -181,6 +181,14 @@ const styles = {
     gap: '12px',
     background: '#fff',
   },
+  brandingFooter: {
+    padding: '10px 16px',
+    borderTop: '1px solid #e5e7eb',
+    textAlign: 'center' as const,
+    fontSize: '11px',
+    color: '#94a3b8',
+    background: '#f9fafb',
+  },
   composerActions: {
     display: 'flex',
     gap: '8px',
@@ -487,6 +495,7 @@ export default function App({ config, businessName, assetBaseUrl, preChatFormEna
   const notificationsAllowed = config.notificationSoundEnabled !== false;
   const position = config.position || 'right';
   const ratingEnabled = config.ratingEnabled !== false;
+  const showBranding = config.showBranding !== false;
 
   useEffect(() => {
     setPreChatData(buildFormState(preChatFields));
@@ -903,6 +912,19 @@ export default function App({ config, businessName, assetBaseUrl, preChatFormEna
                   <SendIcon />
                 </button>
               </div>
+              {showBranding && (
+                <div style={styles.brandingFooter}>
+                  مدعوم من{' '}
+                  <a
+                    href="https://fahimo.com"
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ color: theme.primary, fontWeight: 600, textDecoration: 'none' }}
+                  >
+                    Fahimo
+                  </a>
+                </div>
+              )}
             </div>
           )}
         </div>

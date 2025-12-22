@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Bot,
   Headphones,
@@ -14,24 +15,107 @@ import {
   Upload,
   Save,
   Loader2,
+  Bell,
+  Timer,
+  Layout,
+  Ruler,
 } from 'lucide-react';
 import { widgetApi, businessApi } from '@/lib/api';
 import { BRAND } from '@/constants';
+
+const INITIAL_WIDGET_CONFIG = {
+  welcomeMessage: '',
+  primaryColor: '#000000',
+  personality: 'friendly',
+  showBranding: true,
+  preChatFormEnabled: false,
+  preChatEnabled: true,
+  preChatDescription: '',
+  avatar: 'robot',
+  notificationSoundEnabled: true,
+  autoOpenDelay: 0,
+  position: 'right',
+  borderRadius: '18px',
+};
+
+const POSITION_OPTIONS = [
+  { id: 'right', label: 'يمين الشاشة' },
+  { id: 'left', label: 'يسار الشاشة' },
+];
+
+const BORDER_RADIUS_RANGE = { min: 0, max: 32 };
 
 export default function WidgetSettingsView({
   user,
   addNotification,
   setShowProAlert,
 }) {
-  const [widgetConfig, setWidgetConfig] = useState({
-    welcomeMessage: '',
-    primaryColor: '#000000',
-    personality: 'friendly',
-    showBranding: true,
-    preChatFormEnabled: false,
-    avatar: 'robot',
-  });
+  const [widgetConfig, setWidgetConfig] = useState(INITIAL_WIDGET_CONFIG);
   const [savingConfig, setSavingConfig] = useState(false);
+  const borderRadiusValue = useMemo(() => {
+    const raw = String(widgetConfig.borderRadius || '').replace('px', '');
+    const parsed = parseInt(raw, 10);
+    return Number.isNaN(parsed) ? 18 : parsed;
+  }, [widgetConfig.borderRadius]);
+  const autoOpenDelaySeconds = useMemo(() => {
+    if (typeof widgetConfig.autoOpenDelay === 'number') {
+      return Math.max(0, Math.round(widgetConfig.autoOpenDelay / 1000));
+    }
+    return 0;
+  }, [widgetConfig.autoOpenDelay]);
+  const soundEnabled = widgetConfig.notificationSoundEnabled !== false;
+
+  const updateWidgetField = (field, value) => {
+    setWidgetConfig(prev => ({ ...prev, [field]: value }));
+  };
+
+  const buildConfigPayload = (overrides = {}) => {
+    const next = { ...widgetConfig, ...overrides };
+    const { preChatFormEnabled, ...rest } = next;
+    return rest;
+  };
+
+  const broadcastConfigUpdate = () => {
+    if (typeof window === 'undefined') return;
+    const businessId = user?.businessId;
+    if (!businessId) return;
+    const channel = `fahimo-config-update-${businessId}`;
+    try {
+      if (typeof BroadcastChannel !== 'undefined') {
+        const bc = new BroadcastChannel(channel);
+        bc.postMessage({ type: 'CONFIG_UPDATED', timestamp: Date.now() });
+        bc.close();
+      } else {
+        localStorage.setItem(`${channel}-notify`, String(Date.now()));
+      }
+    } catch (error) {
+      try {
+        localStorage.setItem(`${channel}-notify`, String(Date.now()));
+      } catch (err) {
+        // ignore storage errors
+      }
+    }
+  };
+
+  const handlePreChatToggle = async checked => {
+    setWidgetConfig(prev => ({
+      ...prev,
+      preChatFormEnabled: checked,
+      preChatEnabled: checked,
+    }));
+    try {
+      await businessApi.updatePreChatSettings({ preChatFormEnabled: checked });
+      addNotification('تم تحديث حالة نموذج ما قبل المحادثة');
+      broadcastConfigUpdate();
+    } catch (err) {
+      addNotification('فشل تحديث حالة نموذج ما قبل المحادثة', 'error');
+      setWidgetConfig(prev => ({
+        ...prev,
+        preChatFormEnabled: !checked,
+        preChatEnabled: !checked,
+      }));
+    }
+  };
 
   useEffect(() => {
     if (user?.businessId) {
@@ -43,9 +127,23 @@ export default function WidgetSettingsView({
     try {
       const data = await widgetApi.getConfig(businessId);
       // Include business-level settings like preChatFormEnabled from widget config response
+      const incoming = data?.widgetConfig || {};
       setWidgetConfig(prev => ({
         ...prev,
-        ...(data?.widgetConfig || {}),
+        ...incoming,
+        autoOpenDelay:
+          typeof incoming.autoOpenDelay === 'number'
+            ? incoming.autoOpenDelay
+            : prev.autoOpenDelay,
+        notificationSoundEnabled:
+          typeof incoming.notificationSoundEnabled === 'boolean'
+            ? incoming.notificationSoundEnabled
+            : prev.notificationSoundEnabled,
+        preChatEnabled:
+          typeof incoming.preChatEnabled === 'boolean'
+            ? incoming.preChatEnabled
+            : prev.preChatEnabled,
+        borderRadius: incoming.borderRadius || prev.borderRadius,
         preChatFormEnabled: data?.preChatFormEnabled ?? prev.preChatFormEnabled,
       }));
     } catch (err) {
@@ -56,35 +154,14 @@ export default function WidgetSettingsView({
   const saveWidgetConfig = async () => {
     setSavingConfig(true);
     try {
-      await widgetApi.updateConfig(widgetConfig);
-      
-      // Broadcast config update to widget (immediate refresh without waiting 30s)
-      const businessId = user?.businessId;
-      if (businessId) {
-        try {
-          const bc = new BroadcastChannel(`fahimo-config-update-${businessId}`);
-          bc.postMessage({ type: 'CONFIG_UPDATED', timestamp: Date.now() });
-          bc.close();
-        } catch (e) {
-          localStorage.setItem(`fahimo-config-update-${businessId}-notify`, Date.now());
-        }
-      }
-      
+      await widgetApi.updateConfig(buildConfigPayload());
+      broadcastConfigUpdate();
+
       // Update business pre-chat form setting separately if present
       if (typeof widgetConfig.preChatFormEnabled === 'boolean') {
         try {
           await businessApi.updatePreChatSettings({ preChatFormEnabled: widgetConfig.preChatFormEnabled });
-          // Broadcast again after updating business-level setting so widget picks it up immediately
-          const businessId = user?.businessId;
-          if (businessId) {
-            try {
-              const bc2 = new BroadcastChannel(`fahimo-config-update-${businessId}`);
-              bc2.postMessage({ type: 'CONFIG_UPDATED', timestamp: Date.now() });
-              bc2.close();
-            } catch (e) {
-              localStorage.setItem(`fahimo-config-update-${businessId}-notify`, Date.now());
-            }
-          }
+          broadcastConfigUpdate();
         } catch (err) {
           // ignore here - widget API update was the main payload; show a notification
           addNotification('فشل تحديث حالة نموذج ما قبل المحادثة', 'error');
@@ -133,23 +210,10 @@ export default function WidgetSettingsView({
       }));
       
       // Auto-save after upload
-      await widgetApi.updateConfig({
-        ...widgetConfig,
-        customIconUrl: iconUrl,
-        avatar: 'custom',
-      });
-      
-      // Broadcast config update to widget
-      const businessId = user?.businessId;
-      if (businessId) {
-        try {
-          const bc = new BroadcastChannel(`fahimo-config-update-${businessId}`);
-          bc.postMessage({ type: 'CONFIG_UPDATED', timestamp: Date.now() });
-          bc.close();
-        } catch (e) {
-          localStorage.setItem(`fahimo-config-update-${businessId}-notify`, Date.now());
-        }
-      }
+      await widgetApi.updateConfig(
+        buildConfigPayload({ customIconUrl: iconUrl, avatar: 'custom' })
+      );
+      broadcastConfigUpdate();
       
       addNotification('تم رفع الأيقونة بنجاح وحفظها');
     } catch (err) {
@@ -298,29 +362,108 @@ export default function WidgetSettingsView({
               <input
                 type="checkbox"
                 checked={widgetConfig.preChatFormEnabled}
-                onChange={async e => {
-                  const checked = e.target.checked;
-                  setWidgetConfig({ ...widgetConfig, preChatFormEnabled: checked });
-                  try {
-                    await businessApi.updatePreChatSettings({ preChatFormEnabled: checked });
-                    addNotification('تم تحديث حالة نموذج ما قبل المحادثة');
-                    // Broadcast config update so the widget refreshes immediately
-                    const businessId = user?.businessId;
-                    if (businessId) {
-                      try {
-                        const bc = new BroadcastChannel(`fahimo-config-update-${businessId}`);
-                        bc.postMessage({ type: 'CONFIG_UPDATED', timestamp: Date.now() });
-                        bc.close();
-                      } catch (e) {
-                        localStorage.setItem(`fahimo-config-update-${businessId}-notify`, Date.now());
-                      }
-                    }
-                  } catch (err) {
-                    addNotification('فشل تحديث حالة نموذج ما قبل المحادثة', 'error');
-                  }
-                }}
+                onChange={e => handlePreChatToggle(e.target.checked)}
                 className="toggle"
               />
+            </div>
+          </div>
+
+          {widgetConfig.preChatFormEnabled && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium">نص توضيحي لنموذج ما قبل المحادثة</label>
+              <Textarea
+                value={widgetConfig.preChatDescription || ''}
+                onChange={e => updateWidgetField('preChatDescription', e.target.value)}
+                placeholder="شاركنا بيانات بسيطة لنستطيع خدمتك بشكل أفضل."
+                className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+              />
+              <p className="text-xs text-muted-foreground">
+                يظهر النص تحت عنوان النموذج داخل الويدجت ويوضح سبب طلب البيانات.
+              </p>
+            </div>
+          )}
+
+          <div className="p-3 border rounded-lg bg-white/60 dark:bg-gray-900/40">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <label className="text-sm font-medium flex items-center gap-2"><Sparkles className="w-4 h-4 text-brand-500" />إظهار شعار Fahimo</label>
+                <p className="text-xs text-muted-foreground">ساعدنا على النمو عبر إبقاء عبارة "Powered by Fahimo".</p>
+              </div>
+              <input
+                type="checkbox"
+                checked={widgetConfig.showBranding}
+                onChange={e => updateWidgetField('showBranding', e.target.checked)}
+                className="toggle"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-3 p-3 border rounded-lg bg-muted/40">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <Bell className="w-4 h-4 text-brand-500" /> إشعار صوتي للرسائل
+              </div>
+              <input
+                type="checkbox"
+                checked={soundEnabled}
+                onChange={e => updateWidgetField('notificationSoundEnabled', e.target.checked)}
+                className="toggle"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium flex items-center gap-2">
+                <Timer className="w-4 h-4 text-brand-500" /> تأخير الفتح التلقائي (ثواني)
+              </label>
+              <Input
+                type="number"
+                min={0}
+                max={3600}
+                value={autoOpenDelaySeconds}
+                onChange={e => {
+                  const seconds = Math.max(0, Math.min(3600, parseInt(e.target.value, 10) || 0));
+                  updateWidgetField('autoOpenDelay', seconds > 0 ? seconds * 1000 : 0);
+                }}
+                className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+              />
+              <p className="text-xs text-muted-foreground">ضع 0 لتعطيل الفتح التلقائي؛ القيمة تحتسب بالثواني.</p>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <label className="text-sm font-medium flex items-center gap-2">
+                <Layout className="w-4 h-4 text-brand-500" /> موضع زر الويدجت
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {POSITION_OPTIONS.map(option => (
+                  <button
+                    type="button"
+                    key={option.id}
+                    onClick={() => updateWidgetField('position', option.id)}
+                    className={`rounded-xl border px-4 py-3 text-sm text-right transition ${
+                      widgetConfig.position === option.id
+                        ? 'border-brand-500 bg-brand-50 text-brand-700 shadow-sm'
+                        : 'border-dashed border-gray-300 text-gray-600 hover:border-brand-200'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium flex items-center gap-2">
+                <Ruler className="w-4 h-4 text-brand-500" /> استدارة الزوايا ({borderRadiusValue}px)
+              </label>
+              <input
+                type="range"
+                min={BORDER_RADIUS_RANGE.min}
+                max={BORDER_RADIUS_RANGE.max}
+                value={borderRadiusValue}
+                onChange={e => updateWidgetField('borderRadius', `${e.target.value}px`)}
+                className="w-full accent-brand-500"
+              />
+              <p className="text-xs text-muted-foreground">تؤثر القيمة على نافذة الدردشة وزر الإطلاق في آنٍ واحد.</p>
             </div>
           </div>
 
