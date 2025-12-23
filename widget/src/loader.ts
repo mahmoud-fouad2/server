@@ -89,11 +89,18 @@ declare global {
   }
 
   async function fetchAndRender() {
-    const res = await fetch(getConfigUrl(), { cache: 'no-store' as any });
-    const config = await res.json();
-    if (!config || !config.widgetConfig) throw new Error('Invalid config');
-    renderWidget(config);
-    trackVisitor(config); // Track visit after config loads
+    try {
+      const res = await fetch(getConfigUrl(), { cache: 'no-store' as any });
+      const config = await res.json();
+      if (!config || !config.widgetConfig) throw new Error('Invalid config');
+      renderWidget(config);
+      trackVisitor(config); // Track visit after config loads
+    } catch (err) {
+      console.warn('[Fahimo] Failed to load widget config, falling back to minimal config:', err);
+      // Fallback: render a minimal, non-demo widget so the business still shows
+      renderWidget({ name: 'Business', widgetConfig: {}, widgetVariant: 'STANDARD', configVersion: Date.now(), isDemo: false });
+      // Do not attempt visitor tracking when fallback is in use
+    }
   }
 
   async function trackVisitor(publicConfig?: any) {
