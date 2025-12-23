@@ -280,8 +280,9 @@ export default function AvatarAndWidgetSettingsView({ user, addNotification }) {
     const businessId = user?.businessId;
     const baseWidget = API_CONFIG.WIDGET_SCRIPT || 
       `https://fahimo-api.onrender.com/${settings.selectedVariant === 'enhanced' ? 'fahimo-widget-enhanced.js' : 'fahimo-widget.js'}`;
-    const versionParam = settings.latestConfigVersion ? `?v=${settings.latestConfigVersion}` : '';
-    const embedCode = `<script src="${baseWidget}${versionParam}" data-business-id="${businessId}"></script>`;
+    const versionParam = settings.latestConfigVersion ? `v=${settings.latestConfigVersion}` : '';
+    const sep = baseWidget.includes('?') ? '&' : (versionParam ? '?' : '');
+    const embedCode = `<script src="${baseWidget}${sep}${versionParam}" data-business-id="${businessId}"></script>`;
 
     navigator.clipboard.writeText(embedCode).then(() => {
       setCopied(true);
