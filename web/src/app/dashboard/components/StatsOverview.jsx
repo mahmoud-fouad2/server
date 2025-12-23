@@ -50,9 +50,13 @@ function DonutSatisfaction({ data = [] }) {
   const maxItem = data.reduce((best, d) => (d.value > (best.value || 0) ? d : best), {});
   const maxPercent = total ? Math.round(((maxItem.value || 0) / total) * 100) : 0;
 
+  if (!data || data.length === 0) {
+      return <div className="h-[200px] flex items-center justify-center text-muted-foreground">No data available</div>;
+  }
+
   return (
-    <div className="w-full h-full flex items-center justify-center">
-      <SafeResponsiveContainer width="100%" height="100%" minHeight={200}>
+    <div className="w-full h-full flex items-center justify-center" style={{ minHeight: 300 }}>
+      <SafeResponsiveContainer width="100%" height="100%" minHeight={300}>
         <RechartsPieChart>
           <defs>
             <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
