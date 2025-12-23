@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { adminApi } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
+import SafeResponsiveContainer from '@/components/ui/SafeResponsiveContainer';
 
 export default function AnalyticsView() {
   const [overview, setOverview] = useState(null);
@@ -72,7 +73,7 @@ export default function AnalyticsView() {
             <CardTitle>الزوار حسب الدولة</CardTitle>
           </CardHeader>
           <CardContent className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
+            <SafeResponsiveContainer width="100%" height="100%" minHeight={200}>
               <BarChart data={countries} layout="vertical" margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
                 <XAxis type="number" />
                 <YAxis dataKey="country" type="category" width={120} />
