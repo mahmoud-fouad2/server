@@ -7,6 +7,8 @@ const chatController = new ChatController();
 
 // Public chat endpoints (protected by rate limit and businessId check, not user auth)
 router.post('/send', chatController.sendMessage.bind(chatController));
+// Demo route used by marketing demo widget - returns canned demo responses
+router.post('/demo', chatController.demoChat.bind(chatController));
 router.post('/rate', chatController.rateConversation.bind(chatController));
 
 router.get('/conversations', authenticateToken, chatController.getConversations.bind(chatController));

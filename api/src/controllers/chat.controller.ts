@@ -191,6 +191,26 @@ export class ChatController {
     }
   }
 
+  // Demo endpoint for marketing/demo widget - returns canned response quickly
+  async demoChat(req: Request, res: Response) {
+    try {
+      const { message } = req.body as { message?: string };
+      if (!message || typeof message !== 'string') return res.status(400).json({ error: 'Message is required' });
+
+      // Simple canned dialogue to showcase features without requiring AI providers
+      const canned = [
+        { sender: 'BOT', content: 'أهلاً! أنا مساعد فهملي، كيف أساعدك اليوم؟' },
+        { sender: 'BOT', content: `لقد استلمت رسالتك: "${String(message).slice(0, 120)}". تستطيع تجربة الأسئلة الشائعة أو الضغط على الخيارات.` },
+        { sender: 'BOT', content: 'هذه المحادثة تعمل على وضع العرض التوضيحي وليس على نظام الإنتاج.' }
+      ];
+
+      return res.json({ success: true, botReplies: canned });
+    } catch (error) {
+      console.error('Demo Chat Error:', error);
+      res.status(500).json({ error: 'Demo chat failed' });
+    }
+  }
+
   async getAnalytics(req: Request, res: Response) {
     try {
       const { conversationId } = req.params;
