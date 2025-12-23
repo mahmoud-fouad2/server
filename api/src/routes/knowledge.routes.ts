@@ -10,12 +10,14 @@ router.use(authenticateToken);
 router.get('/', knowledgeController.getEntries.bind(knowledgeController));
 router.post('/', knowledgeController.createEntry.bind(knowledgeController));
 
-// Fix for frontend 404s - Map specific endpoints to createEntry
-// Note: For /upload, we might need multer middleware if it sends a file directly, 
-// but if it sends a JSON with file content/url, this works.
-router.post('/text', knowledgeController.createEntry.bind(knowledgeController));
-router.post('/url', knowledgeController.createEntry.bind(knowledgeController));
-router.post('/upload', knowledgeController.createEntry.bind(knowledgeController));
+// New endpoints for different knowledge import methods
+router.post('/text', knowledgeController.createFromText.bind(knowledgeController));
+router.post('/url', knowledgeController.createFromUrl.bind(knowledgeController));
+
+// Multer for upload
+import multer from 'multer';
+const upload = multer({ dest: 'uploads/' });
+router.post('/upload', upload.single('file'), knowledgeController.uploadFile.bind(knowledgeController));
 
 router.post('/reindex', knowledgeController.reindex.bind(knowledgeController));
 router.delete('/:id', knowledgeController.deleteEntry.bind(knowledgeController));
