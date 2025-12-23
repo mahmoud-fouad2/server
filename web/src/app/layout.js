@@ -192,6 +192,13 @@ export default function RootLayout({ children }) {
           }}
         />
 
+        {/* Runtime widget business id (optional) - set at build time to allow pages to provide a runtime override
+            If NEXT_PUBLIC_WIDGET_BUSINESS_ID is set during build, it will be rendered as a meta tag so the widget loader can
+            pick it up without requiring client-side environment variables injected at build time. */}
+        {process.env.NEXT_PUBLIC_WIDGET_BUSINESS_ID ? (
+          <meta name="fahimo-business-id" content={process.env.NEXT_PUBLIC_WIDGET_BUSINESS_ID} />
+        ) : null}
+
         {/* Structured Data - Organization */}
         <script
           type="application/ld+json"
