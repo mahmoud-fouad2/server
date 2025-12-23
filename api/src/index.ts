@@ -45,6 +45,7 @@ import customAIModelRoutes from './routes/custom-ai-model.routes.js';
 import apiKeyRoutes from './routes/api-key.routes.js';
 import ratingRoutes from './routes/rating.routes.js';
 import systemRoutes from './routes/system.routes.js';
+import avatarSettingsRoutes from './routes/avatar-settings.routes.js';
 
 dotenv.config();
 
@@ -132,6 +133,7 @@ app.use('/api/chat', apiLimiter, chatRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/api-keys', apiKeyRoutes);
 app.use('/api/business', apiLimiter, businessRoutes);
+app.use('/api/business', avatarSettingsRoutes);
 app.use('/api/crm', apiLimiter, crmRoutes);
 app.use('/api/knowledge', apiLimiter, knowledgeRoutes);
 app.use('/api/notifications', notificationRoutes);

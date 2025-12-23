@@ -7,8 +7,8 @@ export const DemoChatWindow = () => {
   const [widgetLoaded, setWidgetLoaded] = useState(false);
 
   useEffect(() => {
-    // Load the actual widget for demo
-    const DEMO_BUSINESS_ID = 'cmir2oyaz00013ltwis4xc4tp'; // Faheemly demo business
+    // Load our real business widget
+    const DEMO_BUSINESS_ID = 'cmir2oyaz00013ltwis4xc4tp'; // Our actual business
     const existingScript = document.getElementById('demo-widget-script');
     
     if (!existingScript && !document.getElementById('fahimo-widget-root')) {

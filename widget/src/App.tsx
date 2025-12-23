@@ -974,14 +974,13 @@ export default function App({ config, businessName, assetBaseUrl, apiBaseUrl, pr
               </div>
               {showBranding && (
                 <div style={styles.brandingFooter}>
-                  مدعوم من{' '}
                   <a
                     href="https://faheemly.com"
                     target="_blank"
                     rel="noreferrer"
                     style={{ color: theme.primary, fontWeight: 600, textDecoration: 'none' }}
                   >
-                    فهملي AI
+                    Powered by Faheemly.com
                   </a>
                 </div>
               )}
