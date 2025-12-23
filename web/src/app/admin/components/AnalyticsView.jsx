@@ -80,7 +80,7 @@ export default function AnalyticsView() {
                 <Tooltip />
                 <Bar dataKey="count" fill="#4f46e5" />
               </BarChart>
-            </ResponsiveContainer>
+            </SafeResponsiveContainer>
           </CardContent>
         </Card>
 
