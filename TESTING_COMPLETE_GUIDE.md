@@ -5,7 +5,7 @@
 ### 1. ملف الصوت المحلي 🔊
 
 #### التغييرات المنفذة:
-- ✅ نسخ ملف `notification.mp3` إلى `widget/public/sounds/`
+- ✅ نسخ ملف `notify.mp3` إلى `widget/public/sounds/`
 - ✅ تحديث `widget/vite.config.ts` لنسخ المجلد `public`
 - ✅ تحديث `widget/src/App.tsx` لاستخدام الملف المحلي
 - ✅ تحديث `api/scripts/copy-widget.js` لنسخ مجلد الأصوات
@@ -14,13 +14,13 @@
 ```javascript
 // في الويدجت، يتم تحميل الصوت من:
 const soundUrl = assetBaseUrl 
-  ? `${assetBaseUrl}/sounds/notification.mp3` 
-  : '/sounds/notification.mp3';
+   ? `${assetBaseUrl}/sounds/notify.mp3` 
+   : '/sounds/notify.mp3';
 
 // الصوت موجود في:
-// - widget/public/sounds/notification.mp3 (قبل البناء)
-// - widget/dist/sounds/notification.mp3 (بعد البناء)
-// - api/public/sounds/notification.mp3 (على السيرفر)
+// - widget/public/sounds/notify.mp3 (قبل البناء)
+// - widget/dist/sounds/notify.mp3 (بعد البناء)
+// - api/public/sounds/notify.mp3 (على السيرفر)
 ```
 
 #### التحقق من التثبيت:
@@ -30,14 +30,14 @@ cd widget
 npx vite build
 
 # التحقق من وجود الملف
-ls dist/sounds/notification.mp3
+ls dist/sounds/notify.mp3
 
 # نسخ إلى API
 cd ../api
 node scripts/copy-widget.js
 
 # التحقق من النسخ
-ls public/sounds/notification.mp3
+ls public/sounds/notify.mp3
 ```
 
 ### 2. نظام الاختبار الشامل 🧪

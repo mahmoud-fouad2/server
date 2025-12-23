@@ -1,14 +1,23 @@
 import { Request, Response } from 'express';
 import { TicketService } from '../services/ticket.service.js';
 import { AuthRequest } from '../middleware/auth.js';
+import { CreateTicketSchema } from '@fahimo/shared';
 
 const ticketService = new TicketService();
 
 export class TicketController {
   async create(req: AuthRequest, res: Response) {
     try {
-      const { CreateTicketSchema } = await import('@fahimo/shared');
-      const { subject, message, priority } = CreateTicketSchema.parse(req.body);
+      const parseResult = CreateTicketSchema.safeParse(req.body);
+      
+      if (!parseResult.success) {
+        return res.status(400).json({ 
+          error: 'Invalid ticket data',
+          details: parseResult.error.errors 
+        });
+      }
+      
+      const { subject, message, priority } = parseResult.data;
       const userId = req.user!.userId;
       const businessId = req.user!.businessId;
 
@@ -25,7 +34,10 @@ export class TicketController {
       res.status(201).json(ticket);
     } catch (error) {
       console.error('Create Ticket Error:', error);
-      res.status(500).json({ error: 'Failed to create ticket' });
+      res.status(500).json({ 
+        error: 'Failed to create ticket',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   }
 

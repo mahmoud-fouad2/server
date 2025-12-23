@@ -10,15 +10,15 @@
 ### 1️⃣ ملف الصوت المحلي 🔊
 
 **كان:** صوت مضمن كـ data URI في الكود  
-**أصبح:** ملف `notification.mp3` محلي في المشروع
+**أصبح:** ملف `notify.mp3` محلي في المشروع
 
 **التغييرات:**
 ```
-widget/public/sounds/notification.mp3  → ملف الصوت الأصلي
-        ↓ [vite build]
-widget/dist/sounds/notification.mp3    → بعد البناء
-        ↓ [copy-widget.js]
-api/public/sounds/notification.mp3     → على السيرفر
+widget/public/sounds/notify.mp3  → ملف الصوت الأصلي
+   ↓ [vite build]
+widget/dist/sounds/notify.mp3    → بعد البناء
+   ↓ [copy-widget.js]
+api/public/sounds/notify.mp3     → على السيرفر
 ```
 
 **الفوائد:**

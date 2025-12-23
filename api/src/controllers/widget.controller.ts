@@ -13,8 +13,10 @@ export class WidgetController {
     try {
       const { businessId } = req.params;
       
-      // Cache headers for performance
-      res.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
+      // Disable caching so the public widget always reflects the latest config immediately
+      res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
       
       const config = await widgetService.getPublicConfig(businessId);
       res.json(config);

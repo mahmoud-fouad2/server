@@ -20,6 +20,7 @@ export class WidgetService {
     });
 
     if (!business) {
+      console.warn(`[WidgetService] Business ${businessId} not found - returning default demo config`);
       return this.getDefaultConfig();
     }
 
@@ -46,7 +47,7 @@ export class WidgetService {
       widgetConfig: safeConfig,
       widgetVariant: business.widgetVariant,
       configVersion: Date.now(),
-      isDemo: false,
+      isDemo: false, // Real business, not demo
       preChatFormEnabled: business.preChatFormEnabled,
       crmLeadCollectionEnabled: business.crmLeadCollectionEnabled,
     };

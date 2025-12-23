@@ -134,7 +134,7 @@ export default function LiveSupportView({ addNotification }) {
           )}
         </CardContent>
       </Card>
-      <audio ref={audioRef} src="/notification.mp3" preload="none" />
+      <audio ref={audioRef} src="/sounds/notify.mp3" preload="none" />
     </motion.div>
   );
 }

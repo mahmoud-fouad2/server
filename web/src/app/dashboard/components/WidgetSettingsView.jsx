@@ -386,8 +386,8 @@ export default function WidgetSettingsView({
           <div className="p-3 border rounded-lg bg-white/60 dark:bg-gray-900/40">
             <div className="flex items-center justify-between gap-2">
               <div>
-                <label className="text-sm font-medium flex items-center gap-2"><Sparkles className="w-4 h-4 text-brand-500" />إظهار شعار Fahimo</label>
-                <p className="text-xs text-muted-foreground">ساعدنا على النمو عبر إبقاء عبارة "Powered by Fahimo".</p>
+                <label className="text-sm font-medium flex items-center gap-2"><Sparkles className="w-4 h-4 text-brand-500" />إظهار شعار Faheemly</label>
+                <p className="text-xs text-muted-foreground">ساعدنا على النمو عبر إبقاء عبارة "Powered by Faheemly".</p>
               </div>
               <input
                 type="checkbox"

@@ -25,13 +25,8 @@ declare global {
     return;
   }
 
-  // Determine API URL
-  let apiUrl = 'https://fahimo-api.onrender.com';
-  const dataApi = scriptTag.getAttribute('data-api-url');
-  if (dataApi) apiUrl = dataApi;
-
   // Determine Asset Base URL (where this script is loaded from)
-  let assetBaseUrl = 'https://fahimo.com'; // Default fallback
+  let assetBaseUrl = 'https://faheemly.com'; // Default fallback
   if (scriptTag.src) {
     try {
       const url = new URL(scriptTag.src);
@@ -40,6 +35,12 @@ declare global {
       console.warn('[Fahimo] Could not determine asset base URL from script src');
     }
   }
+
+  // Determine API URL
+  // Default to assetBaseUrl (where the script is served from) which is usually the API server
+  let apiUrl = assetBaseUrl;
+  const dataApi = scriptTag.getAttribute('data-api-url');
+  if (dataApi) apiUrl = dataApi;
 
   // SPA Navigation Handler
   let currentRoot: HTMLElement | null = null;

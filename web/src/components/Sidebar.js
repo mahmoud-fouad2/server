@@ -213,7 +213,7 @@ export default function Sidebar({ activeTab, setActiveTab, userRole }) {
             <SidebarItem
               icon={BarChart3}
               label="تحليلات الزوار"
-              id="analytics"
+              id="visitor-analytics"
               activeTab={activeTab}
               setActiveTab={setActiveTab}
             />

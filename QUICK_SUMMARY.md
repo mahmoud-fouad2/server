@@ -13,11 +13,11 @@
 
 **الحل المطبق:**
 ```
-widget/public/sounds/notification.mp3  ←  ملف الصوت الأصلي
+widget/public/sounds/notify.mp3  ←  ملف الصوت الأصلي
         ↓ [vite build]
-widget/dist/sounds/notification.mp3    ←  بعد البناء
+widget/dist/sounds/notify.mp3    ←  بعد البناء
         ↓ [copy-widget.js]
-api/public/sounds/notification.mp3     ←  على السيرفر
+api/public/sounds/notify.mp3     ←  على السيرفر
 ```
 
 **الملفات المعدلة:**
@@ -180,7 +180,7 @@ git push origin main
 ### الكود:
 - 🧪 `tests/e2e/comprehensive.spec.ts` - اختبارات E2E
 - 🧪 `api/src/__tests__/api.test.ts` - اختبارات API
-- 🔊 `widget/public/sounds/notification.mp3` - ملف الصوت
+- 🔊 `widget/public/sounds/notify.mp3` - ملف الصوت
 - ⚙️ `widget/vite.config.ts` - إعدادات البناء
 - 📋 `api/scripts/copy-widget.js` - سكريبت النسخ
 
