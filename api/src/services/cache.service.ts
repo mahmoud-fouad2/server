@@ -35,16 +35,24 @@ class CacheService {
 
       if (redisUrl) {
         this.redis = new Redis(redisUrl, {
-          maxRetriesPerRequest: 3,
+          maxRetriesPerRequest: 1, // Reduce retries to fail fast
           retryStrategy: (times: number) => {
             if (times > 3) {
-              logger.error('Redis connection failed after 3 retries');
+              logger.error('Redis connection failed after 3 retries, switching to LRU cache');
+              this.redis?.disconnect();
+              this.redis = null;
               return null;
             }
             return Math.min(times * 1000, 3000);
           },
         });
       } else {
+        // If no explicit config, don't try localhost in production/render
+        if (process.env.NODE_ENV === 'production' || process.env.RENDER) {
+             logger.warn('No Redis URL provided in production, using LRU cache');
+             return;
+        }
+        
         this.redis = new Redis({
           host: redisHost,
           port: redisPort,

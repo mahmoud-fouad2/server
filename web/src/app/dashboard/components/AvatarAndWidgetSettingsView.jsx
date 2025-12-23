@@ -68,6 +68,7 @@ const BORDER_RADIUS_OPTIONS = [
 // ===============================================
 
 export default function AvatarAndWidgetSettingsView({ user, addNotification }) {
+  console.log('AvatarAndWidgetSettingsView Loaded - Version 2.0');
   const [activeTab, setActiveTab] = useState('appearance');
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);

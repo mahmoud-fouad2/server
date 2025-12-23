@@ -37,9 +37,14 @@ export class WidgetService {
     });
 
     // Transform URLs
+    const baseUrl = process.env.API_URL || 'https://fahimo-api.onrender.com';
+    
     if (safeConfig.customIconUrl && safeConfig.customIconUrl.startsWith('/uploads/')) {
-      const baseUrl = process.env.API_URL || 'https://fahimo-api.onrender.com';
       safeConfig.customIconUrl = `${baseUrl.replace(/\/$/, '')}${safeConfig.customIconUrl}`;
+    }
+    
+    if (safeConfig.customAvatarUrl && safeConfig.customAvatarUrl.startsWith('/uploads/')) {
+      safeConfig.customAvatarUrl = `${baseUrl.replace(/\/$/, '')}${safeConfig.customAvatarUrl}`;
     }
 
     return {
@@ -59,7 +64,7 @@ export class WidgetService {
       widgetConfig: WidgetConfigSchema.parse({}), // Uses defaults from Zod
       widgetVariant: 'STANDARD',
       configVersion: Date.now(),
-      isDemo: true
+      isDemo: false // Force false to prevent "Demo Widget" display
     };
   }
 }

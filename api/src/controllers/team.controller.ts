@@ -28,7 +28,14 @@ export class TeamController {
       }
       
       const { AddTeamMemberSchema } = await import('@fahimo/shared');
-      const { name, email, password, role } = AddTeamMemberSchema.parse(req.body);
+      
+      // Inject default role if missing
+      const payload = {
+        ...req.body,
+        role: req.body.role || 'EMPLOYEE'
+      };
+
+      const { name, email, password, role } = AddTeamMemberSchema.parse(payload);
 
       const employee = await teamService.addEmployee(businessId, { name, email, password, role });
       res.status(201).json(employee);
