@@ -49,8 +49,17 @@ export default function WidgetLoader() {
       if (blockedPaths.some(p => path.startsWith(p))) return;
 
       // If a widget script or already-rendered widget container exists for this business, avoid injecting another
+      // Priority order for choosing a business id:
+      // 1) Build-time env var (NEXT_PUBLIC_WIDGET_BUSINESS_ID / NEXT_PUBLIC_BUSINESS_ID)
+      // 2) Runtime override: `window.__FAHIMO_BUSINESS_ID` or a meta tag <meta name="fahimo-business-id" content="..." />
+      // 3) Fallback to demo on faheemly.com (for the public site)
       const bidEnv = process.env.NEXT_PUBLIC_WIDGET_BUSINESS_ID || process.env.NEXT_PUBLIC_BUSINESS_ID;
-      let bid = bidEnv;
+      const bidRuntime = typeof window !== 'undefined' ? (window.__FAHIMO_BUSINESS_ID || document?.querySelector('meta[name="fahimo-business-id"]')?.getAttribute('content')) : undefined;
+      let bid = bidEnv || bidRuntime;
+      if (bidRuntime && !bidEnv) {
+        console.info('[Fahimo] Using runtime business ID override via window.__FAHIMO_BUSINESS_ID or meta tag');
+      }
+
       if (!bid) {
         const host = typeof window !== 'undefined' && window.location ? window.location.hostname : '';
         if (host && host.includes('faheemly.com')) {
@@ -58,7 +67,7 @@ export default function WidgetLoader() {
           bid = FAHEEMLY_DEMO_BUSINESS_ID;
           console.info('[Fahimo] No env business ID found; defaulting to Faheemly demo business on faheemly.com');
         } else {
-          console.warn('No business ID configured for widget. Set NEXT_PUBLIC_WIDGET_BUSINESS_ID or NEXT_PUBLIC_BUSINESS_ID.');
+          console.warn('No business ID configured for widget. Set NEXT_PUBLIC_WIDGET_BUSINESS_ID or NEXT_PUBLIC_BUSINESS_ID or place a runtime override via window.__FAHIMO_BUSINESS_ID or <meta name="fahimo-business-id">.');
           return;
         }
       }

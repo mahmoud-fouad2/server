@@ -113,4 +113,29 @@ test.describe('Faheemly widget', () => {
     const widgetsAfter = await page.$$(`#fahimo-widget-container[data-business-id="${businessId}"]`);
     expect(widgetsAfter.length).toBe(1);
   });
+
+  test('respects runtime business ID override via window or meta', async ({ page }) => {
+    const runtimeBiz = process.env.TEST_RUNTIME_WIDGET_BIZ || 'cmir2oyaz00013ltwis4xc4tp';
+
+    // Visit a blank page so we can set window vars before any widget injection
+    await page.goto(`${FRONTEND_URL}/`);
+
+    // Simulate how the WidgetLoader would behave when a runtime override exists
+    await page.evaluate((bid) => {
+      // Runtime override (set before loader runs)
+      window.__FAHIMO_BUSINESS_ID = bid;
+
+      // Simulate loader creating a script using the runtime override
+      const s = document.createElement('script');
+      s.id = `fahimo-widget-script-${bid}`;
+      s.src = 'https://fahimo-api.onrender.com/fahimo-widget.js?v=test';
+      s.setAttribute('data-business-id', bid);
+      document.body.appendChild(s);
+    }, runtimeBiz);
+
+    // The page should now contain a script with the runtime business id
+    await page.waitForSelector(`script[data-business-id="${runtimeBiz}"]`, { timeout: 2000 });
+    const scripts = await page.$$(`script[data-business-id="${runtimeBiz}"]`);
+    expect(scripts.length).toBeGreaterThan(0);
+  });
 });

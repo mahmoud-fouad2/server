@@ -68,6 +68,8 @@ const sections = [
 
         <p className="text-sm text-gray-600 dark:text-gray-400">Tip: If your site is served from a different host (staging or self-hosted), include <code>data-api-url</code> pointing to your API (or set <code>window.__FAHIMO_WIDGET_API_URL</code> before loading the script) to avoid the widget calling the production API and returning 404/400.</p>
 
+        <p className="text-sm text-gray-600 dark:text-gray-400">Runtime override: If you cannot rebuild the site, you can set the business ID at runtime by adding either <code>&lt;meta name="fahimo-business-id" content="YOUR_BUSINESS_ID"/&gt;</code> to your page head or by setting <code>window.__FAHIMO_BUSINESS_ID</code> before the widget script runs. This will prevent the loader from defaulting to the demo business on faheemly.com.</p>
+
         <h4 className="font-semibold">خطوات التثبيت (تفصيلي)</h4>
         <ol className="list-decimal list-inside space-y-2 text-sm">
           <li>انسخ كود التضمين وضعه قبل وسم <code>&lt;/body&gt;</code> في الموقع.</li>
