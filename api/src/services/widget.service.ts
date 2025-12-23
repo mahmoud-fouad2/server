@@ -42,9 +42,9 @@ export class WidgetService {
     if (safeConfig.customIconUrl && safeConfig.customIconUrl.startsWith('/uploads/')) {
       safeConfig.customIconUrl = `${baseUrl.replace(/\/$/, '')}${safeConfig.customIconUrl}`;
     }
-    
-    if (safeConfig.customAvatarUrl && safeConfig.customAvatarUrl.startsWith('/uploads/')) {
-      safeConfig.customAvatarUrl = `${baseUrl.replace(/\/$/, '')}${safeConfig.customAvatarUrl}`;
+    // Fix: Use avatarUrl instead of customAvatarUrl
+    if (safeConfig.avatarUrl && safeConfig.avatarUrl.startsWith('/uploads/')) {
+      safeConfig.avatarUrl = `${baseUrl.replace(/\/$/, '')}${safeConfig.avatarUrl}`;
     }
 
     return {

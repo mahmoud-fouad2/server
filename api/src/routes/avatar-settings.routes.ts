@@ -106,7 +106,7 @@ router.post(
 
       // Handle custom avatar upload
       if (files?.customAvatar && files.customAvatar[0]) {
-        updatedConfig.customAvatarUrl = `/uploads/${files.customAvatar[0].filename}`;
+        updatedConfig.avatarUrl = `/uploads/${files.customAvatar[0].filename}`;
       }
 
       // Handle custom icon upload
