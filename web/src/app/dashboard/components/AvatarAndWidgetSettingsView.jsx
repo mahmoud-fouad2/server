@@ -144,7 +144,7 @@ export default function AvatarAndWidgetSettingsView({ user, addNotification }) {
               autoOpenDelay: cfg.autoOpenDelay || prev.autoOpenDelay,
               showBranding: cfg.showBranding ?? prev.showBranding,
               previewCustomIcon: cfg.customIconUrl || prev.previewCustomIcon,
-              previewCustomAvatar: cfg.customAvatarUrl || prev.previewCustomAvatar,
+              previewCustomAvatar: cfg.avatarUrl || prev.previewCustomAvatar,
             }));
           } catch (e) {
             console.error('Failed to parse widget config:', e);
@@ -255,7 +255,7 @@ export default function AvatarAndWidgetSettingsView({ user, addNotification }) {
           setSettings(prev => ({
             ...prev,
             previewCustomIcon: data.widgetConfig.customIconUrl || prev.previewCustomIcon,
-            previewCustomAvatar: data.widgetConfig.customAvatarUrl || prev.previewCustomAvatar,
+            previewCustomAvatar: data.widgetConfig.avatarUrl || prev.previewCustomAvatar,
           }));
         }
 
@@ -389,6 +389,40 @@ export default function AvatarAndWidgetSettingsView({ user, addNotification }) {
                       <span className="text-sm text-brand-600 mt-2 font-medium">✓ تم التحميل</span>
                     </div>
                   )}
+                </div>
+
+                {/* Inspector Header Preview */}
+                <div className="mt-4">
+                  <div className="rounded-xl overflow-hidden shadow" style={{border: '1px solid rgba(0,0,0,0.06)'}}>
+                    <header style={{padding: 20, background: 'linear-gradient(120deg, rgb(0, 102, 255), rgb(0, 212, 255))', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+                      <div style={{display: 'flex', alignItems: 'center', gap: 12}}>
+                        <div style={{width: 48, height: 48, borderRadius: '50%', background: 'rgba(255, 255, 255, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, color: '#ffffff', border: '2px solid rgba(255,255,255,0.4)', overflow: 'hidden'}}>
+                          {settings.previewCustomAvatar ? (
+                            <img src={settings.previewCustomAvatar} alt="avatar" style={{width: '100%', height: '100%', objectFit: 'cover'}} />
+                          ) : (
+                            <span>{(settings.widgetName || 'F').charAt(0)}</span>
+                          )}
+                        </div>
+                        <div>
+                          <div style={{fontSize: 18, fontWeight: 600, color: 'white'}}>{settings.widgetName || 'Faheemly Official'}</div>
+                          <div style={{display: 'flex', alignItems: 'center', gap: 6, color: 'rgba(255,255,255,0.9)', fontSize: 13}}>
+                            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" style={{display: 'inline-block'}}></span>
+                            <span>متاح للرد خلال لحظات</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div style={{display: 'flex', gap: 8}}>
+                        <button type="button" style={{width: 34, height: 34, borderRadius: 34, border: 'none', background: 'rgba(255, 255, 255, 0.2)', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'}} title="Minimize preview">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5"></path></svg>
+                        </button>
+                        <button type="button" style={{width: 34, height: 34, borderRadius: 34, border: 'none', background: 'rgba(255, 255, 255, 0.2)', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'}} title="Close preview">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+                        </button>
+                      </div>
+                    </header>
+                  </div>
+                </div>
                 </div>
               </CardContent>
             </Card>

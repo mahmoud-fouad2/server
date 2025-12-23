@@ -23,6 +23,7 @@
     "build:shared": "cd ../shared && npm install && npm run build",
     "build:widget": "cd ../widget && npm install && npm run build",
     "postbuild": "node scripts/copy-widget.js",
+    "flush-cache": "node scripts/flush-cache.mjs" ,
     "prebuild": "npm run clean && npm run build:shared && npm run build:widget",
     "postinstall": "prisma generate"
   },
