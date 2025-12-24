@@ -7,28 +7,46 @@ export const DemoChatWindow = () => {
   const [widgetLoaded, setWidgetLoaded] = useState(false);
 
   useEffect(() => {
-    // Load our real business widget
-    const DEMO_BUSINESS_ID = 'cmir2oyaz00013ltwis4xc4tp'; // Our actual business
-    const existingScript = document.getElementById('demo-widget-script');
-    
-    if (!existingScript && !document.getElementById('fahimo-widget-root')) {
+    // Choose business id in priority order:
+    // 1) runtime override: window.__FAHIMO_BUSINESS_ID or meta[name="fahimo-business-id"]
+    // 2) build-time env: NEXT_PUBLIC_WIDGET_BUSINESS_ID / NEXT_PUBLIC_BUSINESS_ID
+    // 3) fallback to seeded demo (keeps behavior safe for local dev)
+    const runtimeBiz = typeof window !== 'undefined'
+      ? (window.__FAHIMO_BUSINESS_ID || document?.querySelector('meta[name="fahimo-business-id"]')?.getAttribute('content'))
+      : undefined;
+    const envBiz = process.env.NEXT_PUBLIC_WIDGET_BUSINESS_ID || process.env.NEXT_PUBLIC_BUSINESS_ID;
+    const BUSINESS_ID = runtimeBiz || envBiz || 'cmir2oyaz00013ltwis4xc4tp';
+
+    const scriptId = `fahimo-widget-script-${BUSINESS_ID}`;
+    const existingScript = document.getElementById(scriptId);
+    const existingRoot = document.getElementById('fahimo-widget-root');
+    let createdByThis = false;
+
+    if (!existingScript && !existingRoot) {
       const script = document.createElement('script');
-      script.id = 'demo-widget-script';
+      script.id = scriptId;
       script.src = process.env.NEXT_PUBLIC_WIDGET_URL || 'https://fahimo-api.onrender.com/fahimo-widget.js';
-      script.setAttribute('data-business-id', DEMO_BUSINESS_ID);
+      script.setAttribute('data-business-id', BUSINESS_ID);
       script.async = true;
       script.onload = () => setWidgetLoaded(true);
       document.body.appendChild(script);
+      createdByThis = true;
     } else {
       setWidgetLoaded(true);
     }
 
     return () => {
-      // Cleanup on unmount
-      const widgetRoot = document.getElementById('fahimo-widget-root');
-      if (widgetRoot) widgetRoot.remove();
-      const demoScript = document.getElementById('demo-widget-script');
-      if (demoScript) demoScript.remove();
+      // Cleanup only if we created the script/root to avoid removing other instances
+      try {
+        if (createdByThis) {
+          const widgetRoot = document.getElementById('fahimo-widget-root');
+          if (widgetRoot) widgetRoot.remove();
+          const demoScript = document.getElementById(scriptId);
+          if (demoScript) demoScript.remove();
+        }
+      } catch (err) {
+        // ignore cleanup errors
+      }
     };
   }, []);
 
