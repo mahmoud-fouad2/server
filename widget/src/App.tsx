@@ -334,6 +334,18 @@ function resolveAssetUrl(input?: string, base?: string) {
   return input;
 }
 
+function getAvatarEmoji(avatarType?: string) {
+  const avatarMap: Record<string, string> = {
+    'robot': '🤖',
+    'support': '🎧',
+    'chat': '💬',
+    'sparkles': '✨',
+    'business': '💼',
+    'user': '👤',
+  };
+  return avatarMap[avatarType || ''] || null;
+}
+
 function buildFormState(fields: PreChatField[]) {
   return fields.reduce<Record<string, string>>((state, field) => {
     state[field.id] = '';
@@ -543,6 +555,7 @@ export default function App({ config, businessName, assetBaseUrl, apiBaseUrl, pr
   const widgetName = config.widgetName || config.botName || businessName || 'مساعد فهملي';
   const welcomeMessage = config.welcomeMessage || 'مرحباً! كيف يمكنني مساعدتك اليوم؟ 👋';
   const avatarUrl = resolveAssetUrl(config.botIcon || config.avatarUrl || config.customIconUrl, assetBaseUrl);
+  const avatarEmoji = getAvatarEmoji(config.avatar);
   const launcherIcon = resolveAssetUrl(config.customLauncherIcon || config.customIconUrl || config.botIcon, assetBaseUrl);
   const notificationSoundSrc =
     resolveAssetUrl(config.notificationSound, assetBaseUrl) ||
@@ -933,6 +946,8 @@ export default function App({ config, businessName, assetBaseUrl, apiBaseUrl, pr
             <div style={styles.avatarShell(theme)}>
               {avatarUrl ? (
                 <img src={avatarUrl} alt={widgetName} style={styles.avatarImage} />
+              ) : avatarEmoji ? (
+                <span style={{ fontSize: '28px' }}>{avatarEmoji}</span>
               ) : (
                 <span>{widgetName?.charAt(0)?.toUpperCase()}</span>
               )}

@@ -19,6 +19,7 @@ import {
   Timer,
   Layout,
   Ruler,
+  AlertCircle,
 } from 'lucide-react';
 import { widgetApi, businessApi } from '@/lib/api';
 import { BRAND } from '@/constants';
@@ -75,6 +76,7 @@ export default function WidgetSettingsView({
   const [widgetConfig, setWidgetConfig] = useState(INITIAL_WIDGET_CONFIG);
   const [savingConfig, setSavingConfig] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const borderRadiusValue = useMemo(() => {
     const raw = String(widgetConfig.borderRadius || '').replace('px', '');
     const parsed = parseInt(raw, 10);
@@ -90,6 +92,7 @@ export default function WidgetSettingsView({
 
   const updateWidgetField = (field, value) => {
     setWidgetConfig(prev => ({ ...prev, [field]: value }));
+    setHasUnsavedChanges(true);
   };
 
   const buildConfigPayload = (overrides = {}) => {
@@ -195,6 +198,7 @@ export default function WidgetSettingsView({
         }
       }
       addNotification('تم حفظ الإعدادات');
+      setHasUnsavedChanges(false);
     } catch (err) {
       addNotification('فشل الحفظ', 'error');
     } finally {
@@ -255,12 +259,26 @@ export default function WidgetSettingsView({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+      className="space-y-6"
     >
-      <Card>
+      {/* Unsaved Changes Warning */}
+      {hasUnsavedChanges && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-yellow-500/10 border border-yellow-500/20 p-3 rounded-lg flex items-center gap-2"
+        >
+          <AlertCircle className="w-4 h-4 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
+          <span className="text-sm text-yellow-700 dark:text-yellow-300">
+            يوجد تغييرات غير محفوظة - لا تنسى الحفظ
+          </span>
+        </motion.div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
         <CardHeader>
           <CardTitle>إعدادات المظهر والسلوك</CardTitle>
         </CardHeader>
@@ -586,6 +604,7 @@ export default function WidgetSettingsView({
           </div>
         </CardContent>
       </Card>
+      </div>
     </motion.div>
   );
 }

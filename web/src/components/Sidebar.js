@@ -112,7 +112,7 @@ export default function Sidebar({ activeTab, setActiveTab, userRole }) {
       </div>
 
       {/* Navigation Items */}
-      <div className="flex-1 overflow-y-auto py-6 px-4 space-y-1 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 dark:hover:scrollbar-thumb-gray-600">
+      <div className="flex-1 overflow-y-auto py-6 px-4 space-y-1 custom-scrollbar">
         <div className="text-xs font-bold text-gray-400 dark:text-gray-500 px-4 mb-2 uppercase tracking-wider">
           {t('dashboard.overview')}
         </div>
@@ -202,6 +202,13 @@ export default function Sidebar({ activeTab, setActiveTab, userRole }) {
               id="crm"
               label={t('dashboard.crm')}
               icon={ContactRound}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+            />
+            <SidebarItem
+              id="leads"
+              label="عملاء محتملون"
+              icon={Users}
               activeTab={activeTab}
               setActiveTab={setActiveTab}
             />

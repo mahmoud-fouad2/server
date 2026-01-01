@@ -157,15 +157,9 @@ export default function RootLayout({ children }) {
         {/* Content Security Policy: allow API host from env */}
         {
           (() => {
-            // Force production URL in production build
-            let apiHost = process.env.NEXT_PUBLIC_API_URL || 'https://fahimo-api.onrender.com';
-            
-            // In production, ignore localhost and force Render URL
-            if (process.env.NODE_ENV === 'production') {
-              apiHost = 'https://fahimo-api.onrender.com';
-            }
-
-            const apiOrigin = apiHost.replace(/\/api$/, '');
+            // PRODUCTION ONLY: Always use production URL
+            const apiHost = 'https://fahimo-api.onrender.com';
+            const apiOrigin = apiHost;
             const apiWs = apiOrigin.replace(/^http/, 'ws');
             
             const csp = [

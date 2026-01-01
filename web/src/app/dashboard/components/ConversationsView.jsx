@@ -24,6 +24,7 @@ export default function ConversationsView() {
   const [loading, setLoading] = useState(true);
   const [showAll, setShowAll] = useState(false);
   const [socket, setSocket] = useState(null);
+  const [socketConnected, setSocketConnected] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -51,9 +52,11 @@ export default function ConversationsView() {
             localSocket = io(API_CONFIG.BASE_URL.replace('/api', ''), { transports: ['websocket'] });
 
             localSocket.on('connect', () => {
-              // ...existing code...
+              setSocketConnected(true);
               localSocket.emit('join_room', `business_${profile.businessId}`);
             });
+
+            localSocket.on('disconnect', () => setSocketConnected(false));
 
             localSocket.on('handover_request', (data) => {
               playNotificationSound();
@@ -220,10 +223,18 @@ export default function ConversationsView() {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
-      // Use a responsive height: on small screens use min-height so content can grow,
-      // on large screens keep the previous fixed available-height layout.
       className="grid grid-cols-1 lg:grid-cols-3 gap-8 min-h-[60vh] lg:h-[calc(100vh-250px)]"
     >
+      {!socketConnected && (
+        <div className="lg:col-span-3 bg-yellow-500/10 border border-yellow-500/20 p-3 rounded-lg">
+          <div className="flex items-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin text-yellow-600 dark:text-yellow-400" />
+            <span className="text-sm text-yellow-700 dark:text-yellow-300">
+              الاتصال المباشر معطل - جاري إعادة الاتصال...
+            </span>
+          </div>
+        </div>
+      )}
       {/* Conversations List */}
       <Card className="lg:col-span-1 flex flex-col h-full">
         <CardHeader>

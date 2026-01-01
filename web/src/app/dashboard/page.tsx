@@ -42,6 +42,7 @@ import SettingsView from './components/SettingsView';
 import PlaygroundView from './components/PlaygroundView';
 import VisitorAnalytics from './components/VisitorAnalytics';
 import CrmView from './components/CrmView';
+import LeadsView from './components/LeadsView';
 import DashboardTour, { useDashboardTour } from './components/DashboardTour';
 
 interface Notification {
@@ -368,6 +369,8 @@ function DashboardContent() {
             {activeTab === 'crm' && (
               <CrmView key="crm" user={user} addNotification={addNotification} />
             )}
+
+            {activeTab === 'leads' && <LeadsView key="leads" />}
 
             {activeTab === 'subscription' && (
               <motion.div

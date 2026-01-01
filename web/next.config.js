@@ -24,17 +24,14 @@ const nextConfig = {
   // Environment variables for client-side
   env: {
     NEXT_PUBLIC_API_URL:
-      process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api',
+      process.env.NEXT_PUBLIC_API_URL || 'https://fahimo-api.onrender.com/api',
     NEXT_PUBLIC_API_BASE_URL:
-      process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001/api',
+      process.env.NEXT_PUBLIC_API_BASE_URL || 'https://fahimo-api.onrender.com/api',
   },
 
   async headers() {
-    const devConnectSrc = `http://localhost:3001 ws://localhost:3001`;
-    const prodConnectSrc = `https://fahimo-api.onrender.com https://faheemly.com https://*.faheemly.com wss://fahimo-api.onrender.com wss://*.faheemly.com`;
-    const connectSrc = process.env.NODE_ENV === 'development'
-      ? `'self' ${devConnectSrc} ${prodConnectSrc}`
-      : `'self' ${prodConnectSrc}`;
+    // PRODUCTION ONLY - NO LOCALHOST
+    const connectSrc = `'self' https://fahimo-api.onrender.com https://faheemly.com https://*.faheemly.com wss://fahimo-api.onrender.com wss://*.faheemly.com`;
 
     const csp = [
       "default-src 'self'",

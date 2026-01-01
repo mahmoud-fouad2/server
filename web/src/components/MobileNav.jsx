@@ -208,11 +208,18 @@ export default function MobileNav({ activeTab, setActiveTab, userRole }) {
             )}
             <MenuItem icon={LifeBuoy} label="تذاكر الدعم" id="tickets" />
             {!isAgent && (
-              <MenuItem
-                icon={ContactRound}
-                label="إدارة العملاء"
-                id="crm"
-              />
+              <>
+                <MenuItem
+                  icon={ContactRound}
+                  label="إدارة العملاء"
+                  id="crm"
+                />
+                <MenuItem
+                  icon={Users}
+                  label="عملاء محتملون"
+                  id="leads"
+                />
+              </>
             )}
             <MenuItem
               icon={User}

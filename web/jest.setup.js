@@ -44,7 +44,7 @@ jest.mock('next/navigation', () => ({
 }))
 
 // Mock environment variables
-process.env.NEXT_PUBLIC_API_URL = 'http://localhost:3001'
+process.env.NEXT_PUBLIC_API_URL = 'https://fahimo-api.onrender.com/api'
 
 // Global test utilities
 global.fetch = jest.fn()

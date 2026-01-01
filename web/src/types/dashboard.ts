@@ -247,5 +247,6 @@ export type DashboardTab =
   | 'playground'
   | 'tickets'
   | 'crm'
+  | 'leads'
   | 'settings'
   | 'subscription';

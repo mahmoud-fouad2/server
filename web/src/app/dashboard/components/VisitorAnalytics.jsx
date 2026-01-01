@@ -193,7 +193,10 @@ export default function VisitorAnalytics() {
   }
 
   // Show helpful message if no data yet
-  const hasAnyData = totalSessions > 0 || activeSessions.length > 0;
+  const hasAnyData = (totalSessions > 0) || 
+                     (activeSessions.length > 0) || 
+                     (analytics && Object.keys(analytics).length > 0 && 
+                      (analytics.totalPageViews > 0 || analytics.avgDuration > 0));
   
   if (!hasAnyData && !loading) {
     return (

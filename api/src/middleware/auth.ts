@@ -62,12 +62,11 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
     let businessIdHeader = req.headers['x-business-id'];
     if (Array.isArray(businessIdHeader)) businessIdHeader = businessIdHeader[0];
 
-    // @ts-ignore
-    const businessId = businessIdHeader || decoded.businessId || user.businesses[0]?.id;
+    const userBusinesses = user.businesses as { id: string }[];
+    const businessId = businessIdHeader || decoded.businessId || userBusinesses[0]?.id;
 
     // Verify access to the requested business
-    // @ts-ignore
-    if (businessId && user.businesses && !user.businesses.some(b => b.id === businessId)) {
+    if (businessId && userBusinesses && !userBusinesses.some(b => b.id === businessId)) {
        // If they are SUPERADMIN, maybe allow? For now, strict check.
        if (user.role !== 'ADMIN') { // Assuming ADMIN here means SUPERADMIN or similar, but let's stick to the prompt's strictness
           return res.status(403).json({ error: 'Access denied to this business context' });
@@ -79,18 +78,6 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
       ...user,
       businessId
     };
-
-    // Audit log (async to not block)
-    if (businessId) {
-      prisma.auditLog.create({ 
-        data: { 
-          userId: user.id, 
-          businessId, 
-          action: 'access_context',
-          ipAddress: req.ip
-        } 
-      }).catch(err => console.error('Audit log failed:', err));
-    }
 
     next();
   } catch (error) {

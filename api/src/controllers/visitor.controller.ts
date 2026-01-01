@@ -33,6 +33,10 @@ export class VisitorController {
         return res.status(404).json({ error: 'Business not found' });
       }
 
+      if (business.status === 'SUSPENDED' || business.status === 'CANCELLED') {
+        return res.status(403).json({ error: 'Business is not active' });
+      }
+
       const session = await visitorService.getOrCreateSession(businessId as string, fingerprint as string, {
         userAgent: req.headers['user-agent'],
         ipAddress: req.ip,

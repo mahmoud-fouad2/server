@@ -140,7 +140,6 @@ export default function StatsOverview({
   const [conversationDataState, setConversationDataState] = useState([]);
   const [responseTimeState, setResponseTimeState] = useState([]);
   const [satisfactionState, setSatisfactionState] = useState([]);
-  const [chartType, setChartType] = useState('area'); // 'area' | 'line' | 'bar'
   const [vectorStats, setVectorStats] = useState(null);
   const [alerts, setAlerts] = useState([]);
   const syncId = 'dashboardSync';
@@ -195,13 +194,17 @@ export default function StatsOverview({
             name: d.date,
             conversations: d.count
           })));
+        } else {
+          setConversationDataState([]);
         }
 
         if (data.performance?.responseTimes) {
           setResponseTimeState(data.performance.responseTimes.map(d => ({
             name: d.range,
-            time: d.count // Using 'time' as the value key based on chart config
+            time: d.count
           })));
+        } else {
+          setResponseTimeState([]);
         }
 
         if (data.performance?.satisfactionDistribution) {
@@ -211,6 +214,8 @@ export default function StatsOverview({
             value: d.count,
             color: colors[d.rating - 1] || '#8884d8'
           })));
+        } else {
+          setSatisfactionState([]);
         }
       } catch (e) {
         console.warn('Failed to fetch analytics:', e.message || e);
@@ -305,33 +310,6 @@ export default function StatsOverview({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Dynamic script injection to bypass aggressive caching
-  useEffect(() => {
-    const scriptId = 'fahimo-widget-script';
-    // Remove any old script to prevent duplicates
-    document.getElementById(scriptId)?.remove();
-
-    if (user?.businessId) {
-      const script = document.createElement('script');
-      const version = new Date().getTime();
-      const widgetSrc = API_CONFIG.WIDGET_SCRIPT 
-        ? `${API_CONFIG.WIDGET_SCRIPT}?v=${version}` 
-        : `${API_CONFIG.BASE_URL}/fahimo-widget.js?v=${version}`;
-      
-      script.id = scriptId;
-      script.src = widgetSrc;
-      script.setAttribute('data-business-id', user.businessId);
-      script.async = true;
-      
-      document.body.appendChild(script);
-
-      // Cleanup on component unmount
-      return () => {
-        document.getElementById(scriptId)?.remove();
-      };
-    }
-  }, [user?.businessId]); // Re-run if businessId changes
-
   const getWidgetCode = (platform) => {
     const version = new Date().getTime();
     const widgetSrc = `${API_CONFIG.WIDGET_SCRIPT || `${API_CONFIG.BASE_URL}/fahimo-widget.js`}?v=${version}`;
@@ -393,16 +371,6 @@ add_action('wp_footer', 'add_fahimo_widget');`;
       alert('فشل تصدير البيانات');
     }
   };
-
-  // Default empty state for charts
-  const conversationData = [];
-  const responseTimeData = [];
-  const satisfactionData = [
-    { name: 'راضي جداً', value: 1, color: '#10B981' },
-    { name: 'راضي', value: 1, color: '#3B82F6' },
-    { name: 'محايد', value: 1, color: '#F59E0B' },
-    { name: 'غير راضي', value: 1, color: '#EF4444' },
-  ];
 
   return (
     <motion.div
@@ -499,15 +467,6 @@ add_action('wp_footer', 'add_fahimo_widget');`;
           </Button>
         </div>
 
-        <div className="flex items-center gap-2">
-          <label className="text-xs text-muted-foreground mr-1">نوع المخطط:</label>
-          <div className="flex items-center gap-1">
-            <Button size="sm" variant={chartType === 'area' ? 'default' : 'outline'} onClick={() => setChartType('area')}>Area</Button>
-            <Button size="sm" variant={chartType === 'line' ? 'default' : 'outline'} onClick={() => setChartType('line')}>Line</Button>
-            <Button size="sm" variant={chartType === 'bar' ? 'default' : 'outline'} onClick={() => setChartType('bar')}>Bar</Button>
-          </div>
-        </div>
-
         <Button size="sm" onClick={() => window.open(getApiUrl(`api/analytics/export?format=csv&days=${timeRangeDays}`))}>
           تصدير CSV
         </Button>
@@ -594,47 +553,23 @@ add_action('wp_footer', 'add_fahimo_widget');`;
               <DonutSatisfaction data={satisfactionState && satisfactionState.length ? satisfactionState : satisfactionData} />
             </div>
 
-            {/* Bar + Area combined section with brush */}
+            {/* Area chart with brush */}
             <div className="h-[300px]" style={{ height: 300 }}>
               <SafeResponsiveContainer width="100%" height="100%" minHeight={200}>
-                {chartType === 'area' && (
-                  <AreaChart syncId={syncId} data={conversationDataState && conversationDataState.length ? conversationDataState : conversationData}>
-                    <defs>
-                      <linearGradient id="colorConv" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8}/>
-                        <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <Tooltip />
-                    <Area type="monotone" dataKey="conversations" stroke="#3B82F6" fillOpacity={1} fill="url(#colorConv)" />
-                    <Brush dataKey="name" height={30} stroke="#8884d8" />
-                  </AreaChart>
-                )}
-
-                {chartType === 'line' && (
-                  <LineChart syncId={syncId} data={conversationDataState && conversationDataState.length ? conversationDataState : conversationData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="conversations" stroke="#3B82F6" strokeWidth={2} dot={{ r: 4 }} />
-                    <Brush dataKey="name" height={30} stroke="#3B82F6" />
-                  </LineChart>
-                )}
-
-                {chartType === 'bar' && (
-                  <BarChart syncId={syncId} data={conversationDataState && conversationDataState.length ? conversationDataState : conversationData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="conversations" fill="#3B82F6" />
-                    <Brush dataKey="name" height={30} stroke="#3B82F6" />
-                  </BarChart>
-                )}
+                <AreaChart syncId={syncId} data={conversationDataState && conversationDataState.length ? conversationDataState : conversationData}>
+                  <defs>
+                    <linearGradient id="colorConv" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <Tooltip />
+                  <Area type="monotone" dataKey="conversations" stroke="#3B82F6" fillOpacity={1} fill="url(#colorConv)" />
+                  <Brush dataKey="name" height={30} stroke="#8884d8" />
+                </AreaChart>
               </SafeResponsiveContainer>
             </div>
           </div>

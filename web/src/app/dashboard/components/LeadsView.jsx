@@ -1,18 +1,22 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 import { apiCall } from '@/lib/api';
 
 export default function LeadsView() {
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   async function fetchLeads() {
     setLoading(true);
+    setError(null);
     try {
       const data = await apiCall('/api/crm/leads');
       setLeads(data.data || []);
     } catch (e) {
       console.error('Failed to fetch leads', e);
+      setError('فشل تحميل البيانات - حاول مرة أخرى');
     } finally {
       setLoading(false);
     }
@@ -49,9 +53,24 @@ export default function LeadsView() {
         </div>
       </div>
 
+      {/* Error State */}
+      {error && (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4 rounded-lg">
+          <p className="text-red-600 dark:text-red-400 mb-2">{error}</p>
+          <Button 
+            onClick={() => { setError(null); fetchLeads(); }} 
+            variant="outline"
+            size="sm"
+            className="border-red-300 dark:border-red-700"
+          >
+            إعادة المحاولة
+          </Button>
+        </div>
+      )}
+
       <div className="overflow-auto border rounded">
         <table className="min-w-full text-sm">
-          <thead className="bg-gray-50">
+          <thead className="bg-gray-50 dark:bg-gray-800">
             <tr>
               <th className="p-2 text-left">الاسم</th>
               <th className="p-2 text-left">البريد</th>
@@ -62,7 +81,14 @@ export default function LeadsView() {
             </tr>
           </thead>
           <tbody>
-            {leads.length === 0 ? (
+            {loading ? (
+              <tr>
+                <td colSpan="6" className="p-8 text-center">
+                  <Loader2 className="w-6 h-6 animate-spin mx-auto text-brand-500" />
+                  <p className="text-sm text-muted-foreground mt-2">جاري التحميل...</p>
+                </td>
+              </tr>
+            ) : leads.length === 0 ? (
               <tr><td colSpan="6" className="p-4 text-center">لا توجد بيانات</td></tr>
             ) : (
               leads.map(l => (

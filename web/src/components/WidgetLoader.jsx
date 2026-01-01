@@ -63,9 +63,9 @@ export default function WidgetLoader() {
 
       if (!bid) {
         const host = typeof window !== 'undefined' && window.location ? window.location.hostname : '';
-        // Allow localhost to use the demo business ID for testing purposes
-        if ((host && host.includes('faheemly.com')) || host === 'localhost' || host === '127.0.0.1') {
-          // On the faheemly.com site (or localhost), default to the demo Faheemly business so the embed works without extra setup
+        // Allow faheemly.com to use the demo business ID
+        if (host && host.includes('faheemly.com')) {
+          // On the faheemly.com site, default to the demo Faheemly business so the embed works without extra setup
           bid = FAHEEMLY_DEMO_BUSINESS_ID;
           console.info('[Fahimo] No env business ID found; defaulting to Faheemly demo business');
         } else {
@@ -80,9 +80,7 @@ export default function WidgetLoader() {
       const externalWidget = process.env.NEXT_PUBLIC_WIDGET_URL || API_CONFIG.WIDGET_SCRIPT || 'https://fahimo-api.onrender.com/fahimo-widget.js';
       const widgetSrc = appendCacheBust(externalWidget);
 
-      // Load only the production/external widget by default. Local fallbacks are
-      // disabled to prevent accidental loading from localhost in production.
-      // To allow a local fallback for development, set NEXT_PUBLIC_ALLOW_LOCAL_WIDGET=true.
+      // PRODUCTION ONLY: Load external widget, no local fallback
       function loadScript(src) {
         const s = document.createElement('script');
         s.id = `fahimo-widget-script-${bid}`;
@@ -93,33 +91,15 @@ export default function WidgetLoader() {
         if (WIDGET_BUILD_VERSION) {
           s.setAttribute('data-widget-version', WIDGET_BUILD_VERSION);
         }
-        // Only set explicit data-api-url in safe cases:
-        // 1) If NEXT_PUBLIC_API_URL is provided at build-time (explicit override)
-        // 2) If running on localhost and NEXT_PUBLIC_ALLOW_LOCAL_WIDGET=true (local dev only)
+        // PRODUCTION ONLY: Always use production API URL
         try {
           const explicitApi = normalizeApiBaseUrl(process.env.NEXT_PUBLIC_API_URL);
-          const allowLocal = process.env.NEXT_PUBLIC_ALLOW_LOCAL_WIDGET === 'true';
-          const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
 
           if (explicitApi && explicitApi.indexOf('localhost') === -1) {
             s.setAttribute('data-api-url', explicitApi);
-          } else if ((hostname === 'localhost' || hostname === '127.0.0.1') && allowLocal) {
-            s.setAttribute('data-api-url', window.location.origin);
           } else {
-            // Force production URL if explicitApi is missing or is localhost in a non-local context
-            // This ensures we never accidentally inject localhost into the widget config
-            if (process.env.NODE_ENV === 'production') {
-               // Do not set data-api-url, let the widget use its default (https://fahimo-api.onrender.com)
-               // Explicitly set it to the production API to be safe
-               s.setAttribute('data-api-url', 'https://fahimo-api.onrender.com');
-            }
-            
-            // Avoid setting a default local API URL that could cause CSP violations when the widget
-            // is embedded on remote sites (e.g., faheemly.com). In production, recommend configuring
-            // NEXT_PUBLIC_API_URL to the correct API host.
-            if (process.env.NODE_ENV === 'production' && !explicitApi) {
-              console.warn('WidgetLoader: NEXT_PUBLIC_API_URL not set in production; widget will use script origin or default. Set NEXT_PUBLIC_API_URL to your API host to prevent CSP/localhost calls.');
-            }
+            // Production default - never use localhost
+            s.setAttribute('data-api-url', 'https://fahimo-api.onrender.com');
           }
         } catch (e) {}
 
@@ -129,16 +109,7 @@ export default function WidgetLoader() {
         document.body.appendChild(s);
       }
 
-      // Always attempt to load the external (production) widget first.
-      // Attempt external widget only (no local/localhost fallback in production)
-      // Warn developers if the default external widget points to production while the page origin is clearly not production.
-      try {
-        const isProdWidget = externalWidget && externalWidget.indexOf('fahimo-api.onrender.com') !== -1;
-        const pageHost = typeof window !== 'undefined' ? window.location.host : '';
-        if (isProdWidget && pageHost && pageHost.indexOf('faheemly.com') === -1 && !process.env.NEXT_PUBLIC_API_URL) {
-          console.warn('WidgetLoader: loading production widget script without NEXT_PUBLIC_API_URL set. This may cause the widget to call the production API and return 404/400 on non-production sites.');
-        }
-      } catch (e) {}
+      // PRODUCTION: Load external widget
       loadScript(widgetSrc);
     } catch (e) {
       console.error('WidgetLoader error', e);

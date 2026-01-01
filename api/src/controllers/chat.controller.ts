@@ -15,8 +15,16 @@ export class ChatController {
       if (!businessId) {
         return res.status(401).json({ error: 'Unauthorized' });
       }
+
+      const { status } = req.query;
+      const where: any = { businessId };
+
+      if (status) {
+        where.status = String(status);
+      }
+
       const conversations = await prisma.conversation.findMany({
-        where: { businessId },
+        where,
         include: {
           messages: {
             orderBy: { createdAt: 'desc' },

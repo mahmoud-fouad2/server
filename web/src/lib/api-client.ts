@@ -107,21 +107,41 @@ export async function fetchAPI<T = unknown>(endpoint: string, options: FetchOpti
       if (response.status === 401 || response.status === 403) {
         const data = await response.json().catch(() => null);
         
-        // Check for specific "Invalid token" error which implies session expiry
-        const isTokenInvalid = response.status === 403 && data && 
-          ((data.error === 'Invalid token') || (data.message === 'Invalid token'));
+        // Check for specific authentication errors
+        const isAuthError = 
+          response.status === 401 || 
+          (response.status === 403 && data && (
+            data.error === 'Invalid token' || 
+            data.message === 'Invalid token' ||
+            data.error === 'No token provided' ||
+            data.message === 'No token provided' ||
+            data.error === 'jwt expired' ||
+            data.message === 'jwt expired'
+          ));
 
-        if (response.status === 401 || isTokenInvalid) {
+        // Clear token and redirect on authentication failures
+        if (isAuthError) {
           if (typeof window !== 'undefined') {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
-            // Only redirect if not already on login page to avoid loops
-            if (!window.location.pathname.includes('/login')) {
-               window.location.href = '/login?reason=session_expired';
+            // Only redirect if not already on login/register/public pages
+            const publicPaths = ['/login', '/register', '/forgot-password', '/reset-password', '/'];
+            const currentPath = window.location.pathname;
+            const isPublicPath = publicPaths.some(path => currentPath.startsWith(path));
+            
+            if (!isPublicPath) {
+              window.location.href = '/login?reason=session_expired';
             }
           }
           throw new Error('Unauthorized');
         }
+        
+        // For other 403 errors (permission denied), throw without redirect
+        const errorMessage = data?.error || data?.message || 'Access denied';
+        const err = new Error(errorMessage) as Error & { status?: number; data?: unknown };
+        err.status = response.status;
+        err.data = data;
+        throw err;
       }
 
       const contentType = (response.headers.get('content-type') || '').toLowerCase();

@@ -5,7 +5,7 @@ const config = {
   timeout: 30 * 1000,
   retries: 0,
   use: {
-    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'https://faheemly.com',
     headless: true,
     viewport: { width: 1280, height: 800 },
     ignoreHTTPSErrors: true,

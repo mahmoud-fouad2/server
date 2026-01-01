@@ -16,24 +16,23 @@ export class AnalyticsService {
       },
     });
 
-    const messages = await prisma.message.findMany({
-      where: {
-        conversation: { businessId },
-        createdAt: { gte: startDate, lte: endDate },
-      },
-      select: { createdAt: true },
-    });
+    // Optimized aggregation using raw query for performance
+    const rawTrends = await prisma.$queryRaw<any[]>`
+      SELECT "createdAt"::date as date, COUNT(*)::int as count
+      FROM "Message"
+      WHERE "conversationId" IN (
+        SELECT "id" FROM "Conversation" WHERE "businessId" = ${businessId}
+      )
+      AND "createdAt" >= ${startDate}
+      AND "createdAt" <= ${endDate}
+      GROUP BY "createdAt"::date
+      ORDER BY date ASC
+    `;
 
-    const trendsMap: Record<string, number> = {};
-    messages.forEach((msg: any) => {
-      const date = msg.createdAt.toISOString().split('T')[0];
-      trendsMap[date] = (trendsMap[date] || 0) + 1;
-    });
-
-    const trends = Object.keys(trendsMap).map((date) => ({
-      date,
-      count: trendsMap[date],
-    })).sort((a, b) => a.date.localeCompare(b.date));
+    const trends = rawTrends.map((t) => ({
+      date: new Date(t.date).toISOString().split('T')[0],
+      count: Number(t.count),
+    }));
 
     return {
       totalMessages,
