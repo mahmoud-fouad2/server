@@ -209,6 +209,11 @@ app.get('/', (req, res) => {
   });
 });
 
+// Favicon handler - prevents 404 errors in logs
+app.get('/favicon.ico', (req, res) => {
+  res.status(204).end(); // No Content
+});
+
 // 404 Handler
 app.use(notFound);
 
