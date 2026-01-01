@@ -162,7 +162,7 @@ export default function MobileNav({ activeTab, setActiveTab, userRole }) {
           </div>
 
           {/* Navigation Items */}
-          <nav className="flex-1 overflow-y-auto custom-scrollbar py-2">
+          <nav className="flex-1 overflow-y-auto py-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 dark:hover:scrollbar-thumb-gray-600">
             {!isAgent && (
               <MenuItem
                 icon={TrendingUp}

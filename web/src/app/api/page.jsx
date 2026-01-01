@@ -238,7 +238,7 @@ export default function APIPage() {
                 استخدم أي لغة برمجة لإرسال طلبات HTTP إلى API
               </p>
               <code className="bg-gray-100 px-3 py-2 rounded text-sm block">
-                POST https://api.faheemly.com/v1/
+                POST https://fahimo-api.onrender.com/api/
               </code>
             </motion.div>
 
@@ -401,19 +401,19 @@ export default function APIPage() {
             {[
               {
                 lang: 'JavaScript',
-                code: "const response = await fetch('https://api.faheemly.com/v1/auth/login', {\n  method: 'POST',\n  headers: {\n    'Content-Type': 'application/json'\n  },\n  body: JSON.stringify({\n    email: 'user@example.com',\n    password: 'password123'\n  })\n});\n\nconst data = await response.json();\nconsole.log(data);",
+                code: "const response = await fetch('https://fahimo-api.onrender.com/api/auth/login', {\n  method: 'POST',\n  headers: {\n    'Content-Type': 'application/json'\n  },\n  body: JSON.stringify({\n    email: 'user@example.com',\n    password: 'password123'\n  })\n});\n\nconst data = await response.json();\nconsole.log(data);",
               },
               {
                 lang: 'Python',
-                code: "import requests\n\nresponse = requests.post(\n    'https://api.faheemly.com/v1/auth/login',\n    json={\n        'email': 'user@example.com',\n        'password': 'password123'\n    }\n)\n\ndata = response.json()\nprint(data['token'])",
+                code: "import requests\n\nresponse = requests.post(\n    'https://fahimo-api.onrender.com/api/auth/login',\n    json={\n        'email': 'user@example.com',\n        'password': 'password123'\n    }\n)\n\ndata = response.json()\nprint(data['token'])",
               },
               {
                 lang: 'PHP',
-                code: "$ch = curl_init('https://api.faheemly.com/v1/auth/login');\n\ncurl_setopt($ch, CURLOPT_POST, true);\ncurl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([\n    'email' => 'user@example.com',\n    'password' => 'password123'\n]));\ncurl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);\ncurl_setopt($ch, CURLOPT_RETURNTRANSFER, true);\n\n$response = curl_exec($ch);\n$data = json_decode($response);\necho $data->token;",
+                code: "$ch = curl_init('https://fahimo-api.onrender.com/api/auth/login');\n\ncurl_setopt($ch, CURLOPT_POST, true);\ncurl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([\n    'email' => 'user@example.com',\n    'password' => 'password123'\n]));\ncurl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);\ncurl_setopt($ch, CURLOPT_RETURNTRANSFER, true);\n\n$response = curl_exec($ch);\n$data = json_decode($response);\necho $data->token;",
               },
               {
                 lang: 'cURL',
-                code: "curl -X POST https://api.faheemly.com/v1/auth/login \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"email\": \"user@example.com\",\n    \"password\": \"password123\"\n  }'",
+                code: "curl -X POST https://fahimo-api.onrender.com/api/auth/login \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"email\": \"user@example.com\",\n    \"password\": \"password123\"\n  }'",
               },
             ].map((example, index) => (
               <motion.div

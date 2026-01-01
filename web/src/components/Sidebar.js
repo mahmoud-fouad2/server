@@ -104,15 +104,15 @@ export default function Sidebar({ activeTab, setActiveTab, userRole }) {
   };
 
   return (
-    <aside className="hidden md:flex w-72 flex-shrink-0 !bg-white dark:!bg-cosmic-900 border-l border-gray-200 dark:border-white/10 flex-col h-screen sticky top-0 transition-colors duration-300 shadow-xl z-40">
+    <aside className="hidden md:flex w-72 flex-shrink-0 !bg-white dark:!bg-cosmic-900 border-l border-gray-200 dark:border-white/10 flex-col h-screen sticky top-0 transition-colors duration-300 shadow-xl z-40 overflow-hidden">
       {/* Logo Area */}
-      <div className="p-6 flex items-center justify-center border-b border-gray-100 dark:border-white/5 relative overflow-hidden">
+      <div className="p-6 flex items-center justify-center border-b border-gray-100 dark:border-white/5 relative flex-shrink-0">
         <div className="absolute inset-0 bg-gradient-to-r from-brand-500/5 to-purple-500/5 animate-pulse"></div>
         <FaheemAnimatedLogo size="sidebar" className="relative z-10" />
       </div>
 
       {/* Navigation Items */}
-      <div className="flex-1 overflow-y-auto py-6 px-4 space-y-1 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto py-6 px-4 space-y-1 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 dark:hover:scrollbar-thumb-gray-600">
         <div className="text-xs font-bold text-gray-400 dark:text-gray-500 px-4 mb-2 uppercase tracking-wider">
           {t('dashboard.overview')}
         </div>
@@ -206,14 +206,14 @@ export default function Sidebar({ activeTab, setActiveTab, userRole }) {
               setActiveTab={setActiveTab}
             />
             <SidebarItem
-              id="visitors"
+              id="visitor-analytics"
               label={t('dashboard.visitorAnalytics')}
               icon={TrendingUp}
               activeTab={activeTab}
               setActiveTab={setActiveTab}
             />
             <SidebarItem
-              id="widget-settings"
+              id="widget"
               label={t('dashboard.widgetSettings')}
               icon={Settings}
               activeTab={activeTab}
@@ -231,7 +231,7 @@ export default function Sidebar({ activeTab, setActiveTab, userRole }) {
       </div>
 
       {/* Footer Actions */}
-      <div className="p-4 border-t border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-black/20">
+      <div className="p-4 border-t border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-black/20 flex-shrink-0">
         <button
           onClick={toggleTheme}
           className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-white dark:hover:bg-white/5 hover:shadow-sm transition-all mb-2"

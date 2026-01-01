@@ -24,14 +24,14 @@ const nextConfig = {
   // Environment variables for client-side
   env: {
     NEXT_PUBLIC_API_URL:
-      process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
+      process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api',
     NEXT_PUBLIC_API_BASE_URL:
-      process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001',
+      process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001/api',
   },
 
   async headers() {
     const devConnectSrc = `http://localhost:3001 ws://localhost:3001`;
-    const prodConnectSrc = `https://api.faheemly.com https://faheemly.com https://fahimo-api.onrender.com wss://api.faheemly.com wss://fahimo-api.onrender.com`;
+    const prodConnectSrc = `https://fahimo-api.onrender.com https://faheemly.com https://*.faheemly.com wss://fahimo-api.onrender.com wss://*.faheemly.com`;
     const connectSrc = process.env.NODE_ENV === 'development'
       ? `'self' ${devConnectSrc} ${prodConnectSrc}`
       : `'self' ${prodConnectSrc}`;
@@ -39,9 +39,9 @@ const nextConfig = {
     const csp = [
       "default-src 'self'",
       `connect-src ${connectSrc}`,
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.faheemly.com",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.faheemly.com https://fahimo-api.onrender.com",
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: https://*.faheemly.com https://ma-fo.info https://images.unsplash.com",
+      "img-src 'self' data: https://*.faheemly.com https://ma-fo.info https://images.unsplash.com https://fahimo-api.onrender.com",
       "font-src 'self' data:",
       "frame-ancestors 'none'",
     ].join('; ');
