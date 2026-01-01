@@ -523,7 +523,7 @@ add_action('wp_footer', 'add_fahimo_widget');`;
             <CardDescription>المحادثات اليومية خلال الأسبوع الماضي</CardDescription>
           </CardHeader>
           <CardContent>
-              <div className="h-[300px]">
+              <div className="h-[300px]" style={{ height: 300 }}>
               <SafeResponsiveContainer width="100%" height="100%" minHeight={200}>
                 <LineChart syncId={syncId} data={conversationDataState && conversationDataState.length ? conversationDataState : conversationData}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -553,7 +553,7 @@ add_action('wp_footer', 'add_fahimo_widget');`;
             <CardDescription>متوسط أوقات الاستجابة بالميلي ثانية</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-[300px]">
+            <div className="h-[300px]" style={{ height: 300 }}>
               <SafeResponsiveContainer width="100%" height="100%" minHeight={200}>
                 <LineChart syncId={syncId} data={responseTimeState && responseTimeState.length ? responseTimeState : responseTimeData}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -584,18 +584,18 @@ add_action('wp_footer', 'add_fahimo_widget');`;
           <CardDescription>توزيع مستويات رضا العملاء</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px] flex items-center justify-center">
+          <div className="h-[300px] flex items-center justify-center" style={{ height: 300 }}>
               <DonutSatisfaction data={satisfactionState && satisfactionState.length ? satisfactionState : satisfactionData} />
           </div>
         </CardContent>
           <CardContent>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <div className="h-[300px]">
+              <div className="h-[300px]" style={{ height: 300 }}>
               <DonutSatisfaction data={satisfactionState && satisfactionState.length ? satisfactionState : satisfactionData} />
             </div>
 
             {/* Bar + Area combined section with brush */}
-            <div className="h-[300px]">
+            <div className="h-[300px]" style={{ height: 300 }}>
               <SafeResponsiveContainer width="100%" height="100%" minHeight={200}>
                 {chartType === 'area' && (
                   <AreaChart syncId={syncId} data={conversationDataState && conversationDataState.length ? conversationDataState : conversationData}>

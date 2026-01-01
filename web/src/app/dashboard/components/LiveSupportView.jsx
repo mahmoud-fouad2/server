@@ -30,7 +30,7 @@ export default function LiveSupportView({ addNotification }) {
 
     const fetchHandoverRequests = async () => {
       try {
-        const payload = await chatApi.getHandoverRequests();
+        const payload = await chatApi.handoverRequests();
         const requests = Array.isArray(payload)
           ? payload
           : Array.isArray(payload?.data)
@@ -62,6 +62,20 @@ export default function LiveSupportView({ addNotification }) {
     if (audioRef.current) {
       audioRef.current.play().catch(() => {});
     }
+  };
+
+  const handleAccept = async (id) => {
+    try {
+      await chatApi.acceptHandover(id);
+      addNotification('تم قبول المحادثة');
+      setHandoverRequests(prev => prev.filter(r => r.id !== id));
+    } catch (err) {
+      addNotification('فشل قبول المحادثة', 'error');
+    }
+  };
+
+  const handleIgnore = (id) => {
+    setHandoverRequests(prev => prev.filter(r => r.id !== id));
   };
 
   return (
@@ -118,12 +132,13 @@ export default function LiveSupportView({ addNotification }) {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button size="sm" variant="outline">
+                    <Button size="sm" variant="outline" onClick={() => handleIgnore(req.id)}>
                       تجاهل
                     </Button>
                     <Button
                       size="sm"
                       className="bg-green-600 hover:bg-green-700"
+                      onClick={() => handleAccept(req.id)}
                     >
                       قبول المحادثة
                     </Button>

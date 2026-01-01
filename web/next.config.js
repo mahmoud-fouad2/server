@@ -25,6 +25,38 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_API_URL:
       process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
+    NEXT_PUBLIC_API_BASE_URL:
+      process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001',
+  },
+
+  async headers() {
+    const devConnectSrc = `http://localhost:3001 ws://localhost:3001`;
+    const prodConnectSrc = `https://api.faheemly.com https://faheemly.com https://fahimo-api.onrender.com wss://api.faheemly.com wss://fahimo-api.onrender.com`;
+    const connectSrc = process.env.NODE_ENV === 'development'
+      ? `'self' ${devConnectSrc} ${prodConnectSrc}`
+      : `'self' ${prodConnectSrc}`;
+
+    const csp = [
+      "default-src 'self'",
+      `connect-src ${connectSrc}`,
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.faheemly.com",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: https://*.faheemly.com https://ma-fo.info https://images.unsplash.com",
+      "font-src 'self' data:",
+      "frame-ancestors 'none'",
+    ].join('; ');
+
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          { key: 'Content-Security-Policy', value: csp },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-XSS-Protection', value: '1; mode=block' },
+        ],
+      },
+    ];
   },
 
   // Next.js 15 deprecates `next lint`. Run ESLint via npm scripts/CI instead.

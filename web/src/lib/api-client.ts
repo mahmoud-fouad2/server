@@ -9,7 +9,7 @@ function normalizeApiBaseUrl(value: string) {
     .replace(/\/api$/i, '');
 }
 
-const API_BASE = normalizeApiBaseUrl(process.env.NEXT_PUBLIC_API_URL || 'https://fahimo-api.onrender.com');
+const API_BASE = normalizeApiBaseUrl(process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || 'https://fahimo-api.onrender.com');
 const API_URL = `${API_BASE}/api`;
 
 function normalizeEndpoint(endpoint: string) {

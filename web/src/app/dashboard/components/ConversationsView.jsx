@@ -33,7 +33,7 @@ export default function ConversationsView() {
       try {
         // fetch conversations (local helper)
         try {
-          const response = await chatApi.getConversations();
+          const response = await chatApi.conversations();
           const conversationsList = Array.isArray(response) ? response : (response.data || []);
           if (mounted) setConversations(conversationsList);
         } catch (err) {
@@ -46,7 +46,7 @@ export default function ConversationsView() {
 
         // setup socket
         try {
-          const profile = await authApi.getProfile();
+          const profile = await authApi.profile();
           if (profile && profile.businessId) {
             localSocket = io(API_CONFIG.BASE_URL.replace('/api', ''), { transports: ['websocket'] });
 

@@ -153,7 +153,7 @@ function DashboardContent() {
       <MobileNav activeTab={activeTab} setActiveTab={setActiveTab} userRole={user?.role} />
 
       {/* Notifications */}
-      <div className="fixed top-4 left-4 z-50 flex flex-col gap-2 max-w-[90vw] sm:max-w-md">
+      <div className="fixed top-4 left-4 z-[100] flex flex-col gap-2 max-w-[90vw] sm:max-w-md pointer-events-none">
         <AnimatePresence>
           {notifications.map((n) => (
             <motion.div
@@ -161,8 +161,8 @@ function DashboardContent() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className={`p-3 sm:p-4 rounded-lg shadow-lg text-white flex items-center gap-2 w-full ${
-                n.type === 'success' ? 'bg-green-600' : 'bg-red-600'
+              className={`pointer-events-auto p-3 sm:p-4 rounded-lg shadow-xl text-white flex items-center gap-2 w-full border border-white/10 ${
+                n.type === 'success' ? '!bg-green-600' : '!bg-red-600'
               }`}
             >
               {n.type === 'success' ? (

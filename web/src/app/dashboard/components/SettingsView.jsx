@@ -135,7 +135,7 @@ export default function SettingsView({ user, addNotification }) {
   const fetchBusinessSettings = async () => {
     setBusinessLoading(true);
     try {
-      const business = await businessApi.getSettings();
+      const business = await businessApi.settings();
       if (business) {
         setBusinessData({
           name: business.name || '',

@@ -21,6 +21,23 @@ function contentType(file) {
 }
 
 const server = http.createServer((req, res) => {
+  // Add Security Headers
+  const prodConnectSrc = "https://api.faheemly.com https://faheemly.com https://fahimo-api.onrender.com wss://api.faheemly.com wss://fahimo-api.onrender.com";
+  const csp = [
+    "default-src 'self'",
+    `connect-src 'self' ${prodConnectSrc}`,
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.faheemly.com",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: https://*.faheemly.com https://ma-fo.info https://images.unsplash.com",
+    "font-src 'self' data:",
+    "frame-ancestors 'none'",
+  ].join('; ');
+
+  res.setHeader('Content-Security-Policy', csp);
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+
   let filePath = path.join(root, req.url.split('?')[0])
   if (filePath.endsWith(path.sep)) filePath = path.join(filePath, 'index.html')
   fs.stat(filePath, (err, stats) => {

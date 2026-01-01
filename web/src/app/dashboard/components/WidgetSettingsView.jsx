@@ -45,6 +45,28 @@ const POSITION_OPTIONS = [
 
 const BORDER_RADIUS_RANGE = { min: 0, max: 32 };
 
+import { Skeleton } from '@/components/ui/Skeleton';
+
+function WidgetSettingsSkeleton() {
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-pulse">
+      <div className="space-y-6">
+        <div className="h-8 w-48 bg-gray-200 dark:bg-gray-800 rounded" />
+        <div className="space-y-4">
+          <div className="h-10 w-full bg-gray-200 dark:bg-gray-800 rounded" />
+          <div className="h-10 w-full bg-gray-200 dark:bg-gray-800 rounded" />
+          <div className="grid grid-cols-6 gap-3">
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <div key={i} className="aspect-square bg-gray-200 dark:bg-gray-800 rounded-xl" />
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="h-[500px] bg-gray-200 dark:bg-gray-800 rounded-xl" />
+    </div>
+  );
+}
+
 export default function WidgetSettingsView({
   user,
   addNotification,
@@ -228,11 +250,7 @@ export default function WidgetSettingsView({
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
-      </div>
-    );
+    return <WidgetSettingsSkeleton />;
   }
 
   return (

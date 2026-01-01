@@ -16,7 +16,30 @@ import {
   RefreshCw,
   AlertCircle,
 } from 'lucide-react';
-import { visitorApi, analyticsApi } from '@/lib/api';
+import { Skeleton } from '@/components/ui/Skeleton';
+
+function AnalyticsSkeleton() {
+  return (
+    <div className="space-y-6 animate-pulse">
+      <div className="flex gap-2">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="h-10 w-24 bg-gray-200 dark:bg-gray-800 rounded-lg" />
+        ))}
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="h-32 bg-gray-200 dark:bg-gray-800 rounded-xl" />
+        ))}
+      </div>
+      <div className="h-64 bg-gray-200 dark:bg-gray-800 rounded-xl" />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="h-64 bg-gray-200 dark:bg-gray-800 rounded-xl" />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function VisitorAnalytics() {
   const [activeSessions, setActiveSessions] = useState([]);
@@ -31,9 +54,7 @@ export default function VisitorAnalytics() {
 
     const fetchActiveSessions = async () => {
       try {
-        console.log('[VisitorAnalytics] Fetching active sessions...');
         const response = await visitorApi.getActiveSessions();
-        console.log('[VisitorAnalytics] Active sessions response:', response);
         const sessions = Array.isArray(response?.sessions)
           ? response.sessions
           : Array.isArray(response)
@@ -41,41 +62,35 @@ export default function VisitorAnalytics() {
             : [];
         if (mounted) {
           setActiveSessions(sessions);
-          console.log('[VisitorAnalytics] Active sessions set:', sessions.length);
         }
       } catch (error) {
-        if (mounted) {
-          console.error('[VisitorAnalytics] Error fetching active sessions:', error);
-          setError('فشل تحميل الجلسات النشطة');
-        }
+        console.error('[VisitorAnalytics] Error fetching active sessions:', error);
+        // Don't block the whole page for this
+        if (mounted) setActiveSessions([]);
       }
     };
 
     const fetchAnalytics = async () => {
       try {
-        console.log('[VisitorAnalytics] Fetching analytics...');
         const dateFrom = getDateFrom(dateRange).toISOString();
         const response = await visitorApi.getAnalytics({ from: dateFrom });
-        console.log('[VisitorAnalytics] Analytics response:', response);
         const analyticsData = response?.analytics || response?.data || response;
         if (mounted) {
           setAnalytics(analyticsData || {});
-          console.log('[VisitorAnalytics] Analytics set:', analyticsData);
         }
       } catch (error) {
+        console.error('[VisitorAnalytics] Error fetching analytics:', error);
         if (mounted) {
-          console.error('[VisitorAnalytics] Error fetching analytics:', error);
           setAnalytics({});
-          setError('فشل تحميل بيانات التحليلات');
+          // Only set main error if we really can't show anything useful
+          // setError('فشل تحميل بيانات التحليلات'); 
         }
       }
     };
 
     const fetchRatingStats = async () => {
       try {
-        console.log('[VisitorAnalytics] Fetching rating stats...');
         const statsResponse = await analyticsApi.getRatingStats();
-        console.log('[VisitorAnalytics] Rating stats response:', statsResponse);
         if (!mounted) return;
         const payload = statsResponse?.stats || statsResponse || {};
         setRatingStats({
@@ -84,8 +99,8 @@ export default function VisitorAnalytics() {
           ratingDistribution: payload?.distribution || payload?.ratingDistribution || { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
         });
       } catch (error) {
+        console.error('[VisitorAnalytics] Error fetching rating stats:', error);
         if (mounted) {
-          console.error('[VisitorAnalytics] Error fetching rating stats:', error);
           setRatingStats({ avgRating: 0, totalRatings: 0, ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } });
         }
       }
@@ -94,12 +109,18 @@ export default function VisitorAnalytics() {
     const fetchData = async () => {
       setError(null);
       setLoading(true);
-      await Promise.all([
-        fetchActiveSessions(),
-        fetchAnalytics(),
-        fetchRatingStats(),
-      ]);
-      if (mounted) setLoading(false);
+      try {
+        await Promise.all([
+          fetchActiveSessions(),
+          fetchAnalytics(),
+          fetchRatingStats(),
+        ]);
+      } catch (err) {
+        console.error('Error in fetchData Promise.all:', err);
+        // Even if something fails catastrophically, we stop loading
+      } finally {
+        if (mounted) setLoading(false);
+      }
     };
 
     fetchData();
@@ -149,14 +170,7 @@ export default function VisitorAnalytics() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">جاري تحميل التحليلات...</p>
-        </div>
-      </div>
-    );
+    return <AnalyticsSkeleton />;
   }
 
   if (error) {

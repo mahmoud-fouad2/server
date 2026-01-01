@@ -85,7 +85,8 @@ export default function CrmView({ user, addNotification }) {
       if (endDate) params.endDate = endDate;
 
       const response = await crmApi.exportLeads(params);
-      const blob = new Blob([response], { type: 'text/csv' });
+      const content = response.raw || response;
+      const blob = new Blob([content], { type: 'text/csv' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;

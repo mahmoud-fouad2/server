@@ -30,7 +30,7 @@ export default function ChannelsView({ addNotification }) {
 
   const fetchIntegrations = async () => {
     try {
-      const data = await businessApi.getIntegrations();
+      const data = await businessApi.integrations();
       const integrations = Array.isArray(data)
         ? data
         : Array.isArray(data?.data)
@@ -49,7 +49,7 @@ export default function ChannelsView({ addNotification }) {
     if (!telegramToken) return;
     setIsConnectingTelegram(true);
     try {
-      const data = await telegramApi.setup(telegramToken);
+      const data = await telegramApi.updateTelegram(telegramToken);
       addNotification('تم ربط بوت تيليجرام بنجاح');
       setTelegramIntegration({ isActive: true, config: { botInfo: data.bot } });
       setShowTelegramInput(false);
@@ -97,7 +97,10 @@ export default function ChannelsView({ addNotification }) {
               اربط حساب واتساب للأعمال الخاص بك لتمكين الرد الآلي على استفسارات
               العملاء 24/7.
             </p>
-            <Button className="w-full bg-green-600 hover:bg-green-700">
+            <Button 
+              className="w-full bg-green-600 hover:bg-green-700"
+              onClick={() => addNotification('سيتم تفعيل الربط عبر QR Code قريباً', 'info')}
+            >
               <LinkIcon className="w-4 h-4 ml-2" />
               ربط الحساب (QR Code)
             </Button>
@@ -149,9 +152,15 @@ export default function ChannelsView({ addNotification }) {
                 <Button
                   variant="outline"
                   className="w-full text-red-500 hover:text-red-600 hover:bg-red-50"
-                  onClick={() => {
-                    // Implement disconnect logic if needed
-                    alert('لإلغاء الربط، يرجى التواصل مع الدعم الفني');
+                  onClick={async () => {
+                    if (!confirm('هل أنت متأكد من إلغاء الربط؟')) return;
+                    try {
+                      await telegramApi.remove('TELEGRAM');
+                      addNotification('تم إلغاء الربط بنجاح');
+                      setTelegramIntegration(null);
+                    } catch (err) {
+                      addNotification('فشل إلغاء الربط', 'error');
+                    }
                   }}
                 >
                   إلغاء الربط
