@@ -554,6 +554,9 @@ export default function App({ config, businessName, assetBaseUrl, apiBaseUrl, pr
   const ratingEnabled = config.ratingEnabled !== false;
   const showBranding = config.showBranding !== false;
 
+  const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     setPreChatData(buildFormState(preChatFields));
   }, [preChatFields]);
@@ -656,6 +659,66 @@ export default function App({ config, businessName, assetBaseUrl, apiBaseUrl, pr
       });
     }
   }, [messages, notificationsAllowed]);
+
+  const handleFileUpload = async (event: any) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Reset input
+    event.target.value = '';
+
+    // Optimistic UI update (optional, or just show loading)
+    setIsLoading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('businessId', config.businessId);
+      if (conversationId) formData.append('conversationId', conversationId);
+
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error('Upload failed');
+
+      const data = await response.json();
+      const fileUrl = data.url || data.fileUrl;
+
+      // Send the file URL as a message
+      const content = `[ملف مرفق](${fileUrl})`;
+      const outgoing: Message = {
+        id: `msg_${Date.now()}`,
+        content,
+        senderType: 'USER',
+        timestamp: new Date(),
+      };
+
+      setMessages(prev => [...prev, outgoing]);
+      
+      // Also send to backend as a message
+      await fetch(`${apiUrl}/api/chat/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          businessId: config.businessId,
+          content,
+          conversationId,
+          visitorId,
+          visitorSessionId: sessionId,
+          visitorName: visitorInfo.name || 'زائر',
+        }),
+      });
+
+    } catch (error) {
+      console.error('File upload error:', error);
+      alert('فشل رفع الملف. يرجى المحاولة مرة أخرى.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handlePreChatChange = (fieldId: string, value: string) => {
     setPreChatError(null);
@@ -973,21 +1036,70 @@ export default function App({ config, businessName, assetBaseUrl, apiBaseUrl, pr
 
               <div style={styles.composerShell(isMobile)}>
                 <div style={styles.composerActions}>
-                  <button type="button" style={styles.subtleButton} aria-label="إرفاق ملف" disabled>
-                    <AttachIcon />
-                  </button>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    style={{ display: 'none' }}
+                    onChange={handleFileUpload}
+                    accept="image/*,.pdf,.doc,.docx"
+                  />
                   <button 
                     type="button" 
                     style={styles.subtleButton} 
-                    aria-label="إرسال إيموجي"
-                    onClick={() => {
-                      const emojis = ['😊', '👍', '❤️', '🎉', '🙏', '✅', '🤔', '😂', '🔥', '💯'];
-                      const emoji = emojis[Math.floor(Math.random() * emojis.length)];
-                      setInput(prev => prev + emoji);
-                    }}
+                    aria-label="إرفاق ملف" 
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isLoading}
                   >
-                    <EmojiIcon />
+                    <AttachIcon />
                   </button>
+                  <div style={{ position: 'relative' }}>
+                    <button 
+                      type="button" 
+                      style={styles.subtleButton} 
+                      aria-label="إرسال إيموجي"
+                      onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}
+                    >
+                      <EmojiIcon />
+                    </button>
+                    {isEmojiPickerOpen && (
+                      <div style={{
+                        position: 'absolute',
+                        bottom: '45px',
+                        left: '0',
+                        background: '#fff',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '12px',
+                        padding: '8px',
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(5, 1fr)',
+                        gap: '4px',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                        zIndex: 10,
+                        width: '180px'
+                      }}>
+                        {['😊', '👍', '❤️', '🎉', '🙏', '✅', '🤔', '😂', '🔥', '💯', '👋', '😢', '😡', '👀', '✨'].map(emoji => (
+                          <button
+                            key={emoji}
+                            type="button"
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              fontSize: '20px',
+                              cursor: 'pointer',
+                              padding: '4px',
+                              borderRadius: '4px',
+                            }}
+                            onClick={() => {
+                              setInput(prev => prev + emoji);
+                              setIsEmojiPickerOpen(false);
+                            }}
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <textarea
                   style={styles.textInput}
