@@ -44,6 +44,10 @@ import {
 } from 'recharts';
 import SafeResponsiveContainer from '@/components/ui/SafeResponsiveContainer';
 
+const conversationData = [];
+const responseTimeData = [];
+const satisfactionData = [];
+
 // Improved donut chart for satisfaction distribution
 function DonutSatisfaction({ data = [] }) {
   const total = data.reduce((s, d) => s + (d.value || 0), 0) || 0;
@@ -336,7 +340,7 @@ add_action('wp_footer', 'add_fahimo_widget');`;
       const rows = [];
 
       // Conversations
-      const conv = conversationDataState && conversationDataState.length ? conversationDataState : conversationData;
+      const conv = conversationDataState && conversationDataState.length ? conversationDataState : [];
       rows.push(['Exported At', new Date().toISOString()]);
       rows.push(['Business', user?.businessId || 'unknown']);
       rows.push(['Time Range Days', timeRangeDays]);
@@ -346,13 +350,13 @@ add_action('wp_footer', 'add_fahimo_widget');`;
       rows.push([]);
 
       // Response times
-      const resp = responseTimeState && responseTimeState.length ? responseTimeState : responseTimeData;
+      const resp = responseTimeState && responseTimeState.length ? responseTimeState : [];
       rows.push(['Response Time (time)', 'ms']);
       resp.forEach(r => rows.push([r.name, r.time]));
       rows.push([]);
 
       // Satisfaction
-      const sat = satisfactionState && satisfactionState.length ? satisfactionState : satisfactionData;
+      const sat = satisfactionState && satisfactionState.length ? satisfactionState : [];
       rows.push(['Satisfaction Level', 'value']);
       sat.forEach(r => rows.push([r.name, r.value]));
 
