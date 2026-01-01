@@ -52,6 +52,7 @@ export default function WidgetSettingsView({
 }) {
   const [widgetConfig, setWidgetConfig] = useState(INITIAL_WIDGET_CONFIG);
   const [savingConfig, setSavingConfig] = useState(false);
+  const [loading, setLoading] = useState(true);
   const borderRadiusValue = useMemo(() => {
     const raw = String(widgetConfig.borderRadius || '').replace('px', '');
     const parsed = parseInt(raw, 10);
@@ -120,6 +121,8 @@ export default function WidgetSettingsView({
   useEffect(() => {
     if (user?.businessId) {
       fetchConfig(user.businessId);
+    } else if (user) {
+      setLoading(false);
     }
   }, [user]);
 
@@ -148,6 +151,8 @@ export default function WidgetSettingsView({
       }));
     } catch (err) {
       console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -221,6 +226,14 @@ export default function WidgetSettingsView({
       addNotification(err.message || 'فشل رفع الأيقونة', 'error');
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
+      </div>
+    );
+  }
 
   return (
     <motion.div

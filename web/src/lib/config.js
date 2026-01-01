@@ -8,16 +8,19 @@ const getBaseApiUrl = () => {
   // Production default (backend is on Render, frontend on Bluehost)
   const productionDefault = 'https://fahimo-api.onrender.com';
 
-  // FORCE production URL in production build
-  if (process.env.NODE_ENV === 'production') {
-    return productionDefault;
-  }
-
   // Check environment overrides first
   const envUrl =
     process.env.NEXT_PUBLIC_API_URL ||
     process.env.NEXT_PUBLIC_BACKEND_URL ||
     process.env.REACT_APP_API_URL;
+
+  // If an environment variable is set, use it (even in production)
+  if (envUrl) return envUrl;
+
+  // Fallback to production default if no env var is set
+  if (process.env.NODE_ENV === 'production') {
+    return productionDefault;
+  }
 
   // In development, prefer a relative API (same origin) unless an env URL is explicitly set.
   // This prevents dev builds from calling the production host unintentionally.

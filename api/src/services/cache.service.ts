@@ -57,8 +57,15 @@ class CacheService {
           host: redisHost,
           port: redisPort,
           password: redisPassword,
-          maxRetriesPerRequest: 3,
+          maxRetriesPerRequest: 1,
           retryStrategy: (times: number) => {
+            // If we are on localhost and fail immediately, give up to avoid spamming logs
+            if (redisHost === 'localhost' || redisHost === '127.0.0.1') {
+                logger.warn('Local Redis not found, switching to LRU cache immediately');
+                this.redis?.disconnect();
+                this.redis = null;
+                return null;
+            }
             if (times > 3) {
               logger.error('Redis connection failed after 3 retries');
               return null;

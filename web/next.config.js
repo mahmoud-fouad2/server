@@ -24,7 +24,7 @@ const nextConfig = {
   // Environment variables for client-side
   env: {
     NEXT_PUBLIC_API_URL:
-      process.env.NEXT_PUBLIC_API_URL || 'https://fahimo-api.onrender.com',
+      process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
   },
 
   // Next.js 15 deprecates `next lint`. Run ESLint via npm scripts/CI instead.

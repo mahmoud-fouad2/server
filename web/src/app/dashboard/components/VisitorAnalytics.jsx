@@ -183,24 +183,26 @@ export default function VisitorAnalytics() {
   if (!hasAnyData && !loading) {
     return (
       <div className="space-y-6">
-        <Card>
-          <CardContent className="py-12">
-            <div className="text-center">
-              <Eye className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-              <h3 className="text-xl font-bold mb-2">لا توجد بيانات زيارات بعد</h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
-                بمجرد أن يبدأ الزوار بالتفاعل مع الويدجت، ستظهر التحليلات هنا
+        <Card className="border-dashed border-2">
+          <CardContent className="py-16">
+            <div className="text-center max-w-md mx-auto">
+              <div className="bg-gray-100 dark:bg-gray-800 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <TrendingUp className="w-10 h-10 text-gray-400" />
+              </div>
+              <h3 className="text-xl font-bold mb-3">لا توجد بيانات زيارات حتى الآن</h3>
+              <p className="text-gray-500 dark:text-gray-400 mb-8 leading-relaxed">
+                لم يتم تسجيل أي زيارات أو جلسات محادثة بعد. تأكد من تثبيت الويدجت على موقعك بشكل صحيح.
               </p>
-              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 max-w-2xl mx-auto">
-                <h4 className="font-bold mb-2 text-blue-900 dark:text-blue-100">
-                  💡 للحصول على بيانات التحليلات:
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 text-right">
+                <h4 className="font-bold mb-2 text-blue-900 dark:text-blue-100 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4" />
+                  كيف تبدأ؟
                 </h4>
-                <ol className="text-right text-sm text-blue-800 dark:text-blue-200 space-y-2">
-                  <li>1. تأكد من تثبيت الويدجت على موقعك</li>
-                  <li>2. تأكد من إضافة السكريبت بشكل صحيح مع Business ID</li>
-                  <li>3. انتظر حتى يقوم الزوار بفتح الويدجت</li>
-                  <li>4. البيانات ستظهر هنا تلقائياً</li>
-                </ol>
+                <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-2 list-disc list-inside">
+                  <li>تأكد من نسخ كود الويدجت وإضافته لموقعك</li>
+                  <li>قم بزيارة موقعك وتفاعل مع الويدجت</li>
+                  <li>انتظر بضع ثوانٍ ثم قم بتحديث هذه الصفحة</li>
+                </ul>
               </div>
             </div>
           </CardContent>

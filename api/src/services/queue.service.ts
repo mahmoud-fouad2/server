@@ -21,6 +21,18 @@ class QueueService {
         host: process.env.REDIS_HOST || 'localhost',
         port: parseInt(process.env.REDIS_PORT || '6379'),
         password: process.env.REDIS_PASSWORD,
+        maxRetriesPerRequest: 1,
+        retryStrategy: (times: number) => {
+          const host = process.env.REDIS_HOST || 'localhost';
+          if (host === 'localhost' || host === '127.0.0.1') {
+             // Fail fast on localhost to avoid log spam
+             return null;
+          }
+          if (times > 3) {
+            return null;
+          }
+          return Math.min(times * 1000, 3000);
+        },
       };
     } else {
       logger.warn('Redis not available, queue system will not function');
