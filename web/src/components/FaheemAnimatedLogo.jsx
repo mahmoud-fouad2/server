@@ -27,6 +27,14 @@ const FaheemAnimatedLogo = ({
       textMargin: 'mt-0',
       textScale: 1,
     },
+    sidebar: {
+      width: 200,
+      height: 80,
+      fontSize: 24,
+      container: 'w-full max-w-[200px] h-[80px]',
+      textMargin: 'mt-0',
+      textScale: 0.8,
+    },
     small: {
       width: 280,
       height: 120,

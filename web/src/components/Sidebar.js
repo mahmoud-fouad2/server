@@ -104,11 +104,11 @@ export default function Sidebar({ activeTab, setActiveTab, userRole }) {
   };
 
   return (
-    <aside className="w-72 bg-white dark:bg-cosmic-900 border-l border-gray-200 dark:border-white/10 flex flex-col h-screen sticky top-0 transition-colors duration-300 shadow-xl z-50">
+    <aside className="hidden md:flex w-72 flex-shrink-0 bg-white dark:bg-cosmic-900 border-l border-gray-200 dark:border-white/10 flex-col h-screen sticky top-0 transition-colors duration-300 shadow-xl z-50">
       {/* Logo Area */}
       <div className="p-6 flex items-center justify-center border-b border-gray-100 dark:border-white/5 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-brand-500/5 to-purple-500/5 animate-pulse"></div>
-        <FaheemAnimatedLogo className="w-32 h-auto relative z-10" />
+        <FaheemAnimatedLogo size="sidebar" className="relative z-10" />
       </div>
 
       {/* Navigation Items */}
