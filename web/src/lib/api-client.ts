@@ -9,8 +9,36 @@ function normalizeApiBaseUrl(value: string) {
     .replace(/\/api$/i, '');
 }
 
-const API_BASE = normalizeApiBaseUrl(process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || 'https://fahimo-api.onrender.com');
-const API_URL = `${API_BASE}/api`;
+const PRODUCTION_DEFAULT_API_BASE = 'https://fahimo-api.onrender.com';
+
+function isLocalHostname(hostname: string) {
+  const h = String(hostname || '').toLowerCase();
+  return h === 'localhost' || h === '127.0.0.1' || h === '::1' || h.endsWith('.local');
+}
+
+function isLocalApiBase(baseUrl: string) {
+  return /(^|\/\/)(localhost|127\.0\.0\.1|::1)(:|\/|$)/i.test(String(baseUrl || ''));
+}
+
+function resolveApiBaseUrl() {
+  const raw = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || '';
+  const normalized = normalizeApiBaseUrl(raw);
+
+  // Runtime guard: if a production page accidentally shipped with localhost baked in,
+  // force it to the Render backend to prevent CSP blocks and broken UI.
+  if (typeof window !== 'undefined') {
+    const hostname = window.location?.hostname || '';
+    if (!isLocalHostname(hostname) && isLocalApiBase(normalized)) {
+      return PRODUCTION_DEFAULT_API_BASE;
+    }
+    if (!normalized) {
+      // Production page with no configured API should still work.
+      return isLocalHostname(hostname) ? '' : PRODUCTION_DEFAULT_API_BASE;
+    }
+  }
+
+  return normalized || PRODUCTION_DEFAULT_API_BASE;
+}
 
 function normalizeEndpoint(endpoint: string) {
   const raw = String(endpoint || '').trim();
@@ -41,6 +69,8 @@ export async function fetchAPI<T = unknown>(endpoint: string, options: FetchOpti
     params,
     ...customConfig
   } = options;
+
+  const API_URL = `${resolveApiBaseUrl()}/api`;
 
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
   

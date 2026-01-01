@@ -3,6 +3,16 @@
  * Production-ready with proper environment variable handling
  */
 
+const normalizeApiBaseUrl = (value) => {
+  if (!value) return '';
+  return String(value)
+    .trim()
+    .replace(/\/+$/, '')
+    // Some env files set NEXT_PUBLIC_API_URL to ".../api".
+    // Normalize to the host base so we can safely append "/api" where needed.
+    .replace(/\/api$/i, '');
+};
+
 // Get base API URL from environment with production default
 const getBaseApiUrl = () => {
   // Production default (backend is on Render, frontend on Bluehost)
@@ -14,8 +24,21 @@ const getBaseApiUrl = () => {
     process.env.NEXT_PUBLIC_BACKEND_URL ||
     process.env.REACT_APP_API_URL;
 
-  // If an environment variable is set, use it (even in production)
-  if (envUrl) return envUrl;
+  // Runtime guard: prevent accidental localhost in production/static export.
+  // (Next.js loads `.env.local` in all environments; a wrong local file can leak into builds.)
+  try {
+    if (typeof window !== 'undefined') {
+      const hostname = window.location?.hostname || '';
+      const isLocalHost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1';
+      const hasLocalApi = envUrl && /(^|\/\/)(localhost|127\.0\.0\.1|::1)(:|\/|$)/i.test(envUrl);
+      if (!isLocalHost && hasLocalApi) return productionDefault;
+    }
+  } catch {
+    // ignore
+  }
+
+  // If an environment variable is set, use it
+  if (envUrl) return normalizeApiBaseUrl(envUrl);
 
   // Fallback to production default if no env var is set
   if (process.env.NODE_ENV === 'production') {
@@ -24,7 +47,7 @@ const getBaseApiUrl = () => {
 
   // In development, prefer a relative API (same origin) unless an env URL is explicitly set.
   // This prevents dev builds from calling the production host unintentionally.
-  if (envUrl) return envUrl;
+  if (envUrl) return normalizeApiBaseUrl(envUrl);
 
   // Use relative path in dev so requests go to the same origin (useful when running backend locally).
   return '';

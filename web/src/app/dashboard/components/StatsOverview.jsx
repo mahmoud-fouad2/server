@@ -157,6 +157,16 @@ export default function StatsOverview({
 
   // Real-time updates from API
   useEffect(() => {
+    let cancelled = false;
+    let timer = null;
+    let failureCount = 0;
+
+    const schedule = (ms) => {
+      if (cancelled) return;
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(fetchRealTimeStats, ms);
+    };
+
     const fetchRealTimeStats = async () => {
       try {
         const resp = await apiCall('api/analytics/realtime');
@@ -166,14 +176,25 @@ export default function StatsOverview({
           responseTime: d.responseTime || 0,
           satisfaction: d.satisfaction || 0,
         });
+        failureCount = 0;
       } catch (e) {
-        console.warn('Failed to fetch realtime stats:', e?.message || e);
+        failureCount += 1;
+        // Avoid console spam when the backend is waking up or network is flaky.
+        if (failureCount === 1 || failureCount % 4 === 0) {
+          console.warn('Failed to fetch realtime stats:', e?.message || e);
+        }
       }
+
+      // Exponential backoff on failures (15s -> 30s -> 60s -> 120s max)
+      const nextMs = Math.min(120000, 15000 * Math.pow(2, Math.max(0, failureCount - 1)));
+      schedule(nextMs);
     };
 
     fetchRealTimeStats();
-    const iv = setInterval(fetchRealTimeStats, 15000);
-    return () => clearInterval(iv);
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
   }, []);
 
   // Fetch analytics for charts
