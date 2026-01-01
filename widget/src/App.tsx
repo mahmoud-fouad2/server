@@ -107,9 +107,9 @@ const styles = {
     flexDirection: 'column',
     height: '100%',
   },
-  messages: (theme: any) => ({
+  messages: (theme: any, isMobile: boolean) => ({
     flex: 1,
-    padding: '20px',
+    padding: isMobile ? '12px' : '20px',
     overflowY: 'auto' as const,
     display: 'flex',
     flexDirection: 'column',
@@ -173,14 +173,15 @@ const styles = {
     cursor: 'pointer',
     fontSize: '18px',
   }),
-  composerShell: {
-    padding: '16px',
+  composerShell: (isMobile: boolean) => ({
+    padding: isMobile ? '12px 16px' : '16px',
+    paddingBottom: isMobile ? 'max(12px, env(safe-area-inset-bottom))' : '16px', // Safe area for home indicator
     borderTop: '1px solid #e5e7eb',
     display: 'flex',
     alignItems: 'center',
     gap: '12px',
     background: '#fff',
-  },
+  }),
   brandingFooter: {
     padding: '10px 16px',
     borderTop: '1px solid #e5e7eb',
@@ -256,6 +257,7 @@ function getWidgetStyle(theme: any, position: 'left' | 'right', isOpen: boolean,
       top: '0',
       width: '100%',
       height: '100%',
+      maxHeight: '-webkit-fill-available', // Fallback for mobile browsers
       transform: 'translateY(0)',
       opacity: 1,
       pointerEvents: 'auto',
@@ -290,14 +292,15 @@ function getWidgetStyle(theme: any, position: 'left' | 'right', isOpen: boolean,
   } as const;
 }
 
-function getHeaderStyle(theme: any) {
+function getHeaderStyle(theme: any, isMobile: boolean) {
   return {
-    padding: '20px',
+    padding: isMobile ? '12px 16px' : '20px',
     background: `linear-gradient(120deg, ${theme.primary}, ${theme.accent})`,
     color: theme.textOnPrimary,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingTop: isMobile ? 'max(12px, env(safe-area-inset-top))' : '20px', // Safe area for notch
   } as const;
 }
 
@@ -862,7 +865,7 @@ export default function App({ config, businessName, assetBaseUrl, apiBaseUrl, pr
         aria-live="polite"
         aria-label="محادثة الدعم"
       >
-        <header style={getHeaderStyle(theme)}>
+        <header style={getHeaderStyle(theme, isMobile)}>
           <div style={styles.headerContent}>
             <div style={styles.avatarShell(theme)}>
               {avatarUrl ? (
@@ -926,7 +929,7 @@ export default function App({ config, businessName, assetBaseUrl, apiBaseUrl, pr
             </form>
           ) : (
             <div style={styles.chatShell}>
-              <div style={styles.messages(theme)}>
+              <div style={styles.messages(theme, isMobile)}>
                 {messages.map(message => (
                   <div key={message.id} style={styles.messageRow(message.senderType)}>
                     <div style={styles.messageBubble(theme, message.senderType)}>
@@ -968,7 +971,7 @@ export default function App({ config, businessName, assetBaseUrl, apiBaseUrl, pr
                 </div>
               )}
 
-              <div style={styles.composerShell}>
+              <div style={styles.composerShell(isMobile)}>
                 <div style={styles.composerActions}>
                   <button type="button" style={styles.subtleButton} aria-label="إرفاق ملف" disabled>
                     <AttachIcon />
