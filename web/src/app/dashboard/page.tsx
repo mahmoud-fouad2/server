@@ -21,12 +21,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import AuthGuard from '@/components/AuthGuard';
 import DashboardSkeleton from '@/components/skeletons/DashboardSkeleton';
 import { api } from '@/lib/api-client';
-import type { User, DashboardTab } from '@/types/dashboard';
+import type { DashboardTab } from '@/types/dashboard';
 import {
   useDashboardStats,
-  useBusiness,
-  useKnowledge,
-} from '@/hooks/useDashboard';
+  useBusinessInfo,
+  useKnowledgeBase,
+} from '@/hooks/useQueries';
+import { useAuth } from '@/hooks/useAuth';
 
 // Import Sub-components
 import StatsOverview from './components/StatsOverview';
@@ -52,12 +53,14 @@ interface Notification {
 function DashboardContent() {
   // Hooks
   const [isDark, setIsDark] = useTheme(false);
-  const { stats, loading: statsLoading } = useDashboardStats();
-  const { loading: businessLoading } = useBusiness();
-  const { entries: kbList, reindex } = useKnowledge();
+  const { user } = useAuth();
+  
+  // React Query Hooks
+  const { data: stats, isLoading: statsLoading } = useDashboardStats();
+  const { isLoading: businessLoading } = useBusinessInfo();
+  const { entries: kbList, reindex } = useKnowledgeBase();
 
   // State
-  const [user, setUser] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState<DashboardTab>('overview');
   const [showProAlert, setShowProAlert] = useState(false);
   const [cacheLoadingState, setCacheLoadingState] = useState({
@@ -70,18 +73,6 @@ function DashboardContent() {
   const { runTour, resetTour, handleComplete } = useDashboardTour();
 
   const loading = statsLoading || businessLoading;
-
-  // Load user data
-  useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      try {
-        setUser(JSON.parse(userData));
-      } catch (e) {
-        console.error('Error parsing user data', e);
-      }
-    }
-  }, []);
 
   // Scroll to top when tab changes
   useEffect(() => {

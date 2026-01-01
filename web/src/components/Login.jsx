@@ -1,76 +1,76 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button, Input, Card } from './ui/Components';
-import { APP_NAME, TRANSLATIONS } from '../constants';
 import { Lock, Mail, Bot, Home, ArrowRight, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import FaheemAnimatedLogo from './FaheemAnimatedLogo';
 import Captcha from './Captcha';
-import { authApi } from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
+import { useTranslation } from 'react-i18next';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useRouter } from 'next/navigation';
 
-export const Login = ({ lang }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+const loginSchema = z.object({
+  email: z.string().email('البريد الإلكتروني غير صالح'),
+  password: z.string().min(6, 'كلمة المرور يجب أن تكون 6 أحرف على الأقل'),
+});
+
+export const Login = () => {
+  const { t } = useTranslation();
+  const { login } = useAuth();
+  const router = useRouter();
   const [isVerified, setIsVerified] = useState(false);
   const [sessionToast, setSessionToast] = useState('');
   const [showSessionToast, setShowSessionToast] = useState(false);
-  const t = TRANSLATIONS[lang];
+  const [globalError, setGlobalError] = useState('');
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(loginSchema),
+  });
 
   useEffect(() => {
     try {
-      // Check localStorage flag set by apiCall on 401
       const fromStorage = localStorage.getItem('sessionExpired');
       const params = new URLSearchParams(window.location.search);
       const reason = params.get('reason');
 
       if (fromStorage || reason === 'session_expired') {
-        const msg = 'انتهت الجلسة، الرجاء تسجيل الدخول مرة أخرى';
+        const msg = t('auth.sessionExpired', 'انتهت الجلسة، الرجاء تسجيل الدخول مرة أخرى');
         setSessionToast(msg);
         setShowSessionToast(true);
-        // Clear the flag so it doesn't show repeatedly
         localStorage.removeItem('sessionExpired');
 
-        // remove reason param from URL without reloading
         if (reason) {
           params.delete('reason');
           const newUrl = window.location.pathname + (params.toString() ? `?${params.toString()}` : '');
           window.history.replaceState({}, document.title, newUrl);
         }
 
-        // Auto-hide after 6s
         setTimeout(() => setShowSessionToast(false), 6000);
       }
     } catch (e) {
-      // ignore in non-browser environments
+      // ignore
     }
-  }, []);
+  }, [t]);
 
-  const handleSubmit = async e => {
-    e.preventDefault();
+  const onSubmit = async (data) => {
     if (!isVerified) {
-      setError('يرجى التحقق من أنك لست روبوت');
+      setGlobalError(t('auth.captchaRequired', 'يرجى التحقق من أنك لست روبوت'));
       return;
     }
-    setLoading(true);
-    setError('');
+    setGlobalError('');
+    
     try {
-      const data = await authApi.login({ email, password });
-
-      // Handle login success
-      // ...existing code...
-      // You might want to save token here if not handled by the component calling this
-      // But usually Login component handles the redirect or state update
-      if (data.token) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        window.location.href = '/dashboard';
-      }
+      await login(data.email, data.password);
+      router.push('/dashboard');
     } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+      setGlobalError(err.message || t('auth.loginFailed', 'فشل تسجيل الدخول'));
     }
   };
 
@@ -98,129 +98,124 @@ export const Login = ({ lang }) => {
             </div>
 
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 tracking-tight">
-              {t.welcomeBack}
+              {t('auth.welcomeBack', 'مرحباً بعودتك')}
             </h1>
-            <p className="text-gray-500 dark:text-gray-400 text-sm">
-              {t.loginSubtitle}
+            <p className="text-gray-500 dark:text-gray-400">
+              {t('auth.loginSubtitle', 'سجل دخولك للمتابعة إلى لوحة التحكم')}
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {showSessionToast && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                className="mb-4 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-500/30 text-amber-700 dark:text-amber-300 text-sm text-center"
-              >
-                {sessionToast}
-              </motion.div>
-            )}
+          {showSessionToast && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-500/30 rounded-xl flex items-center gap-3 text-amber-800 dark:text-amber-200"
+            >
+              <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
+              <span className="text-sm font-medium">{sessionToast}</span>
+            </motion.div>
+          )}
 
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 text-red-600 dark:text-red-400 text-sm text-center"
-              >
-                {error}
-              </motion.div>
-            )}
+          {globalError && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 rounded-xl flex items-center gap-3 text-red-800 dark:text-red-200"
+            >
+              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+              <span className="text-sm font-medium">{globalError}</span>
+            </motion.div>
+          )}
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                <Mail size={16} className="text-brand-500" /> {t.email}
-              </label>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+            <div className="space-y-1">
               <div className="relative group">
+                <Mail className="absolute right-4 top-3.5 text-gray-400 group-focus-within:text-brand-500 transition-colors" size={20} />
                 <Input
                   type="email"
-                  placeholder="name@company.com"
-                  required
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  className="pl-10 bg-gray-50 dark:bg-cosmic-800/50 border-gray-200 dark:border-white/10 focus:ring-brand-500 focus:border-brand-500 transition-all group-hover:border-brand-500/50"
+                  placeholder={t('auth.emailPlaceholder', 'البريد الإلكتروني')}
+                  className={`pr-12 h-12 bg-white dark:bg-black/20 border-gray-200 dark:border-white/10 focus:border-brand-500 dark:focus:border-brand-500 rounded-xl transition-all ${errors.email ? 'border-red-500' : ''}`}
+                  {...register('email')}
                 />
               </div>
+              {errors.email && (
+                <p className="text-red-500 text-xs mr-1">{errors.email.message}</p>
+              )}
             </div>
 
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                  <Lock size={16} className="text-brand-500" /> {t.password}
-                </label>
-                <a
-                  href="/forgot-password"
-                  className="text-xs text-brand-600 dark:text-brand-400 hover:underline"
-                >
-                  نسيت كلمة المرور؟
-                </a>
-              </div>
+            <div className="space-y-1">
               <div className="relative group">
+                <Lock className="absolute right-4 top-3.5 text-gray-400 group-focus-within:text-brand-500 transition-colors" size={20} />
                 <Input
                   type="password"
-                  placeholder="••••••••"
-                  required
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  className="pl-10 bg-gray-50 dark:bg-cosmic-800/50 border-gray-200 dark:border-white/10 focus:ring-brand-500 focus:border-brand-500 transition-all group-hover:border-brand-500/50"
+                  placeholder={t('auth.passwordPlaceholder', 'كلمة المرور')}
+                  className={`pr-12 h-12 bg-white dark:bg-black/20 border-gray-200 dark:border-white/10 focus:border-brand-500 dark:focus:border-brand-500 rounded-xl transition-all ${errors.password ? 'border-red-500' : ''}`}
+                  {...register('password')}
                 />
               </div>
+              {errors.password && (
+                <p className="text-red-500 text-xs mr-1">{errors.password.message}</p>
+              )}
             </div>
 
-            <div className="space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <label className="flex items-center gap-2 cursor-pointer group">
+                <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500 transition-colors" />
+                <span className="text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300 transition-colors">
+                  {t('auth.rememberMe', 'تذكرني')}
+                </span>
+              </label>
+              <Link
+                href="/forgot-password"
+                className="text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 font-medium transition-colors"
+              >
+                {t('auth.forgotPassword', 'نسيت كلمة المرور؟')}
+              </Link>
+            </div>
+
+            <div className="py-2">
               <Captcha onVerify={setIsVerified} />
             </div>
 
             <Button
               type="submit"
-              className="w-full py-6 text-lg font-bold shadow-lg shadow-brand-500/25 hover:shadow-brand-500/40 transition-all hover:-translate-y-0.5 rounded-xl"
-              disabled={loading}
+              disabled={isSubmitting}
+              className="w-full h-12 bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-700 hover:to-brand-600 text-white rounded-xl font-bold shadow-lg shadow-brand-500/20 hover:shadow-brand-500/30 transition-all transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
             >
-              {loading ? (
-                <Loader2 className="animate-spin" />
+              {isSubmitting ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="animate-spin" size={20} />
+                  <span>{t('auth.loggingIn', 'جاري الدخول...')}</span>
+                </div>
               ) : (
-                <span className="flex items-center gap-2">
-                  {t.login} <ArrowRight size={18} />
-                </span>
+                <div className="flex items-center justify-center gap-2">
+                  <span>{t('auth.loginButton', 'تسجيل الدخول')}</span>
+                  <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                </div>
               )}
             </Button>
-
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200 dark:border-white/10"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white dark:bg-cosmic-900 text-gray-500">
-                  أو
-                </span>
-              </div>
-            </div>
-
-            <div className="text-center">
-              <p className="text-gray-500 dark:text-gray-400 text-sm">
-                {t.dontHaveAccount}{' '}
-                <Link
-                  href="/register"
-                  className="text-brand-600 dark:text-brand-500 hover:text-brand-700 dark:hover:text-brand-400 font-bold hover:underline transition-all"
-                >
-                  {t.signUp}
-                </Link>
-              </p>
-            </div>
           </form>
-        </div>
 
-        <div className="mt-8 text-center">
-          <p className="text-xs text-gray-400 dark:text-gray-500">
-            محمي بواسطة نظام فهملي الأمني وتطبق{' '}
-            <Link href="/privacy" className="underline hover:text-gray-300">
-              سياسة الخصوصية
-            </Link>{' '}
-            و{' '}
-            <Link href="/terms" className="underline hover:text-gray-300">
-              شروط الخدمة
+          <div className="mt-8 pt-6 border-t border-gray-100 dark:border-white/5 text-center">
+            <p className="text-gray-500 dark:text-gray-400 mb-4">
+              {t('auth.noAccount', 'ليس لديك حساب؟')}
+            </p>
+            <Link href="/register">
+              <Button
+                variant="outline"
+                className="w-full h-12 border-2 border-gray-200 dark:border-white/10 hover:border-brand-500 dark:hover:border-brand-500 text-gray-700 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl font-bold transition-all bg-transparent"
+              >
+                {t('auth.createAccount', 'إنشاء حساب جديد')}
+              </Button>
             </Link>
-            .
-          </p>
+          </div>
+          
+          <div className="mt-6 text-center">
+             <Link href="/" className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-brand-500 transition-colors">
+               <Home size={16} />
+               <span>{t('auth.backToHome', 'العودة للرئيسية')}</span>
+             </Link>
+          </div>
         </div>
       </motion.div>
     </div>

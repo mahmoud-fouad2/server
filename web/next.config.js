@@ -7,6 +7,8 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Note: 'export' mode disables API routes and Image Optimization.
+  // If deploying to a Node.js server (like Vercel or Render Web Service), consider removing this line.
   output: 'export',
   trailingSlash: true,
 

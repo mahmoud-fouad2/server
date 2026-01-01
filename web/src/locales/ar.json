@@ -1,0 +1,33 @@
+{
+  "dashboard": {
+    "overview": "نظرة عامة",
+    "conversations": "المحادثات",
+    "liveSupport": "الدعم المباشر",
+    "channels": "القنوات",
+    "knowledgeBase": "قاعدة المعرفة",
+    "tickets": "التذاكر",
+    "widgetSettings": "تخصيص الويدجت",
+    "team": "فريق العمل",
+    "settings": "الإعدادات",
+    "playground": "تجربة البوت",
+    "visitorAnalytics": "تحليلات الزوار",
+    "crm": "إدارة العملاء (CRM)",
+    "logout": "تسجيل الخروج",
+    "welcome": "مرحباً بك",
+    "stats": {
+      "totalConversations": "إجمالي المحادثات",
+      "activeNow": "نشط الآن",
+      "aiResponseRate": "معدل رد الذكاء الاصطناعي",
+      "avgResponseTime": "متوسط وقت الرد"
+    }
+  },
+  "common": {
+    "loading": "جاري التحميل...",
+    "error": "حدث خطأ ما",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "search": "بحث"
+  }
+}

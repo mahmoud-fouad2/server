@@ -55,7 +55,6 @@ import {
   COMPARISON_DATA,
 } from '../../constants';
 import { DemoChatWindow } from '../DemoChatWindow';
-import DemoChat from '../DemoChat';
 import FaheemAnimatedLogo from '../FaheemAnimatedLogo';
 import SalesBot from '../SalesBot';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -117,8 +116,7 @@ const HeroSection = ({ regionContent, t, activeCountry, isDark }) => (
       </div>
 
       <div className="mt-20 relative z-10">
-        <div className="absolute inset-0 bg-brand-500/20 blur-[100px] -z-10 rounded-full"></div>
-        <DemoChat />
+        {/* DemoChat removed to show real widget only */}
       </div>
     </div>
   </section>

@@ -4,7 +4,8 @@ import { useEffect } from 'react';
 import { API_CONFIG } from '@/lib/config';
 
 // Seeded Faheemly business that powers the public demo (see api/src/scripts/seed.ts)
-const FAHEEMLY_DEMO_BUSINESS_ID = 'cmir2oyaz00013ltwis4xc4tp';
+// Use environment variable for demo business ID, fallback to the known seeded ID
+const FAHEEMLY_DEMO_BUSINESS_ID = process.env.NEXT_PUBLIC_DEMO_BUSINESS_ID || 'cmir2oyaz00013ltwis4xc4tp';
 const WIDGET_BUILD_VERSION = getWidgetBuildVersion();
 
 function getWidgetBuildVersion() {
@@ -62,10 +63,11 @@ export default function WidgetLoader() {
 
       if (!bid) {
         const host = typeof window !== 'undefined' && window.location ? window.location.hostname : '';
-        if (host && host.includes('faheemly.com')) {
-          // On the faheemly.com site, default to the demo Faheemly business so the embed works without extra setup
+        // Allow localhost to use the demo business ID for testing purposes
+        if ((host && host.includes('faheemly.com')) || host === 'localhost' || host === '127.0.0.1') {
+          // On the faheemly.com site (or localhost), default to the demo Faheemly business so the embed works without extra setup
           bid = FAHEEMLY_DEMO_BUSINESS_ID;
-          console.info('[Fahimo] No env business ID found; defaulting to Faheemly demo business on faheemly.com');
+          console.info('[Fahimo] No env business ID found; defaulting to Faheemly demo business');
         } else {
           console.warn('No business ID configured for widget. Set NEXT_PUBLIC_WIDGET_BUSINESS_ID or NEXT_PUBLIC_BUSINESS_ID or place a runtime override via window.__FAHIMO_BUSINESS_ID or <meta name="fahimo-business-id">.');
           return;
@@ -108,6 +110,8 @@ export default function WidgetLoader() {
             // This ensures we never accidentally inject localhost into the widget config
             if (process.env.NODE_ENV === 'production') {
                // Do not set data-api-url, let the widget use its default (https://fahimo-api.onrender.com)
+               // Explicitly set it to the production API to be safe
+               s.setAttribute('data-api-url', 'https://fahimo-api.onrender.com');
             }
             
             // Avoid setting a default local API URL that could cause CSP violations when the widget

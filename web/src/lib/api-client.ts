@@ -201,6 +201,7 @@ export const api = {
   },
   knowledge: {
     list: async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const response: any = await fetchAPI('/knowledge');
       if (Array.isArray(response)) return response;
       if (response && Array.isArray(response.data)) return response.data;

@@ -1,5 +1,6 @@
 import './globals.css';
 import { Beiruti } from 'next/font/google';
+import Providers from '@/components/Providers';
 
 const beiruti = Beiruti({
   subsets: ['arabic'],
@@ -127,7 +128,9 @@ export const metadata = {
     images: ['/twitter-image.jpg'],
   },
   icons: {
-    icon: '/favicon.ico',
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' }
+    ],
     // Use `favicon.ico` as the primary shortcut to avoid 404s when only .ico exists
     shortcut: '/favicon.ico',
     apple: '/apple-touch-icon.png',
@@ -146,7 +149,6 @@ export default function RootLayout({ children }) {
       <head>
         {/* Fonts handled by next/font (Beiruti) for automatic optimization */}
         {/* Explicit favicons to ensure browsers pick them up and avoid caching issues */}
-        <link rel="icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link
           rel="stylesheet"
@@ -378,11 +380,13 @@ export default function RootLayout({ children }) {
       <body
         className={`${beiruti.className} overflow-x-hidden bg-gray-50 dark:bg-cosmic-950 text-gray-900 dark:text-gray-100 transition-colors duration-300 selection:bg-brand-500/30`}
       >
-        <ErrorBoundary>
-          <AppProvider>
-            <ClientLayout>{children}</ClientLayout>
-          </AppProvider>
-        </ErrorBoundary>
+        <Providers>
+          <ErrorBoundary>
+            <AppProvider>
+              <ClientLayout>{children}</ClientLayout>
+            </AppProvider>
+          </ErrorBoundary>
+        </Providers>
         {/* Client-only widget loader (will no-op on blocked routes like /wizard) */}
         <WidgetLoader />
       </body>

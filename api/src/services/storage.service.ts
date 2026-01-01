@@ -14,22 +14,28 @@ class StorageService {
   }
 
   private initializeS3() {
-    const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
-    const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
-    const region = process.env.AWS_REGION || 'us-east-1';
-    this.bucketName = process.env.AWS_S3_BUCKET || '';
+    // Support for Cloudflare R2 or standard S3
+    const accessKeyId = process.env.CF_R2_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID;
+    const secretAccessKey = process.env.CF_R2_SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY;
+    const bucket = process.env.CF_R2_BUCKET || process.env.AWS_S3_BUCKET;
+    const endpoint = process.env.CF_R2_ENDPOINT || process.env.S3_ENDPOINT;
+    const region = process.env.CF_R2_REGION || process.env.AWS_REGION || 'auto';
+
+    this.bucketName = bucket || '';
 
     if (accessKeyId && secretAccessKey && this.bucketName) {
       this.s3 = new AWS.S3({
         accessKeyId,
         secretAccessKey,
         region,
+        endpoint,
+        signatureVersion: 'v4',
       });
 
       this.useS3 = true;
-      logger.info('✅ S3 storage initialized');
+      logger.info('✅ Object Storage (S3/R2) initialized');
     } else {
-      logger.warn('S3 not configured, using local storage');
+      logger.warn('Object Storage not configured, using local storage');
     }
   }
 

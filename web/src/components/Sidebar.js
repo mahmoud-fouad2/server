@@ -6,7 +6,6 @@ import {
   LogOut,
   Moon,
   Sun,
-  CreditCard,
   Play,
   TrendingUp,
   FileText,
@@ -21,9 +20,9 @@ import {
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import FaheemAnimatedLogo from './FaheemAnimatedLogo';
-import { ticketApi, notificationsApi } from '@/lib/api';
-import { API_CONFIG } from '@/lib/config';
-import { io } from 'socket.io-client';
+import { useTranslation } from 'react-i18next';
+import { useTickets, useUnreadMessages } from '@/hooks/useQueries';
+import { useAuth } from '@/hooks/useAuth';
 
 const SidebarItem = ({
   icon: Icon,
@@ -63,9 +62,15 @@ const SidebarItem = ({
 
 export default function Sidebar({ activeTab, setActiveTab, userRole }) {
   const router = useRouter();
+  const { t } = useTranslation();
+  const { logout } = useAuth();
   const [isDark, setIsDark] = useState(false);
-  const [ticketCount, setTicketCount] = useState(0);
-  const [unreadCount, setUnreadCount] = useState(0);
+  
+  // Use React Query for data fetching
+  const { data: tickets = [] } = useTickets();
+  const { data: unreadCount = 0 } = useUnreadMessages();
+  
+  const ticketCount = tickets.filter(t => t.status === 'OPEN' || t.status === 'IN_PROGRESS').length;
   const isAgent = userRole === 'AGENT';
 
   useEffect(() => {
@@ -79,259 +84,174 @@ export default function Sidebar({ activeTab, setActiveTab, userRole }) {
       attributes: true,
       attributeFilter: ['class'],
     });
-
-    // Fetch Ticket Count
-    const fetchTicketCount = async () => {
-      try {
-        const data = await ticketApi.list();
-        // Count open or in_progress tickets
-        const count = data.filter(
-          t => t.status === 'OPEN' || t.status === 'IN_PROGRESS'
-        ).length;
-        setTicketCount(count);
-      } catch (err) {
-        if (process.env.NODE_ENV !== 'production') {
-          console.error('Sidebar: failed to fetch tickets', err);
-        }
-      }
-    };
-    // Fetch unread counts
-    const fetchUnread = async () => {
-      try {
-        const data = await notificationsApi.getUnreadCounts();
-        // Show number of tickets that have unread messages (avoid counting individual ticket messages)
-        const ticketsWithUnread = data.ticketsUnread || 0;
-        setUnreadCount(ticketsWithUnread);
-      } catch (err) {
-        if (process.env.NODE_ENV !== 'production') {
-          console.error('Sidebar: failed to fetch unread counts', err);
-        }
-      }
-    };
-    fetchTicketCount();
-    fetchUnread();
-
-    // Poll for ticket updates every 60 seconds
-    const ticketInterval = setInterval(fetchTicketCount, 60000);
-
-    // Setup socket to get real-time notification increments
-    try {
-      const rawUser = localStorage.getItem('user');
-      const profile = rawUser ? JSON.parse(rawUser) : null;
-      if (profile && profile.businessId && API_CONFIG.BASE_URL) {
-        const socketUrl = API_CONFIG.BASE_URL.replace('/api', '');
-        const socket = io(socketUrl, { transports: ['websocket'] });
-        
-        socket.on('connect', () => {
-          socket.emit('join_room', `business_${profile.businessId}`);
-        });
-        
-        socket.on('notification:new', () => fetchUnread());
-        socket.on('ticket:updated', () => fetchTicketCount()); // Listen for ticket updates if backend supports it
-        
-        // Update on explicit events too
-        const onUnreadChanged = () => fetchUnread();
-        window.addEventListener('unread:changed', onUnreadChanged);
-
-        // clean up on unmount
-        const cleanup = () => {
-          try {
-            socket.disconnect();
-          } catch (socketError) {
-            if (process.env.NODE_ENV !== 'production') {
-              console.warn('Sidebar: failed to disconnect socket', socketError);
-            }
-          }
-          window.removeEventListener('unread:changed', onUnreadChanged);
-          clearInterval(ticketInterval);
-        };
-        window.addEventListener('beforeunload', cleanup);
-        return cleanup; // Return cleanup function for useEffect
-      }
-    } catch (e) {
-      console.error('Socket setup failed', e);
-    }
-
-    return () => {
-      observer.disconnect();
-      clearInterval(ticketInterval);
-    };
+    return () => observer.disconnect();
   }, []);
 
   const toggleTheme = () => {
     if (isDark) {
       document.documentElement.classList.remove('dark');
       localStorage.setItem('theme', 'light');
-      setIsDark(false);
     } else {
       document.documentElement.classList.add('dark');
       localStorage.setItem('theme', 'dark');
-      setIsDark(true);
     }
+    setIsDark(!isDark);
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    logout();
     router.push('/login');
   };
 
   return (
-    <aside className="w-64 border-l border-gray-200 dark:border-white/5 flex flex-col bg-white/80 dark:bg-cosmic-950/80 backdrop-blur-xl z-20 hidden md:flex h-screen sticky top-0 shadow-2xl shadow-brand-900/5">
-      <div className="p-6 flex-1 overflow-y-auto custom-scrollbar">
-        <div className="flex items-center justify-center mb-8">
-          <FaheemAnimatedLogo size="small" showText={true} />
-        </div>
-
-        <nav className="space-y-1">
-          {!isAgent && (
-            <SidebarItem
-              icon={TrendingUp}
-              label="نظرة عامة"
-              id="overview"
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-              dataTour="sidebar-overview"
-            />
-          )}
-          <SidebarItem
-            icon={MessageSquare}
-            label="المحادثات"
-            id="conversations"
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            dataTour="sidebar-conversations"
-          />
-          <SidebarItem
-            icon={Headphones}
-            label="الدعم المباشر"
-            id="live-support"
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-          />
-          {!isAgent && (
-            <SidebarItem
-              icon={BarChart3}
-              label="تحليلات الزوار"
-              id="visitor-analytics"
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-            />
-          )}
-          {!isAgent && (
-            <SidebarItem
-              icon={Users}
-              label="فريق العمل"
-              id="team"
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-            />
-          )}
-          {!isAgent && (
-            <SidebarItem
-              icon={Share2}
-              label="قنوات الاتصال"
-              id="channels"
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-            />
-          )}
-          {!isAgent && (
-            <SidebarItem
-              icon={FileText}
-              label="قاعدة المعرفة"
-              id="knowledge"
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-              dataTour="sidebar-knowledge"
-            />
-          )}
-          {!isAgent && (
-            <SidebarItem
-              icon={Settings}
-              label="تخصيص الويدجت"
-              id="widget"
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-              dataTour="sidebar-widget"
-            />
-          )}
-          {!isAgent && (
-            <SidebarItem
-              icon={Play}
-              label="تجربة البوت"
-              id="playground"
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-            />
-          )}
-          <SidebarItem
-            icon={LifeBuoy}
-            label="تذاكر الدعم"
-            id="tickets"
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            badge={unreadCount > 0 ? unreadCount : ticketCount}
-          />
-          {!isAgent && (
-            <SidebarItem
-              icon={ContactRound}
-              label="إدارة العملاء"
-              id="crm"
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-            />
-          )}
-          <SidebarItem
-            icon={User}
-            label="إعدادات الحساب"
-            id="settings"
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            dataTour="sidebar-settings"
-          />
-          {!isAgent && (
-            <SidebarItem
-              icon={CreditCard}
-              label="الاشتراك والباقة"
-              id="subscription"
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-            />
-          )}
-        </nav>
+    <aside className="w-72 bg-white dark:bg-cosmic-900 border-l border-gray-200 dark:border-white/10 flex flex-col h-screen sticky top-0 transition-colors duration-300 shadow-xl z-50">
+      {/* Logo Area */}
+      <div className="p-6 flex items-center justify-center border-b border-gray-100 dark:border-white/5 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-brand-500/5 to-purple-500/5 animate-pulse"></div>
+        <FaheemAnimatedLogo className="w-32 h-auto relative z-10" />
       </div>
 
-      <div className="p-4 border-t border-gray-200 dark:border-white/5 space-y-4 bg-gray-50/50 dark:bg-white/5">
+      {/* Navigation Items */}
+      <div className="flex-1 overflow-y-auto py-6 px-4 space-y-1 custom-scrollbar">
+        <div className="text-xs font-bold text-gray-400 dark:text-gray-500 px-4 mb-2 uppercase tracking-wider">
+          {t('dashboard.overview')}
+        </div>
+        <SidebarItem
+          id="overview"
+          label={t('dashboard.overview')}
+          icon={BarChart3}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          dataTour="overview-tab"
+        />
+        <SidebarItem
+          id="conversations"
+          label={t('dashboard.conversations')}
+          icon={MessageSquare}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          badge={unreadCount}
+          dataTour="conversations-tab"
+        />
+        <SidebarItem
+          id="live-support"
+          label={t('dashboard.liveSupport')}
+          icon={Headphones}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+        />
+
+        {!isAgent && (
+          <>
+            <div className="mt-6 mb-2 px-4">
+              <div className="h-px bg-gray-100 dark:bg-white/5"></div>
+            </div>
+            <div className="text-xs font-bold text-gray-400 dark:text-gray-500 px-4 mb-2 uppercase tracking-wider">
+              {t('dashboard.channels')}
+            </div>
+            <SidebarItem
+              id="channels"
+              label={t('dashboard.channels')}
+              icon={Share2}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+            />
+            <SidebarItem
+              id="knowledge"
+              label={t('dashboard.knowledgeBase')}
+              icon={FileText}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              dataTour="knowledge-tab"
+            />
+            <SidebarItem
+              id="playground"
+              label={t('dashboard.playground')}
+              icon={Play}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+            />
+          </>
+        )}
+
+        <div className="mt-6 mb-2 px-4">
+          <div className="h-px bg-gray-100 dark:bg-white/5"></div>
+        </div>
+        <div className="text-xs font-bold text-gray-400 dark:text-gray-500 px-4 mb-2 uppercase tracking-wider">
+          {t('dashboard.team')}
+        </div>
+
+        <SidebarItem
+          id="tickets"
+          label={t('dashboard.tickets')}
+          icon={LifeBuoy}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          badge={ticketCount}
+        />
+        {!isAgent && (
+          <>
+            <SidebarItem
+              id="team"
+              label={t('dashboard.team')}
+              icon={Users}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+            />
+            <SidebarItem
+              id="crm"
+              label={t('dashboard.crm')}
+              icon={ContactRound}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+            />
+            <SidebarItem
+              id="visitors"
+              label={t('dashboard.visitorAnalytics')}
+              icon={TrendingUp}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+            />
+            <SidebarItem
+              id="widget-settings"
+              label={t('dashboard.widgetSettings')}
+              icon={Settings}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+            />
+            <SidebarItem
+              id="settings"
+              label={t('dashboard.settings')}
+              icon={User}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+            />
+          </>
+        )}
+      </div>
+
+      {/* Footer Actions */}
+      <div className="p-4 border-t border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-black/20">
         <button
-          onClick={() => setActiveTab('tickets')}
-          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-300 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-brand-50 dark:hover:bg-brand-900/20 hover:text-brand-600 dark:hover:text-brand-400 group border border-transparent hover:border-brand-200 dark:hover:border-brand-800"
+          onClick={toggleTheme}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-white dark:hover:bg-white/5 hover:shadow-sm transition-all mb-2"
         >
-          <LifeBuoy
-            size={18}
-            className="group-hover:rotate-12 transition-transform"
-          />
-          <span>الدعم الفني</span>
+          {isDark ? <Sun size={20} /> : <Moon size={20} />}
+          <span className="font-medium">
+            {isDark ? 'الوضع النهاري' : 'الوضع الليلي'}
+          </span>
         </button>
 
-        <div className="flex gap-2">
-          <button
-            onClick={toggleTheme}
-            data-tour="theme-toggle"
-            className="flex-1 flex items-center justify-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white bg-white dark:bg-white/5 py-2.5 rounded-lg border border-gray-200 dark:border-white/5 hover:border-brand-500 dark:hover:border-brand-500 transition-colors shadow-sm"
-          >
-            {isDark ? <Sun size={18} /> : <Moon size={18} />}
-            <span className="text-xs font-bold">
-              {isDark ? 'Light' : 'Dark'}
-            </span>
-          </button>
-          <button
-            onClick={handleLogout}
-            className="flex items-center justify-center w-10 text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 bg-red-50 dark:bg-red-500/10 py-2.5 rounded-lg border border-red-100 dark:border-red-500/20 hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors"
-          >
-            <LogOut size={18} />
-          </button>
-        </div>
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:shadow-sm transition-all group"
+        >
+          <LogOut
+            size={20}
+            className="group-hover:-translate-x-1 transition-transform"
+          />
+          <span className="font-medium">{t('dashboard.logout')}</span>
+        </button>
       </div>
     </aside>
   );

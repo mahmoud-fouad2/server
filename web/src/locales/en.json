@@ -1,0 +1,33 @@
+{
+  "dashboard": {
+    "overview": "Overview",
+    "conversations": "Conversations",
+    "liveSupport": "Live Support",
+    "channels": "Channels",
+    "knowledgeBase": "Knowledge Base",
+    "tickets": "Tickets",
+    "widgetSettings": "Widget Settings",
+    "team": "Team",
+    "settings": "Settings",
+    "playground": "Playground",
+    "visitorAnalytics": "Visitor Analytics",
+    "crm": "CRM",
+    "logout": "Logout",
+    "welcome": "Welcome",
+    "stats": {
+      "totalConversations": "Total Conversations",
+      "activeNow": "Active Now",
+      "aiResponseRate": "AI Response Rate",
+      "avgResponseTime": "Avg Response Time"
+    }
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "search": "Search"
+  }
+}

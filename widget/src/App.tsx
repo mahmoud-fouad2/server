@@ -246,7 +246,29 @@ function getLauncherStyle(theme: any, position: 'left' | 'right', isOpen: boolea
   } as const;
 }
 
-function getWidgetStyle(theme: any, position: 'left' | 'right', isOpen: boolean, isMinimized: boolean) {
+function getWidgetStyle(theme: any, position: 'left' | 'right', isOpen: boolean, isMinimized: boolean, isMobile: boolean) {
+  if (isMobile && isOpen && !isMinimized) {
+    return {
+      position: 'fixed',
+      bottom: '0',
+      left: '0',
+      right: '0',
+      top: '0',
+      width: '100%',
+      height: '100%',
+      transform: 'translateY(0)',
+      opacity: 1,
+      pointerEvents: 'auto',
+      borderRadius: '0',
+      background: '#fff',
+      zIndex: 1000000,
+      display: 'flex',
+      flexDirection: 'column' as const,
+      overflow: 'hidden',
+      animation: 'fahimoFadeIn 0.2s ease',
+    } as const;
+  }
+
   return {
     position: 'fixed',
     bottom: '24px',
@@ -264,6 +286,7 @@ function getWidgetStyle(theme: any, position: 'left' | 'right', isOpen: boolean,
     zIndex: 1000000,
     overflow: 'hidden',
     animation: isOpen ? 'fahimoSlideUp 0.35s ease' : 'none',
+    transition: 'width 0.3s ease, height 0.3s ease, transform 0.3s ease, opacity 0.3s ease',
   } as const;
 }
 
@@ -449,6 +472,15 @@ function ensureGlobalStyles() {
 
 export default function App({ config, businessName, assetBaseUrl, apiBaseUrl, preChatFormEnabled }: AppProps) {
   ensureGlobalStyles();
+
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 640);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const computedPreChatEnabled = typeof preChatFormEnabled === 'boolean'
     ? preChatFormEnabled
@@ -826,7 +858,7 @@ export default function App({ config, businessName, assetBaseUrl, apiBaseUrl, pr
       </button>
 
       <section
-        style={getWidgetStyle(theme, position, isOpen, isMinimized)}
+        style={getWidgetStyle(theme, position, isOpen, isMinimized, isMobile)}
         aria-live="polite"
         aria-label="محادثة الدعم"
       >

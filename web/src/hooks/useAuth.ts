@@ -1,45 +1,58 @@
-import { useState, useEffect } from 'react';
-import { api } from '@/lib/api-client';
-import type { User } from '@/types/dashboard';
-import { LoginInput } from '@fahimo/shared/dist/auth.dto';
+import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
-export function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    checkUser();
-  }, []);
-
-  async function checkUser() {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-      const { user } = await api.auth.me() as { user: User };
-      setUser(user);
-    } catch (error) {
-      console.error('Auth check failed', error);
-      localStorage.removeItem('token');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function login(data: LoginInput) {
-    const response = await api.auth.login(data) as { token: string; user: User };
-    localStorage.setItem('token', response.token);
-    await checkUser();
-    return response;
-  }
-
-  function logout() {
-    localStorage.removeItem('token');
-    setUser(null);
-    window.location.href = '/login';
-  }
-
-  return { user, loading, login, logout, checkUser };
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  businessId?: string;
+  currentBusinessId?: string;
+  [key: string]: unknown;
 }
+
+interface AuthState {
+  user: User | null;
+  token: string | null;
+  isAuthenticated: boolean;
+  login: (user: User, token: string) => void;
+  logout: () => void;
+  updateUser: (updates: Partial<User>) => void;
+}
+
+export const useAuth = create<AuthState>()(
+  persist(
+    (set) => ({
+      user: null,
+      token: null,
+      isAuthenticated: false,
+      login: (user, token) => {
+        // Also set localStorage for legacy code compatibility if needed
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('token', token);
+          localStorage.setItem('user', JSON.stringify(user));
+        }
+        set({ user, token, isAuthenticated: true });
+      },
+      logout: () => {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+        }
+        set({ user: null, token: null, isAuthenticated: false });
+      },
+      updateUser: (updates) =>
+        set((state) => {
+          const newUser = state.user ? { ...state.user, ...updates } : null;
+          if (newUser && typeof window !== 'undefined') {
+            localStorage.setItem('user', JSON.stringify(newUser));
+          }
+          return { user: newUser };
+        }),
+    }),
+    {
+      name: 'auth-storage', // unique name
+      storage: createJSONStorage(() => localStorage), // use localStorage
+    }
+  )
+);
