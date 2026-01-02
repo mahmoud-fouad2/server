@@ -5,7 +5,7 @@ import { API_CONFIG } from '@/lib/config';
 
 // Seeded Faheemly business that powers the public demo (see api/src/scripts/seed.ts)
 // Use environment variable for demo business ID, fallback to the known seeded ID
-const FAHEEMLY_DEMO_BUSINESS_ID = process.env.NEXT_PUBLIC_DEMO_BUSINESS_ID || 'cmir2oyaz00013ltwis4xc4tp';
+const FAHEEMLY_DEMO_BUSINESS_ID = process.env.NEXT_PUBLIC_DEMO_BUSINESS_ID || 'cmjx5hz7a000br594zctuurus';
 const WIDGET_BUILD_VERSION = getWidgetBuildVersion();
 
 function getWidgetBuildVersion() {
