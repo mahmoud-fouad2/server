@@ -242,7 +242,7 @@ function DashboardContent() {
       <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto relative pt-16 md:pt-8 min-h-screen">
         <div className="flex-1 flex flex-col max-w-7xl mx-auto w-full">
           {/* Header */}
-          <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8 bg-transparent backdrop-blur-md p-3 sm:p-4 rounded-lg">
+          <header className="glass-panel flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8 p-4 sm:p-5 rounded-xl">
             <div className="flex items-center gap-3 w-full sm:w-auto">
               <div className="md:hidden">
                 <FaheemAnimatedLogo size="small" showText={true} />
@@ -300,7 +300,7 @@ function DashboardContent() {
                   }}
                   data-tour="theme-toggle"
                   aria-label="Toggle theme"
-                  className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-brand-600/10 dark:bg-white/5 flex items-center justify-center hover:bg-brand-600/20 transition-colors"
+                  className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-brand-600/10 dark:bg-white/5 flex items-center justify-center hover:bg-brand-600/20 transition-colors focus-visible-ring"
                 >
                   {isDark ? (
                     <Sun className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-300" />

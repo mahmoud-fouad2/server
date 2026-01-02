@@ -242,7 +242,7 @@ export default function ConversationsView() {
         </CardHeader>
         <CardContent className="flex-1 overflow-y-auto p-2">
           {loading ? (
-            <div className="flex justify-center py-8">
+            <div className="flex justify-center py-10 text-muted-foreground">
               <Loader2 className="animate-spin" />
             </div>
           ) : conversations.length === 0 ? (
@@ -255,7 +255,7 @@ export default function ConversationsView() {
               <div
                 key={conv.id}
                 onClick={() => selectConversation(conv)}
-                className={`p-3 mb-2 rounded-lg cursor-pointer transition-colors ${selectedConversation?.id === conv.id ? 'bg-brand-500/10 border border-brand-500/20' : 'hover:bg-muted'}`}
+                className={`p-3 mb-2 rounded-lg cursor-pointer transition-colors border ${selectedConversation?.id === conv.id ? 'bg-brand-500/10 border-brand-500/30' : 'bg-card hover:bg-muted/50 border-border'}`}
               >
                 <div className="flex justify-between items-start">
                   <div className="font-medium text-sm">
@@ -275,7 +275,7 @@ export default function ConversationsView() {
               ))}
               {conversations.length > 10 && (
                 <div className="flex justify-center mt-4">
-                  <Button size="sm" onClick={() => setShowAll(s => !s)} className="bg-brand-600 text-white hover:bg-brand-700">
+                  <Button size="sm" onClick={() => setShowAll(s => !s)} variant="outline">
                     {showAll ? 'عرض أقل' : `عرض الكل (${conversations.length})`}
                   </Button>
                 </div>
@@ -311,7 +311,7 @@ export default function ConversationsView() {
                   className={`flex gap-3 ${msg.role === 'ASSISTANT' ? 'flex-row-reverse' : ''}`}
                 >
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${msg.role === 'ASSISTANT' ? 'bg-brand-500 text-white' : 'bg-gray-200 dark:bg-gray-700'}`}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${msg.role === 'ASSISTANT' ? 'bg-brand-500 text-white' : 'bg-background border border-border'}`}
                   >
                     {msg.role === 'ASSISTANT' ? (
                       <Bot className="w-4 h-4" />
@@ -320,7 +320,7 @@ export default function ConversationsView() {
                     )}
                   </div>
                   <div
-                    className={`p-3 rounded-lg max-w-[80%] ${msg.role === 'ASSISTANT' ? 'bg-brand-500 text-white rounded-tl-none' : 'bg-white dark:bg-gray-800 border border-border rounded-tr-none'}`}
+                    className={`p-3 rounded-lg max-w-[80%] ${msg.role === 'ASSISTANT' ? 'bg-brand-500 text-white rounded-tl-none' : 'bg-background border border-border rounded-tr-none'}`}
                   >
                     {renderAssistantContent(msg.content, msg.role)}
                   </div>
@@ -333,7 +333,7 @@ export default function ConversationsView() {
                   value={replyInput}
                   onChange={e => setReplyInput(e.target.value)}
                   placeholder="اكتب ردك هنا..."
-                  className="flex-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                  className="flex-1 bg-background"
                 />
                 <Button
                   type="submit"

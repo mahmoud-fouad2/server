@@ -85,12 +85,12 @@ export default function MobileNav({ activeTab, setActiveTab, userRole }) {
       data-tour={dataTour}
       className={`w-full flex items-center gap-4 px-6 py-4 transition-all duration-300 ${
         activeTab === id
-          ? 'bg-brand-600/10 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400 border-r-4 border-brand-600'
+          ? 'bg-brand-600/10 text-brand-700 dark:bg-brand-500/10 dark:text-brand-300 border-r-4 border-brand-500'
           : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-cosmic-800 active:bg-gray-200 dark:active:bg-cosmic-700'
       }`}
     >
         {Icon ? <Icon size={22} /> : null}
-      <span className="font-medium text-lg">{label}</span>
+      <span className="font-medium text-base">{label}</span>
     </button>
   );
 

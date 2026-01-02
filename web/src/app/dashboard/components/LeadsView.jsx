@@ -47,9 +47,9 @@ export default function LeadsView() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">بيانات العملاء</h3>
-        <div>
-          <Button onClick={fetchLeads} disabled={loading}>تحديث</Button>
-          <Button onClick={exportLeads} className="ml-2">تصدير CSV</Button>
+        <div className="flex items-center gap-2">
+          <Button onClick={fetchLeads} disabled={loading} variant="outline">تحديث</Button>
+          <Button onClick={exportLeads}>تصدير CSV</Button>
         </div>
       </div>
 
@@ -68,16 +68,16 @@ export default function LeadsView() {
         </div>
       )}
 
-      <div className="overflow-auto border rounded">
+      <div className="overflow-auto border border-border rounded-lg bg-card">
         <table className="min-w-full text-sm">
-          <thead className="bg-gray-50 dark:bg-gray-800">
+          <thead className="bg-muted/40">
             <tr>
-              <th className="p-2 text-left">الاسم</th>
-              <th className="p-2 text-left">البريد</th>
-              <th className="p-2 text-left">الجوال</th>
-              <th className="p-2 text-left">الطلب</th>
-              <th className="p-2 text-left">المصدر</th>
-              <th className="p-2 text-left">تاريخ</th>
+              <th className="p-3 text-right font-semibold">الاسم</th>
+              <th className="p-3 text-right font-semibold">البريد</th>
+              <th className="p-3 text-right font-semibold">الجوال</th>
+              <th className="p-3 text-right font-semibold">الطلب</th>
+              <th className="p-3 text-right font-semibold">المصدر</th>
+              <th className="p-3 text-right font-semibold">تاريخ</th>
             </tr>
           </thead>
           <tbody>
@@ -91,14 +91,14 @@ export default function LeadsView() {
             ) : leads.length === 0 ? (
               <tr><td colSpan="6" className="p-4 text-center">لا توجد بيانات</td></tr>
             ) : (
-              leads.map(l => (
-                <tr key={l.id} className="border-t">
-                  <td className="p-2">{l.name}</td>
-                  <td className="p-2">{l.email || '-'}</td>
-                  <td className="p-2">{l.phone || '-'}</td>
-                  <td className="p-2">{l.requestSummary || '-'}</td>
-                  <td className="p-2">{l.source}</td>
-                  <td className="p-2">{new Date(l.createdAt).toLocaleString()}</td>
+              leads.map((l, idx) => (
+                <tr key={l.id} className={`border-t ${idx % 2 === 0 ? 'bg-transparent' : 'bg-muted/20'} hover:bg-muted/40 transition-colors`}>
+                  <td className="p-3 font-medium">{l.name}</td>
+                  <td className="p-3">{l.email || '-'}</td>
+                  <td className="p-3">{l.phone || '-'}</td>
+                  <td className="p-3 max-w-[360px] truncate" title={l.requestSummary || ''}>{l.requestSummary || '-'}</td>
+                  <td className="p-3">{l.source}</td>
+                  <td className="p-3">{new Date(l.createdAt).toLocaleString('ar-SA')}</td>
                 </tr>
               ))
             )}

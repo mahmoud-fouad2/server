@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Headphones, User, Share2, Loader2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { ticketApi } from '@/lib/api';
 
 export default function TicketsView({ addNotification }) {
@@ -104,7 +105,7 @@ export default function TicketsView({ addNotification }) {
           </Button>
 
           {loading ? (
-            <div className="flex justify-center py-8">
+            <div className="flex justify-center py-10 text-muted-foreground">
               <Loader2 className="animate-spin" />
             </div>
           ) : tickets.length === 0 ? (
@@ -122,27 +123,27 @@ export default function TicketsView({ addNotification }) {
                   <h4 className="font-bold text-sm truncate">
                     {ticket.subject}
                   </h4>
-                  <span
-                    className={`text-[10px] px-2 py-0.5 rounded-full ${
+                  <Badge
+                    type={
                       ticket.status === 'OPEN'
-                        ? 'bg-green-100 text-green-700'
+                        ? 'success'
                         : ticket.status === 'IN_PROGRESS'
-                          ? 'bg-blue-100 text-blue-700'
-                          : 'bg-gray-100 text-gray-700'
-                    }`}
+                          ? 'info'
+                          : 'warning'
+                    }
                   >
                     {ticket.status}
-                  </span>
+                  </Badge>
                 </div>
                 <div className="flex justify-between items-center text-xs text-muted-foreground">
                   <span>
                     {new Date(ticket.updatedAt).toLocaleDateString('ar-SA')}
                   </span>
-                  <span
-                    className={`font-medium ${ticket.priority === 'URGENT' ? 'text-red-500' : ''}`}
+                  <Badge
+                    type={ticket.priority === 'URGENT' ? 'warning' : 'brand'}
                   >
                     {ticket.priority}
-                  </span>
+                  </Badge>
                 </div>
               </div>
             ))
@@ -165,13 +166,13 @@ export default function TicketsView({ addNotification }) {
                     setNewTicket({ ...newTicket, subject: e.target.value })
                   }
                   placeholder="عنوان المشكلة"
-                  className="bg-white dark:bg-gray-800"
+                  className="bg-background"
                 />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">الأولوية</label>
                 <select
-                  className="flex h-10 w-full rounded-md border border-input bg-white dark:bg-gray-800 px-3 py-2 text-sm"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   value={newTicket.priority}
                   onChange={e =>
                     setNewTicket({ ...newTicket, priority: e.target.value })
@@ -187,7 +188,7 @@ export default function TicketsView({ addNotification }) {
                 <label className="text-sm font-medium">تفاصيل المشكلة</label>
                 <textarea
                   required
-                  className="flex min-h-[200px] w-full rounded-md border border-input bg-white dark:bg-gray-800 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex min-h-[200px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   value={newTicket.message}
                   onChange={e =>
                     setNewTicket({ ...newTicket, message: e.target.value })
@@ -221,18 +222,17 @@ export default function TicketsView({ addNotification }) {
                   </CardDescription>
                 </div>
                 <div className="flex gap-2">
-                  {/* Status Badge */}
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-bold ${
+                  <Badge
+                    type={
                       selectedTicket.status === 'OPEN'
-                        ? 'bg-green-100 text-green-700'
+                        ? 'success'
                         : selectedTicket.status === 'IN_PROGRESS'
-                          ? 'bg-blue-100 text-blue-700'
-                          : 'bg-gray-100 text-gray-700'
-                    }`}
+                          ? 'info'
+                          : 'warning'
+                    }
                   >
                     {selectedTicket.status}
-                  </span>
+                  </Badge>
                 </div>
               </div>
             </CardHeader>
@@ -243,7 +243,7 @@ export default function TicketsView({ addNotification }) {
                   className={`flex gap-4 ${msg.isAdmin ? 'flex-row-reverse' : ''}`}
                 >
                   <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm ${msg.isAdmin ? 'bg-brand-600 text-white' : 'bg-white dark:bg-gray-700'}`}
+                    className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm ${msg.isAdmin ? 'bg-brand-600 text-white' : 'bg-background border border-border'}`}
                   >
                     {msg.isAdmin ? (
                       <Headphones className="w-5 h-5" />
@@ -264,7 +264,7 @@ export default function TicketsView({ addNotification }) {
                       </span>
                     </div>
                     <div
-                      className={`p-4 rounded-xl shadow-sm text-sm leading-relaxed ${msg.isAdmin ? 'bg-brand-600 text-white rounded-tr-none' : 'bg-white dark:bg-gray-800 border border-border rounded-tl-none'}`}
+                      className={`p-4 rounded-xl shadow-sm text-sm leading-relaxed ${msg.isAdmin ? 'bg-brand-600 text-white rounded-tr-none' : 'bg-background border border-border rounded-tl-none'}`}
                     >
                       {msg.message}
                     </div>

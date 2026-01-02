@@ -97,7 +97,7 @@ export default function TeamView({ addNotification }) {
                     setNewMember({ ...newMember, name: e.target.value })
                   }
                   placeholder="اسم الموظف"
-                  className="bg-white dark:bg-gray-800"
+                  className="bg-background"
                 />
               </div>
               <div className="space-y-2">
@@ -110,7 +110,7 @@ export default function TeamView({ addNotification }) {
                     setNewMember({ ...newMember, email: e.target.value })
                   }
                   placeholder="email@example.com"
-                  className="bg-white dark:bg-gray-800"
+                  className="bg-background"
                 />
               </div>
               <div className="space-y-2">
@@ -123,7 +123,7 @@ export default function TeamView({ addNotification }) {
                     setNewMember({ ...newMember, password: e.target.value })
                   }
                   placeholder="******"
-                  className="bg-white dark:bg-gray-800"
+                  className="bg-background"
                 />
               </div>
               <Button type="submit" className="w-full" disabled={addingMember}>

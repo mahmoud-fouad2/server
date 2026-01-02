@@ -67,26 +67,22 @@ const StatusBadge = ({ status = 'info', children }) => {
 };
 
 const PlaceholderLine = ({ width = 'w-full' }) => (
-  <div className={`${width} h-3 rounded-full bg-gray-100 dark:bg-gray-800 animate-pulse`} />
+  <div className={`${width} h-3 rounded-full bg-muted/40 animate-pulse`} />
 );
 
 const InsightCard = ({ title, description, value, status, icon: Icon }) => (
-  <Card className="relative overflow-hidden border border-gray-100 shadow-sm dark:border-gray-800">
+  <Card className="relative overflow-hidden border border-border shadow-sm">
     <CardHeader className="flex flex-row items-start justify-between gap-3">
       <div>
-        <CardTitle className="text-base md:text-lg text-gray-900 dark:text-white">
-          {title}
-        </CardTitle>
-        <CardDescription className="text-sm text-gray-500 dark:text-gray-400">
-          {description}
-        </CardDescription>
+        <CardTitle className="text-base md:text-lg">{title}</CardTitle>
+        <CardDescription className="text-sm">{description}</CardDescription>
       </div>
       <span className="p-2 rounded-full bg-brand-50 text-brand-600 dark:bg-brand-900/20">
         <Icon className="w-4 h-4" />
       </span>
     </CardHeader>
     <CardContent className="flex items-center justify-between">
-      <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
+      <p className="text-2xl font-bold">{value}</p>
       <StatusBadge status={status} />
     </CardContent>
   </Card>
@@ -301,7 +297,7 @@ export default function SettingsView({ user, addNotification }) {
       </section>
 
       <section className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-        <Card className="border border-gray-100 dark:border-gray-800">
+        <Card className="border border-border">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
@@ -322,7 +318,7 @@ export default function SettingsView({ user, addNotification }) {
                 <Input
                   value={profileData.name}
                   onChange={e => handleProfileChange('name', e.target.value)}
-                  className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                  className="bg-background"
                 />
               )}
             </div>
@@ -332,7 +328,7 @@ export default function SettingsView({ user, addNotification }) {
                 type="email"
                 value={profileData.email}
                 onChange={e => handleProfileChange('email', e.target.value)}
-                className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                className="bg-background"
               />
             </div>
             <div className="space-y-2">
@@ -342,14 +338,14 @@ export default function SettingsView({ user, addNotification }) {
                 placeholder="اتركه فارغاً إذا لم ترد التغيير"
                 value={profileData.password}
                 onChange={e => handleProfileChange('password', e.target.value)}
-                className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                className="bg-background"
               />
-              <p className="text-xs text-gray-500">سيتم إرسال تنبيه أمني للفريق عند تغيير كلمة المرور.</p>
+              <p className="text-xs text-muted-foreground">سيتم إرسال تنبيه أمني للفريق عند تغيير كلمة المرور.</p>
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-            <div className="text-xs text-gray-500">
-              آخر حفظ: <span className="font-medium text-gray-700 dark:text-gray-300">{formatLastSaved(lastSavedAt)}</span>
+            <div className="text-xs text-muted-foreground">
+              آخر حفظ: <span className="font-medium text-foreground">{formatLastSaved(lastSavedAt)}</span>
             </div>
             <Button
               onClick={handleProfileUpdate}
@@ -372,7 +368,7 @@ export default function SettingsView({ user, addNotification }) {
           </CardFooter>
         </Card>
 
-        <Card className="border border-gray-100 dark:border-gray-800">
+        <Card className="border border-border">
           <CardHeader>
             <CardTitle>بيانات النشاط التجاري</CardTitle>
             <CardDescription>اضبط الهوية الصوتية وطريقة التفاعل الذكية</CardDescription>
@@ -386,14 +382,14 @@ export default function SettingsView({ user, addNotification }) {
                 <Input
                   value={businessData.name}
                   onChange={e => handleBusinessChange('name', e.target.value)}
-                  className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                  className="bg-background"
                 />
               )}
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">نوع النشاط</label>
               <select
-                className="flex h-11 w-full rounded-lg border border-input bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-white"
+                className="flex h-11 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 value={businessData.activityType}
                 onChange={e => handleBusinessChange('activityType', e.target.value)}
               >
@@ -477,11 +473,11 @@ export default function SettingsView({ user, addNotification }) {
                     className={`rounded-xl border px-4 py-3 text-right transition ${
                       businessData.botTone === preset.value
                         ? 'border-brand-500 bg-brand-50 text-brand-800 shadow-sm'
-                        : 'border-gray-200 hover:border-brand-200'
+                        : 'border-border hover:border-brand-200'
                     }`}
                   >
                     <div className="text-sm font-semibold">{preset.label}</div>
-                    <p className="text-xs text-gray-500">{preset.helper}</p>
+                    <p className="text-xs text-muted-foreground">{preset.helper}</p>
                   </button>
                 ))}
               </div>
@@ -491,7 +487,7 @@ export default function SettingsView({ user, addNotification }) {
       </section>
 
       <section className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-        <Card className="border border-gray-100 dark:border-gray-800">
+        <Card className="border border-border">
           <CardHeader className="flex flex-col gap-2">
             <CardTitle>تجربة العملاء والتنبيهات</CardTitle>
             <CardDescription>تحكم في سرعة الردود والتنبيهات الداخلية</CardDescription>
@@ -511,11 +507,11 @@ export default function SettingsView({ user, addNotification }) {
                     className={`rounded-2xl border px-4 py-3 text-right transition ${
                       experienceSettings.responseWindow === option.value
                         ? 'border-brand-500 bg-brand-50 text-brand-800 shadow-sm'
-                        : 'border-dashed border-gray-200 hover:border-brand-200'
+                        : 'border-dashed border-border hover:border-brand-200'
                     }`}
                   >
                     <div className="text-sm font-semibold">{option.label}</div>
-                    <p className="text-xs text-gray-500">{option.description}</p>
+                    <p className="text-xs text-muted-foreground">{option.description}</p>
                   </button>
                 ))}
               </div>
@@ -531,11 +527,11 @@ export default function SettingsView({ user, addNotification }) {
                   type="checkbox"
                   checked={experienceSettings.notifyTeam}
                   onChange={e => handleExperienceChange('notifyTeam', e.target.checked)}
-                  className="mt-1 h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+                  className="mt-1 h-4 w-4 rounded border-input text-brand-600 focus:ring-ring"
                 />
                 <div>
                   <p className="text-sm font-medium">إشعار الفريق عند وجود تذاكر عاجلة</p>
-                  <p className="text-xs text-gray-500">يعزز سرعة معالجة التذاكر الحرجة.</p>
+                  <p className="text-xs text-muted-foreground">يعزز سرعة معالجة التذاكر الحرجة.</p>
                 </div>
               </label>
               <label className="flex items-start gap-3">
@@ -543,18 +539,18 @@ export default function SettingsView({ user, addNotification }) {
                   type="checkbox"
                   checked={experienceSettings.escalateTickets}
                   onChange={e => handleExperienceChange('escalateTickets', e.target.checked)}
-                  className="mt-1 h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+                  className="mt-1 h-4 w-4 rounded border-input text-brand-600 focus:ring-ring"
                 />
                 <div>
                   <p className="text-sm font-medium">تصعيد تلقائي للتذاكر غير المجابة</p>
-                  <p className="text-xs text-gray-500">يرفع التذكرة للمسؤول إذا لم يتم الرد خلال 30 دقيقة.</p>
+                  <p className="text-xs text-muted-foreground">يرفع التذكرة للمسؤول إذا لم يتم الرد خلال 30 دقيقة.</p>
                 </div>
               </label>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border border-gray-100 dark:border-gray-800">
+        <Card className="border border-border">
           <CardHeader className="flex flex-col gap-3">
             <div className="flex items-center justify-between gap-3">
               <div>
@@ -572,7 +568,7 @@ export default function SettingsView({ user, addNotification }) {
                   placeholder="اسم المفتاح (مثلاً: تطبيق الجوال)"
                   value={newKeyName}
                   onChange={e => setNewKeyName(e.target.value)}
-                  className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                  className="bg-background"
                 />
                 <Button onClick={handleCreateKey} disabled={!newKeyName.trim() || creatingKey}>
                   {creatingKey ? <Loader2 className="w-4 h-4 animate-spin" /> : <Key className="w-4 h-4 ml-1" />}
@@ -589,7 +585,7 @@ export default function SettingsView({ user, addNotification }) {
                 <PlaceholderLine width="w-4/5" />
               </div>
             ) : apiKeys.length === 0 ? (
-              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 p-10 text-center text-gray-500">
+              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border p-10 text-center text-muted-foreground">
                 <AlertTriangle className="w-5 h-5 text-amber-500 mb-3" />
                 لا توجد مفاتيح مفعلة حالياً
                 <p className="text-xs mt-2">أنشئ مفتاحاً لربط الروبوت مع موقعك، تطبيقك أو نظام الـCRM لديك.</p>
@@ -599,16 +595,16 @@ export default function SettingsView({ user, addNotification }) {
                 {apiKeys.map(key => (
                   <div
                     key={key.id}
-                    className="flex flex-col gap-3 rounded-2xl border border-gray-200 bg-white/70 p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900"
+                    className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm"
                   >
                     <div className="flex flex-col gap-1">
                       <div className="flex items-center justify-between">
-                        <p className="text-sm font-semibold text-gray-900 dark:text-white">{key.name}</p>
+                        <p className="text-sm font-semibold text-foreground">{key.name}</p>
                         <StatusBadge status="info">{key.environment || 'إنتاج'}</StatusBadge>
                       </div>
-                      <p className="text-xs text-gray-500">{key.description || 'وصول قياسي للواجهة البرمجية'}</p>
+                      <p className="text-xs text-muted-foreground">{key.description || 'وصول قياسي للواجهة البرمجية'}</p>
                     </div>
-                    <div className="flex flex-wrap items-center gap-3 text-xs font-mono text-gray-600 dark:text-gray-300">
+                    <div className="flex flex-wrap items-center gap-3 text-xs font-mono text-muted-foreground">
                       <span className="truncate">{key.key}</span>
                       <div className="flex gap-2 ml-auto">
                         <Button

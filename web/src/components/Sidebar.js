@@ -36,14 +36,14 @@ const SidebarItem = ({
   <button
     onClick={() => setActiveTab(id)}
     data-tour={dataTour}
-    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 mb-1 group relative overflow-hidden ${
+    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 mb-1 group relative overflow-hidden focus-visible-ring ${
       activeTab === id
-        ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300 shadow-sm font-semibold'
-        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white'
+        ? 'bg-brand-600/10 text-brand-700 dark:bg-brand-500/10 dark:text-brand-300 shadow-sm font-semibold'
+        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white'
     }`}
   >
     {activeTab === id && (
-      <div className="absolute left-0 top-0 bottom-0 w-1 bg-brand-500 rounded-r-full"></div>
+      <div className="absolute right-0 top-0 bottom-0 w-1 bg-brand-500 rounded-l-full"></div>
     )}
     {Icon ? (
       <Icon
@@ -104,7 +104,7 @@ export default function Sidebar({ activeTab, setActiveTab, userRole }) {
   };
 
   return (
-    <aside className="hidden md:flex w-72 flex-shrink-0 !bg-white dark:!bg-cosmic-900 border-l border-gray-200 dark:border-white/10 flex-col h-screen sticky top-0 transition-colors duration-300 shadow-xl z-40 overflow-hidden">
+    <aside className="hidden md:flex w-72 flex-shrink-0 bg-white/95 dark:bg-cosmic-900/80 backdrop-blur-xl border-l border-gray-200/70 dark:border-white/10 flex-col h-screen sticky top-0 transition-colors duration-300 shadow-xl z-40 overflow-hidden">
       {/* Logo Area */}
       <div className="p-6 flex items-center justify-center border-b border-gray-100 dark:border-white/5 relative flex-shrink-0">
         <div className="absolute inset-0 bg-gradient-to-r from-brand-500/5 to-purple-500/5 animate-pulse"></div>
@@ -113,7 +113,7 @@ export default function Sidebar({ activeTab, setActiveTab, userRole }) {
 
       {/* Navigation Items */}
       <div className="flex-1 overflow-y-auto py-6 px-4 space-y-1 custom-scrollbar">
-        <div className="text-xs font-bold text-gray-400 dark:text-gray-500 px-4 mb-2 uppercase tracking-wider">
+        <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 px-4 mb-2 tracking-wide">
           {t('dashboard.overview')}
         </div>
         <SidebarItem
@@ -146,7 +146,7 @@ export default function Sidebar({ activeTab, setActiveTab, userRole }) {
             <div className="mt-6 mb-2 px-4">
               <div className="h-px bg-gray-100 dark:bg-white/5"></div>
             </div>
-            <div className="text-xs font-bold text-gray-400 dark:text-gray-500 px-4 mb-2 uppercase tracking-wider">
+            <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 px-4 mb-2 tracking-wide">
               {t('dashboard.channels')}
             </div>
             <SidebarItem
@@ -177,7 +177,7 @@ export default function Sidebar({ activeTab, setActiveTab, userRole }) {
         <div className="mt-6 mb-2 px-4">
           <div className="h-px bg-gray-100 dark:bg-white/5"></div>
         </div>
-        <div className="text-xs font-bold text-gray-400 dark:text-gray-500 px-4 mb-2 uppercase tracking-wider">
+        <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 px-4 mb-2 tracking-wide">
           {t('dashboard.team')}
         </div>
 
@@ -241,7 +241,7 @@ export default function Sidebar({ activeTab, setActiveTab, userRole }) {
       <div className="p-4 border-t border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-black/20 flex-shrink-0">
         <button
           onClick={toggleTheme}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-white dark:hover:bg-white/5 hover:shadow-sm transition-all mb-2"
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-white/5 hover:shadow-sm transition-all mb-2 focus-visible-ring"
         >
           {isDark ? <Sun size={20} /> : <Moon size={20} />}
           <span className="font-medium">
@@ -251,7 +251,7 @@ export default function Sidebar({ activeTab, setActiveTab, userRole }) {
 
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:shadow-sm transition-all group"
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:shadow-sm transition-all group focus-visible-ring"
         >
           <LogOut
             size={20}

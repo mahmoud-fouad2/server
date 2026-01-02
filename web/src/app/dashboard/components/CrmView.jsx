@@ -269,31 +269,37 @@ export default function CrmView({ user, addNotification }) {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500"></div>
+            <div className="rounded-lg border border-border bg-card p-6">
+              <div className="flex items-center justify-center gap-3 text-muted-foreground">
+                <div className="animate-spin rounded-full h-5 w-5 border-2 border-muted-foreground/30 border-t-brand-600" />
+                <p className="text-sm">جارِ تحميل البيانات…</p>
+              </div>
             </div>
           ) : leads.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              لا توجد بيانات عملاء
+            <div className="rounded-lg border border-border bg-card p-10 text-center">
+              <p className="text-sm text-muted-foreground">لا توجد بيانات عملاء</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-right p-4">الاسم</th>
-                    <th className="text-right p-4">البريد الإلكتروني</th>
-                    <th className="text-right p-4">الهاتف</th>
-                    <th className="text-right p-4">ملخص الطلب</th>
-                    <th className="text-right p-4">المصدر</th>
-                    <th className="text-right p-4">التاريخ</th>
+            <div className="overflow-x-auto border border-border rounded-lg bg-card">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/40">
+                  <tr className="border-b border-border">
+                    <th className="text-right p-3 font-semibold">الاسم</th>
+                    <th className="text-right p-3 font-semibold">البريد الإلكتروني</th>
+                    <th className="text-right p-3 font-semibold">الهاتف</th>
+                    <th className="text-right p-3 font-semibold">ملخص الطلب</th>
+                    <th className="text-right p-3 font-semibold">المصدر</th>
+                    <th className="text-right p-3 font-semibold">التاريخ</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {leads.map((lead) => (
-                    <tr key={lead.id} className="border-b hover:bg-muted/50">
-                      <td className="p-4 font-medium">{lead.name}</td>
-                      <td className="p-4">
+                  {leads.map((lead, idx) => (
+                    <tr
+                      key={lead.id}
+                      className={`border-b border-border/70 ${idx % 2 === 0 ? 'bg-transparent' : 'bg-muted/20'} hover:bg-muted/40 transition-colors`}
+                    >
+                      <td className="p-3 font-medium">{lead.name}</td>
+                      <td className="p-3">
                         {lead.email ? (
                           <div className="flex items-center gap-2">
                             <Mail className="w-4 h-4 text-muted-foreground" />
@@ -303,7 +309,7 @@ export default function CrmView({ user, addNotification }) {
                           <span className="text-muted-foreground">-</span>
                         )}
                       </td>
-                      <td className="p-4">
+                      <td className="p-3">
                         {lead.phone ? (
                           <div className="flex items-center gap-2">
                             <Phone className="w-4 h-4 text-muted-foreground" />
@@ -313,15 +319,15 @@ export default function CrmView({ user, addNotification }) {
                           <span className="text-muted-foreground">-</span>
                         )}
                       </td>
-                      <td className="p-4 max-w-xs truncate" title={lead.requestSummary}>
-                        {lead.requestSummary}
+                      <td className="p-3 max-w-xs truncate" title={lead.requestSummary || ''}>
+                        {lead.requestSummary || '-'}
                       </td>
-                      <td className="p-4">
+                      <td className="p-3">
                         <Badge variant="secondary">
                           {lead.source === 'PRE_CHAT_FORM' ? 'نموذج ما قبل المحادثة' : 'إدخال يدوي'}
                         </Badge>
                       </td>
-                      <td className="p-4">
+                      <td className="p-3">
                         {new Date(lead.createdAt).toLocaleDateString('ar-SA')}
                       </td>
                     </tr>
