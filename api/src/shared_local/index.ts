@@ -25,7 +25,7 @@ export const WidgetConfigSchema = z.object({
   botName: z.string().optional(),
   botIcon: z.string().optional(),
   borderRadius: z.string().default('18px'),
-  position: z.enum(['left', 'right']).default('right'),
+  position: z.enum(['left', 'right', 'bottom-left', 'bottom-right']).default('right'),
   preChatEnabled: z.boolean().default(true),
   preChatDescription: z.string().optional(),
   preChatFields: z.array(PreChatFieldSchema).optional(),

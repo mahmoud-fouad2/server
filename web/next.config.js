@@ -63,6 +63,9 @@ const nextConfig = {
 
   // Performance optimizations
   compress: true,
+  
+  // Disable font optimization to prevent preload warnings
+  optimizeFonts: false,
 
   // Compiler optimizations
   compiler: {
