@@ -81,6 +81,12 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
 
     next();
   } catch (error) {
-    return res.status(403).json({ error: 'Invalid or expired token' });
+    // Normalize JWT failures so clients can reliably handle session expiry.
+    // 401 is the correct status for authentication failures.
+    const err = error as { name?: string; message?: string };
+    if (err?.name === 'TokenExpiredError') {
+      return res.status(401).json({ error: 'jwt expired' });
+    }
+    return res.status(401).json({ error: 'Invalid token' });
   }
 };

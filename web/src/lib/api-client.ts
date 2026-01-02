@@ -143,8 +143,12 @@ export async function fetchAPI<T = unknown>(endpoint: string, options: FetchOpti
           (response.status === 403 && data && (
             data.error === 'Invalid token' || 
             data.message === 'Invalid token' ||
+            data.error === 'Invalid or expired token' ||
+            data.message === 'Invalid or expired token' ||
             data.error === 'No token provided' ||
             data.message === 'No token provided' ||
+            data.error === 'Access token required' ||
+            data.message === 'Access token required' ||
             data.error === 'jwt expired' ||
             data.message === 'jwt expired'
           ));
