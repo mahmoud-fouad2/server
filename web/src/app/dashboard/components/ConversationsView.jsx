@@ -49,16 +49,26 @@ export default function ConversationsView() {
         try {
           const profile = await authApi.profile();
           if (profile && profile.businessId) {
-            localSocket = io(API_CONFIG.BASE_URL.replace('/api', ''), { transports: ['websocket'] });
-
-            localSocket.on('connect', () => {
-              setSocketConnected(true);
-              localSocket.emit('join_room', `business_${profile.businessId}`);
+            localSocket = io(API_CONFIG.BASE_URL.replace('/api', ''), { 
+              transports: ['websocket'],
+              reconnection: true,
+              reconnectionDelay: 1000,
+              reconnectionAttempts: 5
             });
 
-            localSocket.on('disconnect', () => setSocketConnected(false));
+            localSocket.on('connect', () => {
+              if (mounted) {
+                setSocketConnected(true);
+                localSocket.emit('join_room', `business_${profile.businessId}`);
+              }
+            });
+
+            localSocket.on('disconnect', () => {
+              if (mounted) setSocketConnected(false);
+            });
 
             localSocket.on('handover_request', (data) => {
+              if (!mounted) return;
               playNotificationSound();
               if (Notification.permission === 'granted') {
                 new Notification('طلب مساعدة جديد', { body: data.message });
@@ -77,8 +87,8 @@ export default function ConversationsView() {
 
             if (mounted) setSocket(localSocket);
 
-            if (Notification.permission !== 'granted') {
-              Notification.requestPermission();
+            if (typeof Notification !== 'undefined' && Notification.permission !== 'granted') {
+              Notification.requestPermission().catch(() => {});
             }
           }
         } catch (e) {
@@ -93,7 +103,10 @@ export default function ConversationsView() {
 
     return () => {
       mounted = false;
-      if (localSocket) localSocket.disconnect();
+      if (localSocket) {
+        localSocket.removeAllListeners();
+        localSocket.disconnect();
+      }
     };
   }, []);
 

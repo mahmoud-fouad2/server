@@ -46,6 +46,11 @@ const POSITION_OPTIONS = [
 
 const BORDER_RADIUS_RANGE = { min: 0, max: 32 };
 
+// Helper to ensure controlled values
+const ensureControlledValue = (value, defaultValue = '') => {
+  return value ?? defaultValue;
+};
+
 import { Skeleton } from '@/components/ui/Skeleton';
 
 function WidgetSettingsSkeleton() {

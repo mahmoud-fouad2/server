@@ -24,8 +24,15 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { apiCall } from '@/lib/api-client';
+import { apiCall, resolveApiUrl } from '@/lib/api-client';
 import { API_CONFIG } from '@/lib/config';
+
+// Helper function for building API URLs
+const getApiUrl = (endpoint) => {
+  const base = API_CONFIG.BASE_URL || '';
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
+  return `${base}/${cleanEndpoint}`;
+};
 import {
   LineChart,
   Line,
@@ -55,11 +62,18 @@ function DonutSatisfaction({ data = [] }) {
   const maxPercent = total ? Math.round(((maxItem.value || 0) / total) * 100) : 0;
 
   if (!data || data.length === 0) {
-      return <div className="h-[200px] flex items-center justify-center text-muted-foreground">No data available</div>;
+      return (
+        <div className="h-[200px] flex items-center justify-center text-muted-foreground">
+          <div className="text-center space-y-2">
+            <PieChart className="w-12 h-12 mx-auto opacity-20" />
+            <p className="text-sm">لا توجد بيانات</p>
+          </div>
+        </div>
+      );
   }
 
   return (
-    <div className="w-full h-full flex items-center justify-center" style={{ minHeight: 300 }}>
+    <div className="w-full h-full flex items-center justify-center relative" style={{ minHeight: 300 }}>
       <SafeResponsiveContainer width="100%" height="100%" minHeight={300}>
         <RechartsPieChart>
           <defs>
@@ -82,18 +96,27 @@ function DonutSatisfaction({ data = [] }) {
             animationDuration={900}
           >
             {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={entry.color || entry.fill || '#8884d8'} stroke="#ffffff" strokeWidth={1} />
+              <Cell key={`cell-${index}`} fill={entry.color || entry.fill || '#8884d8'} stroke="#ffffff" strokeWidth={1} className="transition-all duration-300 hover:opacity-80" />
             ))}
           </Pie>
+          <Tooltip 
+            contentStyle={{ 
+              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              border: '1px solid #e5e7eb',
+              borderRadius: '8px',
+              padding: '8px 12px'
+            }}
+            itemStyle={{ color: '#374151' }}
+          />
         </RechartsPieChart>
       </SafeResponsiveContainer>
 
       {/* Center overlay: total and dominant slice */}
       <div className="absolute flex flex-col items-center pointer-events-none">
         <div className="text-xs text-muted-foreground">ردود</div>
-        <div className="text-2xl font-semibold">{total}</div>
-        {maxItem && (
-          <div className="text-sm text-muted-foreground mt-1">{maxItem.name} · {maxPercent}%</div>
+        <div className="text-2xl sm:text-3xl font-bold">{total}</div>
+        {maxItem && maxItem.name && (
+          <div className="text-xs sm:text-sm text-muted-foreground mt-1">{maxItem.name} · {maxPercent}%</div>
         )}
       </div>
     </div>
@@ -168,9 +191,14 @@ export default function StatsOverview({
     };
 
     const fetchRealTimeStats = async () => {
+      if (cancelled) return;
+      
       try {
         const resp = await apiCall('api/analytics/realtime');
         const d = resp?.data || resp || {};
+        
+        if (cancelled) return;
+        
         setRealTimeStats({
           activeUsers: d.activeUsers || 0,
           responseTime: d.responseTime || 0,
@@ -178,6 +206,8 @@ export default function StatsOverview({
         });
         failureCount = 0;
       } catch (e) {
+        if (cancelled) return;
+        
         failureCount += 1;
         // Avoid console spam when the backend is waking up or network is flaky.
         if (failureCount === 1 || failureCount % 4 === 0) {
@@ -185,15 +215,21 @@ export default function StatsOverview({
         }
       }
 
+      if (cancelled) return;
+      
       // Exponential backoff on failures (15s -> 30s -> 60s -> 120s max)
       const nextMs = Math.min(120000, 15000 * Math.pow(2, Math.max(0, failureCount - 1)));
       schedule(nextMs);
     };
 
     fetchRealTimeStats();
+    
     return () => {
       cancelled = true;
-      if (timer) clearTimeout(timer);
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
     };
   }, []);
 

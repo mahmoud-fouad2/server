@@ -245,13 +245,13 @@ function DashboardContent() {
       <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto relative pt-16 md:pt-8 min-h-screen">
         <div className="flex-1 flex flex-col max-w-7xl mx-auto w-full">
           {/* Header */}
-          <header className="glass-panel flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8 p-4 sm:p-5 rounded-xl">
-            <div className="flex items-center gap-3 w-full sm:w-auto">
+          <header className="glass-panel flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8 p-4 sm:p-6 rounded-xl shadow-sm transition-all duration-300 hover:shadow-md">
+            <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
               <div className="md:hidden">
                 <FaheemAnimatedLogo size="small" showText={true} />
               </div>
               <div className="flex-1">
-                <h1 className="text-2xl sm:text-3xl font-bold mb-1 flex items-center gap-2">
+                <h1 className="text-2xl sm:text-3xl font-bold mb-1 flex items-center gap-2 tracking-tight">
                   <span className="hidden md:inline">لوحة التحكم</span>
                   <span className="md:hidden">فهملي</span>
                 </h1>
@@ -261,14 +261,15 @@ function DashboardContent() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
+            <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-between sm:justify-end flex-wrap">
               <div className="flex items-center gap-2">
                 <Button
                   size="sm"
                   variant="ghost"
                   onClick={handleClearCache}
                   disabled={cacheLoadingState.clearing}
-                  className="text-xs sm:text-sm"
+                  className="text-xs sm:text-sm transition-all duration-200 hover:scale-105"
+                  title="مسح الكاش"
                 >
                   {cacheLoadingState.clearing ? (
                     <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
@@ -283,7 +284,8 @@ function DashboardContent() {
                   variant="outline"
                   onClick={handleReindex}
                   disabled={cacheLoadingState.reindexing}
-                  className="text-xs sm:text-sm"
+                  className="text-xs sm:text-sm transition-all duration-200 hover:scale-105"
+                  title="إعادة الفهرسة"
                 >
                   {cacheLoadingState.reindexing ? (
                     <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />

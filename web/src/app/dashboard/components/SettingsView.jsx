@@ -88,7 +88,7 @@ const InsightCard = ({ title, description, value, status, icon: Icon }) => (
 );
 
 export default function SettingsView({ user, addNotification }) {
-  const [profileData, setProfileData] = useState({ name: '', email: '', password: '' });
+  const [profileData, setProfileData] = useState({ name: '', email: '' });
   const [businessData, setBusinessData] = useState({ name: '', activityType: '', botTone: '' });
   const [experienceSettings, setExperienceSettings] = useState(DEFAULT_EXPERIENCE);
   const [savingProfile, setSavingProfile] = useState(false);
