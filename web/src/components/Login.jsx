@@ -11,6 +11,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
+import { api } from '@/lib/api-client';
 
 const loginSchema = z.object({
   email: z.string().email('البريد الإلكتروني غير صالح'),
@@ -19,7 +20,7 @@ const loginSchema = z.object({
 
 export const Login = () => {
   const { t } = useTranslation();
-  const { login } = useAuth();
+  const loginAction = useAuth((state) => state.login);
   const router = useRouter();
   const [isVerified, setIsVerified] = useState(false);
   const [sessionToast, setSessionToast] = useState('');
@@ -67,7 +68,13 @@ export const Login = () => {
     setGlobalError('');
     
     try {
-      await login(data.email, data.password);
+      // Call API to login
+      const response = await api.auth.login({ email: data.email, password: data.password });
+      
+      // Store token and user data
+      loginAction(response.user, response.token);
+      
+      // Redirect to dashboard
       router.push('/dashboard');
     } catch (err) {
       setGlobalError(err.message || t('auth.loginFailed', 'فشل تسجيل الدخول'));

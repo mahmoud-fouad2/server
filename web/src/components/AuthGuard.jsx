@@ -3,30 +3,31 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function AuthGuard({ children }) {
   const router = useRouter();
-  const [authorized, setAuthorized] = useState(false);
+  const [checking, setChecking] = useState(true);
+  const { token, isAuthenticated } = useAuth();
 
   useEffect(() => {
-    // Check for token and user data
-    const token = localStorage.getItem('token');
-    const user = localStorage.getItem('user');
-
-    if (!token || !user) {
+    // Check authentication status
+    if (!token || !isAuthenticated) {
       // Redirect to login if not authenticated
-      router.push('/login');
+      router.push('/login?reason=unauthorized');
     } else {
-      // Verify token validity if needed (optional, but good practice)
-      // For now, we just check existence
-      setAuthorized(true);
+      // Verify token validity by checking if it exists
+      setChecking(false);
     }
-  }, [router]);
+  }, [token, isAuthenticated, router]);
 
-  if (!authorized) {
+  if (checking) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-10 h-10 animate-spin text-brand-500" />
+        <div className="text-center space-y-4">
+          <Loader2 className="w-10 h-10 animate-spin text-brand-500 mx-auto" />
+          <p className="text-sm text-muted-foreground">جاري التحقق من الجلسة...</p>
+        </div>
       </div>
     );
   }
