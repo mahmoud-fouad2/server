@@ -1,6 +1,7 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import logger from '../utils/logger.js';
+import { URL } from 'url';
 
 interface CrawlResult {
   url: string;
@@ -85,16 +86,19 @@ class WebCrawlerService {
 
   async crawlWebsite(
     startUrl: string,
-    maxPages: number = 10
+    options?: { maxDepth?: number; maxPages?: number }
   ): Promise<CrawlResult[]> {
     const results: CrawlResult[] = [];
     const visited = new Set<string>();
     const queue: { url: string; depth: number }[] = [{ url: startUrl, depth: 0 }];
 
-    while (queue.length > 0 && results.length < maxPages) {
+    const effectiveMaxDepth = options?.maxDepth ?? this.maxDepth;
+    const effectiveMaxPages = options?.maxPages ?? this.maxPages;
+
+    while (queue.length > 0 && results.length < effectiveMaxPages) {
       const { url, depth } = queue.shift()!;
 
-      if (visited.has(url) || depth > this.maxDepth) {
+      if (visited.has(url) || depth > effectiveMaxDepth) {
         continue;
       }
 
@@ -106,7 +110,7 @@ class WebCrawlerService {
         results.push(result);
 
         // Add child links to queue
-        if (depth < this.maxDepth) {
+        if (depth < effectiveMaxDepth) {
           result.links.forEach((link) => {
             if (!visited.has(link) && this.isSameDomain(link, startUrl)) {
               queue.push({ url: link, depth: depth + 1 });
@@ -148,6 +152,30 @@ class WebCrawlerService {
 
     // Skip anchors
     if (href.startsWith('#')) {
+      return false;
+    }
+
+    // SSRF Protection: Block private IPs and localhost
+    try {
+      const fullUrl = this.normalizeUrl(href, baseUrl);
+      const parsed = new URL(fullUrl);
+      const hostname = parsed.hostname.toLowerCase();
+
+      // Block localhost and private IP ranges
+      if (
+        hostname === 'localhost' ||
+        hostname === '127.0.0.1' ||
+        hostname === '::1' ||
+        hostname.startsWith('192.168.') ||
+        hostname.startsWith('10.') ||
+        (hostname.startsWith('172.') && parseInt(hostname.split('.')[1]) >= 16 && parseInt(hostname.split('.')[1]) <= 31) ||
+        hostname.endsWith('.local') ||
+        hostname.endsWith('.internal')
+      ) {
+        logger.warn(`Blocked SSRF attempt to: ${hostname}`);
+        return false;
+      }
+    } catch (e) {
       return false;
     }
 

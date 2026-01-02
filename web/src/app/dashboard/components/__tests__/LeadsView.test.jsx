@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import LeadsView from '../LeadsView';
-import * as api from '@/lib/api';
+import * as api from '@/lib/api-client';
 
 jest.mock('@/lib/api');
 

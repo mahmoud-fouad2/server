@@ -128,4 +128,42 @@ export class AdminController {
       res.status(500).json({ error: 'Failed to fetch audit logs' });
     }
   }
+
+  // --- Stubs for missing endpoints to prevent UI crashes ---
+
+  async getIntegrations(req: AuthRequest, res: Response) {
+    res.json({ data: [], count: 0 });
+  }
+
+  async getMedia(req: AuthRequest, res: Response) {
+    res.json({ data: [], count: 0 });
+  }
+
+  async getPayments(req: AuthRequest, res: Response) {
+    res.json({ data: [], count: 0 });
+  }
+
+  async getSEO(req: AuthRequest, res: Response) {
+    res.json({ data: {} });
+  }
+
+  async getSystemSettings(req: AuthRequest, res: Response) {
+    res.json({ data: {} });
+  }
+
+  async getAIModels(req: AuthRequest, res: Response) {
+    res.json({ data: [], count: 0 });
+  }
+
+  async getLogs(req: AuthRequest, res: Response) {
+    res.json({ data: [], count: 0 });
+  }
+
+  async getMonitoring(req: AuthRequest, res: Response) {
+    res.json({ data: {} });
+  }
+
+  async getInvoices(req: AuthRequest, res: Response) {
+    res.json({ data: [], count: 0 });
+  }
 }

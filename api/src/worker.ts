@@ -64,12 +64,15 @@ queueService.createWorker('emails', async (job) => {
 
 // Worker: Web Crawling
 queueService.createWorker('crawling', async (job) => {
-  const { url, businessId, maxDepth } = job.data;
+  const { url, businessId, maxDepth, maxPages } = job.data;
   
   logger.info(`Crawling website: ${url}`);
   
   try {
-    const results = await webCrawlerService.crawlWebsite(url, maxDepth || 3);
+    const results = await webCrawlerService.crawlWebsite(url, {
+      maxDepth: typeof maxDepth === 'number' ? maxDepth : 3,
+      maxPages: typeof maxPages === 'number' ? maxPages : 50,
+    });
     
     // Store crawled content in knowledge base
     for (const page of results) {

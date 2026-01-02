@@ -43,6 +43,7 @@ import PlaygroundView from './components/PlaygroundView';
 import VisitorAnalytics from './components/VisitorAnalytics';
 import CrmView from './components/CrmView';
 import LeadsView from './components/LeadsView';
+import ImprovementView from './components/ImprovementView';
 import DashboardTour, { useDashboardTour } from './components/DashboardTour';
 
 interface Notification {
@@ -148,30 +149,32 @@ function DashboardContent() {
       </div>
 
       {/* Desktop Sidebar */}
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} userRole={user?.role} />
+      <div className="hidden md:block w-72 flex-shrink-0">
+        <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} userRole={user?.role} />
+      </div>
 
       {/* Mobile Navigation */}
       <MobileNav activeTab={activeTab} setActiveTab={setActiveTab} userRole={user?.role} />
 
       {/* Notifications */}
-      <div className="fixed top-4 left-4 z-[100] flex flex-col gap-2 max-w-[90vw] sm:max-w-md pointer-events-none">
+      <div className="fixed top-4 right-4 z-[9999] flex flex-col gap-4 max-w-[90vw] sm:max-w-md pointer-events-none">
         <AnimatePresence>
           {notifications.map((n) => (
             <motion.div
               key={n.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className={`pointer-events-auto p-3 sm:p-4 rounded-lg shadow-xl text-white flex items-center gap-2 w-full border border-white/10 ${
-                n.type === 'success' ? '!bg-green-600' : '!bg-red-600'
+              initial={{ opacity: 0, x: 20, scale: 0.95 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, x: 20, scale: 0.95 }}
+              className={`pointer-events-auto p-4 rounded-xl shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1),0_10px_10px_-5px_rgba(0,0,0,0.04)] flex items-center gap-3 w-full border border-gray-100 dark:border-white/10 ${
+                isDark ? 'bg-[#1A1A1A] text-white' : 'bg-white text-gray-900'
               }`}
             >
               {n.type === 'success' ? (
-                <Check className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
               ) : (
-                <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0" />
               )}
-              <span className="text-sm sm:text-base">{n.message}</span>
+              <span className="text-sm font-medium">{n.message}</span>
             </motion.div>
           ))}
         </AnimatePresence>
@@ -371,6 +374,8 @@ function DashboardContent() {
             )}
 
             {activeTab === 'leads' && <LeadsView key="leads" />}
+
+            {activeTab === 'improvement' && <ImprovementView key="improvement" />}
 
             {activeTab === 'subscription' && (
               <motion.div

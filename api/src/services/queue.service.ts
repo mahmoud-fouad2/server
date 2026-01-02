@@ -15,28 +15,15 @@ class QueueService {
 
   constructor() {
     const redisClient = cacheService.getRedisClient();
-    
-    if (redisClient) {
-      this.connection = {
-        host: process.env.REDIS_HOST || 'localhost',
-        port: parseInt(process.env.REDIS_PORT || '6379'),
-        password: process.env.REDIS_PASSWORD,
-        maxRetriesPerRequest: 1,
-        retryStrategy: (times: number) => {
-          const host = process.env.REDIS_HOST || 'localhost';
-          if (host === 'localhost' || host === '127.0.0.1') {
-             // Fail fast on localhost to avoid log spam
-             return null;
-          }
-          if (times > 3) {
-            return null;
-          }
-          return Math.min(times * 1000, 3000);
-        },
-      };
-    } else {
+
+    if (!redisClient) {
       logger.warn('Redis not available, queue system will not function');
+      return;
     }
+
+    // BullMQ supports passing an ioredis instance for `connection`.
+    // This ensures REDIS_URL (and any TLS/cloud config) is respected.
+    this.connection = redisClient;
   }
 
   createQueue(name: string): Queue | null {

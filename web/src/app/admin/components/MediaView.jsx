@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { adminApi } from '@/lib/api';
+import { adminApi } from '@/lib/api-client';
 import { Loader2 } from 'lucide-react';
 
 export default function MediaView() {

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Search, Briefcase, Edit, Trash2, Loader2 } from 'lucide-react'
-import { adminApi } from '@/lib/api'
+import { adminApi } from '@/lib/api-client'
 
 export default function BusinessesView() {
   const router = useRouter()

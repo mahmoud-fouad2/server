@@ -21,7 +21,7 @@ import {
   Ruler,
   AlertCircle,
 } from 'lucide-react';
-import { widgetApi, businessApi } from '@/lib/api';
+import { widgetApi, businessApi } from '@/lib/api-client';
 import { BRAND } from '@/constants';
 
 const INITIAL_WIDGET_CONFIG = {

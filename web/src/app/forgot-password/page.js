@@ -7,7 +7,7 @@ import { Button, Input } from '../../components/ui/Components';
 import { Mail, ArrowLeft, CheckCircle, Loader2, Home } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import FaheemAnimatedLogo from '../../components/FaheemAnimatedLogo';
-import { authApi } from '@/lib/api';
+import { authApi } from '@/lib/api-client';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');

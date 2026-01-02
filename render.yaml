@@ -14,10 +14,38 @@ services:
         fromDatabase:
           name: fahimo-db
           property: connectionString
+      - key: DATABASE_URL_EXTERNAL
+        fromDatabase:
+          name: fahimo-db
+          property: connectionString
       - key: JWT_SECRET
         generateValue: true
+      - key: REDIS_URL
+        sync: false
       - key: CORS_ORIGINS
         value: "*"
+
+  # Background Worker Service (BullMQ + crawling + embeddings)
+  - type: worker
+    name: fahimo-worker
+    env: node
+    rootDir: api
+    buildCommand: npm install && npm run build
+    startCommand: npm run worker
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: fahimo-db
+          property: connectionString
+      - key: DATABASE_URL_EXTERNAL
+        fromDatabase:
+          name: fahimo-db
+          property: connectionString
+      - key: REDIS_URL
+        sync: false
 
   # Frontend Web Service
   - type: web

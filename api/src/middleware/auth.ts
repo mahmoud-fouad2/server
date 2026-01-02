@@ -42,17 +42,21 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
     const decoded: any = jwt.verify(token, secret);
 
     // Verify user still exists and is active
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.id },
-      select: { 
-        id: true, 
-        email: true, 
-        role: true, 
-        // currentBusinessId: true, // Temporarily disabled
-        // roles: true,
-        businesses: { select: { id: true } } 
-      }
-    });
+    let user;
+    try {
+      user = await prisma.user.findUnique({
+        where: { id: decoded.id },
+        select: { 
+          id: true, 
+          email: true, 
+          role: true, 
+          businesses: { select: { id: true } } 
+        }
+      });
+    } catch (dbError) {
+      console.error('Database Connection Error in Auth Middleware:', dbError);
+      return res.status(503).json({ error: 'Service Unavailable: Database connection failed' });
+    }
 
     if (!user) {
       return res.status(403).json({ error: 'User not found' });

@@ -13,7 +13,7 @@ jest.mock('@/lib/api', () => ({
 }))
 
 import BusinessesView from '../BusinessesView'
-import { adminApi } from '@/lib/api'
+import { adminApi } from '@/lib/api-client'
 
 describe('BusinessesView', () => {
   beforeEach(() => jest.clearAllMocks())

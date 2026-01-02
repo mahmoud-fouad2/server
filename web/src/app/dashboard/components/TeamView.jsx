@@ -10,7 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { User, Trash2, Loader2 } from 'lucide-react';
-import { teamApi } from '@/lib/api';
+import { teamApi } from '@/lib/api-client';
 
 export default function TeamView({ addNotification }) {
   const [teamMembers, setTeamMembers] = useState([]);

@@ -40,7 +40,7 @@ import {
   Sparkles,
   Zap,
 } from 'lucide-react';
-import { authApi, widgetApi, knowledgeApi, businessApi } from '@/lib/api';
+import { authApi, widgetApi, knowledgeApi, businessApi } from '@/lib/api-client';
 import { API_CONFIG } from '@/lib/config';
 import { convertCurrency } from '@/constants';
 const Confetti = dynamic(() => import('react-confetti'), { ssr: false });

@@ -17,7 +17,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { visitorApi, analyticsApi } from '@/lib/api';
+import { visitorApi, analyticsApi } from '@/lib/api-client';
 
 function AnalyticsSkeleton() {
   return (

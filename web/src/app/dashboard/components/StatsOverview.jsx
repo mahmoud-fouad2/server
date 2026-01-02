@@ -24,7 +24,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { apiCall } from '@/lib/api';
+import { apiCall } from '@/lib/api-client';
 import { API_CONFIG } from '@/lib/config';
 import {
   LineChart,
@@ -244,6 +244,10 @@ export default function StatsOverview({
         }
       } catch (e) {
         console.warn('Failed to fetch analytics:', e.message || e);
+        // Graceful degradation: show empty state instead of crashing
+        setConversationDataState([]);
+        setResponseTimeState([]);
+        setSatisfactionState([]);
       }
     };
 
@@ -567,11 +571,7 @@ add_action('wp_footer', 'add_fahimo_widget');`;
           </CardTitle>
           <CardDescription>توزيع مستويات رضا العملاء</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="h-[300px] flex items-center justify-center" style={{ height: 300 }}>
-              <DonutSatisfaction data={satisfactionState && satisfactionState.length ? satisfactionState : satisfactionData} />
-          </div>
-        </CardContent>
+
           <CardContent>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div className="h-[300px]" style={{ height: 300 }}>

@@ -16,7 +16,7 @@ import {
   Check,
   Loader2,
 } from 'lucide-react';
-import { businessApi, telegramApi } from '@/lib/api';
+import { businessApi, telegramApi } from '@/lib/api-client';
 
 export default function ChannelsView({ addNotification }) {
   const [telegramToken, setTelegramToken] = useState('');

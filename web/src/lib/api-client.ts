@@ -61,7 +61,15 @@ interface FetchOptions extends RequestInit {
   params?: Record<string, string | number | boolean | undefined>;
 }
 
+let isRedirecting = false;
+
 export async function fetchAPI<T = unknown>(endpoint: string, options: FetchOptions = {}): Promise<T> {
+  // If we are already redirecting to login, don't fire new requests.
+  // Return a promise that never resolves to halt execution.
+  if (isRedirecting) {
+    return new Promise(() => {});
+  }
+
   const {
     retries = 1, // Reduced default retries for faster feedback
     retryDelay = 1000,
@@ -133,6 +141,13 @@ export async function fetchAPI<T = unknown>(endpoint: string, options: FetchOpti
         signal: controller.signal,
       }).finally(() => clearTimeout(timeoutHandle));
 
+      // Handle 503 - Service Unavailable (DB Down)
+      if (response.status === 503) {
+        console.error('Service Unavailable: Database might be down');
+        // Optionally trigger a global "Maintenance Mode" state here
+        throw new Error('Service Unavailable');
+      }
+
       // Handle 401/403 - Unauthorized
       if (response.status === 401 || response.status === 403) {
         const data = await response.json().catch(() => null);
@@ -156,6 +171,9 @@ export async function fetchAPI<T = unknown>(endpoint: string, options: FetchOpti
         // Clear token and redirect on authentication failures
         if (isAuthError) {
           if (typeof window !== 'undefined') {
+            // Prevent multiple redirects
+            if (isRedirecting) return new Promise(() => {}) as unknown as T;
+            
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             // Only redirect if not already on login/register/public pages
@@ -164,7 +182,11 @@ export async function fetchAPI<T = unknown>(endpoint: string, options: FetchOpti
             const isPublicPath = publicPaths.some(path => currentPath.startsWith(path));
             
             if (!isPublicPath) {
+              isRedirecting = true;
               window.location.href = '/login?reason=session_expired';
+              // Silence Redirect: Return a promise that never resolves to prevent
+              // downstream errors while the page is reloading.
+              return new Promise(() => {}) as unknown as T;
             }
           }
           throw new Error('Unauthorized');
@@ -272,7 +294,7 @@ export const api = {
   },
   chat: {
     conversations: (params?: Record<string, string | number | boolean>) => fetchAPI('/chat/conversations', { params }),
-    messages: (conversationId: string) => fetchAPI(`/chat/messages/${conversationId}`),
+    messages: (conversationId: string) => fetchAPI(`/chat/conversations/${conversationId}/messages`),
     send: (data: Record<string, unknown>) => fetchAPI('/chat/send', { method: 'POST', body: JSON.stringify(data) }),
     reply: (conversationId: string, message: string) => fetchAPI('/chat/reply', { method: 'POST', body: JSON.stringify({ conversationId, message }) }),
     handoverRequests: (status?: string) => fetchAPI('/chat/handover-requests', { params: { status } }),
@@ -442,6 +464,7 @@ export const improvementApi = api.improvement;
 export const customAIModelApi = api.customAIModel;
 export const analyticsApi = api.analytics;
 export const adminApi = api.admin;
+export const telegramApi = api.integration;
 
 export const apiCall = fetchAPI;
 

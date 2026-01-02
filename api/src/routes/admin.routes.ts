@@ -28,4 +28,15 @@ router.post('/businesses/:id/quota', adminController.updateQuota);
 // Audit Logs
 router.get('/audit-logs', adminController.getAuditLogs);
 
+// Stubs for missing endpoints
+router.get('/integrations', adminController.getIntegrations);
+router.get('/media', adminController.getMedia);
+router.get('/payments', adminController.getPayments);
+router.get('/seo', adminController.getSEO);
+router.get('/system/settings', adminController.getSystemSettings);
+router.get('/ai-models', adminController.getAIModels);
+router.get('/logs', adminController.getLogs);
+router.get('/monitoring', adminController.getMonitoring);
+router.get('/payments/invoices', adminController.getInvoices);
+
 export default router;

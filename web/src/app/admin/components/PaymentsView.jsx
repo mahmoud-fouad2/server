@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { adminApi } from '@/lib/api'
+import { adminApi } from '@/lib/api-client'
 import { useAppStore } from '@/lib/store'
 import GatewayEditForm from './GatewayEditForm'
 

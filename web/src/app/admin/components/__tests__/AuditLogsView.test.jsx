@@ -9,7 +9,7 @@ jest.mock('@/lib/api', () => ({
 }))
 
 import AuditLogsView from '../AuditLogsView'
-import { adminApi } from '@/lib/api'
+import { adminApi } from '@/lib/api-client'
 
 describe('AuditLogsView', () => {
   beforeEach(() => {

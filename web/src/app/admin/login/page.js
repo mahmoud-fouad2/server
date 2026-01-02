@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/card';
 import { Lock, ShieldCheck, Loader2 } from 'lucide-react';
 import FaheemAnimatedLogo from '@/components/FaheemAnimatedLogo';
-import { authApi } from '@/lib/api';
+import { authApi } from '@/lib/api-client';
 import { ERROR_MESSAGES } from '@/lib/error-messages';
 
 export default function AdminLogin() {

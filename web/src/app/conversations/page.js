@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Sidebar from '@/components/Sidebar';
 import { Card, CardContent } from '@/components/ui/card';
 import { MessageSquare, User, Clock } from 'lucide-react';
-import { businessApi } from '@/lib/api';
+import { businessApi } from '@/lib/api-client';
 
 export default function ConversationsPage() {
   const [conversations, setConversations] = useState([]);

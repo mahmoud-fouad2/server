@@ -20,6 +20,7 @@ const upload = multer({ dest: 'uploads/' });
 router.post('/upload', upload.single('file'), knowledgeController.uploadFile.bind(knowledgeController));
 
 router.post('/reindex', knowledgeController.reindex.bind(knowledgeController));
+router.put('/:id', knowledgeController.updateEntry.bind(knowledgeController));
 router.delete('/:id', knowledgeController.deleteEntry.bind(knowledgeController));
 
 export default router;

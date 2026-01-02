@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Sidebar from '@/components/Sidebar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Upload, Check, Loader2 } from 'lucide-react';
-import { knowledgeApi } from '@/lib/api';
+import { knowledgeApi } from '@/lib/api-client';
 
 export default function KnowledgePage() {
   const [uploading, setUploading] = useState(false);

@@ -16,6 +16,7 @@
     "db:studio": "prisma studio",
     "db:seed": "ts-node src/scripts/seed.ts",
     "seed:prod": "node dist/scripts/seed.js",
+    "seed:faheemly:prod": "node dist/scripts/seed-faheemly-crawl.js",
     "lint": "eslint src --ext .ts",
     "format": "prettier --write \"src/**/*.ts\"",
     "test": "jest",

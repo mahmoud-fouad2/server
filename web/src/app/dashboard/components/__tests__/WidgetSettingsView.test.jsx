@@ -14,7 +14,7 @@ jest.mock('@/lib/api', () => ({
 }))
 
 import WidgetSettingsView from '../WidgetSettingsView'
-import { widgetApi } from '@/lib/api'
+import { widgetApi } from '@/lib/api-client'
 
 describe('WidgetSettingsView', () => {
   const defaultProps = {

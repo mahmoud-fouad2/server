@@ -12,5 +12,6 @@ router.get('/', ticketController.getAll);
 router.get('/:id', ticketController.getOne);
 router.post('/:id/messages', ticketController.addMessage);
 router.patch('/:id/status', ticketController.updateStatus);
+router.post('/:id/mark-read', ticketController.markRead);
 
 export default router;

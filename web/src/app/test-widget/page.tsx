@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { notFound } from 'next/navigation';
 
 declare global {
   interface Window {
@@ -9,6 +10,10 @@ declare global {
 }
 
 export default function TestWidgetPage() {
+  if (process.env.NODE_ENV !== 'development') {
+    notFound();
+  }
+
   const [businessId, setBusinessId] = useState('');
   const [isLoaded, setIsLoaded] = useState(false);
 

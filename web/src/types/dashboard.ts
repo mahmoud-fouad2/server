@@ -249,4 +249,5 @@ export type DashboardTab =
   | 'crm'
   | 'leads'
   | 'settings'
-  | 'subscription';
+  | 'subscription'
+  | 'improvement';

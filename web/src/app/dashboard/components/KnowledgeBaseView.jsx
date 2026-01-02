@@ -16,7 +16,7 @@ import {
   Edit2,
   X,
 } from 'lucide-react';
-import { knowledgeApi } from '@/lib/api';
+import { knowledgeApi } from '@/lib/api-client';
 
 export default function KnowledgeBaseView({ addNotification }) {
   const [kbList, setKbList] = useState([]);
@@ -50,6 +50,10 @@ export default function KnowledgeBaseView({ addNotification }) {
       setKbList(normalized);
     } catch (err) {
       console.error(err);
+      // If service is unavailable (503), show a specific error
+      if (err.message === 'Service Unavailable') {
+        addNotification('قاعدة المعرفة غير متاحة حالياً (مشكلة في الاتصال بقاعدة البيانات)', 'error');
+      }
     } finally {
       setLoading(false);
     }

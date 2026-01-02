@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import useTheme from '@/lib/theme';
-import { chatApi } from '@/lib/api';
+import { chatApi } from '@/lib/api-client';
 import Link from 'next/link';
 import { Button } from './ui/Components';
 import {
@@ -43,8 +43,6 @@ import {
   REGIONAL_CONTENT,
   COMPARISON_DATA,
 } from '../constants';
-import { DemoChatWindow } from './DemoChatWindow';
-import DemoChat from './DemoChat';
 import FaheemAnimatedLogo from './FaheemAnimatedLogo';
 import { motion, AnimatePresence } from 'framer-motion';
 import LoadingScreen from './LoadingScreen';

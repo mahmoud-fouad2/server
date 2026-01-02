@@ -8,29 +8,156 @@ import { cacheService } from './cache.service.js';
 import logger from '../utils/logger.js';
 
 export class KnowledgeService {
+
+  private async checkDatabaseHealth() {
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+      return true;
+    } catch (error) {
+      logger.error('Database Health Check Failed:', error);
+      return false;
+    }
+  }
+
+  private async createSingleChunk(params: {
+    businessId: string;
+    knowledgeBaseId: string;
+    content: string;
+    metadata?: any;
+  }) {
+    const chunk = await prisma.knowledgeChunk.create({
+      data: {
+        businessId: params.businessId,
+        knowledgeBaseId: params.knowledgeBaseId,
+        content: params.content,
+        metadata: params.metadata ? JSON.stringify(params.metadata) : undefined,
+      },
+    });
+    return chunk;
+  }
+
+  private async indexChunkNow(params: {
+    chunkId: string;
+    content: string;
+    businessId: string;
+    knowledgeBaseId: string;
+    metadata?: any;
+  }) {
+    await vectorSearchService.indexKnowledgeChunk(
+      params.chunkId,
+      params.content,
+      params.businessId,
+      params.knowledgeBaseId,
+      params.metadata || {}
+    );
+  }
   
   async reindex(businessId: string) {
-    const entries = await prisma.knowledgeBase.findMany({
+    if (!(await this.checkDatabaseHealth())) {
+      throw new Error('Database unavailable, cannot reindex');
+    }
+
+    const chunks = await prisma.knowledgeChunk.findMany({
       where: { businessId },
-      select: { id: true, title: true, content: true }
+      select: { id: true, content: true, knowledgeBaseId: true, metadata: true },
     });
 
-    let count = 0;
-    for (const entry of entries) {
-      await queueService.addJob(
+    let queuedOrProcessed = 0;
+
+    for (const chunk of chunks) {
+      const job = await queueService.addJob(
         'embeddings',
         'regenerate-embedding',
         {
-          knowledgeChunkId: entry.id,
-          text: `${entry.title}\n${entry.content}`,
+          knowledgeChunkId: chunk.id,
+          text: chunk.content,
           businessId,
+          knowledgeBaseId: chunk.knowledgeBaseId || chunk.id,
         },
-        { priority: 1 } // Low priority
+        { priority: 1 }
       );
-      count++;
+
+      if (!job) {
+        await this.indexChunkNow({
+          chunkId: chunk.id,
+          content: chunk.content,
+          businessId,
+          knowledgeBaseId: chunk.knowledgeBaseId || chunk.id,
+          metadata: chunk.metadata ? JSON.parse(chunk.metadata as any) : {},
+        });
+      }
+
+      queuedOrProcessed++;
     }
 
-    return { count, message: `Queued ${count} entries for re-indexing` };
+    return {
+      count: queuedOrProcessed,
+      message: chunks.length
+        ? 'Reindex started (queued if Redis available, otherwise processed inline)'
+        : 'No knowledge chunks found to reindex',
+    };
+  }
+
+  async updateEntry(businessId: string, id: string, data: Partial<CreateKnowledgeInput>) {
+    const entry = await prisma.knowledgeBase.findFirst({
+      where: { id, businessId },
+    });
+
+    if (!entry) {
+      throw new Error('Entry not found');
+    }
+
+    const updated = await prisma.knowledgeBase.update({
+      where: { id },
+      data: {
+        title: data.question,
+        content: data.answer,
+        tags: data.tags ? JSON.stringify(data.tags) : undefined,
+        metadata: data.metadata ? JSON.stringify(data.metadata) : undefined,
+      },
+    });
+
+    // If content changed, we must re-chunk and re-index
+    if (data.question || data.answer) {
+      // Delete old chunks
+      await prisma.knowledgeChunk.deleteMany({
+        where: { knowledgeBaseId: id },
+      });
+
+      // Create new single chunk (simple strategy for manual edits)
+      const chunkContent = `${updated.title}\n${updated.content}`;
+      const chunk = await this.createSingleChunk({
+        businessId,
+        knowledgeBaseId: id,
+        content: chunkContent,
+        metadata: data.metadata,
+      });
+
+      // Index it
+      const job = await queueService.addJob(
+        'embeddings',
+        'generate-embedding',
+        {
+          knowledgeChunkId: chunk.id,
+          text: chunkContent,
+          businessId,
+          knowledgeBaseId: id,
+        },
+        { priority: 5 }
+      );
+
+      if (!job) {
+        await this.indexChunkNow({
+          chunkId: chunk.id,
+          content: chunkContent,
+          businessId,
+          knowledgeBaseId: id,
+          metadata: data.metadata,
+        });
+      }
+    }
+
+    return updated;
   }
 
   async getEntries(businessId: string, options?: {
@@ -74,14 +201,24 @@ export class KnowledgeService {
       }
     });
 
-    // Queue embedding generation (async)
-    await queueService.addJob(
+    // Keep embeddings on KnowledgeChunk (pgvector). Create one chunk per entry.
+    const chunkContent = `${data.question}\n${data.answer}`;
+    const chunk = await this.createSingleChunk({
+      businessId,
+      knowledgeBaseId: entry.id,
+      content: chunkContent,
+      metadata: { source: entry.source },
+    });
+
+    // Queue embedding generation when Redis is available; otherwise index inline.
+    const job = await queueService.addJob(
       'embeddings',
       'generate-embedding',
       {
-        knowledgeChunkId: entry.id,
-        text: `${data.question}\n${data.answer}`,
+        knowledgeChunkId: chunk.id,
+        text: chunkContent,
         businessId,
+        knowledgeBaseId: entry.id,
       },
       {
         priority: 3,
@@ -89,52 +226,22 @@ export class KnowledgeService {
       }
     );
 
+    if (!job) {
+      await this.indexChunkNow({
+        chunkId: chunk.id,
+        content: chunkContent,
+        businessId,
+        knowledgeBaseId: entry.id,
+        metadata: { source: entry.source },
+      });
+    }
+
     logger.info(`Created knowledge entry ${entry.id} and queued embedding generation`);
 
     // Clear cache
     await cacheService.delPattern(`knowledge:${businessId}:*`);
 
     return entry;
-  }
-
-  async updateEntry(businessId: string, id: string, data: Partial<CreateKnowledgeInput>) {
-    // Ensure ownership
-    const entry = await prisma.knowledgeBase.findFirst({
-      where: { id, businessId }
-    });
-    
-    if (!entry) throw new Error('Entry not found or access denied');
-
-    const updated = await prisma.knowledgeBase.update({
-      where: { id },
-      data: {
-        title: data.question,
-        content: data.answer,
-        tags: data.tags ? JSON.stringify(data.tags) : undefined,
-        updatedAt: new Date(),
-      }
-    });
-
-    // Re-generate embedding if content changed
-    if (data.question || data.answer) {
-      await queueService.addJob(
-        'embeddings',
-        'regenerate-embedding',
-        {
-          knowledgeChunkId: id,
-          text: `${updated.title}\n${updated.content}`,
-          businessId,
-        },
-        { priority: 2 }
-      );
-
-      logger.info(`Queued embedding re-generation for updated entry ${id}`);
-    }
-
-    // Clear cache
-    await cacheService.delPattern(`knowledge:${businessId}:*`);
-
-    return updated;
   }
 
   async deleteEntry(businessId: string, id: string) {
@@ -145,8 +252,14 @@ export class KnowledgeService {
     
     if (!entry) throw new Error('Entry not found or access denied');
 
-    // Delete from vector database
-    await vectorSearchService.deleteKnowledgeChunk(id);
+    // Delete chunks (and embeddings stored on them)
+    const chunks = await prisma.knowledgeChunk.findMany({
+      where: { businessId, knowledgeBaseId: id },
+      select: { id: true },
+    });
+
+    await Promise.all(chunks.map((c) => vectorSearchService.deleteKnowledgeChunk(c.id)));
+    await prisma.knowledgeChunk.deleteMany({ where: { businessId, knowledgeBaseId: id } });
 
     // Delete from database
     const deleted = await prisma.knowledgeBase.delete({
@@ -182,7 +295,7 @@ export class KnowledgeService {
     maxDepth?: number;
     maxPages?: number;
   }) {
-    // Queue web crawling job
+    // Prefer queue/worker if available; otherwise run inline (no Redis/env vars needed).
     const job = await queueService.addJob(
       'crawling',
       'crawl-website',
@@ -197,16 +310,62 @@ export class KnowledgeService {
       }
     );
 
-    logger.info(`Queued web crawling job for ${url}`);
+    if (job) {
+      logger.info(`Queued web crawling job for ${url}`);
+      return {
+        jobId: job.id,
+        status: 'queued',
+        message: 'Web crawling started. Knowledge will be added automatically.',
+      };
+    }
 
-    if (!job) {
-      throw new Error('Failed to queue web crawling job');
+    logger.warn('Redis/queue unavailable; running crawl inline (may take a while)');
+
+    const maxDepth = options?.maxDepth || 3;
+    const maxPages = options?.maxPages || 50;
+    const results = await webCrawlerService.crawlWebsite(url, { maxDepth, maxPages });
+
+    let stored = 0;
+    for (const page of results) {
+      if (!page.content || page.content.length < 100) continue;
+
+      const knowledgeBase = await prisma.knowledgeBase.create({
+        data: {
+          businessId,
+          content: page.content,
+          title: page.title || page.url,
+          source: page.url,
+          metadata: JSON.stringify({
+            description: (page as any).metadata?.description,
+            keywords: (page as any).metadata?.keywords,
+            crawledAt: new Date(),
+          }),
+        },
+      });
+
+      const chunk = await this.createSingleChunk({
+        businessId,
+        knowledgeBaseId: knowledgeBase.id,
+        content: page.content,
+        metadata: { source: page.url, title: page.title },
+      });
+
+      await this.indexChunkNow({
+        chunkId: chunk.id,
+        content: page.content,
+        businessId,
+        knowledgeBaseId: knowledgeBase.id,
+        metadata: { source: page.url, title: page.title },
+      });
+
+      stored++;
     }
 
     return {
-      jobId: job.id,
-      status: 'queued',
-      message: 'Web crawling started. Knowledge will be added automatically.',
+      status: 'completed',
+      pagesCrawled: results.length,
+      entriesCreated: stored,
+      message: 'Crawl completed inline and knowledge was indexed.',
     };
   }
 
@@ -225,83 +384,101 @@ export class KnowledgeService {
 
     logger.info(`Splitting text into ${chunks.length} chunks`);
 
-    // Create knowledge entries for each chunk
-    const entries = await Promise.all(
-      chunks.map((chunk, index) =>
-        prisma.knowledgeBase.create({
-          data: {
-            businessId,
-            title: `Imported Text - Part ${index + 1}`,
-            content: chunk,
-            source: 'text-import',
-            metadata: JSON.stringify({ chunkIndex: index, totalChunks: chunks.length }),
-          }
-        })
-      )
-    );
+    // Create knowledge entries + chunks for each chunk
+    const createdChunks: { id: string; content: string; knowledgeBaseId: string }[] = [];
+    for (let index = 0; index < chunks.length; index++) {
+      const chunkText = chunks[index];
+      const kb = await prisma.knowledgeBase.create({
+        data: {
+          businessId,
+          title: `Imported Text - Part ${index + 1}`,
+          content: chunkText,
+          source: 'text-import',
+          metadata: JSON.stringify({ chunkIndex: index, totalChunks: chunks.length }),
+        },
+      });
 
-    // Queue batch embedding generation
-    await queueService.addJob(
+      const knowledgeChunk = await this.createSingleChunk({
+        businessId,
+        knowledgeBaseId: kb.id,
+        content: chunkText,
+        metadata: { source: 'text-import', chunkIndex: index, totalChunks: chunks.length },
+      });
+
+      createdChunks.push({ id: knowledgeChunk.id, content: chunkText, knowledgeBaseId: kb.id });
+    }
+
+    // Queue batch embedding generation when possible; otherwise index inline.
+    const batchJob = await queueService.addJob(
       'batch-embeddings',
       'generate-batch-embeddings',
       {
         businessId,
-        knowledgeIds: entries.map(e => e.id),
+        knowledgeIds: createdChunks.map((c) => c.id),
       },
       { priority: 2 }
     );
 
-    logger.info(`Created ${entries.length} knowledge entries from text import`);
+    if (!batchJob) {
+      for (const c of createdChunks) {
+        await this.indexChunkNow({
+          chunkId: c.id,
+          content: c.content,
+          businessId,
+          knowledgeBaseId: c.knowledgeBaseId,
+          metadata: { source: 'text-import' },
+        });
+      }
+    }
+
+    logger.info(`Created ${createdChunks.length} knowledge entries from text import`);
 
     return {
-      entriesCreated: entries.length,
-      message: 'Text imported successfully. Embeddings are being generated.',
+      entriesCreated: createdChunks.length,
+      message: batchJob
+        ? 'Text imported successfully. Embeddings are being generated.'
+        : 'Text imported successfully. Embeddings were generated inline.',
     };
   }
 
   async reindexAll(businessId: string) {
-    // Queue reindexing job
     const job = await queueService.addJob(
       'reindex-business',
       'reindex',
-      {
-        businessId,
-      },
+      { businessId },
       { priority: 1 }
     );
 
-    if (!job) {
-      throw new Error('Failed to queue reindexing job');
+    if (job) {
+      logger.info(`Queued reindexing job for business ${businessId}`);
+      return {
+        jobId: job.id,
+        status: 'queued',
+        message: 'Reindexing started. This may take a few minutes.',
+      };
     }
 
-    logger.info(`Queued reindexing job for business ${businessId}`);
-
+    const inline = await vectorSearchService.reindexBusiness(businessId);
     return {
-      jobId: job.id,
-      status: 'queued',
-      message: 'Reindexing started. This may take a few minutes.',
+      status: 'completed',
+      count: inline,
+      message: 'Reindex completed inline (no Redis/worker).',
     };
   }
 
   async getStats(businessId: string) {
-    const [total, withEmbeddings] = await Promise.all([
+    const [totalEntries, totalChunks, chunksWithEmbeddings] = await Promise.all([
       prisma.knowledgeBase.count({ where: { businessId } }),
-      prisma.$queryRaw`
-        SELECT COUNT(*) as count
-        FROM "KnowledgeBase" kb
-        WHERE kb."businessId" = ${businessId}
-        AND EXISTS (
-          SELECT 1 FROM "KnowledgeEmbedding" ke
-          WHERE ke."knowledgeId" = kb.id
-        )
-      ` as Promise<[{ count: bigint }]>,
+      prisma.knowledgeChunk.count({ where: { businessId } }),
+      prisma.knowledgeChunk.count({ where: { businessId, embedding: { not: null } } }),
     ]);
 
     return {
-      total,
-      withEmbeddings: Number(withEmbeddings[0]?.count || 0),
-      withoutEmbeddings: total - Number(withEmbeddings[0]?.count || 0),
-      coveragePercentage: total > 0 ? (Number(withEmbeddings[0]?.count || 0) / total) * 100 : 0,
+      entries: totalEntries,
+      chunks: totalChunks,
+      chunksWithEmbeddings,
+      chunksWithoutEmbeddings: totalChunks - chunksWithEmbeddings,
+      coveragePercentage: totalChunks > 0 ? (chunksWithEmbeddings / totalChunks) * 100 : 0,
     };
   }
 }

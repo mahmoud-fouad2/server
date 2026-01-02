@@ -20,7 +20,7 @@ import {
   Mail,
   Phone,
 } from 'lucide-react';
-import { businessApi, crmApi } from '@/lib/api';
+import { businessApi, crmApi } from '@/lib/api-client';
 
 export default function CrmView({ user, addNotification }) {
   const [leads, setLeads] = useState([]);

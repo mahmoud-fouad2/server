@@ -130,6 +130,23 @@ export class KnowledgeController {
     }
   }
 
+  async updateEntry(req: Request, res: Response) {
+    try {
+      // @ts-ignore
+      const businessId = req.user.businessId;
+      const { id } = req.params;
+      const data = req.body;
+      const updated = await knowledgeService.updateEntry(businessId, id, data);
+      res.json({ success: true, data: updated });
+    } catch (error) {
+      console.error('Knowledge update error:', error);
+      res.status(400).json({ 
+        error: 'Failed to update entry',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+
   async reindex(req: Request, res: Response) {
     try {
       // @ts-ignore

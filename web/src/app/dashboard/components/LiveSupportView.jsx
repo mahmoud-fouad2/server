@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Headphones, User } from 'lucide-react';
-import { chatApi } from '@/lib/api';
+import { chatApi } from '@/lib/api-client';
 
 export default function LiveSupportView({ addNotification }) {
   const [handoverRequests, setHandoverRequests] = useState([]);

@@ -25,8 +25,17 @@ function runMigrations() {
   
   // Step 2: Force reset and push schema (fresh start)
   console.log('🚀 Resetting database and pushing fresh schema...');
+  
+  // Use DATABASE_URL_EXTERNAL if available for migrations on Render
+  const env = { ...process.env };
+  if (process.env.DATABASE_URL_EXTERNAL) {
+    console.log('🌐 Using DATABASE_URL_EXTERNAL for migration...');
+    env.DATABASE_URL = process.env.DATABASE_URL_EXTERNAL;
+  }
+
   const pushResult = spawnSync(npxCmd, ['prisma', 'db', 'push', '--force-reset', '--skip-generate'], {
     stdio: 'inherit',
+    env,
   });
 
   if (pushResult.status !== 0) {
@@ -36,6 +45,7 @@ function runMigrations() {
     // Fallback: try without force reset
     const fallbackResult = spawnSync(npxCmd, ['prisma', 'db', 'push', '--accept-data-loss', '--skip-generate'], {
       stdio: 'inherit',
+      env,
     });
     
     if (fallbackResult.status !== 0) {

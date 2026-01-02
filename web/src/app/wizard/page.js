@@ -33,7 +33,7 @@ import {
   CheckCircle2,
   AlertCircle,
 } from 'lucide-react';
-import { authApi, widgetApi, knowledgeApi, businessApi } from '@/lib/api';
+import { authApi, widgetApi, knowledgeApi, businessApi } from '@/lib/api-client';
 import { API_CONFIG } from '@/lib/config';
 import PageLayout from '@/components/layout/PageLayout';
 // Confetti is lazy-loaded dynamically to reduce initial bundle size

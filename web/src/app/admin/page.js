@@ -53,7 +53,7 @@ import {
   CardFooter,
 } from '@/components/ui/card';
 import useTheme from '@/lib/theme';
-import { adminApi, ticketApi } from '@/lib/api';
+import { adminApi, ticketApi } from '@/lib/api-client';
 
 export default function AdminDashboard() {
   // 1. All Hooks must be declared at the top level

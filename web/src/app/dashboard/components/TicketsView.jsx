@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Headphones, User, Share2, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { ticketApi } from '@/lib/api';
+import { ticketApi } from '@/lib/api-client';
 
 export default function TicketsView({ addNotification }) {
   const [tickets, setTickets] = useState([]);

@@ -7,7 +7,7 @@ import { Button, Input } from '../../components/ui/Components';
 import { Lock, CheckCircle, Loader2, Home, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 import FaheemAnimatedLogo from '../../components/FaheemAnimatedLogo';
-import { authApi } from '@/lib/api';
+import { authApi } from '@/lib/api-client';
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState('');

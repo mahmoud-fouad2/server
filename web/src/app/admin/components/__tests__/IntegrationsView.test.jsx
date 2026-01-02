@@ -13,7 +13,7 @@ jest.mock('@/lib/api', () => ({
 }));
 
 import IntegrationsView from '../IntegrationsView';
-import { adminApi } from '@/lib/api';
+import { adminApi } from '@/lib/api-client';
 
 describe('IntegrationsView', () => {
   it('renders sections for supported integrations', () => {

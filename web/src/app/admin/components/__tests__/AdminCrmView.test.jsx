@@ -15,7 +15,7 @@ jest.mock('@/lib/api', () => ({
 }))
 
 import AdminCrmView from '../AdminCrmView'
-import { adminApi } from '@/lib/api'
+import { adminApi } from '@/lib/api-client'
 
 describe('AdminCrmView', () => {
   beforeEach(() => jest.clearAllMocks())

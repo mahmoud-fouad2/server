@@ -11,7 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { User, Bot, MessageSquare, Loader2, Bell } from 'lucide-react';
-import { chatApi, authApi } from '@/lib/api';
+import { chatApi, authApi } from '@/lib/api-client';
 import { io } from 'socket.io-client';
 import { API_CONFIG } from '@/lib/config';
 

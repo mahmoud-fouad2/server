@@ -191,12 +191,15 @@ class VectorSearchService {
 
   async deleteKnowledgeChunk(knowledgeId: string): Promise<boolean> {
     try {
+      // This project stores embeddings directly on KnowledgeChunk.embedding (pgvector)
+      // rather than a separate KnowledgeEmbedding table.
       await prisma.$executeRaw`
-        DELETE FROM "KnowledgeEmbedding"
-        WHERE "knowledgeId" = ${knowledgeId}
+        UPDATE "KnowledgeChunk"
+        SET embedding = NULL
+        WHERE id = ${knowledgeId}
       `;
 
-      logger.info(`Deleted embeddings for knowledge ${knowledgeId}`);
+      logger.info(`Cleared embedding for knowledge chunk ${knowledgeId}`);
       return true;
     } catch (error: any) {
       logger.error(`Failed to delete embeddings for knowledge ${knowledgeId}:`, error.message);

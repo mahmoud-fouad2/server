@@ -16,6 +16,7 @@ import {
   LifeBuoy,
   BarChart3,
   ContactRound,
+  Lightbulb,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -104,7 +105,7 @@ export default function Sidebar({ activeTab, setActiveTab, userRole }) {
   };
 
   return (
-    <aside className="hidden md:flex w-72 flex-shrink-0 bg-white/95 dark:bg-cosmic-900/80 backdrop-blur-xl border-l border-gray-200/70 dark:border-white/10 flex-col h-screen sticky top-0 transition-colors duration-300 shadow-xl z-40 overflow-hidden">
+    <aside className="hidden md:flex w-72 flex-shrink-0 bg-white/95 dark:bg-cosmic-900/80 backdrop-blur-xl border-l border-gray-200/70 dark:border-white/10 flex-col h-screen sticky top-0 transition-colors duration-300 shadow-xl z-50 overflow-hidden">
       {/* Logo Area */}
       <div className="p-6 flex items-center justify-center border-b border-gray-100 dark:border-white/5 relative flex-shrink-0">
         <div className="absolute inset-0 bg-gradient-to-r from-brand-500/5 to-purple-500/5 animate-pulse"></div>
@@ -168,6 +169,13 @@ export default function Sidebar({ activeTab, setActiveTab, userRole }) {
               id="playground"
               label={t('dashboard.playground')}
               icon={Play}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+            />
+            <SidebarItem
+              id="improvement"
+              label="التحسين المستمر"
+              icon={Lightbulb}
               activeTab={activeTab}
               setActiveTab={setActiveTab}
             />

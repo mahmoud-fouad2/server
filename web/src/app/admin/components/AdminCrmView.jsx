@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { adminApi, apiCall } from '@/lib/api'
+import { adminApi, apiCall } from '@/lib/api-client'
 import { Loader2 } from 'lucide-react'
 
 export default function AdminCrmView() {

@@ -14,7 +14,7 @@ jest.mock('@/lib/api', () => ({
 }))
 
 import PaymentsView from '../PaymentsView'
-import { adminApi } from '@/lib/api'
+import { adminApi } from '@/lib/api-client'
 
 describe('PaymentsView', () => {
   beforeEach(() => {

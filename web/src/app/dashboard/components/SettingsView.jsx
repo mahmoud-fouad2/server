@@ -23,7 +23,7 @@ import {
   Bell,
   AlertTriangle,
 } from 'lucide-react';
-import { authApi, businessApi, apiKeyApi } from '@/lib/api';
+import { authApi, businessApi, apiKeyApi } from '@/lib/api-client';
 
 const STATUS_STYLES = {
   success: 'bg-emerald-50 text-emerald-800 border border-emerald-100',
@@ -71,21 +71,20 @@ const PlaceholderLine = ({ width = 'w-full' }) => (
 );
 
 const InsightCard = ({ title, description, value, status, icon: Icon }) => (
-  <Card className="relative overflow-hidden border border-border shadow-sm">
-    <CardHeader className="flex flex-row items-start justify-between gap-3">
-      <div>
-        <CardTitle className="text-base md:text-lg">{title}</CardTitle>
-        <CardDescription className="text-sm">{description}</CardDescription>
+  <div className="relative overflow-hidden rounded-2xl border border-gray-100 dark:border-white/5 bg-white dark:bg-white/5 p-6 shadow-sm transition-all hover:shadow-md group">
+    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-brand-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+    <div className="flex items-start justify-between mb-4">
+      <div className="p-3 rounded-xl bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-400 group-hover:scale-110 transition-transform duration-300">
+        <Icon className="w-6 h-6" />
       </div>
-      <span className="p-2 rounded-full bg-brand-50 text-brand-600 dark:bg-brand-900/20">
-        <Icon className="w-4 h-4" />
-      </span>
-    </CardHeader>
-    <CardContent className="flex items-center justify-between">
-      <p className="text-2xl font-bold">{value}</p>
       <StatusBadge status={status} />
-    </CardContent>
-  </Card>
+    </div>
+    <div className="space-y-1">
+      <h3 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">{value}</h3>
+      <p className="text-sm font-medium text-gray-700 dark:text-gray-200">{title}</p>
+      <p className="text-xs text-muted-foreground line-clamp-1">{description}</p>
+    </div>
+  </div>
 );
 
 export default function SettingsView({ user, addNotification }) {
@@ -290,13 +289,16 @@ export default function SettingsView({ user, addNotification }) {
       exit={{ opacity: 0, y: -8 }}
       className="space-y-10"
     >
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <section className="grid grid-cols-1 md:grid-cols-12 gap-6">
         {insightCards.map(card => (
-          <InsightCard key={card.id} {...card} />
+          <div key={card.id} className="col-span-1 md:col-span-4">
+            <InsightCard {...card} />
+          </div>
         ))}
       </section>
 
-      <section className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+      <section className="grid grid-cols-1 xl:grid-cols-12 gap-8">
+        <div className="xl:col-span-6 space-y-8">
         <Card className="border border-border">
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -367,8 +369,10 @@ export default function SettingsView({ user, addNotification }) {
             </Button>
           </CardFooter>
         </Card>
+        </div>
 
-        <Card className="border border-border">
+        <div className="xl:col-span-6">
+        <Card className="border border-border h-full">
           <CardHeader>
             <CardTitle>بيانات النشاط التجاري</CardTitle>
             <CardDescription>اضبط الهوية الصوتية وطريقة التفاعل الذكية</CardDescription>
@@ -463,31 +467,44 @@ export default function SettingsView({ user, addNotification }) {
               </select>
             </div>
             <div className="space-y-3">
-              <label className="text-sm font-medium">نبرة البوت الافتراضية</label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">نبرة البوت الافتراضية</label>
+              <div className="grid grid-cols-2 gap-3">
                 {tonePresets.map(preset => (
                   <button
                     key={preset.value}
                     type="button"
                     onClick={() => handleBusinessChange('botTone', preset.value)}
-                    className={`rounded-xl border px-4 py-3 text-right transition ${
+                    className={`relative flex flex-col items-start p-4 rounded-xl border-2 transition-all duration-200 text-right ${
                       businessData.botTone === preset.value
-                        ? 'border-brand-500 bg-brand-50 text-brand-800 shadow-sm'
-                        : 'border-border hover:border-brand-200'
+                        ? 'border-brand-500 bg-brand-50/50 dark:bg-brand-500/10 ring-1 ring-brand-500'
+                        : 'border-transparent bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10'
                     }`}
                   >
-                    <div className="text-sm font-semibold">{preset.label}</div>
-                    <p className="text-xs text-muted-foreground">{preset.helper}</p>
+                    <div className="flex items-center justify-between w-full mb-2">
+                      <span className={`text-sm font-bold ${
+                        businessData.botTone === preset.value ? 'text-brand-700 dark:text-brand-300' : 'text-gray-700 dark:text-gray-300'
+                      }`}>
+                        {preset.label}
+                      </span>
+                      {businessData.botTone === preset.value && (
+                        <div className="w-2 h-2 rounded-full bg-brand-500 shadow-sm" />
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      {preset.helper}
+                    </p>
                   </button>
                 ))}
               </div>
             </div>
           </CardContent>
         </Card>
+        </div>
       </section>
 
-      <section className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-        <Card className="border border-border">
+      <section className="grid grid-cols-1 xl:grid-cols-12 gap-8">
+        <div className="xl:col-span-6">
+          <Card className="border border-border h-full">
           <CardHeader className="flex flex-col gap-2">
             <CardTitle>تجربة العملاء والتنبيهات</CardTitle>
             <CardDescription>تحكم في سرعة الردود والتنبيهات الداخلية</CardDescription>
@@ -549,8 +566,10 @@ export default function SettingsView({ user, addNotification }) {
             </div>
           </CardContent>
         </Card>
+        </div>
 
-        <Card className="border border-border">
+        <div className="xl:col-span-6">
+        <Card className="border border-border h-full">
           <CardHeader className="flex flex-col gap-3">
             <div className="flex items-center justify-between gap-3">
               <div>
@@ -634,6 +653,7 @@ export default function SettingsView({ user, addNotification }) {
             )}
           </CardContent>
         </Card>
+        </div>
       </section>
     </motion.div>
   );
