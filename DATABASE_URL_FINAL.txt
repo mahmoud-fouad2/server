@@ -1,0 +1,13 @@
+🎯 DATABASE_URL الصحيح النهائي:
+
+postgresql://fahimo_user:ugbqfF41eTQkwCTqYum8wJi9Y3GTh0Fq@dpg-d4ni1bfpm1nc73e7e5gg-a.oregon-postgres.render.com:5432/fahimo
+
+✅ هذا هو الـ URL اللي لازم تحطه في:
+   1. fahimo-api → Environment → DATABASE_URL
+   2. fahimo-worker → Environment → DATABASE_URL
+
+📋 الفرق:
+   ❌ Internal (ناقص):     @dpg-d4ni1bfpm1nc73e7e5gg-a/fahimo
+   ✅ الصحيح (مع region): @dpg-d4ni1bfpm1nc73e7e5gg-a.oregon-postgres.render.com:5432/fahimo
+
+🚀 بعد ما تحطه → Save → Render هيعمل redeploy تلقائياً → انتظر 3 دقائق

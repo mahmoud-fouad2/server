@@ -1,0 +1,9 @@
+🎯 DATABASE_URL الجديد الصحيح:
+
+postgresql://fahimo_db_user:MrVQULRNMA0TK8d5B9JVV2tEC4SP0AJr@dpg-d5bvkci4d50c73fj5d80-a.oregon-postgres.render.com:5432/fahimo_db
+
+✅ ضعه في:
+   1. fahimo-api → Environment → DATABASE_URL
+   2. fahimo-worker → Environment → DATABASE_URL
+
+⚠️ بعد كده لازم تشغل Migrations علشان تنشئ الجداول!
