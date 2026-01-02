@@ -43,10 +43,15 @@ function runMigrations() {
   const maxAttempts = 5;
   let migrationSuccess = false;
 
-  // Determine which URL to use. 
-  // We prefer the standard DATABASE_URL. 
-  // Only if it fails repeatedly might we consider alternatives, but usually DATABASE_URL is correct on Render.
-  // We REMOVED the forced override of DATABASE_URL_EXTERNAL to avoid confusion.
+  // CRITICAL FIX: Use DATABASE_URL_EXTERNAL if available for migrations
+  // This is needed because Render's internal hostname may not be accessible during build
+  const migrationEnv = { ...process.env };
+  if (process.env.DATABASE_URL_EXTERNAL) {
+    console.log('🔗 Using DATABASE_URL_EXTERNAL for migration...');
+    migrationEnv.DATABASE_URL = process.env.DATABASE_URL_EXTERNAL;
+  } else {
+    console.log('⚠️ DATABASE_URL_EXTERNAL not set, using standard DATABASE_URL');
+  }
   
   while (attempts < maxAttempts && !migrationSuccess) {
     attempts++;
@@ -54,7 +59,7 @@ function runMigrations() {
 
     // Try 'migrate deploy' first (Production standard)
     // This expects a valid migration history.
-    const result = runCommand(npxCmd, ['prisma', 'migrate', 'deploy'], process.env, true);
+    const result = runCommand(npxCmd, ['prisma', 'migrate', 'deploy'], migrationEnv, true);
 
     if (result.status === 0) {
       migrationSuccess = true;
@@ -72,7 +77,7 @@ function runMigrations() {
         // Fallback: Try 'db push' if migrate deploy failed (e.g. drift or no history)
         // But ONLY if we are desperate.
         console.log('⚠️ Attempting `db push` as a fallback (schema sync)...');
-        const pushResult = runCommand(npxCmd, ['prisma', 'db', 'push', '--accept-data-loss'], process.env, true);
+        const pushResult = runCommand(npxCmd, ['prisma', 'db', 'push', '--accept-data-loss'], migrationEnv, true);
         
         if (pushResult.status === 0) {
           console.log('✅ Database schema pushed successfully (fallback).');
