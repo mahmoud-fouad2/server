@@ -14,10 +14,6 @@ services:
         fromDatabase:
           name: fahimo-db
           property: connectionString
-      - key: DATABASE_URL_EXTERNAL
-        fromDatabase:
-          name: fahimo-db
-          property: connectionString
       - key: JWT_SECRET
         generateValue: true
       - key: REDIS_URL
@@ -39,11 +35,7 @@ services:
       - key: DATABASE_URL
         fromDatabase:
           name: fahimo-db
-          property: externalConnectionString
-      - key: DATABASE_URL_EXTERNAL
-        fromDatabase:
-          name: fahimo-db
-          property: externalConnectionString
+          property: connectionString
       - key: REDIS_URL
         sync: false
 
@@ -67,3 +59,4 @@ databases:
     databaseName: fahimo
     user: fahimo
     plan: free
+    ipAllowList: []
