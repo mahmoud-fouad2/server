@@ -567,7 +567,7 @@ export default function App({ config, businessName, assetBaseUrl, apiBaseUrl, pr
   const ratingEnabled = config.ratingEnabled !== false;
   const showBranding = config.showBranding !== false;
 
-  const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
+  // Emoji picker removed for cleaner UI
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -679,6 +679,21 @@ export default function App({ config, businessName, assetBaseUrl, apiBaseUrl, pr
 
     // Reset input
     event.target.value = '';
+
+    // Security: Only allow images
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      alert('نوع الملف غير مدعوم. يُرجى رفع صورة فقط (JPG, PNG, GIF, WEBP).');
+      return;
+    }
+    
+    // Security: Max file size 5MB
+    const maxSizeMB = 5;
+    const maxSizeBytes = maxSizeMB * 1024 * 1024;
+    if (file.size > maxSizeBytes) {
+      alert(`حجم الملف كبير جداً. الحد الأقصى ${maxSizeMB} ميجابايت.`);
+      return;
+    }
 
     // Optimistic UI update (optional, or just show loading)
     setIsLoading(true);
@@ -916,7 +931,9 @@ export default function App({ config, businessName, assetBaseUrl, apiBaseUrl, pr
     }
   }
 
-  const shouldShowRating = ratingEnabled && conversationId && !ratingSubmitted;
+  // Only show rating after bot has replied at least once
+  const hasReceivedBotReply = messages.some(m => m.senderType === 'BOT' && m.id !== messages[0]?.id);
+  const shouldShowRating = ratingEnabled && conversationId && !ratingSubmitted && hasReceivedBotReply && messages.length > 2;
 
   return (
     <Fragment>
@@ -1056,65 +1073,25 @@ export default function App({ config, businessName, assetBaseUrl, apiBaseUrl, pr
                     ref={fileInputRef}
                     style={{ display: 'none' }}
                     onChange={handleFileUpload}
-                    accept="image/*,.pdf,.doc,.docx"
+                    accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
                   />
                   <button 
                     type="button" 
-                    style={styles.subtleButton} 
-                    aria-label="إرفاق ملف" 
+                    style={{
+                      ...styles.subtleButton,
+                      background: isLoading ? '#f3f4f6' : 'linear-gradient(135deg, #8b5cf6, #a78bfa)',
+                      color: 'white',
+                      cursor: isLoading ? 'not-allowed' : 'pointer',
+                      border: 'none',
+                      transition: 'all 0.2s ease',
+                      opacity: isLoading ? 0.5 : 1,
+                    }}
+                    aria-label="إرفاق صورة" 
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isLoading}
                   >
                     <AttachIcon />
                   </button>
-                  <div style={{ position: 'relative' }}>
-                    <button 
-                      type="button" 
-                      style={styles.subtleButton} 
-                      aria-label="إرسال إيموجي"
-                      onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}
-                    >
-                      <EmojiIcon />
-                    </button>
-                    {isEmojiPickerOpen && (
-                      <div style={{
-                        position: 'absolute',
-                        bottom: '45px',
-                        left: '0',
-                        background: '#fff',
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '12px',
-                        padding: '8px',
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(5, 1fr)',
-                        gap: '4px',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                        zIndex: 10,
-                        width: '180px'
-                      }}>
-                        {['😊', '👍', '❤️', '🎉', '🙏', '✅', '🤔', '😂', '🔥', '💯', '👋', '😢', '😡', '👀', '✨'].map(emoji => (
-                          <button
-                            key={emoji}
-                            type="button"
-                            style={{
-                              background: 'none',
-                              border: 'none',
-                              fontSize: '20px',
-                              cursor: 'pointer',
-                              padding: '4px',
-                              borderRadius: '4px',
-                            }}
-                            onClick={() => {
-                              setInput(prev => prev + emoji);
-                              setIsEmojiPickerOpen(false);
-                            }}
-                          >
-                            {emoji}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
                 </div>
                 <textarea
                   style={styles.textInput}
