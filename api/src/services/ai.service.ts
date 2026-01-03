@@ -28,7 +28,7 @@ class GroqProvider implements AIProvider {
   async generateResponse(prompt: string, options?: any) {
     const completion = await this.client.chat.completions.create({
       messages: [{ role: 'user', content: prompt }],
-      model: options?.model || 'llama-3.3-70b-versatile',
+      model: options?.model || process.env.GROQ_MODEL || 'llama-3.1-70b-versatile',
     });
     return {
       response: completion.choices[0]?.message?.content || '',
@@ -44,7 +44,7 @@ class GeminiProvider implements AIProvider {
   constructor(apiKey: string) { this.client = new GoogleGenerativeAI(apiKey); }
 
   async generateResponse(prompt: string, options?: any) {
-    const model = this.client.getGenerativeModel({ model: options?.model || 'gemini-pro' });
+    const model = this.client.getGenerativeModel({ model: options?.model || process.env.GEMINI_MODEL || 'gemini-2.0-flash-exp' });
     const result = await model.generateContent(prompt);
     const response = result.response;
     return {
