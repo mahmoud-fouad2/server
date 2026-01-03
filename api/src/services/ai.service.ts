@@ -56,6 +56,54 @@ class GeminiProvider implements AIProvider {
   async healthCheck() { return true; }
 }
 
+// Custom AI Model Provider (supports OpenAI-compatible APIs)
+class CustomAIProvider implements AIProvider {
+  private config: any;
+  constructor(config: any) { this.config = config; }
+  
+  async generateResponse(prompt: string, options?: any) {
+    const modelConfig = typeof this.config === 'string' ? JSON.parse(this.config) : this.config;
+    const endpoint = modelConfig.endpoint || modelConfig.apiUrl;
+    const apiKey = modelConfig.apiKey || modelConfig.key;
+    const model = options?.model || modelConfig.model || modelConfig.defaultModel;
+
+    if (!endpoint || !apiKey) {
+      throw new Error('Custom model missing endpoint or API key');
+    }
+
+    // OpenAI-compatible API call
+    const response = await axios.post(
+      endpoint,
+      {
+        model: model,
+        messages: [{ role: 'user', content: prompt }],
+        temperature: modelConfig.temperature || 0.7,
+        max_tokens: modelConfig.maxTokens || 2000,
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    return {
+      response: response.data.choices[0]?.message?.content || '',
+      usage: { tokens: response.data.usage?.total_tokens || 0 }
+    };
+  }
+
+  async healthCheck() { 
+    try {
+      const modelConfig = typeof this.config === 'string' ? JSON.parse(this.config) : this.config;
+      return !!(modelConfig.endpoint && modelConfig.apiKey);
+    } catch {
+      return false;
+    }
+  }
+}
+
 export class AIService {
   private providers: Map<string, AIProvider> = new Map();
   
@@ -185,22 +233,56 @@ ${dialectResult ? `7. Match the user's detected dialect (${dialectResult.dialect
       }
 
       // 6. Select Provider Strategy
-      const config = business.aiProviderConfig as any;
-      let providerType = config?.type || 'groq';
-      let provider = this.providers.get(providerType);
+      let provider: AIProvider | undefined;
+      let providerType = 'groq'; // default
 
-      // Intelligent Failover
+      // Priority 1: Use Custom AI Models if available
+      if (business.customAIModels && business.customAIModels.length > 0) {
+        const customModel = business.customAIModels[0]; // Use first active model
+        logger.info('Using custom AI model:', { modelId: customModel.id, name: customModel.name });
+        try {
+          provider = new CustomAIProvider(customModel.config);
+          providerType = `custom:${customModel.name}`;
+          
+          // Validate custom provider
+          if (!(await provider.healthCheck())) {
+            logger.warn('Custom model health check failed, falling back');
+            provider = undefined;
+          }
+        } catch (error) {
+          logger.error('Failed to initialize custom model:', error);
+          provider = undefined;
+        }
+      }
+
+      // Priority 2: Use aiProviderConfig if no custom models
+      if (!provider) {
+        const config = business.aiProviderConfig as any;
+        providerType = config?.type || 'groq';
+        provider = this.providers.get(providerType);
+      }
+
+      // Priority 3: Intelligent Failover
       if (!provider || !(await provider.healthCheck())) {
-        console.warn(`Provider ${providerType} unavailable, failing over to Gemini`);
+        logger.warn(`Provider ${providerType} unavailable, failing over to Groq`);
+        provider = this.providers.get('groq');
+        providerType = 'groq';
+      }
+
+      // Priority 4: Try Gemini as last resort
+      if (!provider || !(await provider.healthCheck())) {
+        logger.warn('Groq unavailable, failing over to Gemini');
         provider = this.providers.get('gemini');
+        providerType = 'gemini';
       }
 
       if (!provider) throw new Error('No AI providers available');
 
       // 7. Generate Response
+      const modelConfig = business.aiProviderConfig as any;
       const { response, usage } = await provider.generateResponse(
         `${systemPrompt}\n\nUser: ${userMessage}`,
-        { model: config?.model }
+        { model: modelConfig?.model }
       );
 
       // 8. Async billing update
