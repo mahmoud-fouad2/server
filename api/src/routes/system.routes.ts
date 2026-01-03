@@ -105,4 +105,99 @@ router.post('/seed-faheemly', async (req: Request, res: Response) => {
   }
 });
 
+// Generate embeddings for KB
+router.post('/generate-embeddings', async (req: Request, res: Response) => {
+  try {
+    const { secretKey } = req.body;
+    
+    if (secretKey !== (process.env.SEED_SECRET_KEY || 'faheemly-seed-2026')) {
+      return res.status(403).json({ success: false, message: 'Unauthorized' });
+    }
+
+    logger.info('🔄 Starting embedding generation...');
+    
+    const BUSINESS_ID = 'cmjx5hz7a000br594zctuurus';
+    
+    // Import embedding service
+    const { default: embeddingService } = await import('../services/embedding.service.js');
+
+    // Get KB entries
+    const kbEntries = await prisma.knowledgeBase.findMany({
+      where: { businessId: BUSINESS_ID },
+      select: { id: true, title: true, content: true }
+    });
+
+    if (kbEntries.length === 0) {
+      return res.json({ success: false, message: 'No KB entries found' });
+    }
+
+    // Clear existing chunks
+    await prisma.knowledgeChunk.deleteMany({ where: { businessId: BUSINESS_ID } });
+
+    let processed = 0;
+    let failed = 0;
+
+    // Process each entry
+    for (const kb of kbEntries) {
+      try {
+        const text = `${kb.title}\n${kb.content}`;
+        const chunks = splitText(text, 800);
+        
+        for (let i = 0; i < chunks.length; i++) {
+          try {
+            const { embedding, provider } = await embeddingService.generateEmbedding(chunks[i]);
+            
+            await prisma.knowledgeChunk.create({
+              data: {
+                businessId: BUSINESS_ID,
+                knowledgeBaseId: kb.id,
+                content: chunks[i],
+                embedding: JSON.stringify(embedding),
+                metadata: JSON.stringify({ provider, title: kb.title, chunk: i })
+              }
+            });
+            
+            processed++;
+            await new Promise(r => setTimeout(r, 100)); // Rate limit
+          } catch (e: any) {
+            failed++;
+            logger.error(`Chunk failed: ${e.message}`);
+          }
+        }
+      } catch (e: any) {
+        failed++;
+      }
+    }
+
+    res.json({
+      success: true,
+      message: 'Embeddings generated',
+      processed,
+      failed,
+      total: processed + failed
+    });
+
+  } catch (error: any) {
+    logger.error('Embedding generation failed:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+function splitText(text: string, maxLen: number): string[] {
+  const chunks: string[] = [];
+  const sentences = text.split(/[.!?؟]\s+/);
+  let current = '';
+
+  for (const s of sentences) {
+    if ((current + s).length <= maxLen) {
+      current += s + '. ';
+    } else {
+      if (current) chunks.push(current.trim());
+      current = s + '. ';
+    }
+  }
+  if (current) chunks.push(current.trim());
+  return chunks.length > 0 ? chunks : [text.substring(0, maxLen)];
+}
+
 export default router;
