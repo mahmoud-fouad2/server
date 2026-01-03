@@ -137,31 +137,44 @@ router.post('/generate-embeddings', async (req: Request, res: Response) => {
     let processed = 0;
     let failed = 0;
 
-    // Process each entry
+    // Process each entry with fallback providers
     for (const kb of kbEntries) {
       try {
         const text = `${kb.title}\n${kb.content}`;
         const chunks = splitText(text, 800);
         
         for (let i = 0; i < chunks.length; i++) {
-          try {
-            const { embedding, provider } = await embeddingService.generateEmbedding(chunks[i]);
-            
-            await prisma.knowledgeChunk.create({
-              data: {
-                businessId: BUSINESS_ID,
-                knowledgeBaseId: kb.id,
-                content: chunks[i],
-                embedding: JSON.stringify(embedding),
-                metadata: JSON.stringify({ provider, title: kb.title, chunk: i })
-              }
-            });
-            
-            processed++;
-            await new Promise(r => setTimeout(r, 100)); // Rate limit
-          } catch (e: any) {
+          let success = false;
+          const providers = ['OPENAI', 'GROQ', 'VOYAGE'];
+          
+          // Try each provider in order until success
+          for (const provider of providers) {
+            try {
+              const { embedding } = await embeddingService.generateEmbedding(chunks[i], provider);
+              
+              await prisma.knowledgeChunk.create({
+                data: {
+                  businessId: BUSINESS_ID,
+                  knowledgeBaseId: kb.id,
+                  content: chunks[i],
+                  embedding: JSON.stringify(embedding),
+                  metadata: JSON.stringify({ provider, title: kb.title, chunk: i })
+                }
+              });
+              
+              processed++;
+              success = true;
+              await new Promise(r => setTimeout(r, 500)); // Increased delay for rate limiting
+              break; // Success! Exit provider loop
+            } catch (e: any) {
+              logger.warn(`Provider ${provider} failed for chunk ${i}: ${e.message}`);
+              await new Promise(r => setTimeout(r, 300)); // Wait before trying next provider
+            }
+          }
+          
+          if (!success) {
             failed++;
-            logger.error(`Chunk failed: ${e.message}`);
+            logger.error(`All providers failed for chunk ${i} of "${kb.title}"`);
           }
         }
       } catch (e: any) {
