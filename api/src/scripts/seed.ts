@@ -53,7 +53,7 @@ async function main() {
   console.log(`✅ Premium user upserted: ${premiumUser.email}`);
 
   // 3. Create Business for Premium User
-  const businessId = 'cmir2oyaz00013ltwis4xc4tp';
+  const businessId = 'cmjx5hz7a000br594zctuurus';
   const business = await prisma.business.upsert({
     where: { id: businessId },
     update: {

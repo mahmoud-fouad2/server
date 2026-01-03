@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
-  const businessId = 'cmir2oyaz00013ltwis4xc4tp';
+  const businessId = 'cmjx5hz7a000br594zctuurus';
   console.log(`Checking for business with ID: ${businessId}`);
 
   try {

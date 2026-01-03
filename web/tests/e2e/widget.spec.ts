@@ -115,7 +115,7 @@ test.describe('Faheemly widget', () => {
   });
 
   test('respects runtime business ID override via window or meta', async ({ page }) => {
-    const runtimeBiz = process.env.TEST_RUNTIME_WIDGET_BIZ || 'cmir2oyaz00013ltwis4xc4tp';
+    const runtimeBiz = process.env.TEST_RUNTIME_WIDGET_BIZ || 'cmjx5hz7a000br594zctuurus';
 
     // Visit a blank page so we can set window vars before any widget injection
     await page.goto(`${FRONTEND_URL}/`);

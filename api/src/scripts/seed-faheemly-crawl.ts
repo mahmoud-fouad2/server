@@ -10,7 +10,7 @@ async function main() {
   const businessId =
     process.env.SEED_BUSINESS_ID ||
     process.env.NEXT_PUBLIC_WIDGET_BUSINESS_ID ||
-    'cmir2oyaz00013ltwis4xc4tp';
+    'cmjx5hz7a000br594zctuurus';
   const url = process.env.SEED_URL || 'https://faheemly.com';
   const maxDepth = Number(process.env.SEED_MAX_DEPTH || 3);
   const maxPages = Number(process.env.SEED_MAX_PAGES || 150);
