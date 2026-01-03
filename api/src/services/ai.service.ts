@@ -60,7 +60,9 @@ export class AIService {
   private providers: Map<string, AIProvider> = new Map();
   
   constructor() {
-    if (process.env.GROQ_API_KEY) this.providers.set('groq', new GroqProvider(process.env.GROQ_API_KEY));
+    // Use GROQ_API_KEY or fallback to GROQ_API_KEY_BACKUP
+    const groqKey = process.env.GROQ_API_KEY || process.env.GROQ_API_KEY_BACKUP;
+    if (groqKey) this.providers.set('groq', new GroqProvider(groqKey));
     if (process.env.GEMINI_API_KEY) this.providers.set('gemini', new GeminiProvider(process.env.GEMINI_API_KEY));
   }
 

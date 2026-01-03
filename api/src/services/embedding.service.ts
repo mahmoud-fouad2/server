@@ -37,10 +37,11 @@ class EmbeddingService {
     }
 
     // Groq embeddings (if available)
-    if (process.env.GROQ_API_KEY) {
+    const groqKey = process.env.GROQ_API_KEY || process.env.GROQ_API_KEY_BACKUP;
+    if (groqKey) {
       this.providers.set('GROQ', {
         endpoint: 'https://api.groq.com/openai/v1/embeddings',
-        apiKey: process.env.GROQ_API_KEY,
+        apiKey: groqKey,
         model: 'nomic-embed-text-v1.5',
         dimensions: 768,
       });
