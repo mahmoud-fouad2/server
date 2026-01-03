@@ -1079,16 +1079,33 @@ export default function App({ config, businessName, assetBaseUrl, apiBaseUrl, pr
                     type="button" 
                     style={{
                       ...styles.subtleButton,
-                      background: isLoading ? '#f3f4f6' : 'linear-gradient(135deg, #8b5cf6, #a78bfa)',
+                      background: isLoading ? '#e5e7eb' : '#8b5cf6',
                       color: 'white',
                       cursor: isLoading ? 'not-allowed' : 'pointer',
                       border: 'none',
+                      borderRadius: '50%',
+                      width: '36px',
+                      height: '36px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
                       transition: 'all 0.2s ease',
                       opacity: isLoading ? 0.5 : 1,
+                      boxShadow: isLoading ? 'none' : '0 2px 8px rgba(139, 92, 246, 0.3)',
                     }}
                     aria-label="إرفاق صورة" 
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isLoading}
+                    onMouseEnter={(e) => {
+                      if (!isLoading) {
+                        e.currentTarget.style.transform = 'scale(1.05)';
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(139, 92, 246, 0.4)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'scale(1)';
+                      e.currentTarget.style.boxShadow = isLoading ? 'none' : '0 2px 8px rgba(139, 92, 246, 0.3)';
+                    }}
                   >
                     <AttachIcon />
                   </button>
