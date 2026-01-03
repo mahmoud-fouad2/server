@@ -28,7 +28,7 @@ class GroqProvider implements AIProvider {
   async generateResponse(prompt: string, options?: any) {
     const completion = await this.client.chat.completions.create({
       messages: [{ role: 'user', content: prompt }],
-      model: options?.model || 'llama-3.1-70b-versatile',
+      model: options?.model || 'llama-3.1-8b-instant',
     });
     return {
       response: completion.choices[0]?.message?.content || '',

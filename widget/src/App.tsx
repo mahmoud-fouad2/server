@@ -1034,12 +1034,20 @@ export default function App({ config, businessName, assetBaseUrl, apiBaseUrl, pr
                   </div>
                 ))}
 
-                {isTyping && (
+                {(isTyping || isLoading) && (
                   <div style={styles.messageRow('BOT')}>
-                    <div style={styles.typingBubble(theme)}>
-                      {[0, 120, 240].map(delay => (
-                        <span key={delay} style={styles.typingDot(delay)}></span>
-                      ))}
+                    <div style={{
+                      ...styles.typingBubble(theme),
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                    }}>
+                      <div style={{ display: 'flex', gap: '4px' }}>
+                        {[0, 120, 240].map(delay => (
+                          <span key={delay} style={styles.typingDot(delay)}></span>
+                        ))}
+                      </div>
+                      <span style={{ fontSize: '13px', color: '#6b7280' }}>جاري الكتابة...</span>
                     </div>
                   </div>
                 )}
