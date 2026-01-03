@@ -17,6 +17,8 @@
     "db:seed": "ts-node src/scripts/seed.ts",
     "seed:prod": "node dist/scripts/seed.js",
     "seed:faheemly:prod": "node dist/scripts/seed-faheemly-crawl.js",
+    "smoke-test": "node dist/scripts/run-smoke-tests.js",
+    "smoke-test:dev": "ts-node src/scripts/run-smoke-tests.ts",
     "lint": "eslint src --ext .ts",
     "format": "prettier --write \"src/**/*.ts\"",
     "test": "jest",

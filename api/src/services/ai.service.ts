@@ -126,7 +126,8 @@ export class AIService {
       detectIntent?: boolean;
       analyzeSentiment?: boolean;
       detectLanguage?: boolean;
-      country?: string; // Added for geo-aware dialect detection
+      country?: string;
+      requestId?: string; // For request tracing
     } = {}
   ) {
     const { 
@@ -136,8 +137,11 @@ export class AIService {
       detectIntent = true,
       analyzeSentiment = true,
       detectLanguage = true,
-      country
+      country,
+      requestId
     } = options;
+
+    const logMeta = requestId ? { requestId } : {};
 
     try {
       // 1. Fetch Business Settings
@@ -149,7 +153,10 @@ export class AIService {
         }
       });
 
-      if (!business) throw new Error('Business not found');
+      if (!business) {
+        logger.error('Business not found', { ...logMeta, businessId });
+        throw new Error('Business not found');
+      }
 
       // 2. Parallel Processing: Intent, Sentiment, Language Detection
       const [intentResult, sentimentResult, dialectResult] = await Promise.all([

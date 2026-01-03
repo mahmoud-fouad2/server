@@ -4,11 +4,20 @@ import path from 'path';
 const { combine, timestamp, printf, colorize, errors } = winston.format;
 
 // Custom format for console
-const consoleFormat = printf(({ level, message, timestamp, stack, ...metadata }) => {
-  let msg = `${timestamp} [${level}]: ${message}`;
+const consoleFormat = printf(({ level, message, timestamp, stack, requestId, ...metadata }) => {
+  let msg = `${timestamp} [${level}]`;
   
-  if (Object.keys(metadata).length > 0) {
-    msg += ` ${JSON.stringify(metadata)}`;
+  // Add requestId if present
+  if (requestId) {
+    msg += ` [reqId:${requestId}]`;
+  }
+  
+  msg += `: ${message}`;
+  
+  // Remove sensitive data before logging
+  const sanitizedMetadata = sanitizeMetadata(metadata);
+  if (Object.keys(sanitizedMetadata).length > 0) {
+    msg += ` ${JSON.stringify(sanitizedMetadata)}`;
   }
   
   if (stack) {
@@ -17,6 +26,20 @@ const consoleFormat = printf(({ level, message, timestamp, stack, ...metadata })
   
   return msg;
 });
+
+// Sanitize sensitive data from logs
+function sanitizeMetadata(metadata: any): any {
+  const sanitized = { ...metadata };
+  const sensitiveKeys = ['password', 'apiKey', 'token', 'secret', 'authorization', 'api_key'];
+  
+  for (const key of Object.keys(sanitized)) {
+    if (sensitiveKeys.some(sk => key.toLowerCase().includes(sk))) {
+      sanitized[key] = '***REDACTED***';
+    }
+  }
+  
+  return sanitized;
+}
 
 // Create logger instance
 const logger = winston.createLogger({

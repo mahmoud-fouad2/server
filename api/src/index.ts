@@ -13,6 +13,7 @@ import { SocketService } from './socket/index.js';
 import logger from './utils/logger.js';
 import { cacheService } from './services/cache.service.js';
 import queueService from './services/queue.service.js';
+import { requestIdMiddleware } from './middleware/request-id.middleware.js';
 import { 
   errorHandler, 
   notFound, 
@@ -113,6 +114,9 @@ app.use(cors({
 
 // Rate limiting
 app.use(globalLimiter);
+
+// Request ID middleware (must be early in chain)
+app.use(requestIdMiddleware);
 
 // Body parsing
 app.use(express.json({ limit: '1mb' }));
