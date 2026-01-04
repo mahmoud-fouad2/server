@@ -35,7 +35,16 @@ export class TeamController {
         role: req.body.role || 'EMPLOYEE'
       };
 
-      const { name, email, password, role } = AddTeamMemberSchema.parse(payload);
+      // Validate input
+      const parseResult = AddTeamMemberSchema.safeParse(payload);
+      if (!parseResult.success) {
+        return res.status(400).json({ 
+          error: 'Invalid input',
+          details: parseResult.error.errors 
+        });
+      }
+
+      const { name, email, password, role } = parseResult.data;
 
       const employee = await teamService.addEmployee(businessId, { name, email, password, role });
       res.status(201).json(employee);
