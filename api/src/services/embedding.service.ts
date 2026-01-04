@@ -174,16 +174,19 @@ class EmbeddingService {
       const vectorString = `[${queryEmbedding.join(',')}]`;
 
       // Use raw SQL for vector similarity search
+      // Cast String to vector since embedding column is String type
       const results = await prisma.$queryRawUnsafe(`
         SELECT 
           id,
           "knowledgeBaseId",
           content,
           metadata,
-          1 - (embedding::vector <=> $1::vector) as similarity
+          1 - (embedding::text::vector <=> $1::vector) as similarity
         FROM "KnowledgeChunk"
         WHERE "businessId" = $2
-        ORDER BY embedding::vector <=> $1::vector
+          AND embedding IS NOT NULL
+          AND embedding != ''
+        ORDER BY embedding::text::vector <=> $1::vector
         LIMIT $3
       `, vectorString, businessId, limit);
 
