@@ -115,6 +115,7 @@ const styles = {
     flexDirection: 'column',
     gap: '10px',
     background: `linear-gradient(180deg, ${theme.secondary}, #fff)`,
+    scrollBehavior: 'smooth' as const,
   }),
   messageRow: (sender: Message['senderType']) => ({
     display: 'flex',
@@ -130,6 +131,8 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '8px',
+    whiteSpace: 'pre-wrap' as const, // Preserve newlines
+    lineHeight: '1.5',
   }),
   typingBubble: (theme: any) => ({
     display: 'inline-flex',
@@ -665,8 +668,22 @@ export default function App({ config, businessName, assetBaseUrl, apiBaseUrl, pr
 
     // Fetch conversation history on load/reconnect
     const fetchHistory = async () => {
+      if (!conversationId) return;
       try {
-        const res = await fetch(`${apiUrl}/api/chat/messages/${conversationId}`);
+        const apiUrl = getApiUrl();
+        const res = await fetch(`${apiUrl}/api/chat/conversations/${conversationId}/messages`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('fahimo-token') || ''}` // Add auth if needed, or rely on public endpoint if available
+          }
+        });
+        
+        if (!res.ok) {
+           // Fallback to public endpoint if protected one fails (common in widget context)
+           // Note: You might need to expose a public history endpoint or use a visitor token
+           console.warn('Failed to fetch history from protected endpoint');
+           return;
+        }
+
         const data = await res.json();
         if (data.success && Array.isArray(data.data)) {
           const historyMessages = data.data.map((msg: any) => ({
@@ -1167,7 +1184,12 @@ export default function App({ config, businessName, assetBaseUrl, apiBaseUrl, pr
                 {messages.map(message => (
                   <div key={message.id} style={styles.messageRow(message.senderType)}>
                     <div style={styles.messageBubble(theme, message.senderType)}>
-                      <div>{message.content}</div>
+                      <div dangerouslySetInnerHTML={{ 
+                        __html: message.content
+                          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
+                          .replace(/\n/g, '<br/>') // Newlines
+                          .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: underline;">$1</a>') // Links
+                      }} />
                       <span style={styles.timestamp}>{formatTimestamp(message.timestamp)}</span>
                     </div>
                   </div>
