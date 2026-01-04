@@ -412,7 +412,7 @@ router.post('/generate-embeddings', async (req: Request, res: Response) => {
         
         for (let i = 0; i < chunks.length; i++) {
           let success = false;
-          const providers = ['GEMINI', 'VOYAGE']; // Updated for 2026: Gemini primary, Voyage backup
+          const providers = ['GEMINI', 'GEMINI_BACKUP', 'VOYAGE']; // Full fallback chain
           
           // Try each provider in order until success
           for (const provider of providers) {

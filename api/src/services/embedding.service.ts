@@ -16,7 +16,7 @@ class EmbeddingService {
   }
 
   private initializeProviders() {
-    // Google Gemini (Primary - Free & Fast 2026)
+    // Google Gemini Primary (New key)
     if (process.env.GEMINI_API_KEY) {
       this.providers.set('GEMINI', {
         endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent',
@@ -26,7 +26,17 @@ class EmbeddingService {
       });
     }
 
-    // Voyage AI (Backup - Paid)
+    // Google Gemini Backup (Second account with credit)
+    if (process.env.GEMINI_API_KEY_BACKUP) {
+      this.providers.set('GEMINI_BACKUP', {
+        endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent',
+        apiKey: process.env.GEMINI_API_KEY_BACKUP,
+        model: 'text-embedding-004',
+        dimensions: 768,
+      });
+    }
+
+    // Voyage AI (Final Backup - Paid)
     if (process.env.VOYAGE_API_KEY) {
       this.providers.set('VOYAGE', {
         endpoint: 'https://api.voyageai.com/v1/embeddings',
@@ -36,7 +46,7 @@ class EmbeddingService {
       });
     }
 
-    logger.info(`Initialized ${this.providers.size} embedding providers`);
+    logger.info(`Initialized ${this.providers.size} embedding providers: ${Array.from(this.providers.keys()).join(', ')}`);
   }
 
   async generateEmbedding(text: string, providerKey?: string): Promise<EmbeddingResponse> {
@@ -52,86 +62,96 @@ class EmbeddingService {
       };
     }
 
-    // Select provider
-    let provider;
-    let selectedKey;
+    // Fallback chain: GEMINI → GEMINI_BACKUP → VOYAGE
+    const providerOrder = providerKey 
+      ? [providerKey] 
+      : ['GEMINI', 'GEMINI_BACKUP', 'VOYAGE'];
 
-    if (providerKey && this.providers.has(providerKey)) {
-      provider = this.providers.get(providerKey);
-      selectedKey = providerKey;
-    } else {
-      // Use first available provider
-      const entries = Array.from(this.providers.entries());
-      if (entries.length === 0) {
-        throw new Error('No embedding providers configured');
+    let lastError: any;
+
+    // Try each provider in order
+    for (const key of providerOrder) {
+      if (!this.providers.has(key)) {
+        continue;
       }
-      [selectedKey, provider] = entries[0];
-    }
 
-    try {
-      let response;
-      
-      // Gemini uses different API format
-      if (selectedKey === 'GEMINI') {
-        response = await axios.post(
-          `${provider.endpoint}?key=${provider.apiKey}`,
-          {
-            model: provider.model,
-            content: {
-              parts: [{ text }]
-            }
-          },
-          {
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            timeout: 30000,
-          }
-        );
+      const provider = this.providers.get(key);
 
-        const embedding = response.data.embedding.values;
+      try {
+        let response;
         
-        // Cache the embedding
-        await cacheService.set(cacheKey, embedding, 86400); // 24 hours
-
-        return {
-          embedding,
-          tokensUsed: 0,
-          provider: selectedKey,
-        };
-      } else {
-        // Standard OpenAI-compatible format (Voyage, etc.)
-        response = await axios.post(
-          provider.endpoint,
-          {
-            input: text,
-            model: provider.model,
-          },
-          {
-            headers: {
-              'Authorization': `Bearer ${provider.apiKey}`,
-              'Content-Type': 'application/json',
+        // Gemini uses different API format
+        if (key === 'GEMINI' || key === 'GEMINI_BACKUP') {
+          response = await axios.post(
+            `${provider.endpoint}?key=${provider.apiKey}`,
+            {
+              model: provider.model,
+              content: {
+                parts: [{ text }]
+              }
             },
-            timeout: 30000,
-          }
-        );
+            {
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              timeout: 30000,
+            }
+          );
 
-        const embedding = response.data.data[0].embedding;
-        const tokensUsed = response.data.usage?.total_tokens || 0;
+          const embedding = response.data.embedding.values;
+          
+          // Cache the embedding
+          await cacheService.set(cacheKey, embedding, 86400); // 24 hours
 
-        // Cache the embedding
-        await cacheService.set(cacheKey, embedding, 86400); // 24 hours
+          logger.info(`✅ Embedding generated successfully with ${key}`);
 
-        return {
-          embedding,
-          tokensUsed,
-          provider: selectedKey,
-        };
+          return {
+            embedding,
+            tokensUsed: 0,
+            provider: key,
+          };
+        } else {
+          // Standard OpenAI-compatible format (Voyage, etc.)
+          response = await axios.post(
+            provider.endpoint,
+            {
+              input: text,
+              model: provider.model,
+            },
+            {
+              headers: {
+                'Authorization': `Bearer ${provider.apiKey}`,
+                'Content-Type': 'application/json',
+              },
+              timeout: 30000,
+            }
+          );
+
+          const embedding = response.data.data[0].embedding;
+          const tokensUsed = response.data.usage?.total_tokens || 0;
+
+          // Cache the embedding
+          await cacheService.set(cacheKey, embedding, 86400); // 24 hours
+
+          logger.info(`✅ Embedding generated successfully with ${key}`);
+
+          return {
+            embedding,
+            tokensUsed,
+            provider: key,
+          };
+        }
+      } catch (error: any) {
+        lastError = error;
+        const statusCode = error.response?.status || 'unknown';
+        logger.warn(`⚠️ Provider ${key} failed (${statusCode}): ${error.message}`);
+        // Continue to next provider
       }
-    } catch (error: any) {
-      logger.error(`Embedding generation failed with ${selectedKey}:`, error.message);
-      throw new Error(`Failed to generate embedding: ${error.message}`);
     }
+
+    // All providers failed
+    logger.error('❌ All embedding providers failed');
+    throw new Error(`Failed to generate embedding: ${lastError?.message || 'All providers unavailable'}`);
   }
 
   async generateBatchEmbeddings(texts: string[]): Promise<EmbeddingResponse[]> {
