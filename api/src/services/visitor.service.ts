@@ -58,24 +58,20 @@ export class VisitorService {
       os?: string;
     }
   ) {
-    // 1. Find or Create Visitor
-    let visitor = await prisma.visitor.findUnique({
+    // 1. Find or Create Visitor (using upsert to avoid race conditions)
+    const visitor = await prisma.visitor.upsert({
       where: {
         businessId_fingerprint: {
           businessId,
           fingerprint,
         },
       },
+      create: {
+        businessId,
+        fingerprint,
+      },
+      update: {}, // No updates needed, just return existing
     });
-
-    if (!visitor) {
-      visitor = await prisma.visitor.create({
-        data: {
-          businessId,
-          fingerprint,
-        },
-      });
-    }
 
     // 2. Create Session
     const session = await prisma.visitorSession.create({
