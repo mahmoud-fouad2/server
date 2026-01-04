@@ -170,31 +170,59 @@ class EmbeddingService {
       const { PrismaClient } = await import('@prisma/client');
       const prisma = new PrismaClient();
 
-      // Convert query embedding to PostgreSQL vector format
-      const vectorString = `[${queryEmbedding.join(',')}]`;
+      // Get all chunks for this business
+      const chunks = await prisma.knowledgeChunk.findMany({
+        where: { 
+          businessId,
+          embedding: { not: null }
+        },
+        select: {
+          id: true,
+          knowledgeBaseId: true,
+          content: true,
+          embedding: true,
+          metadata: true,
+        },
+      });
 
-      // Use raw SQL for vector similarity search
-      // Cast String to vector since embedding column is String type
-      const results = await prisma.$queryRawUnsafe(`
-        SELECT 
-          id,
-          "knowledgeBaseId",
-          content,
-          metadata,
-          1 - (embedding::text::vector <=> $1::vector) as similarity
-        FROM "KnowledgeChunk"
-        WHERE "businessId" = $2
-          AND embedding IS NOT NULL
-          AND embedding != ''
-        ORDER BY embedding::text::vector <=> $1::vector
-        LIMIT $3
-      `, vectorString, businessId, limit);
+      if (chunks.length === 0) {
+        await prisma.$disconnect();
+        logger.info(`No knowledge chunks found for business ${businessId}`);
+        return [];
+      }
+
+      // Calculate similarity for each chunk
+      const results = chunks
+        .map(chunk => {
+          try {
+            // Parse embedding from JSON string
+            const chunkEmbedding = JSON.parse(chunk.embedding || '[]');
+            
+            if (!Array.isArray(chunkEmbedding) || chunkEmbedding.length === 0) {
+              return null;
+            }
+
+            // Calculate cosine similarity
+            const similarity = this.cosineSimilarity(queryEmbedding, chunkEmbedding);
+
+            return {
+              ...chunk,
+              similarity,
+            };
+          } catch (error) {
+            logger.warn(`Failed to parse embedding for chunk ${chunk.id}`);
+            return null;
+          }
+        })
+        .filter((result): result is NonNullable<typeof result> => result !== null)
+        .sort((a, b) => b.similarity - a.similarity)
+        .slice(0, limit);
 
       await prisma.$disconnect();
       
-      logger.info(`Vector search returned ${(results as any[]).length} results`);
+      logger.info(`Vector search returned ${results.length} results (manual cosine similarity)`);
       
-      return results as any[];
+      return results;
     } catch (error: any) {
       logger.error('Vector search failed:', error.message);
       logger.error('Error details:', error.stack);
