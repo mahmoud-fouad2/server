@@ -640,6 +640,16 @@ export default function App({ config, businessName, assetBaseUrl, apiBaseUrl, pr
       socket.emit('join-conversation', { conversationId });
     });
 
+    // Listen for standard message event from backend
+    socket.on('receive_message', (payload: any) => {
+      // payload: { content, sender, timestamp, ... }
+      // sender can be 'user', 'agent', 'bot'
+      if (payload.sender === 'user') return; // Ignore own messages
+      
+      const type = payload.sender === 'agent' ? 'AGENT' : 'BOT';
+      appendIncomingMessage(payload, type);
+    });
+
     socket.on('agent-message', (payload: any) => {
       appendIncomingMessage(payload, 'AGENT');
     });

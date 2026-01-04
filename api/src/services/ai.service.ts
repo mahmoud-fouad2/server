@@ -190,7 +190,9 @@ export class AIService {
           logger.info('Using cached knowledge search');
         } else {
           try {
-            const searchResults = await vectorSearchService.searchKnowledge(userMessage, businessId, 5, 0.7);
+            // Lowered threshold to 0.25 to ensure we catch relevant chunks even with lower similarity scores
+            // The LLM will filter out irrelevant context naturally
+            const searchResults = await vectorSearchService.searchKnowledge(userMessage, businessId, 5, 0.25);
             
             if (searchResults.length > 0) {
               relevantKnowledge = searchResults
