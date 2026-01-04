@@ -58,20 +58,57 @@ export class VisitorService {
       os?: string;
     }
   ) {
-    // 1. Find or Create Visitor (using upsert to avoid race conditions)
-    const visitor = await prisma.visitor.upsert({
-      where: {
-        businessId_fingerprint: {
-          businessId,
-          fingerprint,
-        },
-      },
-      create: {
-        businessId,
-        fingerprint,
-      },
-      update: {}, // No updates needed, just return existing
-    });
+    // 1. Find or Create Visitor with retry logic for race conditions
+    let visitor;
+    let retries = 3;
+    
+    while (retries > 0) {
+      try {
+        visitor = await prisma.visitor.upsert({
+          where: {
+            businessId_fingerprint: {
+              businessId,
+              fingerprint,
+            },
+          },
+          create: {
+            businessId,
+            fingerprint,
+          },
+          update: {}, // No updates needed, just return existing
+        });
+        break; // Success, exit retry loop
+      } catch (error: any) {
+        // If unique constraint failed, it means another request just created it
+        // Try to find it directly
+        if (error.code === 'P2002' && retries > 1) {
+          retries--;
+          await new Promise(resolve => setTimeout(resolve, 50)); // Wait 50ms
+          
+          // Try to find the existing visitor
+          const existing = await prisma.visitor.findUnique({
+            where: {
+              businessId_fingerprint: {
+                businessId,
+                fingerprint,
+              },
+            },
+          });
+          
+          if (existing) {
+            visitor = existing;
+            break;
+          }
+          // If still not found, retry upsert
+          continue;
+        }
+        throw error; // Re-throw if not a race condition or out of retries
+      }
+    }
+    
+    if (!visitor) {
+      throw new Error('Failed to get or create visitor after retries');
+    }
 
     // 2. Create Session
     const session = await prisma.visitorSession.create({
