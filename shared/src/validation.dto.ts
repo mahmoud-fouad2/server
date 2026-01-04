@@ -48,8 +48,8 @@ export type WhatsAppIntegrationInput = z.infer<typeof WhatsAppIntegrationSchema>
 
 // Ticket Schema
 export const CreateTicketSchema = z.object({
-  subject: z.string().min(3, 'Subject must be at least 3 characters').max(200),
-  message: z.string().min(10, 'Message must be at least 10 characters').max(5000),
+  subject: z.string().min(1, 'Subject is required').max(200),
+  message: z.string().min(1, 'Message is required').max(5000),
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).optional().default('MEDIUM'),
 });
 

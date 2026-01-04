@@ -49,11 +49,15 @@ export default function ConversationsView() {
         try {
           const profile = await authApi.profile();
           if (profile && profile.businessId) {
-            localSocket = io(API_CONFIG.BASE_URL.replace('/api', ''), { 
-              transports: ['websocket'],
+            // Extract WebSocket URL from BASE_URL
+            const wsUrl = API_CONFIG.BASE_URL.replace(/\/api$/, '');
+            
+            localSocket = io(wsUrl, { 
+              transports: ['websocket', 'polling'],
               reconnection: true,
               reconnectionDelay: 1000,
-              reconnectionAttempts: 5
+              reconnectionAttempts: 10,
+              timeout: 20000
             });
 
             localSocket.on('connect', () => {
@@ -249,11 +253,11 @@ export default function ConversationsView() {
         </div>
       )}
       {/* Conversations List */}
-      <Card className="lg:col-span-1 flex flex-col h-full">
+      <Card className="lg:col-span-1 flex flex-col h-full max-h-[600px]">
         <CardHeader>
           <CardTitle>المحادثات النشطة</CardTitle>
         </CardHeader>
-        <CardContent className="flex-1 overflow-y-auto p-2">
+        <CardContent className="flex-1 overflow-y-auto p-2 max-h-[500px]" style={{scrollbarWidth: 'thin'}}>
           {loading ? (
             <div className="flex justify-center py-10 text-muted-foreground">
               <Loader2 className="animate-spin" />
@@ -264,35 +268,39 @@ export default function ConversationsView() {
             </div>
             ) : (
             <>
-              {conversations.slice(0, showAll ? conversations.length : 10).map(conv => (
-              <div
-                key={conv.id}
-                onClick={() => selectConversation(conv)}
-                className={`p-3 mb-2 rounded-lg cursor-pointer transition-colors border ${selectedConversation?.id === conv.id ? 'bg-brand-500/10 border-brand-500/30' : 'bg-card hover:bg-muted/50 border-border'}`}
-              >
-                <div className="flex justify-between items-start">
-                  <div className="font-medium text-sm">
-                    {conv.country || conv.countryCode || '—'} • {formatVisitorId(conv.id)}
+              {conversations.map(conv => {
+                // Get first user message for display
+                const firstMsg = conv.messages && conv.messages.length > 0 
+                  ? conv.messages.find(m => m.senderType === 'USER') || conv.messages[0]
+                  : null;
+                const previewText = firstMsg 
+                  ? sanitizeContent(firstMsg.content) 
+                  : 'لا توجد رسائل';
+                
+                return (
+                  <div
+                    key={conv.id}
+                    onClick={() => selectConversation(conv)}
+                    className={`p-3 mb-2 rounded-lg cursor-pointer transition-colors border ${selectedConversation?.id === conv.id ? 'bg-brand-500/10 border-brand-500/30' : 'bg-card hover:bg-muted/50 border-border'}`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="font-medium text-sm flex items-center gap-2">
+                        <MessageSquare className="w-4 h-4" />
+                        <span>{conv.country || conv.countryCode || 'زائر'}</span>
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {new Date(conv.updatedAt).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </div>
+                    </div>
+                    <div className="text-xs text-muted-foreground truncate mt-1 line-clamp-2">
+                      {previewText}
+                    </div>
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    {new Date(conv.updatedAt).toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </div>
-                </div>
-                <div className="text-xs text-muted-foreground truncate mt-1">
-                  {sanitizeContent(conv.messages[0]?.content) || 'لا توجد رسائل'}
-                </div>
-              </div>
-              ))}
-              {conversations.length > 10 && (
-                <div className="flex justify-center mt-4">
-                  <Button size="sm" onClick={() => setShowAll(s => !s)} variant="outline">
-                    {showAll ? 'عرض أقل' : `عرض الكل (${conversations.length})`}
-                  </Button>
-                </div>
-              )}
+                );
+              })}
             </>
           )}
         </CardContent>
