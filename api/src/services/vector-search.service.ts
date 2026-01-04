@@ -10,7 +10,7 @@ class VectorSearchService {
     query: string,
     businessId: string,
     limit: number = 5,
-    minSimilarity: number = 0.7
+    minSimilarity: number = 0.3  // Lowered threshold to allow more KB matches
   ): Promise<any[]> {
     try {
       // Generate embedding for the query - MUST use GEMINI to match stored embeddings (768 dims)
@@ -18,6 +18,12 @@ class VectorSearchService {
 
       // Search using manual cosine similarity
       const results = await embeddingService.searchSimilar(embedding, businessId, limit * 4);
+
+      // Log raw results for debugging
+      logger.info(`Raw vector search returned ${results.length} results`);
+      if (results.length > 0) {
+        logger.info(`Top result similarity: ${results[0]?.similarity?.toFixed(3)}`);
+      }
 
       // Rerank results
       const reranked = await this.rerankResults(query, results);
