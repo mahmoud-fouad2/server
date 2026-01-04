@@ -66,6 +66,8 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     background: '#F4F6FB',
+    minHeight: '0',
+    overflow: 'hidden',
   },
   preChatForm: {
     padding: '24px',
@@ -106,16 +108,21 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     height: '100%',
+    minHeight: '0',
+    overflow: 'hidden',
   },
   messages: (theme: any, isMobile: boolean) => ({
     flex: 1,
     padding: isMobile ? '12px' : '20px',
     overflowY: 'auto' as const,
+    overflowX: 'hidden' as const,
     display: 'flex',
     flexDirection: 'column',
     gap: '10px',
     background: `linear-gradient(180deg, ${theme.secondary}, #fff)`,
     scrollBehavior: 'smooth' as const,
+    minHeight: '0',
+    WebkitOverflowScrolling: 'touch' as const,
   }),
   messageRow: (sender: Message['senderType']) => ({
     display: 'flex',
@@ -732,30 +739,62 @@ export default function App({ config, businessName, assetBaseUrl, apiBaseUrl, pr
   }, [messages]);
 
   useEffect(() => {
-    if (!notificationsAllowed) {
-      audioRef.current = null;
+    if (!notificationsAllowed || !soundEnabled) {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
       return;
     }
-    const audio = new Audio(notificationSoundSrc);
-    audio.preload = 'auto';
-    audio.volume = 0.85;
-    audioRef.current = audio;
-    return () => {
-      audio.pause();
+    
+    try {
+      const audio = new Audio(notificationSoundSrc);
+      audio.preload = 'auto';
+      audio.volume = 0.85;
+      
+      // Test if audio can be loaded
+      audio.addEventListener('canplaythrough', () => {
+        console.log('Audio loaded successfully');
+      }, { once: true });
+      
+      audio.addEventListener('error', (e) => {
+        console.error('Audio loading error:', e);
+      });
+      
+      audioRef.current = audio;
+      
+      return () => {
+        if (audio) {
+          audio.pause();
+          audio.src = '';
+        }
+        audioRef.current = null;
+      };
+    } catch (error) {
+      console.error('Failed to initialize audio:', error);
       audioRef.current = null;
-    };
-  }, [notificationSoundSrc, notificationsAllowed]);
+    }
+  }, [notificationSoundSrc, notificationsAllowed, soundEnabled]);
 
   useEffect(() => {
     if (!soundEnabled || !notificationsAllowed) return;
-    if (messages.length <= lastMessageCountRef.current) return;
+    
+    // Only play sound if new messages were added
+    if (messages.length <= lastMessageCountRef.current) {
+      lastMessageCountRef.current = messages.length;
+      return;
+    }
 
-    const latest = messages[messages.length - 1];
+    // Get all new messages since last count
+    const newMessages = messages.slice(lastMessageCountRef.current);
     lastMessageCountRef.current = messages.length;
 
-    if (latest && latest.senderType !== 'USER') {
-      audioRef.current?.play().catch(() => {
-        /* Autoplay might be blocked; ignore */
+    // Play sound if any new message is from BOT or AGENT
+    const hasNewBotMessage = newMessages.some(m => m.senderType === 'BOT' || m.senderType === 'AGENT');
+    
+    if (hasNewBotMessage && audioRef.current) {
+      audioRef.current.play().catch((error) => {
+        console.warn('Audio playback failed:', error);
       });
     }
   }, [messages, soundEnabled, notificationsAllowed]);
@@ -1061,9 +1100,10 @@ export default function App({ config, businessName, assetBaseUrl, apiBaseUrl, pr
     }
   }
 
-  // Only show rating after bot has replied at least once
-  const hasReceivedBotReply = messages.some(m => m.senderType === 'BOT' && m.id !== messages[0]?.id);
-  const shouldShowRating = ratingEnabled && conversationId && !ratingSubmitted && hasReceivedBotReply && messages.length > 2;
+  // Only show rating after meaningful conversation (at least 2 user messages and 2 bot replies)
+  const userMessages = messages.filter(m => m.senderType === 'USER');
+  const botReplies = messages.filter(m => m.senderType === 'BOT' && m.id !== messages[0]?.id);
+  const shouldShowRating = ratingEnabled && conversationId && !ratingSubmitted && userMessages.length >= 2 && botReplies.length >= 2;
 
   return (
     <Fragment>
