@@ -199,6 +199,7 @@ class EmbeddingService {
             const chunkEmbedding = JSON.parse(chunk.embedding || '[]');
             
             if (!Array.isArray(chunkEmbedding) || chunkEmbedding.length === 0) {
+              logger.warn(`Chunk ${chunk.id} has invalid embedding: not an array or empty`);
               return null;
             }
 
@@ -209,8 +210,9 @@ class EmbeddingService {
               ...chunk,
               similarity,
             };
-          } catch (error) {
-            logger.warn(`Failed to parse embedding for chunk ${chunk.id}`);
+          } catch (error: any) {
+            logger.warn(`Failed to parse embedding for chunk ${chunk.id}: ${error.message}`);
+            logger.warn(`Embedding sample: ${(chunk.embedding || '').substring(0, 100)}`);
             return null;
           }
         })
