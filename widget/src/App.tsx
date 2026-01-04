@@ -663,6 +663,38 @@ export default function App({ config, businessName, assetBaseUrl, apiBaseUrl, pr
       window.setTimeout(() => setIsTyping(false), 2500);
     });
 
+    // Fetch conversation history on load/reconnect
+    const fetchHistory = async () => {
+      try {
+        const res = await fetch(`${apiUrl}/api/chat/messages/${conversationId}`);
+        const data = await res.json();
+        if (data.success && Array.isArray(data.data)) {
+          const historyMessages = data.data.map((msg: any) => ({
+            id: msg.id,
+            content: msg.content,
+            senderType: msg.sender === 'user' ? 'USER' : (msg.sender === 'agent' ? 'AGENT' : 'BOT'),
+            timestamp: new Date(msg.createdAt),
+          }));
+          
+          // Merge with existing messages to avoid duplicates
+          setMessages(prev => {
+            const existingIds = new Set(prev.map(m => m.id));
+            const newMessages = historyMessages.filter((m: Message) => !existingIds.has(m.id));
+            if (newMessages.length === 0) return prev;
+            
+            // Combine and sort by timestamp
+            return [...prev, ...newMessages].sort((a, b) => 
+              new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+            );
+          });
+        }
+      } catch (error) {
+        console.error('Failed to fetch history:', error);
+      }
+    };
+    
+    fetchHistory();
+
     return () => {
       socket.disconnect();
       socketRef.current = null;
@@ -869,8 +901,11 @@ export default function App({ config, businessName, assetBaseUrl, apiBaseUrl, pr
         setConversationId(data.conversationId);
       }
 
-      if (data.reply || data.message) {
-        appendIncomingMessage({ content: data.reply || data.message }, 'BOT');
+      // Handle various response formats from backend
+      const botContent = data.reply || data.message || data.content || data.botMessage?.content;
+      
+      if (botContent) {
+        appendIncomingMessage({ content: botContent }, 'BOT');
       }
     } catch (error) {
       console.error('Send message failed:', error);
