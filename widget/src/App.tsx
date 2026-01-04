@@ -140,11 +140,12 @@ const styles = {
     boxShadow: '0 8px 24px rgba(15, 23, 42, 0.08)',
   }),
   typingDot: (delay: number) => ({
-    width: '6px',
-    height: '6px',
+    width: '8px',
+    height: '8px',
     borderRadius: '50%',
-    background: '#cbd5f5',
-    animation: `fahimoPulse 1.4s ease ${delay}ms infinite`,
+    background: 'linear-gradient(135deg, #8B5CF6, #6366F1)',
+    animation: `fahimoTyping 1.2s ease ${delay}ms infinite`,
+    boxShadow: '0 2px 4px rgba(139, 92, 246, 0.3)',
   }),
   timestamp: {
     fontSize: '11px',
@@ -238,12 +239,14 @@ function getLauncherStyle(theme: any, position: 'left' | 'right', isOpen: boolea
     background: `linear-gradient(135deg, ${theme.primary}, ${theme.accent})`,
     color: theme.textOnPrimary,
     border: 'none',
-    boxShadow: '0 18px 40px rgba(37, 99, 235, 0.35)',
+    boxShadow: '0 18px 40px rgba(37, 99, 235, 0.35), 0 0 0 0 rgba(37, 99, 235, 0.4)',
     cursor: 'pointer',
     display: isOpen ? 'none' : 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 999999,
+    animation: 'fahimoPulse 2s infinite, fahimoFadeIn 0.5s ease',
+    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
   } as const;
 }
 
@@ -463,6 +466,29 @@ const EmojiIcon = () => (
   </svg>
 );
 
+const SoundOnIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
+  </svg>
+);
+
+const SoundOffIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+    <line x1="23" y1="9" x2="17" y2="15" />
+    <line x1="17" y1="9" x2="23" y2="15" />
+  </svg>
+);
+
+const EndChatIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z" />
+    <line x1="18" y1="9" x2="12" y2="15" />
+    <line x1="12" y1="9" x2="18" y2="15" />
+  </svg>
+);
+
 function formatTimestamp(value: Date | string) {
   const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) {
@@ -481,6 +507,7 @@ function ensureGlobalStyles() {
     @keyframes fahimoPulse { 0% { opacity: 0.5; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1); } 100% { opacity: 0.5; transform: scale(0.9); } }
     @keyframes fahimoSlideUp { from { transform: translateY(24px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     @keyframes fahimoFadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes fahimoTyping { 0%, 100% { transform: translateY(0); opacity: 0.6; } 50% { transform: translateY(-8px); opacity: 1; } }
   `;
   document.head.appendChild(style);
 }
@@ -528,6 +555,7 @@ export default function App({ config, businessName, assetBaseUrl, apiBaseUrl, pr
   const [ratingValue, setRatingValue] = useState<number | null>(null);
   const [ratingSubmitted, setRatingSubmitted] = useState(false);
   const [visitorInfo, setVisitorInfo] = useState<VisitorInfo>({ name: '', email: '', phone: '' });
+  const [soundEnabled, setSoundEnabled] = useState(true); // Sound control
   const requirePreChat = computedPreChatEnabled;
   const [preChatCompleted, setPreChatCompleted] = useState(!requirePreChat);
   const [showPreChat, setShowPreChat] = useState(requirePreChat);
@@ -660,7 +688,7 @@ export default function App({ config, businessName, assetBaseUrl, apiBaseUrl, pr
   }, [notificationSoundSrc, notificationsAllowed]);
 
   useEffect(() => {
-    if (!notificationsAllowed) return;
+    if (!soundEnabled || !notificationsAllowed) return;
     if (messages.length <= lastMessageCountRef.current) return;
 
     const latest = messages[messages.length - 1];
@@ -671,7 +699,7 @@ export default function App({ config, businessName, assetBaseUrl, apiBaseUrl, pr
         /* Autoplay might be blocked; ignore */
       });
     }
-  }, [messages, notificationsAllowed]);
+  }, [messages, soundEnabled, notificationsAllowed]);
 
   const handleFileUpload = async (event: any) => {
     const file = event.target.files?.[0];
@@ -874,6 +902,46 @@ export default function App({ config, businessName, assetBaseUrl, apiBaseUrl, pr
     setIsTyping(false);
   }
 
+  const endConversation = async () => {
+    if (!conversationId) {
+      // No active conversation, just close
+      setIsOpen(false);
+      setMessages([]);
+      setInput('');
+      return;
+    }
+
+    const confirmed = window.confirm('هل تريد إنهاء المحادثة؟');
+    if (!confirmed) return;
+
+    try {
+      const apiUrl = getApiUrl();
+      await fetch(`${apiUrl}/api/chat/end`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          conversationId,
+          businessId: config.businessId,
+        }),
+      });
+    } catch (error) {
+      console.error('End conversation failed:', error);
+    }
+
+    // Reset state
+    setConversationId(null);
+    setMessages([]);
+    setInput('');
+    setRatingSubmitted(false);
+    setRatingValue(null);
+    setIsOpen(false);
+    welcomeInjectedRef.current = false;
+  };
+
+  const toggleSound = () => {
+    setSoundEnabled(prev => !prev);
+  };
+
   async function initializeSession() {
     try {
       const apiUrl = getApiUrl();
@@ -944,6 +1012,14 @@ export default function App({ config, businessName, assetBaseUrl, apiBaseUrl, pr
           setIsOpen(true);
           setIsMinimized(false);
         }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'scale(1.1)';
+          e.currentTarget.style.boxShadow = '0 24px 60px rgba(37, 99, 235, 0.45), 0 0 0 8px rgba(37, 99, 235, 0.15)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'scale(1)';
+          e.currentTarget.style.boxShadow = '0 18px 40px rgba(37, 99, 235, 0.35), 0 0 0 0 rgba(37, 99, 235, 0.4)';
+        }}
         aria-label="فتح المحادثة"
       >
         {launcherIcon ? (
@@ -979,6 +1055,24 @@ export default function App({ config, businessName, assetBaseUrl, apiBaseUrl, pr
           </div>
 
           <div style={styles.headerActions}>
+            <button 
+              type="button" 
+              style={styles.iconButton} 
+              onClick={toggleSound}
+              aria-label={soundEnabled ? 'كتم الصوت' : 'تشغيل الصوت'}
+              title={soundEnabled ? 'كتم الصوت' : 'تشغيل الصوت'}
+            >
+              {soundEnabled ? <SoundOnIcon /> : <SoundOffIcon />}
+            </button>
+            <button 
+              type="button" 
+              style={styles.iconButton} 
+              onClick={endConversation}
+              aria-label="إنهاء المحادثة"
+              title="إنهاء المحادثة"
+            >
+              <EndChatIcon />
+            </button>
             <button type="button" style={styles.iconButton} onClick={() => setIsMinimized(prev => !prev)}>
               <MinimizeIcon />
             </button>
