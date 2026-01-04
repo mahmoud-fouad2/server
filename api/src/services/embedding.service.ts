@@ -16,34 +16,23 @@ class EmbeddingService {
   }
 
   private initializeProviders() {
-    // Voyage AI (Best for embeddings)
+    // Google Gemini (Primary - Free & Fast 2026)
+    if (process.env.GEMINI_API_KEY) {
+      this.providers.set('GEMINI', {
+        endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent',
+        apiKey: process.env.GEMINI_API_KEY,
+        model: 'text-embedding-004',
+        dimensions: 768,
+      });
+    }
+
+    // Voyage AI (Backup - Paid)
     if (process.env.VOYAGE_API_KEY) {
       this.providers.set('VOYAGE', {
         endpoint: 'https://api.voyageai.com/v1/embeddings',
         apiKey: process.env.VOYAGE_API_KEY,
         model: 'voyage-multilingual-2',
         dimensions: 1024,
-      });
-    }
-
-    // OpenAI (Fallback)
-    if (process.env.OPENAI_API_KEY) {
-      this.providers.set('OPENAI', {
-        endpoint: 'https://api.openai.com/v1/embeddings',
-        apiKey: process.env.OPENAI_API_KEY,
-        model: 'text-embedding-3-small',
-        dimensions: 1536,
-      });
-    }
-
-    // Groq embeddings (if available)
-    const groqKey = process.env.GROQ_API_KEY || process.env.GROQ_API_KEY_BACKUP;
-    if (groqKey) {
-      this.providers.set('GROQ', {
-        endpoint: 'https://api.groq.com/openai/v1/embeddings',
-        apiKey: groqKey,
-        model: 'nomic-embed-text-v1.5',
-        dimensions: 768,
       });
     }
 
@@ -80,32 +69,65 @@ class EmbeddingService {
     }
 
     try {
-      const response = await axios.post(
-        provider.endpoint,
-        {
-          input: text,
-          model: provider.model,
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${provider.apiKey}`,
-            'Content-Type': 'application/json',
+      let response;
+      
+      // Gemini uses different API format
+      if (selectedKey === 'GEMINI') {
+        response = await axios.post(
+          `${provider.endpoint}?key=${provider.apiKey}`,
+          {
+            model: provider.model,
+            content: {
+              parts: [{ text }]
+            }
           },
-          timeout: 30000,
-        }
-      );
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            timeout: 30000,
+          }
+        );
 
-      const embedding = response.data.data[0].embedding;
-      const tokensUsed = response.data.usage?.total_tokens || 0;
+        const embedding = response.data.embedding.values;
+        
+        // Cache the embedding
+        await cacheService.set(cacheKey, embedding, 86400); // 24 hours
 
-      // Cache the embedding
-      await cacheService.set(cacheKey, embedding, 86400); // 24 hours
+        return {
+          embedding,
+          tokensUsed: 0,
+          provider: selectedKey,
+        };
+      } else {
+        // Standard OpenAI-compatible format (Voyage, etc.)
+        response = await axios.post(
+          provider.endpoint,
+          {
+            input: text,
+            model: provider.model,
+          },
+          {
+            headers: {
+              'Authorization': `Bearer ${provider.apiKey}`,
+              'Content-Type': 'application/json',
+            },
+            timeout: 30000,
+          }
+        );
 
-      return {
-        embedding,
-        tokensUsed,
-        provider: selectedKey,
-      };
+        const embedding = response.data.data[0].embedding;
+        const tokensUsed = response.data.usage?.total_tokens || 0;
+
+        // Cache the embedding
+        await cacheService.set(cacheKey, embedding, 86400); // 24 hours
+
+        return {
+          embedding,
+          tokensUsed,
+          provider: selectedKey,
+        };
+      }
     } catch (error: any) {
       logger.error(`Embedding generation failed with ${selectedKey}:`, error.message);
       throw new Error(`Failed to generate embedding: ${error.message}`);
