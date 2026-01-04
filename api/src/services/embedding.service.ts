@@ -167,29 +167,34 @@ class EmbeddingService {
     limit: number = 5
   ): Promise<any[]> {
     try {
-      // This would use pgvector in production
-      // For now, we'll import prisma directly
       const { PrismaClient } = await import('@prisma/client');
       const prisma = new PrismaClient();
 
+      // Convert query embedding to PostgreSQL vector format
+      const vectorString = `[${queryEmbedding.join(',')}]`;
+
       // Use raw SQL for vector similarity search
-      const results = await prisma.$queryRaw`
+      const results = await prisma.$queryRawUnsafe(`
         SELECT 
           id,
           "knowledgeBaseId",
           content,
           metadata,
-          1 - (embedding <=> ${queryEmbedding}::vector) as similarity
+          1 - (embedding::vector <=> $1::vector) as similarity
         FROM "KnowledgeChunk"
-        WHERE "businessId" = ${businessId}
-        ORDER BY embedding <=> ${queryEmbedding}::vector
-        LIMIT ${limit}
-      `;
+        WHERE "businessId" = $2
+        ORDER BY embedding::vector <=> $1::vector
+        LIMIT $3
+      `, vectorString, businessId, limit);
 
       await prisma.$disconnect();
+      
+      logger.info(`Vector search returned ${(results as any[]).length} results`);
+      
       return results as any[];
     } catch (error: any) {
       logger.error('Vector search failed:', error.message);
+      logger.error('Error details:', error.stack);
       return [];
     }
   }

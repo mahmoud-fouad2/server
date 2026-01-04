@@ -23,7 +23,6 @@ export class ChatService {
           status: 'ACTIVE',
           channel: Channel.WIDGET,
         },
-        // Avoid selecting columns that may not exist yet in production DB
         select: {
           id: true,
         },
@@ -32,19 +31,26 @@ export class ChatService {
       
       logger.info(`Created new conversation: ${conversationId}`);
 
-      // Best-effort enrichment (non-blocking): these columns may not exist on older DBs.
-      const channel = Channel.WIDGET;
-      if (senderId) {
-        prisma.conversation
-          .update({
-            where: { id: conversationId },
-            data: {
-              ...(channel ? { channel } : {}),
-              ...(senderType === 'USER' && senderId ? { visitorId: senderId } : {}),
-            },
+      // Best-effort enrichment: update visitorId only if visitor exists
+      if (senderId && senderType === 'USER') {
+        try {
+          // Verify visitor exists before linking
+          const visitorExists = await prisma.visitor.findUnique({
+            where: { id: senderId },
             select: { id: true },
-          })
-          .catch(() => {});
+          });
+          
+          if (visitorExists) {
+            await prisma.conversation.update({
+              where: { id: conversationId },
+              data: { visitorId: senderId },
+              select: { id: true },
+            });
+          }
+        } catch (error) {
+          // Silently fail - conversation still works without visitorId
+          logger.warn(`Could not link visitor ${senderId} to conversation ${conversationId}`);
+        }
       }
     }
 
