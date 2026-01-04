@@ -162,7 +162,7 @@ class EmbeddingService {
   }
 
   async searchSimilar(
-    queryEmbedding: number[],
+    queryEmbeddings: Record<number, number[]> | number[],
     businessId: string,
     limit: number = 5
   ): Promise<any[]> {
@@ -203,6 +203,25 @@ class EmbeddingService {
               return null;
             }
 
+            // Determine which query embedding to use
+            let queryEmbedding: number[] | undefined;
+            
+            if (Array.isArray(queryEmbeddings)) {
+              // Legacy support: single array
+              if (queryEmbeddings.length === chunkEmbedding.length) {
+                queryEmbedding = queryEmbeddings;
+              }
+            } else {
+              // New support: map of dimension -> embedding
+              queryEmbedding = queryEmbeddings[chunkEmbedding.length];
+            }
+
+            if (!queryEmbedding) {
+              // Mismatch or missing embedding for this dimension
+              // logger.debug(`Skipping chunk ${chunk.id}: No query embedding for dimension ${chunkEmbedding.length}`);
+              return null;
+            }
+
             // Calculate cosine similarity
             const similarity = this.cosineSimilarity(queryEmbedding, chunkEmbedding);
 
@@ -212,7 +231,6 @@ class EmbeddingService {
             };
           } catch (error: any) {
             logger.warn(`Failed to parse embedding for chunk ${chunk.id}: ${error.message}`);
-            logger.warn(`Embedding sample: ${(chunk.embedding || '').substring(0, 100)}`);
             return null;
           }
         })

@@ -13,11 +13,35 @@ class VectorSearchService {
     minSimilarity: number = 0.3  // Lowered threshold to allow more KB matches
   ): Promise<any[]> {
     try {
-      // Generate embedding for the query - MUST use GEMINI to match stored embeddings (768 dims)
-      const { embedding } = await embeddingService.generateEmbedding(query, 'GEMINI');
+      // Generate embeddings for both dimensions (768 and 1024) to handle mixed DB state
+      const embeddings: Record<number, number[]> = {};
 
-      // Search using manual cosine similarity
-      const results = await embeddingService.searchSimilar(embedding, businessId, limit * 4);
+      // Try Gemini (768)
+      try {
+        const { embedding } = await embeddingService.generateEmbedding(query, 'GEMINI');
+        if (embedding && embedding.length === 768) {
+          embeddings[768] = embedding;
+        }
+      } catch (e) {
+        logger.warn('Failed to generate Gemini embedding for query');
+      }
+
+      // Try Voyage (1024) - as backup/alternative for older chunks
+      try {
+        const { embedding } = await embeddingService.generateEmbedding(query, 'VOYAGE');
+        if (embedding && embedding.length === 1024) {
+          embeddings[1024] = embedding;
+        }
+      } catch (e) {
+        logger.warn('Failed to generate Voyage embedding for query');
+      }
+
+      if (Object.keys(embeddings).length === 0) {
+        throw new Error('Failed to generate any embeddings for query');
+      }
+
+      // Search using manual cosine similarity with multi-dim support
+      const results = await embeddingService.searchSimilar(embeddings, businessId, limit * 4);
 
       // Log raw results for debugging
       logger.info(`Raw vector search returned ${results.length} results`);
