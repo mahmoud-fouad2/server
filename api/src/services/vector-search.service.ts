@@ -13,10 +13,10 @@ class VectorSearchService {
     minSimilarity: number = 0.7
   ): Promise<any[]> {
     try {
-      // Generate embedding for the query
-      const { embedding } = await embeddingService.generateEmbedding(query);
+      // Generate embedding for the query - MUST use GEMINI to match stored embeddings (768 dims)
+      const { embedding } = await embeddingService.generateEmbedding(query, 'GEMINI');
 
-      // Search using pgvector
+      // Search using manual cosine similarity
       const results = await embeddingService.searchSimilar(embedding, businessId, limit * 4);
 
       // Rerank results
@@ -128,10 +128,10 @@ class VectorSearchService {
     existingEmbedding?: number[]
   ): Promise<boolean> {
     try {
-      // Generate embedding if not provided
+      // Generate embedding if not provided - MUST use GEMINI for consistency (768 dims)
       let embedding = existingEmbedding;
       if (!embedding) {
-        const result = await embeddingService.generateEmbedding(content);
+        const result = await embeddingService.generateEmbedding(content, 'GEMINI');
         embedding = result.embedding;
       }
 
